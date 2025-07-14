@@ -17,7 +17,7 @@ up:
 	$(DOCKER_EXEC) up -d
 	$(DOCKER_EXEC) logs -f nginx > ./dockerFiles/nginx/nginx.logs &
 
-all: build-containers up
+all: build up
 
 stop:
 	$(DOCKER_EXEC) stop
