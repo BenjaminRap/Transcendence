@@ -1,6 +1,5 @@
-.IGNORE:clean, build-webserv, restart-webserv-container, test
-.SILENT:clean, build-webserv, restart-webserv-container, test
-
+.IGNORE: fre, re, fclean, clean, stop, all, up, build, restart-nginx
+.SILENT: fre, re, fclean, clean, stop, all, up, build, restart-nginx
 DOCKER_DIR	=	./dockerFiles/
 DOCKER_FILE	=	docker-compose.yaml
 DOCKER_EXEC	=	docker compose -f $(DOCKER_DIR)$(DOCKER_FILE)
