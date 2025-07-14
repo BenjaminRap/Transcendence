@@ -2,4 +2,14 @@ services:
   nginx:
     build: ./nginx/
     ports:
-      - "443:443"
+      - "8080:8080"
+    volumes:
+      - frontend:/app/
+
+volumes:
+  frontend:
+    driver: local
+    driver_opts:
+      type: none
+      device: ../src/frontend/
+      o: bind
