@@ -5,6 +5,14 @@ services:
       - "8080:8080"
     volumes:
       - frontend:/app/
+  fastify:
+    build: ./fastify/
+    ports:
+      - "8181:8181"
+    volumes:
+      - backend:/app/backend/
+    stdin_open: true
+    tty: true
 
 volumes:
   frontend:
@@ -12,4 +20,10 @@ volumes:
     driver_opts:
       type: none
       device: ../src/frontend/
+      o: bind
+  backend:
+    driver: local
+    driver_opts:
+      type: none
+      device: ../src/backend/
       o: bind
