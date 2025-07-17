@@ -9,12 +9,17 @@ restart-nginx:
 	$(DOCKER_EXEC) restart --no-deps nginx
 	$(DOCKER_EXEC) logs -f nginx > ./dockerFiles/nginx/nginx.logs &
 
+restart-fastify:
+	$(DOCKER_EXEC) restart --no-deps fastify
+	$(DOCKER_EXEC) logs -f fastify > ./dockerFiles/fastify/fastify.logs &
+
 build:
 	$(DOCKER_EXEC) build
 
 up:
 	$(DOCKER_EXEC) up -d
 	$(DOCKER_EXEC) logs -f nginx > ./dockerFiles/nginx/nginx.logs &
+	$(DOCKER_EXEC) logs -f fastify > ./dockerFiles/fastify/fastify.logs &
 
 all: build up
 
