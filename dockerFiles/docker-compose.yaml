@@ -11,8 +11,6 @@ services:
       - "8181:8181"
     volumes:
       - backend:/app/backend/
-    stdin_open: true
-    tty: true
 
 volumes:
   frontend:
