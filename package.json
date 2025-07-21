@@ -8,6 +8,8 @@
 	"fastify": "^5.4.0"
   },
   "scripts": {
+	  "build": "make build",
+	  "up" : "make up",
 	  "start": "make all"
   }
 }
