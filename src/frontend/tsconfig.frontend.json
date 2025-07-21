@@ -4,7 +4,7 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Node",
-    "outDir": "./javascript",
+    "outDir": "./public/javascript",
     "rootDir": "./typescript",
     "lib": ["DOM", "ESNext"],
     "types": ["node"]
