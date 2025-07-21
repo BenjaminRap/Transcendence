@@ -17,11 +17,11 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: ../src/frontend/
+      device: ../src/frontend/public/
       o: bind
   backend:
     driver: local
     driver_opts:
       type: none
-      device: ../src/backend/
+      device: ../src/backend/public/
       o: bind
