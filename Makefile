@@ -13,7 +13,11 @@ restart-fastify:
 	$(DOCKER_EXEC) restart --no-deps fastify
 	$(DOCKER_EXEC) logs -f fastify > ./dockerFiles/fastify/fastify.logs &
 
-build:
+compile:
+	tsc -p ./src/backend/tsconfig.backend.json
+	tsc -p ./src/frontend/tsconfig.frontend.json
+
+build: compile
 	$(DOCKER_EXEC) build
 
 up:
@@ -32,6 +36,8 @@ clean: stop
 	-docker rmi -f $(docker images -qa) 2>/dev/null
 	-docker volume rm $(docker volume ls -q) 2>/dev/null
 	-docker network rm $(docker network ls -q) 2>/dev/null
+	-rm ./src/frontend/public/javascript/*
+	-rm ./src/backend/public/javascript/*
 
 fclean: clean
 	docker system prune -af
