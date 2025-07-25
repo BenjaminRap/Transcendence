@@ -1,15 +1,19 @@
 {
-  "name": "transcendence",
-  "version": "1.0.0",
-  "type": "module",
-  "dependencies": {
-	"typescript": "^5.8.3",
-    "@types/node": "^24.0.15",
-	"fastify": "^5.4.0"
-  },
-  "scripts": {
-	  "build": "make build",
-	  "up" : "make up",
-	  "start": "make all"
-  }
+	"name": "transcendence",
+	"version": "1.0.0",
+	"type": "module",
+	"dependencies": {
+		"typescript": "^5.8.3",
+		"@types/node": "^24.0.15",
+		"fastify": "^5.4.0",
+		"tailwindcss": "^4.1.11",
+		"@tailwindcss/cli": "^4.1.11",
+		"concurrently": "^9.2.0"
+	},
+	"scripts": {
+		"build": "make build",
+		"up" : "make up",
+		"start": "make all",
+		"dev": "make compile-watch"
+	}
 }

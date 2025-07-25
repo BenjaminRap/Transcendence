@@ -1,5 +1,7 @@
-.IGNORE: fre, re, fclean, clean, stop, all, up, build, restart-nginx
-.SILENT: fre, re, fclean, clean, stop, all, up, build, restart-nginx
+.IGNORE: clean, fclean
+.SILENT: clean, fclean
+.PHONY: restart-nginx, restart-fastify, compile, build, compile-watch, up, all, stop, clean, fclean, re, fre
+
 DOCKER_DIR	=	./dockerFiles/
 DOCKER_FILE	=	docker-compose.yaml
 DOCKER_EXEC	=	docker compose -f $(DOCKER_DIR)$(DOCKER_FILE)
@@ -16,9 +18,16 @@ restart-fastify:
 compile:
 	tsc -p ./src/backend/tsconfig.backend.json
 	tsc -p ./src/frontend/tsconfig.frontend.json
+	npx @tailwindcss/cli -i ./input.css -o ./src/frontend/public/css/tailwind.css
 
 build: compile
 	$(DOCKER_EXEC) build
+
+compile-watch:
+	npx concurrently \
+		"tsc -p ./src/backend/tsconfig.backend.json --watch" \
+		"tsc -p ./src/frontend/tsconfig.frontend.json --watch" \
+		"tailwindcss -i ./input.css -o ./src/frontend/public/css/tailwind.css --watch"
 
 up:
 	$(DOCKER_EXEC) up -d
