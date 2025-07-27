@@ -23,5 +23,5 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: ../src/backend/public/
+      device: ../src/backend/
       o: bind

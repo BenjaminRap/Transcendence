@@ -6,6 +6,7 @@
 		"typescript": "^5.8.3",
 		"@types/node": "^24.0.15",
 		"fastify": "^5.4.0",
+		"fastify-sqlite-typed": "^5.0.2",
 		"tailwindcss": "^4.1.11",
 		"@tailwindcss/cli": "^4.1.11",
 		"concurrently": "^9.2.0"

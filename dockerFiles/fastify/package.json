@@ -1,10 +1,11 @@
 {
-  "name": "transcendence-fastify",
-  "version": "1.0.0",
-  "type": "module",
-  "dependencies": {
-  },
-  "scripts": {
-	  "start": "node backend/javascript/index.js"
-  }
+	"name": "transcendence-fastify",
+	"version": "1.0.0",
+	"type": "module",
+	"dependencies": {
+		"fastify-sqlite-typed": "^5.0.2"
+	},
+	"scripts": {
+		"start": "node backend/javascript/index.js"
+	}
 }
