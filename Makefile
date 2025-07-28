@@ -20,6 +20,13 @@ compile:
 	tsc -p ./src/frontend/tsconfig.frontend.json
 	npx @tailwindcss/cli -i ./input.css -o ./src/frontend/public/css/tailwind.css
 
+
+certificates:
+	openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+	  -keyout ./dockerFiles/nginx/selfsigned/selfsigned.key \
+	  -out ./dockerFiles/nginx/selfsigned/selfsigned.crt \
+	  -subj "/C=FR/ST=Auvergne-Rhône-Alpes/L=Brignais/O=42/CN=brappo"
+
 build: compile
 	$(DOCKER_EXEC) build
 
@@ -34,7 +41,7 @@ up:
 	$(DOCKER_EXEC) logs -f nginx > ./dockerFiles/nginx/nginx.logs &
 	$(DOCKER_EXEC) logs -f fastify > ./dockerFiles/fastify/fastify.logs &
 
-all: build up
+all: certificates build up
 
 stop:
 	$(DOCKER_EXEC) stop
