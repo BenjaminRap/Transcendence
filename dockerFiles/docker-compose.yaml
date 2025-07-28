@@ -7,8 +7,6 @@ services:
       - frontend:/app/
   fastify:
     build: ./fastify/
-    ports:
-      - "8181:8181"
     volumes:
       - backend:/app/backend/
 
