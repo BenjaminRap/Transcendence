@@ -4,12 +4,28 @@ services:
     ports:
       - "8080:443"
     volumes:
-      - frontend:/app/
+      - frontend:/app/public/
+    profiles: [
+      "prod"
+    ]
+  vite:
+    build: ./vite/
+    ports:
+      - "8080:443"
+    volumes:
+      - frontend:/app/public/
+    profiles: [
+      "dev"
+    ]
   fastify:
     build: ./fastify/
     volumes:
       - backend:/app/backend/
       - databases:/app/databases/
+    profiles: [
+      "prod",
+      "dev"
+    ]
 
 volumes:
   frontend:

@@ -2,9 +2,10 @@
 .SILENT: clean, fclean
 .PHONY: restart-nginx, restart-fastify, compile, build, compile-watch, up, all, stop, clean, fclean, re, fre
 
+PROFILE = prod
 DOCKER_DIR	=	./dockerFiles/
 DOCKER_FILE	=	docker-compose.yaml
-DOCKER_EXEC	=	docker compose -f $(DOCKER_DIR)$(DOCKER_FILE)
+DOCKER_EXEC	=	docker compose -f $(DOCKER_DIR)$(DOCKER_FILE) --profile $(PROFILE)
 
 compile:
 	npx tsc -p ./src/backend/tsconfig.backend.json
