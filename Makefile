@@ -6,14 +6,6 @@ DOCKER_DIR	=	./dockerFiles/
 DOCKER_FILE	=	docker-compose.yaml
 DOCKER_EXEC	=	docker compose -f $(DOCKER_DIR)$(DOCKER_FILE)
 
-restart-nginx:
-	$(DOCKER_EXEC) restart --no-deps nginx
-	$(DOCKER_EXEC) logs -f nginx > ./dockerFiles/nginx/nginx.logs &
-
-restart-fastify:
-	$(DOCKER_EXEC) restart --no-deps fastify
-	$(DOCKER_EXEC) logs -f fastify > ./dockerFiles/fastify/fastify.logs &
-
 compile:
 	npx tsc -p ./src/backend/tsconfig.backend.json
 	npx tsc -p ./src/frontend/tsconfig.frontend.json
