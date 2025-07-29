@@ -6,7 +6,7 @@ const fastify = Fastify({
 })
 
 fastify.register(fpSqlitePlugin, {
-	dbFilename: "../database.db",
+	dbFilename: "./databases/main.db",
 });
 
 fastify.get('/', (_request, reply) => {

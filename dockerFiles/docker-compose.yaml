@@ -9,6 +9,7 @@ services:
     build: ./fastify/
     volumes:
       - backend:/app/backend/
+      - databases:/app/databases/
 
 volumes:
   frontend:
@@ -23,3 +24,5 @@ volumes:
       type: none
       device: ../src/backend/
       o: bind
+  databases:
+    driver: local
