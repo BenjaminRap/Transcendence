@@ -1,13 +1,9 @@
-module.exports = {
-	content: [
-		"./src/frontend/**/*.html",
-		"./src/frontend/**/*.ts",
-	],
-	theme: {
-		extend: {},
-	},
-	plugins: [],
-	safelist: [
-
-	]
+export const content = [
+    "./src/frontend/**/*.html",
+    "./src/frontend/**/*.ts",
+];
+export const theme = {
+    extend: {},
 };
+export const plugins = [];
+export const safelist = [];
