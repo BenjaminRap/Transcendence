@@ -3,8 +3,6 @@ services:
     build: ./nginx/
     ports:
       - "8080:443"
-    volumes:
-      - frontend:/app/public/
     profiles: [
       "prod"
     ]
@@ -38,7 +36,7 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: ../src/frontend/public/
+      device: ../src/frontend/dev/
       o: bind
   backend:
     driver: local

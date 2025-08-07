@@ -4,10 +4,9 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Node",
-    "outDir": "./public/javascript",
-    "rootDir": "./typescript",
+    "rootDir": "./dev/src/typescript",
     "lib": ["DOM", "ESNext"],
     "types": ["node"]
   },
-  "include": ["typescript/"]
+  "include": ["./dev/src/typescript/"]
 }
