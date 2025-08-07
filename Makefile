@@ -10,7 +10,7 @@ DOCKER_EXEC	=	docker compose -f $(DOCKER_DIR)$(DOCKER_FILE) --profile $(PROFILE)
 compile:
 	npx tsc -p ./src/backend/tsconfig.backend.json
 	npx tsc --noEmit -p ./src/frontend/tsconfig.frontend.json
-	npx @tailwindcss/cli -i ./input.css -o ./src/frontend/public/css/tailwind.css
+	npx @tailwindcss/cli -i ./input.css -o ./src/frontend/dev/public/css/tailwind.css
 
 
 certificates:
