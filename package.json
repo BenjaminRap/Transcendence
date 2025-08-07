@@ -10,7 +10,9 @@
 		"tailwindcss": "^4.1.11",
 		"@tailwindcss/cli": "^4.1.11",
 		"concurrently": "^9.2.0",
-		"vite": "^7.0.6"
+		"vite": "^7.0.6",
+		"@babylonjs/core": "^8.22.0",
+		"@babylonjs/loaders": "^8.22.0"
 	},
 	"scripts": {
 		"build": "make build",
