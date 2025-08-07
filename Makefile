@@ -30,7 +30,7 @@ compile-watch:
 	npx concurrently \
 		"tsc -p ./src/backend/tsconfig.backend.json --watch" \
 		"tsc --noEmit -p ./src/frontend/tsconfig.frontend.json --watch" \
-		"tailwindcss -i ./input.css -o ./src/frontend/public/css/tailwind.css --watch"
+		"tailwindcss -i ./input.css -o ./src/frontend/dev/public/css/tailwind.css --watch"
 
 up:
 	$(DOCKER_EXEC) up -d
