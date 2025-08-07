@@ -109,7 +109,7 @@ Configuration **modulaire** :
 ## ✅ Résumé
 
 - 🧠 Architecture claire : 3 conteneurs pour 3 rôles
-- 🔒 HTTPS géré uniquement par Nginx (via certificat auto-signé)
+- 🔒 HTTPS géré uniquement par Nginx/Vite (via certificat auto-signé)
 - 📦 Fastify exposé  par nginx/Vite en reverse proxy via la route `/api/`
 - 🎨 Tailwind compilé manuellement pour inclure toutes les classes (même backend)
 - 🧪 TypeScript géré différemment en dev/prod
