@@ -1,8 +1,10 @@
 *.logs
 node_modules/
 package-lock.json
-*.js
+/src/backend/javascript/*
 tailwind.css
+secrets/
 *.key
 *.crt
 .env
+dockerFiles/nginx/website/

@@ -13,9 +13,6 @@ RUN [ "npm", "cache", "clean", "--force" ]
 
 RUN [ "mkdir", "-p", "/app/public/" ]
 
-COPY ./selfsigned/selfsigned.key /etc/ssl/private/selfsigned.key
-COPY ./selfsigned/selfsigned.crt /etc/ssl/certs/selfsigned.crt
-
 COPY ./vite.config.js ./vite.config.js
 
 ENTRYPOINT [ "npm", "run", "start" ]
