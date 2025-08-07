@@ -1,29 +1,41 @@
 import "@babylonjs/loaders/glTF";
 import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, MeshBuilder } from "@babylonjs/core"
 
-class App {
-    constructor() {
-        // create the canvas html element and attach it to the webpage
-        var canvas = document.createElement("canvas");
-        canvas.style.width = "100%";
-        canvas.style.height = "100%";
-        canvas.id = "gameCanvas";
-        document.body.appendChild(canvas);
+class PongGame extends HTMLElement
+{
+	private _canvas : HTMLCanvasElement;
+	private _engine! : Engine;
+	private _scene! : Scene;
 
+    constructor()
+	{
+		super();
+		this._canvas = document.createElement("canvas");
+		this._canvas.classList.add("size-full");
+		this.appendChild(this._canvas);
+	}
+
+	connectedCallback() : void
+	{
         // initialize babylon scene and engine
-        var engine = new Engine(canvas, true);
-        var scene = new Scene(engine);
+        this._engine = new Engine(this._canvas, true);
+        this._scene = new Scene(this._engine);
 
-        var camera: ArcRotateCamera = new ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2, 2, Vector3.Zero(), scene);
-        camera.attachControl(canvas, true);
-        new HemisphericLight("light1", new Vector3(1, 1, 0), scene);
-        MeshBuilder.CreateSphere("sphere", { diameter: 1 }, scene);
+        var camera: ArcRotateCamera = new ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2, 2, Vector3.Zero(), this._scene);
+        camera.attachControl(this._canvas, true);
+        new HemisphericLight("light1", new Vector3(1, 1, 0), this._scene);
+        MeshBuilder.CreateSphere("sphere", { diameter: 1 }, this._scene);
 
         // run the main render loop
-        engine.runRenderLoop(() => {
-            scene.render();
+        this._engine.runRenderLoop(() => {
+            this._scene.render();
         });
     }
-}
 
-new App();
+	disconnectedCallback() : void
+	{
+		this._engine.dispose();
+		this._scene.dispose();
+	}
+}
+customElements.define("pong-game", PongGame);
