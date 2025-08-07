@@ -6,8 +6,6 @@ RUN [ "apt-get", "clean" ]
 RUN [ "rm", "-rf", "/var/lib/apt/lists*" ]
 
 COPY ./nginx.conf /etc/nginx/conf.d/nginx.conf
-COPY ./selfsigned/selfsigned.key /etc/ssl/private/selfsigned.key
-COPY ./selfsigned/selfsigned.crt /etc/ssl/certs/selfsigned.crt
 
 RUN [ "mkdir", "-p", "/app/public/" ]
 

@@ -8,6 +8,9 @@ services:
     profiles: [
       "prod"
     ]
+    secrets:
+      - ssl_key
+      - ssl_crt
   vite:
     build: ./vite/
     ports:
@@ -17,6 +20,9 @@ services:
     profiles: [
       "dev"
     ]
+    secrets:
+      - ssl_key
+      - ssl_crt
   fastify:
     build: ./fastify/
     volumes:
@@ -42,3 +48,9 @@ volumes:
       o: bind
   databases:
     driver: local
+
+secrets:
+  ssl_crt:
+    file: ./secrets/ssl/selfsigned.crt
+  ssl_key:
+    file: ./secrets/ssl/selfsigned.key
