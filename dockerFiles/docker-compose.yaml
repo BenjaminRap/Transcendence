@@ -14,7 +14,7 @@ services:
     ports:
       - "8080:443"
     volumes:
-      - frontend:/app/public/
+      - frontend:/app/dev/
     profiles: [
       "dev"
     ]

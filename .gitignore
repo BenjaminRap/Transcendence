@@ -8,3 +8,4 @@ secrets/
 *.crt
 .env
 dockerFiles/nginx/website/
+dockerFiles/vite/tsconfig.json
