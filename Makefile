@@ -55,15 +55,17 @@ stop:
 clean: stop
 	-docker stop $(docker ps -qa) 2>/dev/null
 	-docker rm $(docker ps -qa) 2>/dev/null
-	-docker rmi -f $(docker images -qa) 2>/dev/null
-	-docker volume rm $(docker volume ls -q) 2>/dev/null
-	-docker network rm $(docker network ls -q) 2>/dev/null
-
-fclean: clean
-	-docker system prune -af
 	-rm -rf ./dockerFiles/nginx/website/
 	-rm -rf ./src/backend/javascript/*
 	-rm -r ./dockerFiles/secrets/ssl/*
+
+fclean: clean
+	-docker rmi -f $(docker images -qa) 2>/dev/null
+	-docker volume rm $(docker volume ls -q) 2>/dev/null
+	-docker network rm $(docker network ls -q) 2>/dev/null
+	-docker system prune -af
+	-rm -rf ./node_modules/
+	-rm ./package-lock.json
 
 re: clean all
 fre: fclean all
