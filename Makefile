@@ -8,8 +8,8 @@ DOCKER_FILE	=	docker-compose.yaml
 DOCKER_EXEC	=	docker compose -f $(DOCKER_DIR)$(DOCKER_FILE) --profile $(PROFILE)
 
 compile:
-	npx tsc -p ./src/backend/tsconfig.backend.json
-	npx tsc --noEmit -p ./src/frontend/tsconfig.frontend.json
+	npx tsc -p ./src/backend/tsconfig.json
+	npx tsc --noEmit -p ./src/frontend/tsconfig.json
 	npx @tailwindcss/cli -i ./input.css -o ./src/frontend/dev/public/css/tailwind.css
 
 
@@ -28,8 +28,8 @@ endif
 
 compile-watch:
 	npx concurrently \
-		"tsc -p ./src/backend/tsconfig.backend.json --watch" \
-		"tsc --noEmit -p ./src/frontend/tsconfig.frontend.json --watch" \
+		"tsc -p ./src/backend/tsconfig.json --watch" \
+		"tsc --noEmit -p ./src/frontend/tsconfig.json --watch" \
 		"tailwindcss -i ./input.css -o ./src/frontend/dev/public/css/tailwind.css --watch"
 
 up:
