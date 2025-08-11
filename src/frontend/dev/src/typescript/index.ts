@@ -1,5 +1,24 @@
-import "@babylonjs/loaders/glTF";
-import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, MeshBuilder } from "@babylonjs/core"
+import { Scene } from "@babylonjs/core/scene";
+import { Engine } from "@babylonjs/core/Engines/engine";
+import { SceneLoaderFlags } from "@babylonjs/core/Loading/sceneLoaderFlags";
+
+import "@babylonjs/core/Loading/loadingScreen";
+import "@babylonjs/core/Loading/Plugins/babylonFileLoader";
+import "@babylonjs/core/Cameras/universalCamera";
+import "@babylonjs/core/Meshes/groundMesh";
+import "@babylonjs/core/Lights/directionalLight";
+import "@babylonjs/core/Lights/Shadows/shadowGeneratorSceneComponent";
+import "@babylonjs/core/Materials/PBR/pbrMaterial";
+import "@babylonjs/core/Materials/standardMaterial";
+import "@babylonjs/core/XR/features/WebXRDepthSensing";
+import "@babylonjs/core/Rendering/depthRendererSceneComponent";
+import "@babylonjs/core/Rendering/prePassRendererSceneComponent";
+import "@babylonjs/core/Materials/Textures/Loaders/envTextureLoader";
+import "@babylonjs/materials/sky";
+
+import { loadScene } from "babylonjs-editor-tools";
+
+import { scriptsMap } from "./importScripts";
 
 class PongGame extends HTMLElement
 {
@@ -15,16 +34,24 @@ class PongGame extends HTMLElement
 		this.appendChild(this._canvas);
 	}
 
-	connectedCallback() : void
+	async connectedCallback() : Promise<void>
 	{
-        // initialize babylon scene and engine
-        this._engine = new Engine(this._canvas, true);
-        this._scene = new Scene(this._engine);
+        this._engine = new Engine(this._canvas, true, {
+			stencil: true,
+			antialias: true,
+			audioEngine: true,
+			adaptToDeviceRatio: true,
+			disableWebGL2Support: false,
+			useHighPrecisionFloats: true,
+			powerPreference: "high-performance",
+			failIfMajorPerformanceCaveat: false,
+		});
+		this._scene = new Scene(this._engine);
 
-        var camera: ArcRotateCamera = new ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2, 2, Vector3.Zero(), this._scene);
-        camera.attachControl(this._canvas, true);
-        new HemisphericLight("light1", new Vector3(1, 1, 0), this._scene);
-        MeshBuilder.CreateSphere("sphere", { diameter: 1 }, this._scene);
+		SceneLoaderFlags.ForceFullSceneLoadingForIncremental = true;
+		await loadScene("/scenes/example/", "example.babylon", this._scene, scriptsMap, {
+			quality: "high",
+		});
 
         // run the main render loop
         this._engine.runRenderLoop(() => {

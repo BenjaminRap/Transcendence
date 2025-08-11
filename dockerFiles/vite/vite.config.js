@@ -19,5 +19,18 @@ export default defineConfig({
 			}
 		}
 	},
-	root: '/app/public/',
+	root: '/app/dev/',
+	plugins: [
+		{
+			name: 'set-babylon-json-header',
+			configureServer(server) {
+				server.middlewares.use((req, res, next) => {
+					if (req.url && req.url.endsWith('.babylon')) {
+						res.setHeader('Content-Type', 'application/json');
+					}
+					next();
+				});
+			}
+		}
+	]
 })
