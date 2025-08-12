@@ -11,7 +11,10 @@
     "moduleResolution": "Node",
     "rootDir": "./dev/src/typescript",
     "lib": ["DOM", "ESNext"],
-    "types": ["node"],
+    "types": [
+		"node",
+		"vite/client"
+	],
 	"experimentalDecorators": true
   },
   "include": ["./dev/src/typescript/"]

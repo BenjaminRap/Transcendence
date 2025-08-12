@@ -3,10 +3,11 @@ import { Engine } from "@babylonjs/core/Engines/engine";
 import { SceneManager } from "@babylonjs-toolkit/next"
 import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
 
-import "./RotatingCube"
 import { SceneLoaderFlags } from "@babylonjs/core/Loading/sceneLoaderFlags";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
+
+import.meta.glob("./attachedScripts/*.ts", { eager: true});
 
 class PongGame extends HTMLElement
 {
