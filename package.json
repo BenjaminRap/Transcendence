@@ -15,7 +15,7 @@
 		"@babylonjs/loaders": "^8.22.0",
         "@babylonjs/materials": "^8.22.0",
 		"@babylonjs/gui": "^8.22.0",
-        "babylonjs-editor-tools": "^5.1.0"
+		"@babylonjs-toolkit/next": "^8.15.10"
 	},
 	"scripts": {
 		"build": "make build",

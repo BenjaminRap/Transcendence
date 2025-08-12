@@ -1,24 +1,12 @@
 import { Scene } from "@babylonjs/core/scene";
 import { Engine } from "@babylonjs/core/Engines/engine";
+import { SceneManager } from "@babylonjs-toolkit/next"
+import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
+
+import "./RotatingCube"
 import { SceneLoaderFlags } from "@babylonjs/core/Loading/sceneLoaderFlags";
-
-import "@babylonjs/core/Loading/loadingScreen";
-import "@babylonjs/core/Loading/Plugins/babylonFileLoader";
-import "@babylonjs/core/Cameras/universalCamera";
-import "@babylonjs/core/Meshes/groundMesh";
-import "@babylonjs/core/Lights/directionalLight";
-import "@babylonjs/core/Lights/Shadows/shadowGeneratorSceneComponent";
-import "@babylonjs/core/Materials/PBR/pbrMaterial";
-import "@babylonjs/core/Materials/standardMaterial";
-import "@babylonjs/core/XR/features/WebXRDepthSensing";
-import "@babylonjs/core/Rendering/depthRendererSceneComponent";
-import "@babylonjs/core/Rendering/prePassRendererSceneComponent";
-import "@babylonjs/core/Materials/Textures/Loaders/envTextureLoader";
-import "@babylonjs/materials/sky";
-
-import { loadScene } from "babylonjs-editor-tools";
-
-import { scriptsMap } from "./importScripts";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
 
 class PongGame extends HTMLElement
 {
@@ -46,17 +34,23 @@ class PongGame extends HTMLElement
 			powerPreference: "high-performance",
 			failIfMajorPerformanceCaveat: false,
 		});
+		SceneLoaderFlags.ForceFullSceneLoadingForIncremental = true;
 		this._scene = new Scene(this._engine);
 
-		SceneLoaderFlags.ForceFullSceneLoadingForIncremental = true;
-		await loadScene("/scenes/example/", "example.babylon", this._scene, scriptsMap, {
-			quality: "high",
-		});
+        // A camera is needed even though the imported scene contains one.
+        new FreeCamera("camera1", Vector3.Zero(), this._scene);
 
-        // run the main render loop
-        this._engine.runRenderLoop(() => {
-            this._scene.render();
-        });
+		await SceneManager.InitializeRuntime(this._engine, { showDefaultLoadingScreen: true, hideLoadingUIWithEngine: false });
+		const	assetsManager = new AssetsManager(this._scene);
+		assetsManager.addMeshTask("scene", null, "/games/pong/scenes/", "SampleScene.gltf")
+		await SceneManager.LoadRuntimeAssets(assetsManager, [ "SampleScene.gltf" ], () => {
+			SceneManager.HideLoadingScreen(this._engine);
+            SceneManager.FocusRenderCanvas(this._scene);
+		});
+		// run the main render loop
+		this._engine.runRenderLoop(() => {
+			this._scene.render();
+		});
     }
 
 	disconnectedCallback() : void

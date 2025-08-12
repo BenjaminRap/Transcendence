@@ -1,8 +1,0 @@
-import { loadScene } from "babylonjs-editor-tools";
-import * as scripts_box from "./scripts/box";
-
-export const scriptsMap = {
-    "scripts/box.ts": scripts_box
-};
-
-export { loadScene };
