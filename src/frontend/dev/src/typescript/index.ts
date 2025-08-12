@@ -35,7 +35,6 @@ class PongGame extends HTMLElement
 			powerPreference: "high-performance",
 			failIfMajorPerformanceCaveat: false,
 		});
-		SceneLoaderFlags.ForceFullSceneLoadingForIncremental = true;
 		this._scene = new Scene(this._engine);
 
         // A camera is needed even though the imported scene contains one.
