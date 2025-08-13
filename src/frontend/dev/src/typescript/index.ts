@@ -3,9 +3,11 @@ import { Engine } from "@babylonjs/core/Engines/engine";
 import { SceneManager } from "@babylonjs-toolkit/next"
 import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
 
-import { SceneLoaderFlags } from "@babylonjs/core/Loading/sceneLoaderFlags";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
+import { Node } from "@babylonjs/core/node";
+import { Camera } from "@babylonjs/core/Cameras/camera";
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 
@@ -38,14 +40,43 @@ class PongGame extends HTMLElement
 		this._scene = new Scene(this._engine);
 
         // A camera is needed even though the imported scene contains one.
-        new FreeCamera("camera1", Vector3.Zero(), this._scene);
+        const cam = new FreeCamera("camera1", Vector3.Zero(), this._scene);
 
 		await SceneManager.InitializeRuntime(this._engine, { showDefaultLoadingScreen: true, hideLoadingUIWithEngine: false });
 		const	assetsManager = new AssetsManager(this._scene);
-		assetsManager.addMeshTask("scene", null, "/games/pong/scenes/", "SampleScene.gltf")
+		assetsManager.addMeshTask("scene", null, "/games/pong/", "SampleScene.gltf")
 		await SceneManager.LoadRuntimeAssets(assetsManager, [ "SampleScene.gltf" ], () => {
 			SceneManager.HideLoadingScreen(this._engine);
             SceneManager.FocusRenderCanvas(this._scene);
+			cam.dispose(); // removing the remporary camera
+			this._scene.activeCameras = this._scene.cameras;
+			this._scene.activeCameras.forEach((camera : Camera, _index : number, _cameras : Camera[]) => {
+				if (camera.mode == Camera.ORTHOGRAPHIC_CAMERA)
+				{
+					const scale : number = this._engine.getScreenAspectRatio();
+					camera.orthoLeft! *= scale;
+					camera.orthoRight! *= scale;
+					camera.layerMask = 1;
+				}
+				else
+					camera.layerMask = 2;
+			});
+			this._scene.rootNodes[0].getChildren().find((value : Node, _index : number, _array : Node[]) => {
+				if (value.name === "pong")
+				{
+					value.getChildren().forEach((value : Node, _index : number, _array : Node[]) => {
+						if (value instanceof Mesh)
+							value.layerMask = 1;
+					});
+				}
+				else if (value.name === "background")
+				{
+					value.getChildren().forEach((value : Node, _index : number, _array : Node[]) => {
+						if (value instanceof Mesh)
+							value.layerMask = 2;
+					});
+				}
+			});
 		});
 		// run the main render loop
 		this._engine.runRenderLoop(() => {
