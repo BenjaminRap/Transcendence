@@ -20,14 +20,14 @@ class PongGame extends HTMLElement {
 	}
 
 	async connectedCallback() : Promise<void> {
-		this._engine = this.CreateEngine();
-		this._scene = await this.LoadScene();
+		this._engine = this.createEngine();
+		this._scene = await this.loadScene();
 		this._engine.runRenderLoop(() => {
 			this._scene.render();
 		});
     }
 
-	private CreateEngine() : Engine
+	private createEngine() : Engine
 	{
         return new Engine(this._canvas, true, {
 			stencil: true,
@@ -41,7 +41,7 @@ class PongGame extends HTMLElement {
 		});
 	}
 
-	private async LoadScene() : Promise<Scene> {
+	private async loadScene() : Promise<Scene> {
 
 		const	scene = new Scene(this._engine);
 		const	cam = new FreeCamera("camera1", Vector3.Zero(), scene);
@@ -54,13 +54,13 @@ class PongGame extends HTMLElement {
 
 		await SceneManager.LoadRuntimeAssets(assetsManager, [ "SampleScene.gltf" ], () => {
 			cam.dispose(); // removing the unecessary camera
-			this.OnSceneLoaded();
+			this.onSceneLoaded();
 		});
 
 		return scene;
 	}
 
-	private OnSceneLoaded() : void {
+	private onSceneLoaded() : void {
 		SceneManager.HideLoadingScreen(this._engine);
 		SceneManager.FocusRenderCanvas(this._scene);
 		this._scene.activeCameras = this._scene.cameras;
