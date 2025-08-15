@@ -1,7 +1,6 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
-import { Tools } from "@babylonjs/core/Misc/tools";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 
 export class RotatingCube extends ScriptComponent {
@@ -20,8 +19,8 @@ export class RotatingCube extends ScriptComponent {
 
 	private moveUpAndDown() : void {
 		const	maximunOffsetLength : number = 1;
-		const	speed = 0.002;
-		const	yOffset : number = Math.sin(Tools.Now * speed) * maximunOffsetLength;
+		const	speedFactor = 2;
+		const	yOffset : number = Math.sin(this.getGameTime() * speedFactor) * maximunOffsetLength;
 		const	offset = new Vector3(0, yOffset, 0);
 
 		this.transform.position = this._initialPosition.add(offset);
