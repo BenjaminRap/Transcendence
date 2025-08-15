@@ -8,6 +8,7 @@ import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
 import { Node } from "@babylonjs/core/node";
 import { Camera } from "@babylonjs/core/Cameras/camera";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
+import { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 
@@ -50,33 +51,6 @@ class PongGame extends HTMLElement
             SceneManager.FocusRenderCanvas(this._scene);
 			cam.dispose(); // removing the remporary camera
 			this._scene.activeCameras = this._scene.cameras;
-			this._scene.activeCameras.forEach((camera : Camera, _index : number, _cameras : Camera[]) => {
-				if (camera.mode == Camera.ORTHOGRAPHIC_CAMERA)
-				{
-					const scale : number = this._engine.getScreenAspectRatio();
-					camera.orthoLeft! *= scale;
-					camera.orthoRight! *= scale;
-					camera.layerMask = 1;
-				}
-				else
-					camera.layerMask = 2;
-			});
-			this._scene.rootNodes[0].getChildren().find((value : Node, _index : number, _array : Node[]) => {
-				if (value.name === "pong")
-				{
-					value.getChildren().forEach((value : Node, _index : number, _array : Node[]) => {
-						if (value instanceof Mesh)
-							value.layerMask = 1;
-					});
-				}
-				else if (value.name === "background")
-				{
-					value.getChildren().forEach((value : Node, _index : number, _array : Node[]) => {
-						if (value instanceof Mesh)
-							value.layerMask = 2;
-					});
-				}
-			});
 		});
 		// run the main render loop
 		this._engine.runRenderLoop(() => {

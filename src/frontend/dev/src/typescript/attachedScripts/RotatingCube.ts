@@ -2,10 +2,6 @@ import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 
-/**
- * Babylon Script Component
- * @class RotatingCube
- */
 export class RotatingCube extends ScriptComponent {
 	public	rotationSpeed : number = 1.0;
 
