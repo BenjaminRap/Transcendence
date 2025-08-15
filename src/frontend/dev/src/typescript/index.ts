@@ -5,10 +5,6 @@ import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
 
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
-import { Node } from "@babylonjs/core/node";
-import { Camera } from "@babylonjs/core/Cameras/camera";
-import { Mesh } from "@babylonjs/core/Meshes/mesh";
-import { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 
