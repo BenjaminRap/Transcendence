@@ -20,12 +20,23 @@ class PongGame extends HTMLElement {
 	}
 
 	async connectedCallback() : Promise<void> {
-		this._engine = this.createEngine();
-		this._scene = await this.loadScene();
-		this._engine.runRenderLoop(() => {
-			this._scene.render();
-		});
+		try {
+			this._engine = this.createEngine();
+			this._scene = await this.loadScene();
+			this._engine.runRenderLoop(this.renderScene.bind(this));
+		} catch (error) {
+			console.log(`Could not initialize the game: ${error}`)
+		}
     }
+
+	private renderScene() : void
+	{
+		try {
+			this._scene.render();
+		} catch (error) {
+			console.log(`Could not render the scene : ${error}`)
+		}
+	}
 
 	private createEngine() : Engine
 	{
@@ -67,8 +78,8 @@ class PongGame extends HTMLElement {
 	}
 
 	disconnectedCallback() : void {
-		this._engine.dispose();
-		this._scene.dispose();
+		this._engine?.dispose();
+		this._scene?.dispose();
 	}
 }
 customElements.define("pong-game", PongGame);
