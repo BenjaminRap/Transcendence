@@ -9,7 +9,9 @@ export class SetLayerRecursively extends ScriptComponent {
     }
 
     protected start(): void {
-		this.transform.getChildMeshes(false).forEach((mesh : AbstractMesh, _index : number, _allChildsMeshes : AbstractMesh[]) => {
+		const meshes : AbstractMesh[] = this.transform.getChildMeshes();
+
+		meshes.forEach((mesh : AbstractMesh) => {
 			mesh.layerMask = this.layerMask;
 		});
     }
