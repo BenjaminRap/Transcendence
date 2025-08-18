@@ -3,20 +3,40 @@ services:
     build: ./nginx/
     ports:
       - "8080:443"
+    profiles: [
+      "prod"
+    ]
+    secrets:
+      - ssl_key
+      - ssl_crt
+  vite:
+    build: ./vite/
+    ports:
+      - "8080:443"
     volumes:
-      - frontend:/app/
+      - frontend:/app/public/
+    profiles: [
+      "dev"
+    ]
+    secrets:
+      - ssl_key
+      - ssl_crt
   fastify:
     build: ./fastify/
     volumes:
       - backend:/app/backend/
       - databases:/app/databases/
+    profiles: [
+      "prod",
+      "dev"
+    ]
 
 volumes:
   frontend:
     driver: local
     driver_opts:
       type: none
-      device: ../src/frontend/
+      device: ../src/frontend/dev/
       o: bind
   backend:
     driver: local
@@ -26,3 +46,9 @@ volumes:
       o: bind
   databases:
     driver: local
+
+secrets:
+  ssl_crt:
+    file: ./secrets/ssl/selfsigned.crt
+  ssl_key:
+    file: ./secrets/ssl/selfsigned.key
