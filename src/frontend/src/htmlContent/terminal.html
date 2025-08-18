@@ -1,0 +1,17 @@
+<link rel="stylesheet" href="/src/htmlContent/terminalUtils/terminal.css">
+
+<div
+id="terminal"
+class="terminal-font p-4 m-4 bg-black border border-green-500 float-left text-green-400 text-sm overflow-y-auto focus:outline-none cursor-text relative scroll-smooth"
+style="height: calc(100vh - 2rem); width: 75%;"
+tabindex="0"
+role="region"
+aria-label="Terminal interactif"
+aria-readonly="true"
+aria-hidden="false"
+>
+<div id="output" class="terminal-output"></div>
+<div id="input-line" class="input-line">
+	<textarea spellCheck="false" autocomplete="off" id="current-input" class="current-input" rows="1" value=""></textarea>
+</div>
+</div>

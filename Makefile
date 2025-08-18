@@ -9,7 +9,7 @@ DOCKER_EXEC	=	docker compose -f $(DOCKER_DIR)$(DOCKER_FILE)
 compile:
 	npx tsc -p ./src/backend/tsconfig.backend.json
 	npx tsc -p ./src/frontend/tsconfig.frontend.json
-	npx @tailwindcss/cli -i ./input.css -o ./src/frontend/public/css/tailwind.css
+	npx @tailwindcss/cli -i ./input.css -o ./src/frontend/src/style.css
 
 
 certificates:
@@ -26,7 +26,7 @@ compile-watch:
 	npx concurrently \
 		"tsc -p ./src/backend/tsconfig.backend.json --watch" \
 		"tsc -p ./src/frontend/tsconfig.frontend.json --watch" \
-		"tailwindcss -i ./input.css -o ./src/frontend/public/css/tailwind.css --watch"
+		"tailwindcss -i ./input.css -o ./src/frontend/src/style.css --watch"
 
 up:
 	$(DOCKER_EXEC) up -d

@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+    
+.terminal-font {
+    font-family: 'JetBrains Mono', 'Consolas', 'Monaco', monospace;
+    scrollbar-width: thin;
+    scrollbar-color: #000000 #000000;
+    scrollbar-gutter: stable;
+    scroll-behavior: smooth;
+    color : #34D399;
+}
+
+@keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+}
+
+.terminal-output {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.prompt {
+    flex-shrink: 0; 
+    width: max-content; 
+    height: fit-content; 
+    color: #34D399; 
+}
+
+.input-line {
+    display: flex; 
+    width: 100%; 
+    white-space: pre-wrap; 
+    word-break: break-all; 
+}
+
+.current-input {
+    background-color: transparent;
+    outline: none;
+    resize: none;
+    overflow-y: hidden;
+    width: 100%;
+    white-space: pre-wrap;
+    word-break: break-all;
+    height: auto;
+}
