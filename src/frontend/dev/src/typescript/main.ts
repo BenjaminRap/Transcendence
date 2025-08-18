@@ -1,6 +1,6 @@
-import terminalDiv from './htmlContent/terminal.html?raw'
-import gameDiv from './htmlContent/game.html?raw'
-import('./htmlContent/terminalUtils/terminal.ts')
+import terminalDiv from '../../public/terminal.html?raw'
+import gameDiv from '../../public/game.html?raw'
+import('../typescript/terminal.ts')
 
 function addDiv(id: string, content: string) {
 	const container = document.createElement('div')

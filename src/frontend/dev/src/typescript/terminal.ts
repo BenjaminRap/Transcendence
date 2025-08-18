@@ -1,6 +1,5 @@
 export { };
 
-
 var maxOutputLines = 100; 
 var promptText = "usa@terminal:~$ ";
 

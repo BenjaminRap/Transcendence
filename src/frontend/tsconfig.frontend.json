@@ -5,7 +5,8 @@
     "moduleResolution": "Node",
     "rootDir": "./dev/src/typescript",
     "lib": ["DOM", "ESNext"],
-    "types": ["node"]
+    "types": ["node"],
+    "allowImportingTsExtensions": true
   },
   "include": ["./dev/src/typescript/"]
 }
