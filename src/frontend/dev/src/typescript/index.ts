@@ -4,6 +4,9 @@ import { SceneManager } from "@babylonjs-toolkit/next"
 import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
+import { PhysicsEngine, HavokPlugin } from "@babylonjs/core/Physics";
+
+import HavokPhysics from "@babylonjs/havok";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 
@@ -58,6 +61,13 @@ class PongGame extends HTMLElement {
 		const	cam = new FreeCamera("camera1", Vector3.Zero(), scene);
 		const	assetsManager = new AssetsManager(scene);
 
+		console.log("truc");
+		const havokInterface = await HavokPhysics();
+		console.log("bidule");
+		const plugin = new HavokPlugin(undefined, havokInterface);
+		console.log("aaarh");
+		scene.enablePhysics(undefined, plugin);
+		console.log("aizenxiuaznexjazneuiaurin");
 
 		await SceneManager.InitializeRuntime(this._engine, { showDefaultLoadingScreen: true, hideLoadingUIWithEngine: false });
 

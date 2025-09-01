@@ -15,16 +15,8 @@ export class PongCamera extends ScriptComponent {
     }
 
     protected awake(): void {
-		this.fixOrthographicCameraRatio();
 		this._camera.layerMask = 1;
     }
-
-	private fixOrthographicCameraRatio() : void {
-		const scale : number = this.scene.getEngine().getScreenAspectRatio();
-
-		this._camera.orthoLeft! *= scale;
-		this._camera.orthoRight! *= scale;
-	}
 }
 
 SceneManager.RegisterClass("PongCamera", PongCamera);
