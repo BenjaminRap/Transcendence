@@ -141,7 +141,6 @@ if (terminal) {
 }
 
 window.addEventListener('resize', (e) => {
-	console.log("Log : Terminal resized", e);
 	if (currentInput) {
 		resize();
 	}
