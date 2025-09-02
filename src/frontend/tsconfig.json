@@ -17,5 +17,5 @@
 	],
 	"experimentalDecorators": true
   },
-  "include": ["./dev/src/typescript/"]
+  "include": ["./dev/src/typescript/", "./dev/src/types/"]
 }

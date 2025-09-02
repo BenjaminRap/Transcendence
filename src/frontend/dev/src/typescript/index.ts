@@ -4,7 +4,7 @@ import { SceneManager } from "@babylonjs-toolkit/next"
 import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
-import { PhysicsEngine, HavokPlugin } from "@babylonjs/core/Physics";
+import { HavokPlugin } from "@babylonjs/core/Physics";
 
 import HavokPhysics from "@babylonjs/havok";
 
@@ -61,12 +61,13 @@ class PongGame extends HTMLElement {
 		const	cam = new FreeCamera("camera1", Vector3.Zero(), scene);
 		const	assetsManager = new AssetsManager(scene);
 
-		const havokInterface = await HavokPhysics();
-		const plugin = new HavokPlugin(undefined, havokInterface);
-		if (!scene.enablePhysics(undefined, plugin))
+		await SceneManager.InitializeRuntime(this._engine, { showDefaultLoadingScreen: true, hideLoadingUIWithEngine: false });
+
+		globalThis.HK = await HavokPhysics();
+		globalThis.HKP = new HavokPlugin();
+		if (!scene.enablePhysics(undefined, globalThis.HKP))
 			throw new Error("The physics engine hasn't been initialized !");
 
-		await SceneManager.InitializeRuntime(this._engine, { showDefaultLoadingScreen: true, hideLoadingUIWithEngine: false });
 
 		assetsManager.addMeshTask("scene", null, "/games/pong/", "SampleScene.gltf")
 
