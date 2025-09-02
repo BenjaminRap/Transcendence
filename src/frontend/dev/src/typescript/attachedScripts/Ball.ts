@@ -4,6 +4,7 @@ import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { PhysicsRaycastResult } from "@babylonjs/core/Physics/physicsRaycastResult";
 import { IPhysicsEngine } from "@babylonjs/core/Physics/IPhysicsEngine";
+import { Logger } from "@babylonjs/core/Misc/logger";
 
 export class Ball extends ScriptComponent {
 	public initialDirection : Vector3 = Vector3.Right();
@@ -29,8 +30,8 @@ export class Ball extends ScriptComponent {
 		const	destination : Vector3 = this.transform.position.add(movement);
 		const	res : PhysicsRaycastResult = this._physicsEngine.raycast(this.transform.position, destination);
 
-		if (res && res.hasHit) {
-			console.log("Collision at ", res.hitPointWorld);
+		if (res.hasHit) {
+			Logger.Log("Collision at " + res.hitPointWorld);
 		}
 		this.transform.position = destination;
 	}
