@@ -66,13 +66,6 @@ class PongGame extends HTMLElement {
 		globalThis.HK = await HavokPhysics();
 		globalThis.HKP = new HavokPlugin(false);
 
-        const cleanupGlobals = () => {
-            if (globalThis.HKP)
-				delete globalThis.HKP;
-            if (globalThis.HKP)
-				delete globalThis.HKP;
-        };
-        scene.onDisposeObservable.addOnce(cleanupGlobals);
 		if (!scene.enablePhysics(undefined, globalThis.HKP))
 			throw new Error("The physics engine hasn't been initialized !");
 
@@ -94,6 +87,10 @@ class PongGame extends HTMLElement {
 	}
 
 	disconnectedCallback() : void {
+		if (globalThis.HKP)
+			delete globalThis.HKP;
+		if (globalThis.HKP)
+			delete globalThis.HKP;
 		this._engine?.dispose();
 		this._scene?.dispose();
 	}
