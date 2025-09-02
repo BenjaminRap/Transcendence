@@ -64,7 +64,15 @@ class PongGame extends HTMLElement {
 		await SceneManager.InitializeRuntime(this._engine, { showDefaultLoadingScreen: true, hideLoadingUIWithEngine: false });
 
 		globalThis.HK = await HavokPhysics();
-		globalThis.HKP = new HavokPlugin();
+		globalThis.HKP = new HavokPlugin(false);
+
+        const cleanupGlobals = () => {
+            if (globalThis.HKP)
+				delete globalThis.HKP;
+            if (globalThis.HKP)
+				delete globalThis.HKP;
+        };
+        scene.onDisposeObservable.addOnce(cleanupGlobals);
 		if (!scene.enablePhysics(undefined, globalThis.HKP))
 			throw new Error("The physics engine hasn't been initialized !");
 
