@@ -61,13 +61,10 @@ class PongGame extends HTMLElement {
 		const	cam = new FreeCamera("camera1", Vector3.Zero(), scene);
 		const	assetsManager = new AssetsManager(scene);
 
-		console.log("truc");
 		const havokInterface = await HavokPhysics();
-		console.log("bidule");
 		const plugin = new HavokPlugin(undefined, havokInterface);
-		console.log("aaarh");
-		scene.enablePhysics(undefined, plugin);
-		console.log("aizenxiuaznexjazneuiaurin");
+		if (!scene.enablePhysics(undefined, plugin))
+			throw new Error("The physics engine hasn't been initialized !");
 
 		await SceneManager.InitializeRuntime(this._engine, { showDefaultLoadingScreen: true, hideLoadingUIWithEngine: false });
 
