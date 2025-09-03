@@ -9,6 +9,7 @@ interface SerializableShape
 {
     type : number;
     center : IUnityVector3;
+	isTrigger : boolean;
 
     extents : IUnityVector3 | undefined;
     radius : number | undefined;
@@ -49,7 +50,7 @@ export class ColliderGenerator extends ScriptComponent {
 
 	private getShapeFromSerializable(properties : SerializableShape)
 	{
-		return new PhysicsShape({
+		let	shape =  new PhysicsShape({
 			type: properties.type,
 			parameters: {
 				center: this.getVector3FromIUnityVector3(properties.center),
@@ -57,6 +58,9 @@ export class ColliderGenerator extends ScriptComponent {
 				extents: this.getVector3FromIUnityVector3(properties.extents)
 			}
 		}, this.scene);
+
+		shape.isTrigger = properties.isTrigger;
+		return shape;
 	}
 
 	private getVector3FromIUnityVector3(vector3 : IUnityVector3 | undefined) : Vector3 | undefined
