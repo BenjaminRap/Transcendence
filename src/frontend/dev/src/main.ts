@@ -1,6 +1,7 @@
 import terminalDiv from '../public/terminal.html?raw'
 import gameDiv from '../public/game.html?raw'
 import('./typescript/terminal.ts')
+import('./typescript/game.ts')
 
 function addDiv(id: string, content: string) {
 	const container = document.createElement('div')
@@ -17,5 +18,5 @@ function removeDiv(id: string) {
 	}
 }
 
-addDiv('terminalDiv', terminalDiv)
-// addDiv('gameDiv', gameDiv)
+// addDiv('Terminal', terminalDiv)
+addDiv('gameDiv', gameDiv)

@@ -1,4 +1,26 @@
 <link rel="stylesheet" href="./css/terminal.css">
-<div id="game" class="terminal-font flex align-center justify-center p-4 m-4 bg-black border border-green-500 overflow-y-auto focus:outline-none cursor-text relative scroll-smooth">
-    <p>This is the game</p>
-</div> 
+<div id="game" class="p-4 m-4 terminal-font bg-black border border-green-500" style="height: calc(100vh - 2rem); width: max(25%, 350px);">
+	<div class="flex flex-col p-4 shadow-lg border border-green-500 align-center justify-center items-center">
+		<img src="https://i.pravatar.cc/150?img=12" alt="Avatar" class="w-24 h-24 border border-green-500"></img>
+		<h2 class="text-center">User</h2>
+		<div class="flex gap-4 text-xs">
+			<p>MMR: 500</p>
+			<p>Win: 5</p>
+			<p>Loss: 10</p>
+			<p>W/L: 0.5</p>
+		</div>
+	</div>
+
+	<div class="but flex flex-wrap gap-x-2 justify-center items-center">
+		<button class="w-45 my-2 p-2 border border-green-500 cursor-pointer">Change Name</button>
+		<button class="w-45 my-2 p-2 border border-green-500 cursor-pointer">Change Password</button>
+		<button class="w-45 my-2 p-2 border border-green-500 cursor-pointer">Change Avatar</button>
+		<button class="w-45 my-2 p-2 border border-green-500 cursor-pointer">Delete Account</button>
+	</div>
+
+	<div class="flex w-full place-content-between">
+		<p class="text-center">Last match</p>
+		<button class="cursor-pointer">View More.</button>
+	</div>
+
+</div>
