@@ -66,7 +66,7 @@ class PongGame extends HTMLElement {
 		globalThis.HK = await HavokPhysics();
 		globalThis.HKP = new HavokPlugin(false);
 
-		if (!scene.enablePhysics(undefined, globalThis.HKP))
+		if (!scene.enablePhysics(Vector3.Zero(), globalThis.HKP))
 			throw new Error("The physics engine hasn't been initialized !");
 
 
