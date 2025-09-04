@@ -7,6 +7,7 @@ import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
 import { HavokPlugin } from "@babylonjs/core/Physics";
 
 import HavokPhysics from "@babylonjs/havok";
+import { PhysicsViewer } from "@babylonjs/core";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 
@@ -75,6 +76,12 @@ class PongGame extends HTMLElement {
 		await SceneManager.LoadRuntimeAssets(assetsManager, [ "SampleScene.gltf" ], () => {
 			cam.dispose(); // removing the unecessary camera
 			this.onSceneLoaded();
+
+			let	physicsViewer = new PhysicsViewer(this._scene);
+			this._scene.meshes.forEach(mesh => {
+				if (mesh.physicsBody)
+					physicsViewer.showBody(mesh.physicsBody);
+			});
 		});
 
 		return scene;
@@ -95,4 +102,5 @@ class PongGame extends HTMLElement {
 		this._scene?.dispose();
 	}
 }
+
 customElements.define("pong-game", PongGame);
