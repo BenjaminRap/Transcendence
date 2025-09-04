@@ -1,7 +1,7 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
-import { IPhysicsCollisionEvent, Logger, PhysicsEventType, Vector3 } from "@babylonjs/core";
+import { EventState, IBasePhysicsCollisionEvent, PhysicsEventType, Vector3 } from "@babylonjs/core";
 
 export class BouncingPlateform extends ScriptComponent {
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "BouncingPlateform") {
@@ -10,10 +10,10 @@ export class BouncingPlateform extends ScriptComponent {
 
 	protected	start()
 	{
-		globalThis.HKP.onTriggerCollisionObservable.add(this.onTriggerEnter.bind(this));
+		globalThis.HKP?.onTriggerCollisionObservable.add(this.onTriggerEnter.bind(this));
 	}
 
-	private onTriggerEnter(collisionEvent : IPhysicsCollisionEvent) : void
+	private onTriggerEnter(collisionEvent : IBasePhysicsCollisionEvent, _eventState : EventState) : void
 	{
 		if (collisionEvent.collidedAgainst.transformNode !== this.transform
 			|| collisionEvent.type !== PhysicsEventType.TRIGGER_ENTERED)
