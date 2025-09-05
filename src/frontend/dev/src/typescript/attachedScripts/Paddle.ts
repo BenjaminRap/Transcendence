@@ -9,6 +9,8 @@ import { InputKey } from "../InputKey";
 export class Paddle extends ScriptComponent {
 	public speed : number = 3.0;
 	public inputManagerTransform : IUnityTransform | undefined;
+	public upKey : string = "z";
+	public downKey : string = "s";
 
 	private _physicsBody : PhysicsBody | undefined;
 	private _upKey : InputKey | undefined;
@@ -25,8 +27,8 @@ export class Paddle extends ScriptComponent {
 		const	inputManagerNode = SceneManager.GetTransformNodeByID(this.scene, this.inputManagerTransform.id);
 		const	inputManager = SceneManager.GetComponent<InputManager>(inputManagerNode, "InputManager", false);
 
-		this._upKey = inputManager.getInputKey("z");
-		this._downKey = inputManager.getInputKey("s");
+		this._upKey = inputManager.getInputKey(this.upKey);
+		this._downKey = inputManager.getInputKey(this.downKey);
 		const	physicsBody = this.getAbstractMesh().getPhysicsBody();
 
 		if (!physicsBody)

@@ -7,7 +7,9 @@ import { InputKey } from "../InputKey";
 export class InputManager extends ScriptComponent {
 	private inputKeys : Map<string, InputKey> = new Map<string, InputKey>([
 		["z", new InputKey()],
-		["s", new InputKey()]
+		["s", new InputKey()],
+		["ArrowUp", new InputKey()],
+		["ArrowDown", new InputKey()]
 	]);
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "InputManager") {
