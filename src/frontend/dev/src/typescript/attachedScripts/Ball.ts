@@ -8,7 +8,7 @@ export class Ball extends ScriptComponent {
 	public initialDirection : Vector3 = Vector3.Right();
 	public speed : number = 1;
 
-	private _physicsBody : PhysicsBody;
+	private _physicsBody : PhysicsBody | undefined;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "Ball") {
         super(transform, scene, properties, alias);
@@ -26,7 +26,7 @@ export class Ball extends ScriptComponent {
 
 	protected ready() : void
 	{
-		this._physicsBody.setLinearVelocity(this.initialDirection.scale(this.speed));
+		this._physicsBody?.setLinearVelocity(this.initialDirection.scale(this.speed));
 	}
 }
 
