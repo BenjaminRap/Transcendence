@@ -6,8 +6,8 @@ import { InputKey } from "../InputKey";
 
 export class InputManager extends ScriptComponent {
 	private inputKeys : Map<string, InputKey> = new Map<string, InputKey>([
-		["KeyW", new InputKey()],
-		["KeyS", new InputKey()]
+		["z", new InputKey()],
+		["s", new InputKey()]
 	]);
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "InputManager") {
@@ -17,7 +17,7 @@ export class InputManager extends ScriptComponent {
 
 	private onKeyboardInput(info : KeyboardInfo)
 	{
-		let	keyPressed : InputKey | undefined = this.inputKeys.get(info.event.code);
+		let	keyPressed : InputKey | undefined = this.inputKeys.get(info.event.key);
 
 		if (keyPressed === undefined)
 			return ;
@@ -25,6 +25,11 @@ export class InputManager extends ScriptComponent {
 			keyPressed.setKeyDown();
 		else
 			keyPressed.setKeyUp();
+	}
+
+	protected update()
+	{
+		console.log("fps : " + this.scene.getEngine().getFps());
 	}
 
 	public addKeyObserver(key : string, callback : () => void) : void

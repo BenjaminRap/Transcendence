@@ -25,8 +25,8 @@ export class Paddle extends ScriptComponent {
 		const	inputManagerNode = SceneManager.GetTransformNodeByID(this.scene, this.inputManagerTransform.id);
 		const	inputManager = SceneManager.GetComponent<InputManager>(inputManagerNode, "InputManager", false);
 
-		this._upKey = inputManager.getInputKey("KeyW");
-		this._downKey = inputManager.getInputKey("KeyS");
+		this._upKey = inputManager.getInputKey("z");
+		this._downKey = inputManager.getInputKey("s");
 		const	physicsBody = this.getAbstractMesh().getPhysicsBody();
 
 		if (!physicsBody)
