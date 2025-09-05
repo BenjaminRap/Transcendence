@@ -16,31 +16,31 @@ interface SerializableShape
 }
 
 export class ColliderGenerator extends ScriptComponent {
-	public	shapeProperties : SerializableShape[] = [];
-	public	physicsMotionType : PhysicsMotionType = PhysicsMotionType.STATIC;
+	private	_shapeProperties : SerializableShape[] = [];
+	private	_physicsMotionType : PhysicsMotionType = PhysicsMotionType.STATIC;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "ColliderGenerator") {
         super(transform, scene, properties, alias);
     }
 
     protected awake(): void {
-		if (this.shapeProperties.length == 0)
+		if (this._shapeProperties.length == 0)
 			return ;
 		let	shape = this.getPhysicsShape();
-		let	body = new PhysicsBody(this.transform, this.physicsMotionType, false, this.scene);
+		let	body = new PhysicsBody(this.transform, this._physicsMotionType, false, this.scene);
 
 		body.shape = shape;
     }
 
 	private getPhysicsShape() : PhysicsShape
 	{
-		if (this.shapeProperties.length == 0)
+		if (this._shapeProperties.length == 0)
 			throw new Error("GetPhysicsShape called with an empty shapeProperties list !");
-		if (this.shapeProperties.length == 1)
-			return (this.getShapeFromSerializable(this.shapeProperties[0]));
+		if (this._shapeProperties.length == 1)
+			return (this.getShapeFromSerializable(this._shapeProperties[0]));
 		let	parentShape = new PhysicsShapeContainer(this.scene);
 		
-		this.shapeProperties.forEach((properties : SerializableShape) => {
+		this._shapeProperties.forEach((properties : SerializableShape) => {
 			const	shape = this.getShapeFromSerializable(properties);
 
 			parentShape.addChild(shape);

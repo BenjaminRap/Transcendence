@@ -7,14 +7,13 @@ import { InputManager } from "./InputManager";
 import { InputKey } from "../InputKey";
 
 export class Paddle extends ScriptComponent {
-	public speed : number = 3.0;
-	public inputManagerTransform : IUnityTransform | undefined;
-	public upKey : string = "z";
-	public downKey : string = "s";
-
-	private _physicsBody : PhysicsBody | undefined;
-	private _upKey : InputKey | undefined;
-	private _downKey : InputKey | undefined;
+	private	_speed : number = 6.0;
+	private	_inputManagerTransform : IUnityTransform | undefined;
+	private	_upKeyStringCode : string = "z";
+	private	_downKeyStringCode : string = "s";
+	private	_physicsBody : PhysicsBody | undefined;
+	private	_upKeyInfo : InputKey | undefined;
+	private	_downKeyInfo : InputKey | undefined;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "Paddle") {
         super(transform, scene, properties, alias);
@@ -22,13 +21,13 @@ export class Paddle extends ScriptComponent {
 
 	protected start()
 	{
-		if (!this.inputManagerTransform?.id)
+		if (!this._inputManagerTransform?.id)
 			throw new Error("Invalid InputManager transform id !");
-		const	inputManagerNode = SceneManager.GetTransformNodeByID(this.scene, this.inputManagerTransform.id);
+		const	inputManagerNode = SceneManager.GetTransformNodeByID(this.scene, this._inputManagerTransform.id);
 		const	inputManager = SceneManager.GetComponent<InputManager>(inputManagerNode, "InputManager", false);
 
-		this._upKey = inputManager.getInputKey(this.upKey);
-		this._downKey = inputManager.getInputKey(this.downKey);
+		this._upKeyInfo = inputManager.getInputKey(this._upKeyStringCode);
+		this._downKeyInfo = inputManager.getInputKey(this._downKeyStringCode);
 		const	physicsBody = this.getAbstractMesh().getPhysicsBody();
 
 		if (!physicsBody)
@@ -38,11 +37,11 @@ export class Paddle extends ScriptComponent {
 
 	protected update()
 	{
-		const	isUpPressed : number = this._upKey!.isKeyDown() ? 1 : 0;
-		const	isDownPressed : number = this._downKey!.isKeyDown() ? 1 : 0;
+		const	isUpPressed : number = this._upKeyInfo!.isKeyDown() ? 1 : 0;
+		const	isDownPressed : number = this._downKeyInfo!.isKeyDown() ? 1 : 0;
 		const	direction : number = isUpPressed - isDownPressed;
 
-		this._physicsBody?.setLinearVelocity(Vector3.Up().scale(direction * this.speed));
+		this._physicsBody?.setLinearVelocity(Vector3.Up().scale(direction * this._speed));
 	}
 }
 
