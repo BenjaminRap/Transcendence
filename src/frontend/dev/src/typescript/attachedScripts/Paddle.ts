@@ -5,6 +5,8 @@ import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
 import { InputManager } from "./InputManager";
 import { InputKey } from "../InputKey";
+import { IBasePhysicsCollisionEvent, PhysicsEventType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
+import { EventState } from "@babylonjs/core/Misc/observable";
 
 export class Paddle extends ScriptComponent {
 	private	_speed : number = 6.0;
@@ -18,6 +20,7 @@ export class Paddle extends ScriptComponent {
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "Paddle") {
         super(transform, scene, properties, alias);
     }
+
 
 	protected start()
 	{
