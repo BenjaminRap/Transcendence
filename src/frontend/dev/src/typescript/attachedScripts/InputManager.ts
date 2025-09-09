@@ -29,11 +29,6 @@ export class InputManager extends ScriptComponent {
 			keyPressed.setKeyUp();
 	}
 
-	protected update()
-	{
-		console.log("fps : " + this.scene.getEngine().getFps());
-	}
-
 	public addKeyObserver(key : string, callback : () => void) : void
 	{
 		let	inputKey : InputKey | undefined = this.inputKeys.get(key);
