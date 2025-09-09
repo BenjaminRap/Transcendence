@@ -1,7 +1,7 @@
-import terminalDiv from '../public/terminal.html?raw'
-import gameDiv from '../public/game.html?raw'
 import('./typescript/terminal.ts')
 import('./typescript/game.ts')
+import terminalDiv from '../public/terminal.html?raw'
+import gameDiv from '../public/game.html?raw'
 
 function addDiv(id: string, content: string) {
 	const container = document.createElement('div')
