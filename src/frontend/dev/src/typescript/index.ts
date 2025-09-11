@@ -76,12 +76,6 @@ class PongGame extends HTMLElement {
 		await SceneManager.LoadRuntimeAssets(assetsManager, [ "SampleScene.gltf" ], () => {
 			cam.dispose(); // removing the unecessary camera
 			this.onSceneLoaded();
-
-			let	physicsViewer = new PhysicsViewer(this._scene);
-			this._scene.meshes.forEach(mesh => {
-				if (mesh.physicsBody)
-					physicsViewer.showBody(mesh.physicsBody);
-			});
 		});
 
 		return scene;
