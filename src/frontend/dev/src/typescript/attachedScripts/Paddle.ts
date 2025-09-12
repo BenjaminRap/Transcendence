@@ -81,17 +81,18 @@ export class Paddle extends ScriptComponent {
 
 	protected update()
 	{
-		const	isUpPressed : number = this._upKeyInfo.isKeyDown() ? 1 : 0;
-		const	isDownPressed : number = this._downKeyInfo.isKeyDown() ? 1 : 0;
+		const	isUpPressed : boolean = this._upKeyInfo.isKeyDown();
+		const	isDownPressed : boolean = this._downKeyInfo.isKeyDown();
+		const	canMoveUp : boolean = this.transform.position.y + this.transform.scaling.y / 2 < this._movementRange / 2;
+		const	canMoveDown : boolean = this.transform.position.y - this.transform.scaling.y / 2 > -this._movementRange / 2;
+		let		yVelocity : number = 0;
 
-		let		speedFactor : number = isUpPressed - isDownPressed;
-		if (this.transform.position.y < -this._movementRange / 2 && speedFactor === -1)
-			speedFactor = 0;
-		else if (this.transform.position.y > this._movementRange / 2 && speedFactor === 1)
-			speedFactor = 0;
-		const	velocityLength : number = speedFactor * this._speed;
+		if (isUpPressed && !isDownPressed && canMoveUp)
+			yVelocity = 1;
+		else if (isDownPressed && !isUpPressed && canMoveDown)
+			yVelocity = -1;
 
-		this._physicsBody.setLinearVelocity(Vector3.Up().scale(velocityLength));
+		this._physicsBody.setLinearVelocity(Vector3.Up().scale(yVelocity * this._speed));
 	}
 }
 

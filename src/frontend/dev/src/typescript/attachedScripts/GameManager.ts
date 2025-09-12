@@ -12,7 +12,7 @@ interface TransformRef
 }
 
 export class GameManager extends ScriptComponent {
-	private static _paddleRange : number = 7.4;
+	private static _paddleRange : number = 9.4;
 
 	private	_goalLeft! : IUnityTransform & TransformRef;
 	private	_goalRight! : IUnityTransform & TransformRef;
