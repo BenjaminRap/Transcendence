@@ -37,13 +37,13 @@ export class GameManager extends ScriptComponent {
 
 		if (collidedNode === this._goalLeft.transform)
 		{
-			this._scoreLeft++;
-			this._scoreLeftText.text.setText(this._scoreLeft.toString());
+			this._scoreRight++;
+			this._scoreRightText.text.setText(this._scoreRight.toString());
 		}
 		else if (collidedNode === this._goalRight.transform)
 		{
-			this._scoreRight += 5;
-			this._scoreRightText.text.setText(this._scoreRight.toString());
+			this._scoreLeft++;
+			this._scoreLeftText.text.setText(this._scoreLeft.toString());
 		}
 		else
 			return ;
