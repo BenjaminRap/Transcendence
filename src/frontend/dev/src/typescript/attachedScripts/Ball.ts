@@ -6,9 +6,11 @@ import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
 
 export class Ball extends ScriptComponent {
 	private _initialSpeed : number = 6;
+	private _goalTimeoutMs : number = 500;
 
 	private _physicsBody! : PhysicsBody;
 	private _initialPosition : Vector3;
+	private _startsRight : boolean = true;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "Ball") {
         super(transform, scene, properties, alias);
@@ -33,16 +35,23 @@ export class Ball extends ScriptComponent {
 	public reset() : void
 	{
 		this.transform.position.copyFrom(this._initialPosition);
+		this._physicsBody.setLinearVelocity(Vector3.Zero());
 
-		const	direction = this.getBallDirection();
-		const	velocity = direction.scale(this._initialSpeed);
+		setTimeout(() => {
+			const	direction = this.getBallDirection();
+			const	velocity = direction.scale(this._initialSpeed);
 
-		this._physicsBody.setLinearVelocity(velocity);
+			this._physicsBody.setLinearVelocity(velocity);
+			this._startsRight = !this._startsRight;
+		}, this._goalTimeoutMs);
 	}
 
 	private getBallDirection() : Vector3
 	{
-		return Vector3.Right();
+		if (this._startsRight)
+			return Vector3.Right();
+		else
+			return Vector3.Left();
 	}
 }
 

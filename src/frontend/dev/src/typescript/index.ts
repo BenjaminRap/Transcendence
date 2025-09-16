@@ -7,6 +7,7 @@ import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
 import { HavokPlugin } from "@babylonjs/core/Physics";
 
 import HavokPhysics from "@babylonjs/havok";
+import { Color4 } from "@babylonjs/core/Maths/math.color";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 
