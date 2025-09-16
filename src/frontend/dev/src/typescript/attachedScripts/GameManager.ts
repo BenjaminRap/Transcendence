@@ -5,6 +5,7 @@ import { IBasePhysicsCollisionEvent, PhysicsEventType } from "@babylonjs/core/Ph
 import { int } from "@babylonjs/core/types";
 import { Epsilon, Vector3 } from "@babylonjs/core";
 import { Text } from "./Text"
+import { Ball } from "./Ball";
 
 interface TransformRef
 {
@@ -16,7 +17,7 @@ export class GameManager extends ScriptComponent {
 
 	private	_goalLeft! : IUnityTransform & TransformRef;
 	private	_goalRight! : IUnityTransform & TransformRef;
-	private	_ball! : IUnityTransform & TransformRef;
+	private	_ball! : IUnityTransform & { script : Ball};
 	private	_scoreLeftText! : IUnityTransform & {text : Text};
 	private	_scoreRightText! : IUnityTransform & {text : Text};
 
@@ -31,7 +32,7 @@ export class GameManager extends ScriptComponent {
 	private OnTriggerEvent(eventData : IBasePhysicsCollisionEvent)
 	{
 		if (eventData.type === PhysicsEventType.TRIGGER_ENTERED
-			|| eventData.collider.transformNode !== this._ball.transform)
+			|| eventData.collider.transformNode !== this._ball.script.transform)
 			return ;
 		const	collidedNode = eventData.collidedAgainst.transformNode;
 
@@ -47,26 +48,22 @@ export class GameManager extends ScriptComponent {
 		}
 		else
 			return ;
-		this._ball.transform.position = Vector3.Zero();
-		this._ball.transform.getPhysicsBody()!.setLinearVelocity(Vector3.Right().scale(6));
+		this._ball.script.reset();
 	}
 
 	protected awake()
 	{
 		this._goalLeft.transform = SceneManager.GetTransformNodeByID(this.scene, this._goalLeft.id);
 		this._goalRight.transform = SceneManager.GetTransformNodeByID(this.scene, this._goalRight.id);
-		this._ball.transform = SceneManager.GetTransformNodeByID(this.scene, this._ball.id);
 
 		const	scoreLeftTextTransform = SceneManager.GetTransformNodeByID(this.scene, this._scoreLeftText.id);
 		this._scoreLeftText.text = SceneManager.GetComponent<Text>(scoreLeftTextTransform, "Text", false);
 
 		const	scoreRightTextTransform = SceneManager.GetTransformNodeByID(this.scene, this._scoreRightText.id);
 		this._scoreRightText.text = SceneManager.GetComponent<Text>(scoreRightTextTransform, "Text", false);
-	}
 
-	protected start()
-	{
-		this._ball.transform.getPhysicsBody()!.disablePreStep = false;
+		const	ballTransform = SceneManager.GetTransformNodeByID(this.scene, this._ball.id);
+		this._ball.script = SceneManager.GetComponent<Ball>(ballTransform, "Ball", false);
 	}
 
 	public getPaddleMovementRange()

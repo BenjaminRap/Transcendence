@@ -5,14 +5,14 @@ import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
 
 export class Ball extends ScriptComponent {
-	private _initialDirection : Vector3 = Vector3.Right();
-	private _speed : number = 6;
+	private _initialSpeed : number = 6;
 
 	private _physicsBody! : PhysicsBody;
+	private _initialPosition : Vector3;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "Ball") {
         super(transform, scene, properties, alias);
-		this._initialDirection.normalize();
+		this._initialPosition = transform.position.clone();
     }
 
 	protected start()
@@ -22,11 +22,27 @@ export class Ball extends ScriptComponent {
 		if (!physicsBody)
 			throw new Error("The Ball script should be attached to a mesh with a physic body !");
 		this._physicsBody = physicsBody;
+		this._physicsBody.disablePreStep = false;
 	}
 
 	protected ready() : void
 	{
-		this._physicsBody.setLinearVelocity(this._initialDirection.scale(this._speed));
+		this.reset();
+	}
+
+	public reset() : void
+	{
+		this.transform.position.copyFrom(this._initialPosition);
+
+		const	direction = this.getBallDirection();
+		const	velocity = direction.scale(this._initialSpeed);
+
+		this._physicsBody.setLinearVelocity(velocity);
+	}
+
+	private getBallDirection() : Vector3
+	{
+		return Vector3.Right();
 	}
 }
 

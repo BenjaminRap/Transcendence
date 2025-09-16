@@ -7,6 +7,7 @@ import { InputManager } from "./InputManager";
 import { InputKey } from "../InputKey";
 import { IBasePhysicsCollisionEvent, PhysicsEventType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { GameManager } from "./GameManager";
+import { Scalar } from "@babylonjs/core/Maths/math.scalar";
 
 export class Paddle extends ScriptComponent {
 	private	_speed : number = 6.0;
@@ -14,6 +15,8 @@ export class Paddle extends ScriptComponent {
 	private	_gameManagerTransform! : IUnityTransform;
 	private	_upKeyStringCode : string = "z";
 	private	_downKeyStringCode : string = "s";
+	private _minReboundSpeed : number = 10;
+	private _maxReboundSpeed : number = 15;
 
 	private	_physicsBody! : PhysicsBody;
 	private	_upKeyInfo! : InputKey;
@@ -55,7 +58,8 @@ export class Paddle extends ScriptComponent {
 
 	private getNewSpeed(collidedAgainst : PhysicsBody) : number
 	{
-		const	newSpeed = collidedAgainst.getLinearVelocity().length();
+		const	previousSpeed = collidedAgainst.getLinearVelocity().length();
+		const	newSpeed = Scalar.Clamp(previousSpeed * 1.05, this._minReboundSpeed, this._maxReboundSpeed);
 
 		return newSpeed;
 	}
