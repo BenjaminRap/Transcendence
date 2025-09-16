@@ -7,7 +7,6 @@ import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
 import { HavokPlugin } from "@babylonjs/core/Physics";
 
 import HavokPhysics from "@babylonjs/havok";
-import { PhysicsViewer } from "@babylonjs/core";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 
@@ -19,7 +18,8 @@ class PongGame extends HTMLElement {
     constructor() {
 		super();
 		this._canvas = document.createElement("canvas");
-		this._canvas.classList.add("size-full");
+		this._canvas.style.width = "100%";
+		this._canvas.style.aspectRatio = "16 / 9"
 		this.appendChild(this._canvas);
 	}
 
