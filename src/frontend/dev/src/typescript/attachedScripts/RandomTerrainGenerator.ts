@@ -23,6 +23,14 @@ export class RandomTerrainGenerator extends ScriptComponent {
 
 	protected awake()
 	{
+		const	ground = this.createGroundGrid();
+		this.setVerticesHeights(ground);
+		this.setShader(ground);
+		ground.parent = this.transform;
+	}
+
+	private createGroundGrid() : GroundMesh
+	{
 		const	subdivisions = 2 * this._subdivisionsFactor;
 		const	ground = MeshBuilder.CreateGround("ground", {
 			subdivisions: subdivisions,
@@ -30,18 +38,8 @@ export class RandomTerrainGenerator extends ScriptComponent {
 			height: this._height,
 			updatable: true
 		}, this.scene);
-		this.setVerticesHeights(ground);
-		ground.material = new ShaderMaterial("ground", this.scene, {
-			vertexSource : defaultVertex,
-			fragmentSource: groundFragment
-		},
-		{
-			attributes: [ "position" ],
-			uniforms: [ "worldViewProjection" ],
-		});
-		ground.position = this.transform.position;
-		ground.scaling = this.transform.scaling;
-		ground.rotation = this.transform.rotation;
+
+		return ground;
 	}
 
 	private setVerticesHeights(ground : GroundMesh) : void
@@ -58,6 +56,18 @@ export class RandomTerrainGenerator extends ScriptComponent {
 		});
 
 		ground.setVerticesData(VertexBuffer.PositionKind, positions, true);
+	}
+
+	private setShader(ground : GroundMesh)
+	{
+		ground.material = new ShaderMaterial("ground", this.scene, {
+			vertexSource : defaultVertex,
+			fragmentSource: groundFragment
+		},
+		{
+			attributes: [ "position" ],
+			uniforms: [ "worldViewProjection" ],
+		});
 	}
 }
 
