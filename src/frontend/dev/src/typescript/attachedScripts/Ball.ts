@@ -25,10 +25,6 @@ export class Ball extends ScriptComponent {
 			throw new Error("The Ball script should be attached to a mesh with a physic body !");
 		this._physicsBody = physicsBody;
 		this._physicsBody.disablePreStep = false;
-	}
-
-	protected ready() : void
-	{
 		this.reset();
 	}
 

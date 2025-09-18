@@ -30,7 +30,7 @@ class PongGame extends HTMLElement {
 			this._scene = await this.loadScene();
 			this._engine.runRenderLoop(this.renderScene.bind(this));
 		} catch (error) {
-			console.log(`Could not initialize the game: ${error}`)
+			console.log(`Could not initialize the game: ${JSON.stringify(error)}`)
 		}
     }
 
@@ -39,7 +39,7 @@ class PongGame extends HTMLElement {
 		try {
 			this._scene.render();
 		} catch (error) {
-			console.log(`Could not render the scene : ${error}`)
+			console.log(`Could not render the scene : ${JSON.stringify(error)}`)
 		}
 	}
 
@@ -72,7 +72,7 @@ class PongGame extends HTMLElement {
 			throw new Error("The physics engine hasn't been initialized !");
 
 
-		assetsManager.addMeshTask("scene", null, "/games/pong/", "SampleScene.gltf")
+		assetsManager.addMeshTask("scene", null, "/games/pong/", "basic.gltf")
 
 		await SceneManager.LoadRuntimeAssets(assetsManager, [ "SampleScene.gltf" ], () => {
 			cam.dispose(); // removing the unecessary camera
