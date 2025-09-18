@@ -71,10 +71,11 @@ class PongGame extends HTMLElement {
 		if (!scene.enablePhysics(Vector3.Zero(), globalThis.HKP))
 			throw new Error("The physics engine hasn't been initialized !");
 
+		const	sceneName = "Magic.gltf";
 
-		assetsManager.addMeshTask("scene", null, "/games/pong/", "basic.gltf")
+		assetsManager.addMeshTask("scene", null, "/games/pong/",sceneName)
 
-		await SceneManager.LoadRuntimeAssets(assetsManager, [ "SampleScene.gltf" ], () => {
+		await SceneManager.LoadRuntimeAssets(assetsManager, [ sceneName ], () => {
 			cam.dispose(); // removing the unecessary camera
 			this.onSceneLoaded();
 		});
@@ -86,6 +87,7 @@ class PongGame extends HTMLElement {
 		SceneManager.HideLoadingScreen(this._engine);
 		SceneManager.FocusRenderCanvas(this._scene);
 		this._scene.activeCameras = this._scene.cameras;
+		this._scene.activeCameras[0].attachControl();
 	}
 
 	disconnectedCallback() : void {
