@@ -32,10 +32,16 @@ export class	Float32Array2D {
 		return (x >= 0 && y >= 0 && x < this.width && y < this.height);
 	}
 
-	public get1DArray() : Float32Array
+	public forEach(callback : (value : int, x : int, y : int, index : int) => void) : void
 	{
-		return (this._data);
-	}
+		for (let y = 0; y < this.height; y++) {
+			for (let x = 0; x < this.width; x++) {
+				const	index = this.coordinates2DToIndex(x, y);
+
+				callback(this._data[index], x, y, index);
+			}
+		}
+	};
 
 	private coordinates2DToIndex(x : int, y : int) : int
 	{

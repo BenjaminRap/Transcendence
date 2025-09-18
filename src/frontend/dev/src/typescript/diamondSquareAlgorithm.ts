@@ -4,7 +4,7 @@ import { Range } from "./Range";
 import { Float32Array2D } from "./Float32Array2D";
 import { randomFromRange } from "./utilities";
 
-export function getDiamondSquareArray(sizeFactor : int, heightRange : Range, randomnessRange : Range) : Float32Array
+export function getDiamondSquareArray(sizeFactor : int, heightRange : Range, randomnessRange : Range) : Float32Array2D
 {
 	const	size : int = 2 * sizeFactor + 1;
 	const	array2D = new Float32Array2D(size, size);
@@ -20,7 +20,7 @@ export function getDiamondSquareArray(sizeFactor : int, heightRange : Range, ran
 		randomnessRange.min /= 2;
 		randomnessRange.max /= 2;
 	}
-	return array2D.get1DArray();
+	return array2D;
 }
 
 function	squareStepLoop(array2D : Float32Array2D, randomnessRange : Range, squareSize : int) : void
