@@ -7,7 +7,6 @@ import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
 import { HavokPlugin } from "@babylonjs/core/Physics";
 
 import HavokPhysics from "@babylonjs/havok";
-import { Color4 } from "@babylonjs/core/Maths/math.color";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 
@@ -30,9 +29,7 @@ class PongGame extends HTMLElement {
 			this._scene = await this.loadScene();
 			this._engine.runRenderLoop(this.renderScene.bind(this));
 		} catch (error) {
-			const	printableError = (typeof error === 'object' ? JSON.stringify(error) : error)
-
-			console.log(`Could not initialize the scene : ${printableError}`)
+			console.log(`Could not initialize the scene : ${error}`)
 		}
     }
 
@@ -41,9 +38,7 @@ class PongGame extends HTMLElement {
 		try {
 			this._scene.render();
 		} catch (error) {
-			const	printableError = (typeof error === 'object' ? JSON.stringify(error) : error)
-
-			console.log(`Could not render the scene : ${printableError}`)
+			console.log(`Could not render the scene : ${error}`)
 		}
 	}
 
