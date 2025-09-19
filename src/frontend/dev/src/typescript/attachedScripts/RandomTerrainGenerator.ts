@@ -1,7 +1,7 @@
 import { Scene } from "@babylonjs/core/scene";
 import { GroundMesh, Mesh, MeshBuilder, TransformNode } from "@babylonjs/core/Meshes";
-import { IUnityTransform, SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
-import { float, FloatArray, int, ShaderMaterial, Vector2, VertexBuffer } from "@babylonjs/core";
+import { IUnityMaterial, IUnityTransform, IUnityVector2, SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
+import { int, Matrix, Vector2, Vector3, VertexBuffer } from "@babylonjs/core";
 import { getDiamondSquareArray } from "../diamondSquareAlgorithm";
 import { Range } from "../Range";
 
@@ -11,17 +11,15 @@ import { randomFromRange } from "../utilities";
 import { Float32Array2D } from "../Float32Array2D";
 
 export class RandomTerrainGenerator extends ScriptComponent {
-	private _width : float = 100;
-	private _height : float = 100;
+	private _dimensions : IUnityVector2 = new Vector2(100, 100);
 	private _subdivisionsFactor : int = 8;
-	private _minHeight : float = 1;
-	private _maxHeight : float = 16;
-	private _minRandomness : float = -2;
-	private _maxRandomness : float = 2;
+	private _heightRange : Range = new Range(1, 16);
+	private _randomnessRange : Range = new Range(-2, 2);
 	private _envElements : (IUnityTransform & { mesh : Mesh })[] = [];
-	private _envElementsCounts : int = 100;
+	private _envElementsInstanceCount : int = 100;
+	private _groundMaterial! : IUnityMaterial;
 
-    constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "RandomTerrtexture format babylonjsainGenerator") {
+    constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "RandomTerrainGenerator") {
         super(transform, scene, properties, alias);
     }
 
@@ -30,13 +28,17 @@ export class RandomTerrainGenerator extends ScriptComponent {
 		const	ground = this.createGroundGrid();
 		const	heights = this.getVerticesHeights();
 		this.setVerticesPositions(ground, heights);
+		const	heightAtMiddle = this.getGroundHeight(Vector2.Zero(), heights);
+		ground.position.y -= heightAtMiddle;
 
 		this.setShader(ground);
-		this.populateEnvironment(heights);
+		this.populateEnvironment(heights, ground);
 	}
 
-	private populateEnvironment(heights : Float32Array2D)
+	private populateEnvironment(heights : Float32Array2D, ground : GroundMesh) : void
 	{
+		if (this._envElements.length === 0)
+			return ;
 		this._envElements.forEach((envElement) => {
 			const	elementTransform = SceneManager.GetTransformNodeByID(this.scene, envElement.id);
 
@@ -45,34 +47,35 @@ export class RandomTerrainGenerator extends ScriptComponent {
 			envElement.mesh = elementTransform;
 		});
 		const	meshIndexRange = new Range(0, this._envElements.length);
-		const	xPosRange = new Range(-this._width / 2, this._width / 2);
-		const	yPosRange = new Range(-this._height / 2, this._height / 2);
+		const	xPosRange = new Range(-this._dimensions.y / 2, this._dimensions.y / 2);
+		const	yPosRange = new Range(-this._dimensions.x / 2, this._dimensions.x / 2);
 
-		for (let i = 0; i < this._envElementsCounts; i++) {
+		for (let i = 0; i < this._envElementsInstanceCount; i++) {
 			const	meshIndex = Math.floor(randomFromRange(meshIndexRange));
 			const	mesh = this._envElements[meshIndex].mesh;
-			const	instance = mesh.createInstance(`${mesh.name}_${i}`);
+			const	position = new Vector3();
 
-			instance.position.x = randomFromRange(xPosRange);
-			instance.position.z = randomFromRange(yPosRange);
-			instance.position.y = this.getGroundHeight(new Vector2(instance.position.x, -instance.position.z), heights) + this.transform.absolutePosition.y;
+			position.x = randomFromRange(xPosRange) + ground.position.x;
+			position.z = randomFromRange(yPosRange) + ground.position.z;
+			position.y = this.getGroundHeight(new Vector2(position.x, -position.z), heights) + ground.position.y;
+			mesh.thinInstanceAdd(Matrix.Translation(position.x, position.y, position.z));
 		}
 	}
 
 	private getGroundHeight(relativePos : Vector2, heights : Float32Array2D)
 	{
-		if (relativePos.x < -this._width / 2 || relativePos.x > this._width / 2
-			|| relativePos.y < -this._height / 2 || relativePos.y > this._height / 2)
+		if (relativePos.x < -this._dimensions.y / 2 || relativePos.x > this._dimensions.y / 2
+			|| relativePos.y < -this._dimensions.x / 2 || relativePos.y > this._dimensions.x / 2)
 		{
 			throw new Error("The position isn't on the ground !");
 		}
 		let	gridPos = relativePos;
-		gridPos.x += this._width / 2;
-		gridPos.y += this._height / 2;
+		gridPos.x += this._dimensions.y / 2;
+		gridPos.y += this._dimensions.x / 2;
 
 		const	gridSize = 2 * this._subdivisionsFactor;
-		gridPos.x = gridSize * gridPos.x / this._width;
-		gridPos.y = gridSize * gridPos.y / this._height;
+		gridPos.x = gridSize * gridPos.x / this._dimensions.y;
+		gridPos.y = gridSize * gridPos.y / this._dimensions.x;
 
 		return this.getTriangleAverageHeight(gridPos, heights);
 	}
@@ -106,8 +109,8 @@ export class RandomTerrainGenerator extends ScriptComponent {
 		const	subdivisions = 2 * this._subdivisionsFactor;
 		const	ground = MeshBuilder.CreateGround("ground", {
 			subdivisions: subdivisions,
-			width: this._width,
-			height: this._height,
+			width: this._dimensions.y,
+			height: this._dimensions.x,
 			updatable: true
 		}, this.scene);
 
@@ -117,8 +120,8 @@ export class RandomTerrainGenerator extends ScriptComponent {
 
 	private getVerticesHeights() : Float32Array2D
 	{
-		const	heightsRange = new Range(this._minHeight, this._maxHeight);
-		const	randomnessRange = new Range(this._minRandomness, this._maxRandomness);
+		const	heightsRange = new Range(this._heightRange.min, this._heightRange.max);
+		const	randomnessRange = new Range(this._randomnessRange.min, this._randomnessRange.max);
 		const	heights = getDiamondSquareArray(this._subdivisionsFactor, heightsRange, randomnessRange);
 
 		return heights;
@@ -138,14 +141,15 @@ export class RandomTerrainGenerator extends ScriptComponent {
 
 	private setShader(ground : GroundMesh)
 	{
-		ground.material = new ShaderMaterial("ground", this.scene, {
-			vertexSource : defaultVertex,
-			fragmentSource: groundFragment
-		},
-		{
-			attributes: [ "position" ],
-			uniforms: [ "worldViewProjection" ],
-		});
+		// ground.material = new ShaderMaterial("ground", this.scene, {
+		// 	vertexSource : defaultVertex,
+		// 	fragmentSource: groundFragment
+		// },
+		// {
+		// 	attributes: [ "position" ],
+		// 	uniforms: [ "worldViewProjection" ],
+		// });
+		ground.material = this.scene.getMaterialById(this._groundMaterial.id);
 	}
 }
 
