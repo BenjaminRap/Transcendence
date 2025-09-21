@@ -7,9 +7,78 @@ const currentInput = document.getElementById('current-input') as HTMLTextAreaEle
 const output = document.getElementById('output') as HTMLDivElement | null;
 const terminal = document.getElementById('terminal') as HTMLDivElement | null;
 
+
+var env = {
+	'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+	'HOME': '/home/usa',
+	'TERM': 'xterm-256color'
+};
+
+
+var fileSystem = {
+	'/': {
+		'type': 'dir',
+		'content': {
+			'file1.txt': {
+				'type': 'file',
+				'content': 'This is the content of file1.txt'
+			},
+			'file2.txt': {
+				'type': 'file',
+				'content': 'This is the content of file2.txt'
+			},
+			'subdir': {
+				'type': 'dir',
+				'content': {
+					'file3.txt': {
+						'type': 'file',
+						'content': 'This is the content of file3.txt in subdir'
+					}
+				}
+			}
+		}
+	}
+};
+
+var commandAvailable = 
+[
+	{
+		'name': 'echo',
+		'description': 'Display a line of text',
+		'usage': 'echo [text]',
+		function: echoCommand
+	},
+	{
+		'name': 'help',
+		'description': 'Display this help message',
+		'usage': 'help',
+		function: helpCommand
+	},
+];
+
+var currentDirectory = '/';
+
+
+
 if (currentInput) {
 	currentInput.value = promptText;
 }
+
+// ------------------------------------------------------------------------ Command ---------------------------------------------------------------------
+
+function echoCommand(args: string): string {
+	return args;
+}
+
+function helpCommand(): string {
+	let helpText = 'Available commands:\n';
+	for (let i = 0; i < commandAvailable.length; i++) {
+		helpText += `${commandAvailable[i].name}: ${commandAvailable[i].description}\nUsage: ${commandAvailable[i].usage}\n\n`;
+	}
+	return helpText;
+}
+
+
 
 
 // ------------------------------------------------------------------------ Utilities ---------------------------------------------------------------------
@@ -27,13 +96,39 @@ function countChar(char: string): number
 	}
 	return count;
 }
+
+function checkArgs(args: string): boolean {
+	let quote: string | null = null;
+	for (let i = 0; i < args.length; i++) {
+		const char = args[i];
+		if (char === "'" || char === '"') {
+			if (quote === null) {
+				quote = char;
+			} else if (quote === char) {
+				quote = null;
+			}
+		}
+	}
+	return quote === null;
+}
+
+
 // FIND --> DEBUG, remove later
 function exec(command: string) {
-	if (command === 'find') {
-		let count = countChar('\f');
-		return `${count}`
+	const args = command.match(/"[^"]*"|'[^']*'|\S+/g) || [];
+	for (let i = 0; i < args.length; i++) {
+		if (!checkArgs(args[i])) {
+			return `Erreur de syntaxe dans l'argument : ${args[i]}`;
+		}
+		args[i] = args[i].replace(/^['"]|['"]$/g, '');
 	}
-	return `Commande : ${command} executée avec succès`;
+
+	for (let i = 0; i < commandAvailable.length; i++) {
+		if (args[0] === commandAvailable[i].name) {
+			return commandAvailable[i].function(args.slice(1).join(' ')); // Passe de tab a string
+		}
+	}
+	return `Unknown command: ${args[0]}`;
 }
 
 function resize() {

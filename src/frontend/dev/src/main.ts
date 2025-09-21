@@ -18,5 +18,5 @@ function removeDiv(id: string) {
 	}
 }
 
-// addDiv('Terminal', terminalDiv)
-addDiv('profileDiv', profileDiv)
+addDiv('Terminal', terminalDiv)
+// addDiv('profileDiv', profileDiv)
