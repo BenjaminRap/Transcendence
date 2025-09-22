@@ -24,6 +24,7 @@ export class RandomTerrainGenerator extends ScriptComponent {
 	protected awake()
 	{
 		this._ground = this.createGroundGrid();
+		this._ground.receiveShadows = true;
 		const	heights = this.getVerticesHeights();
 		this.setVerticesPositions(heights);
 		this._ground.position.y -= this._ground.getHeightAtCoordinates(0, 0);
