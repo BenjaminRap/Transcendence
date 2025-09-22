@@ -1,31 +1,25 @@
 import { Scene } from "@babylonjs/core/scene";
 import { GroundMesh, Mesh, TransformNode } from "@babylonjs/core/Meshes";
-import { IUnityTransform, IUnityVector2, SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
+import { IUnityVector2, SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { int } from "@babylonjs/core/types";
 import { Matrix, Vector2, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Range } from "../Range";
 import { randomFromRange } from "../utilities";
 
+interface	RandomEnvironmentElement
+{
+	id : string;
+	instanceCount : int;
+}
+
 export class RandomEnvironmentGenerator extends ScriptComponent {
 	private _dimensions : IUnityVector2 = new Vector2(100, 100);
-	private _envElements : (IUnityTransform & { mesh : Mesh })[] = [];
-	private _envElementsInstanceCount : int = 100;
-	private _placeEnvElementsRef : boolean = true;
+	private _envElements : RandomEnvironmentElement[] = [];
+	private _instancesCountFactor : number = 1;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "RandomEnvironmentGenerator") {
         super(transform, scene, properties, alias);
     }
-
-	protected	awake()
-	{
-		this._envElements.forEach((envElement) => {
-			const	elementTransform = SceneManager.GetTransformNodeByID(this.scene, envElement.id);
-
-			if (!(elementTransform instanceof Mesh))
-				throw new Error("The environment element doesn't have an associated mesh !");
-			envElement.mesh = elementTransform;
-		});
-	}
 
 	public populateEnvironment(ground : GroundMesh) : void
 	{
@@ -34,28 +28,26 @@ export class RandomEnvironmentGenerator extends ScriptComponent {
 		const	xPosRange = new Range(-this._dimensions.y / 2, this._dimensions.y / 2);
 		const	yPosRange = new Range(-this._dimensions.x / 2, this._dimensions.x / 2);
 
-		if (this._placeEnvElementsRef)
-			this.placeEnvElementsRef(ground, xPosRange, yPosRange);
-		this.instanciateEnvElements(ground, xPosRange, yPosRange);
+		this.instanciateAllEnvElements(ground, xPosRange, yPosRange);
 	}
 
-	private placeEnvElementsRef(ground : GroundMesh, xPosRange : Range, yPosRange : Range)
+	private instanciateAllEnvElements(ground : GroundMesh, xPosRange : Range, yPosRange : Range)
 	{
-		this._envElements.forEach((envElement) => {
-			envElement.mesh.position = this.getRandomPositionOnGround(ground, xPosRange, yPosRange);
+		this._envElements.forEach((envElement : RandomEnvironmentElement) => {
+			this.instanciateEnvElement(envElement, ground, xPosRange, yPosRange);
 		});
 	}
 
-	private instanciateEnvElements(ground : GroundMesh, xPosRange : Range, yPosRange : Range)
+	private instanciateEnvElement(envElement : RandomEnvironmentElement, ground : GroundMesh, xPosRange : Range, yPosRange : Range)
 	{
-		const	meshIndexRange = new Range(0, this._envElements.length);
+		const	mesh = this.scene.getNodeByName(envElement.id);
 
-		for (let i = 0; i < this._envElementsInstanceCount; i++) {
-			const	meshIndex = Math.floor(randomFromRange(meshIndexRange));
-			const	mesh = this._envElements[meshIndex].mesh;
+		if (!(mesh instanceof Mesh))
+			throw new Error(`An EnvElement in the RandomEnvironmentGenerator script is not a mesh ! : ${mesh?.name}`);
+		for (let i = 0; i < envElement.instanceCount * this._instancesCountFactor; i++) {
 			const	position = this.getRandomPositionOnGround(ground, xPosRange, yPosRange);
 
-			position.subtractInPlace(mesh.position);
+			position.subtractInPlace(mesh.absolutePosition);
 			const	matrix = Matrix.Translation(position.x, position.y, position.z);
 
 			mesh.thinInstanceAdd(matrix);
