@@ -79,6 +79,18 @@ export class RandomTerrainGenerator extends ScriptComponent {
 	{
 		this._ground.material = this.scene.getMaterialById(this._groundMaterial.id);
 	}
+
+	public	getHeightAtCoordinates(x : number, y : number) : number
+	{
+		if (this._ground === undefined)
+			return 0;
+		if (Math.abs(x) > this._dimensions.x / 2
+			|| Math.abs(y) > this._dimensions.y / 2)
+		{
+			return 0;
+		}
+		return this._ground.getHeightAtCoordinates(x, y);
+	}
 }
 
 SceneManager.RegisterClass("RandomTerrainGenerator", RandomTerrainGenerator);
