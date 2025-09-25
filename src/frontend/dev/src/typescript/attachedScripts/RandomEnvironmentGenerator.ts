@@ -50,7 +50,7 @@ export class RandomEnvironmentGenerator extends ScriptComponent {
 			position.subtractInPlace(mesh.absolutePosition);
 			const	matrix = Matrix.Translation(position.x, position.y, position.z);
 
-			mesh.thinInstanceAdd(matrix);
+			mesh.thinInstanceAdd(matrix, i === this._instancesCountFactor - 1);
 		}
 	}
 
