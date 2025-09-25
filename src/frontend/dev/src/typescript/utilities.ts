@@ -13,7 +13,7 @@ const	sqrt = Math.sqrt;
 export function	getRandomCoordinatesInTrapeze(baseNear : number, baseFar : number, height : number) : Vector2
 {
 	const	random = Math.random();
-	const	yNumerator = -baseNear + sqrt(square(baseNear) + random * height * (square(baseFar) - square(baseNear)));
+	const	yNumerator = -baseNear + sqrt(square(baseNear) + random * (square(baseFar) - square(baseNear)));
 	const	yDenominator = (baseFar - baseNear) / height;
 	const	y : number = yNumerator / yDenominator;
 	const	widhAtZ = remap(y, 0, height, baseNear, baseFar);
@@ -25,9 +25,4 @@ export function	getRandomCoordinatesInTrapeze(baseNear : number, baseFar : numbe
 function	remap(value : number, min : number, max : number, newMin : number, newMax : number)
 {
 	return newMin + (newMax - newMin) * (value - min) / (max - min);
-}
-
-export function	getHorizontalFOV(verticalFOV : number, aspectRatio : number)
-{
-	return 2 * Math.atan(Math.tan(verticalFOV / 2) * aspectRatio);
 }
