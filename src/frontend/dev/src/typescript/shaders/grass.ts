@@ -158,7 +158,7 @@ export function	buildGrassMaterial(name : string, scene : Scene) : GrassMaterial
 	positionFactor.visibleInInspector = false;
 	positionFactor.visibleOnFrame = false;
 	positionFactor.target = 1;
-	positionFactor.value = 0.2;
+	positionFactor.value = 0.01;
 	positionFactor.min = 0;
 	positionFactor.max = 0;
 	positionFactor.isBoolean = false;
@@ -305,7 +305,7 @@ export function	buildGrassMaterial(name : string, scene : Scene) : GrassMaterial
 	grassColorBottom.visibleInInspector = false;
 	grassColorBottom.visibleOnFrame = false;
 	grassColorBottom.target = 1;
-	grassColorBottom.value = new Color3(0.0392156862745098, 0.4745098039215686, 0.0392156862745098);
+	grassColorBottom.value = new Color3(0.027450980392156862, 0.30196078431372547, 0.027450980392156862);
 	grassColorBottom.isConstant = false;
 
 	// InputBlock
@@ -313,7 +313,7 @@ export function	buildGrassMaterial(name : string, scene : Scene) : GrassMaterial
 	grassColorTop.visibleInInspector = false;
 	grassColorTop.visibleOnFrame = false;
 	grassColorTop.target = 1;
-	grassColorTop.value = new Color3(0, 1, 0);
+	grassColorTop.value = new Color3(0.023529411764705882, 0.6784313725490196, 0.023529411764705882);
 	grassColorTop.isConstant = false;
 
 	// LightBlock
@@ -428,7 +428,7 @@ export function	buildGrassMaterial(name : string, scene : Scene) : GrassMaterial
 	FragmentOutput.target = 2;
 	FragmentOutput.convertToGammaSpace = false;
 	FragmentOutput.convertToLinearSpace = false;
-	FragmentOutput.useLogarithmicDepth = true;
+	FragmentOutput.useLogarithmicDepth = false;
 
 	// NodeMaterialTeleportOutBlock
 	var normalizedY1 = new NodeMaterialTeleportOutBlock("> normalizedY");
@@ -518,13 +518,6 @@ export function	buildGrassMaterial(name : string, scene : Scene) : GrassMaterial
 	worldPos5.target = 1;
 	worldPos.attachToEndpoint(worldPos5);
 
-	// NodeMaterialTeleportOutBlock
-	var worldPos6 = new NodeMaterialTeleportOutBlock("> worldPos");
-	worldPos6.visibleInInspector = false;
-	worldPos6.visibleOnFrame = false;
-	worldPos6.target = 1;
-	worldPos.attachToEndpoint(worldPos6);
-
 	// InputBlock
 	var Cameraposition = new InputBlock("Camera position");
 	Cameraposition.visibleInInspector = false;
@@ -546,13 +539,6 @@ export function	buildGrassMaterial(name : string, scene : Scene) : GrassMaterial
 	instanceWorld3.target = 1;
 	instanceWorld.attachToEndpoint(instanceWorld3);
 
-	// NodeMaterialTeleportOutBlock
-	var instanceWorld4 = new NodeMaterialTeleportOutBlock("> instanceWorld");
-	instanceWorld4.visibleInInspector = false;
-	instanceWorld4.visibleOnFrame = false;
-	instanceWorld4.target = 1;
-	instanceWorld.attachToEndpoint(instanceWorld4);
-
 	// Connections
 	position.output.connectTo(Worldposition.vector);
 	world.output.connectTo(Instances.world0);
@@ -561,7 +547,7 @@ export function	buildGrassMaterial(name : string, scene : Scene) : GrassMaterial
 	world3.output.connectTo(Instances.world3);
 	world4.output.connectTo(Instances.world);
 	Instances.output.connectTo(instanceWorld.input);
-	instanceWorld4.output.connectTo(Worldposition.transform);
+	instanceWorld3.output.connectTo(Worldposition.transform);
 	Worldposition.xyz.connectTo(worldPos.input);
 	worldPos1.output.connectTo(VectorSplitter.xyzIn);
 	VectorSplitter.x.connectTo(VectorMerger.x);
@@ -592,10 +578,14 @@ export function	buildGrassMaterial(name : string, scene : Scene) : GrassMaterial
 	Add1.output.connectTo(WorldPosViewProjectionTransform.vector);
 	ViewProjection.output.connectTo(WorldPosViewProjectionTransform.transform);
 	WorldPosViewProjectionTransform.output.connectTo(VertexOutput.vector);
+	grassColorBottom.output.connectTo(Lerp.left);
+	grassColorTop.output.connectTo(Lerp.right);
+	Divide.output.connectTo(Lerp.gradient);
+	Lerp.output.connectTo(Multiply7.left);
 	worldPos2.output.connectTo(VectorMerger1.xyzIn);
 	Float.output.connectTo(VectorMerger1.w);
 	VectorMerger1.xyzw.connectTo(Lights.worldPosition);
-	worldPos6.output.connectTo(Subtract.left);
+	worldPos5.output.connectTo(Subtract.left);
 	Cameraposition.output.connectTo(Subtract.right);
 	Subtract.output.connectTo(Dot.left);
 	normal.output.connectTo(Worldnormal.vector);
@@ -609,12 +599,8 @@ export function	buildGrassMaterial(name : string, scene : Scene) : GrassMaterial
 	Float1.output.connectTo(VectorMerger2.w);
 	VectorMerger2.xyzw.connectTo(Lights.worldNormal);
 	cameraPosition.output.connectTo(Lights.cameraPosition);
-	grassColorBottom.output.connectTo(Lerp.left);
-	grassColorTop.output.connectTo(Lerp.right);
-	Divide.output.connectTo(Lerp.gradient);
 	Lerp.output.connectTo(Lights.diffuseColor);
 	View.output.connectTo(Lights.view);
-	Lights.diffuseOutput.connectTo(Multiply7.left);
 	Lights.shadow.connectTo(Multiply7.right);
 	Multiply7.output.connectTo(FragmentOutput.rgb);
 
