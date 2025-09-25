@@ -1,19 +1,19 @@
 import { Scene } from "@babylonjs/core/scene";
-import { Mesh, TransformNode } from "@babylonjs/core/Meshes";
+import { Mesh, MeshBuilder, TransformNode } from "@babylonjs/core/Meshes";
 import { IUnityTransform, SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 
 import { buildGrassMaterial } from "../shaders/grass";
 import { Camera } from "@babylonjs/core/Cameras/camera";
-import { Matrix, Vector3 } from "@babylonjs/core/Maths/math.vector";
-import { getHorizontalFOV, getRandomCoordinatesInTrapeze } from "../utilities";
+import { Matrix, Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { getRandomCoordinatesInTrapeze } from "../utilities";
+import { RandomTerrainGenerator } from "./RandomTerrainGenerator";
 
 export class GrassGenerator extends ScriptComponent {
 	private _grassTransform! : IUnityTransform & { mesh : Mesh};
 	private _cameraTransform! : IUnityTransform & { camera : Camera, transform : TransformNode };
+	private	_groundTransform! : IUnityTransform & { randomTerrainGenerator : RandomTerrainGenerator}
 	private _grassInstanceCount : number = 100;
 	private _grassMaxDistance : number = 5;
-
-	private static readonly _horizontalFOVMarginInRadian : number = 0.2;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "GrassGenerator") {
         super(transform, scene, properties, alias);
@@ -23,6 +23,10 @@ export class GrassGenerator extends ScriptComponent {
 	{	
 		this.initAttributes();
 		this.setGrassMaterial();
+	}
+
+	protected	start()
+	{
 		this.placeGrassInFrontOfCamera();
 	}
 
@@ -38,6 +42,9 @@ export class GrassGenerator extends ScriptComponent {
 		this._cameraTransform.camera = SceneManager.FindSceneCameraRig(this._cameraTransform.transform);
 		if (this._cameraTransform.camera === null)
 			throw new Error("the _cameraTransform transform is not a Camera !!");
+
+		const	ground = SceneManager.GetTransformNodeByID(this.scene, this._groundTransform.id);
+		this._groundTransform.randomTerrainGenerator = SceneManager.GetComponent(ground, "RandomTerrainGenerator", false);
 	}
 
 	private	setGrassMaterial()
@@ -51,21 +58,25 @@ export class GrassGenerator extends ScriptComponent {
 	{
 		const	camera = this._cameraTransform.camera;
 		const	aspectRatio = this.scene.getEngine().getAspectRatio(camera);
-		const	horizontalFOV = getHorizontalFOV(camera.fov, aspectRatio) + GrassGenerator._horizontalFOVMarginInRadian;
-		const	baseForCircleUnit = Math.tan(horizontalFOV / 2) * 2;
+		const	baseForCircleUnit = Math.tan(camera.fov / 2) * 2 * aspectRatio;
 		const	baseNear = baseForCircleUnit * camera.minZ;
 		const	baseFar = baseForCircleUnit * this._grassMaxDistance;
 		const	height = this._grassMaxDistance - camera.minZ;
+		const	mesh = this._grassTransform.mesh;
+		const	inverseMeshWorldMatrix = Matrix.Invert(mesh.worldMatrixFromCache);
 
 		for (let index = 0; index < this._grassInstanceCount; index++) {
 			const	localPos2D = getRandomCoordinatesInTrapeze(baseNear, baseFar, height);
 			const	localPos3D = new Vector3(localPos2D.x, -5, localPos2D.y + camera.minZ);
+			const	globalPos3D = Vector3.TransformCoordinates(localPos3D, camera.worldMatrixFromCache);
 
-			localPos3D.subtractInPlace(this._grassTransform.mesh.absolutePosition);
-			const	globalPos3D = Vector3.TransformCoordinates(localPos3D, camera.getWorldMatrix());
+			globalPos3D.y = this._groundTransform.randomTerrainGenerator.getHeightAtCoordinates(globalPos3D.x, globalPos3D.z);
+			const	rotation = Quaternion.RotationAxis(Vector3.UpReadOnly, Math.random() * 2 * Math.PI);
+			const	matrix = Matrix.Compose(Vector3.OneReadOnly, rotation, globalPos3D);
 
-			const	matrix = Matrix.Translation(globalPos3D.x, globalPos3D.y, globalPos3D.z);
-			this._grassTransform.mesh.thinInstanceAdd(matrix, true);
+			const	invertedMatrix = matrix.multiply(inverseMeshWorldMatrix);
+			const	updateInstanceBuffer = index === this._grassInstanceCount - 1;
+			mesh.thinInstanceAdd(invertedMatrix, updateInstanceBuffer);
 		}
 	}
 }
