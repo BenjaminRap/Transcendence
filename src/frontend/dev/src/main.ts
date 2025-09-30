@@ -1,9 +1,12 @@
 import('./typescript/terminal.ts')
 import('./typescript/profile.ts')
+
 import terminalDiv from '../public/terminal.html?raw'
 import profileDiv from '../public/profile.html?raw'
 
-function addDiv(id: string, content: string) {
+export let DivTab: string[] = [terminalDiv, profileDiv];
+
+export function addDiv(id: string, content: string) {
 	const container = document.createElement('div')
 	container.innerHTML = content
 	container.id = id
@@ -11,7 +14,7 @@ function addDiv(id: string, content: string) {
 	window.location.replace(`/#/${id}`)
 }
 
-function removeDiv(id: string) {
+export function removeDiv(id: string) {
 	const container = document.getElementById(id)
 	if (container) {
 		document.body.removeChild(container)

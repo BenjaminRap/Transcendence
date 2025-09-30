@@ -1,5 +1,9 @@
 export { };
 
+import {addDiv} from '../main.ts'
+import {removeDiv} from '../main.ts'
+import {DivTab} from '../main.ts'
+
 var maxOutputLines = 100; 
 var promptText = "usa@terminal:~$ ";
 
@@ -11,7 +15,7 @@ const terminal = document.getElementById('terminal') as HTMLDivElement | null;
 var env = {
 	'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
 	'HOME': '/home/usa',
-	'TERM': 'xterm-256color'
+	'TERM': 'minishell'
 };
 
 
@@ -40,6 +44,8 @@ var fileSystem = {
 	}
 };
 
+// HASH_MAP
+
 var commandAvailable = 
 [
 	{
@@ -54,6 +60,12 @@ var commandAvailable =
 		'usage': 'help',
 		function: helpCommand
 	},
+	{
+		'name': 'profile',
+		'description': 'Display user profile information',
+		'usage': 'profile',
+		function: profileCommand
+	}
 ];
 
 var currentDirectory = '/';
@@ -66,8 +78,13 @@ if (currentInput) {
 
 // ------------------------------------------------------------------------ Command ---------------------------------------------------------------------
 
-function echoCommand(args: string): string {
-	return args;
+function echoCommand(args: string[]): string {
+	var result = '';
+
+	for (let i = 1; i < args.length; i++) {
+		result += args[i] + ' ';
+	}
+	return result.trim();
 }
 
 function helpCommand(): string {
@@ -78,6 +95,11 @@ function helpCommand(): string {
 	return helpText;
 }
 
+function profileCommand(): string {
+	addDiv('profileDiv', DivTab[1]);
+	// removeDiv('Terminal');
+	return '';
+}
 
 
 
@@ -125,7 +147,7 @@ function exec(command: string) {
 
 	for (let i = 0; i < commandAvailable.length; i++) {
 		if (args[0] === commandAvailable[i].name) {
-			return commandAvailable[i].function(args.slice(1).join(' ')); // Passe de tab a string
+			return commandAvailable[i].function(args);
 		}
 	}
 	return `Unknown command: ${args[0]}`;

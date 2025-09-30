@@ -3,11 +3,11 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Node",
-    "rootDir": "./dev/src/typescript",
+    "rootDir": "./dev/src/",
     "lib": ["DOM", "ESNext"],
     "types": ["node"],
     "allowImportingTsExtensions": true
   },
-  "include": ["./dev/src/typescript/"]
+  "include": ["./dev/src/"]
 }
 

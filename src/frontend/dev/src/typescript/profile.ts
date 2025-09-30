@@ -126,11 +126,14 @@ const profile = {
 
 
 
-const game = document.getElementById('game');
+const profileElement = document.getElementById('profile');
 
 function createProfileCard() {
-	if (!game)
+	if (!profileElement)
+	{
+		console.log("No profile element found");
 		return;
+	}
 	const profileCard = document.createElement('div');
 	profileCard.className = "flex flex-col p-4 shadow-lg border border-green-500 align-center justify-center items-center";
 	profileCard.innerHTML = `<img src="${profile.linkofavatar}" alt="Avatar" class="w-24 h-24 border border-green-500"></img>
@@ -141,13 +144,16 @@ function createProfileCard() {
 								<p>Loss: ${profile.loss}</p>
 								<p>W/L: ${(profile.win / (profile.loss + profile.win)).toFixed(2)}</p>
 							</div>`;
-	game.appendChild(profileCard);
+	profileElement.appendChild(profileCard);
 }
 
 
 function createButtons() {
-	if (!game)
+	if (!profileElement)
+	{
+		console.log("No profile element found");
 		return;
+	}
 	const buttonContainer = document.createElement('div');
 	buttonContainer.className = "grid grid-cols-2 place-content-stretch gap-2";
 	buttonContainer.innerHTML = `<button class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Change Name</button>
@@ -155,12 +161,15 @@ function createButtons() {
 								<button class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Change Avatar</button>
 								<button class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Delete Account</button>`
 
-	game.appendChild(buttonContainer);
+	profileElement.appendChild(buttonContainer);
 }
 
 function createMatchHistory() {
-	if (!game)
+	if (!profileElement)
+	{
+		console.log("No profile element found");
 		return;
+	}
 	const matchHistory = document.createElement('div');
 	matchHistory.className = "flex flex-col min-h-[25vh]"; 
 	matchHistory.innerHTML = `<div class="flex w-full place-content-between">
@@ -196,12 +205,15 @@ function createMatchHistory() {
 		matchElement.appendChild(matchDiv);
 	}
 	matchHistory.appendChild(matchElement);
-	game.appendChild(matchHistory);
+	profileElement.appendChild(matchHistory);
 }
 
 function createFriendList() {
-	if (!game)
+	if (!profileElement)
+	{
+		console.log("No profile element found");
 		return;
+	}
 	const friendList = document.createElement('div');
 	friendList.className = "flex flex-col min-h-[25vh]";
 	friendList.innerHTML = `
@@ -228,12 +240,15 @@ function createFriendList() {
 	}
 
 	friendList.appendChild(friendElement);
-	game.appendChild(friendList);
+	profileElement.appendChild(friendList);
 }
-
-
 
 createProfileCard();
 createButtons();
 createMatchHistory();
 createFriendList();
+
+console.log("Profile Loaded --");
+
+const test = document.getElementById('profile');
+console.log(test);
