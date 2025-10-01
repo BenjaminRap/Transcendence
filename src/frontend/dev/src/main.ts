@@ -1,10 +1,6 @@
-import('./typescript/terminal.ts')
-import('./typescript/profile.ts')
+import { Terminal } from './typescript/terminal'
 
-import terminalDiv from '../public/terminal.html?raw'
-import profileDiv from '../public/profile.html?raw'
 
-export let DivTab: string[] = [terminalDiv, profileDiv];
 
 export function addDiv(id: string, content: string) {
 	const container = document.createElement('div')
@@ -21,5 +17,6 @@ export function removeDiv(id: string) {
 	}
 }
 
-addDiv('Terminal', terminalDiv)
+Terminal.buildTerminal()
+
 // addDiv('profileDiv', profileDiv)

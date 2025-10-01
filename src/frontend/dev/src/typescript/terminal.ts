@@ -1,24 +1,14 @@
 export { };
 
-import {addDiv} from '../main.ts'
-import {removeDiv} from '../main.ts'
-import {DivTab} from '../main.ts'
+import { ProfileBuilder } from './profile.ts'
 
-var maxOutputLines = 100; 
+var maxOutputLines = 100;
 var promptText = "usa@terminal:~$ ";
-
-const currentInput = document.getElementById('current-input') as HTMLTextAreaElement | null;
-const output = document.getElementById('output') as HTMLDivElement | null;
-const terminal = document.getElementById('terminal') as HTMLDivElement | null;
-
-
 var env = {
 	'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
 	'HOME': '/home/usa',
 	'TERM': 'minishell'
 };
-
-
 var fileSystem = {
 	'/': {
 		'type': 'dir',
@@ -46,7 +36,7 @@ var fileSystem = {
 
 // HASH_MAP
 
-var commandAvailable = 
+var commandAvailable =
 [
 	{
 		'name': 'echo',
@@ -65,16 +55,37 @@ var commandAvailable =
 		'description': 'Display user profile information',
 		'usage': 'profile',
 		function: profileCommand
+	},
+	{
+		'name': 'clear',
+		'description': 'Clear the terminal screen',
+		'usage': 'clear',
+		function: clearCommand
+	},
+	{
+		'name': 'test',
+		'description': 'Test command to resize terminal',
+		'usage': 'test [size in %]',
+		function: teste
+	},
+	{
+		'name': 'kill',
+		'description': 'Terminate a process',
+		'usage': 'kill [process_name]',
+		function: killCommand
 	}
 ];
 
 var currentDirectory = '/';
 
+var isBuilded = false;
+var isProfileActive = false;
 
 
-if (currentInput) {
-	currentInput.value = promptText;
-}
+let terminal: HTMLDivElement | null = null;
+let output: HTMLDivElement | null = null;
+let inputLine: HTMLDivElement | null = null;
+let currentInput: HTMLTextAreaElement | null = null;
 
 // ------------------------------------------------------------------------ Command ---------------------------------------------------------------------
 
@@ -95,18 +106,44 @@ function helpCommand(): string {
 	return helpText;
 }
 
-function profileCommand(): string {
-	addDiv('profileDiv', DivTab[1]);
-	// removeDiv('Terminal');
-	return '';
+function profileCommand(args: string[]): string {
+	if (args.length > 2) {
+		return 'Usage: profile to see your profile or profile [username] to see another user\'s profile.';
+	}
+	if (isProfileActive)
+		return 'Profile is already open. Type "kill profile" to close it.';
+	if (args.length === 1)
+		ProfileBuilder.buildProfile('');
+	else
+		ProfileBuilder.buildProfile(args[1]);
+	isProfileActive = true;
+	return 'Profile is now open.';
+}
+
+
+function killCommand(args: string[]): string {
+	if (args.length !== 2)
+		return 'Usage: kill [process_name]';
+	if (args[1] === 'profile' && isProfileActive) {
+		ProfileBuilder.removeProfile();
+		isProfileActive = false;
+		return 'kill profile';
+	}
+	return `No such process: ${args[1]}`;
+}
+
+
+function clearCommand(): string
+{
+	clearOutput();
+	return ''
 }
 
 
 
 // ------------------------------------------------------------------------ Utilities ---------------------------------------------------------------------
 
-function countChar(char: string): number
-{
+function countChar(char: string): number {
 	if (!output)
 		return 0;
 	const outputText = output.textContent;
@@ -134,6 +171,7 @@ function checkArgs(args: string): boolean {
 	return quote === null;
 }
 
+//---------------------------------------------------------------------------------- CASE ---------------------------------------------------------------------
 
 // FIND --> DEBUG, remove later
 function exec(command: string) {
@@ -145,12 +183,19 @@ function exec(command: string) {
 		args[i] = args[i].replace(/^['"]|['"]$/g, '');
 	}
 
+	if (args.length === 0 || args[0] === '') {
+		return '';
+	}
+
 	for (let i = 0; i < commandAvailable.length; i++) {
 		if (args[0] === commandAvailable[i].name) {
-			return commandAvailable[i].function(args);
+			const result = commandAvailable[i].function(args);
+			if (result === undefined || result === null || result === '')
+				return '';
+			return '> ' + result;
 		}
 	}
-	return `Unknown command: ${args[0]}`;
+	return `> Unknown command: ${args[0]}`;
 }
 
 function resize() {
@@ -182,8 +227,15 @@ function enterCase() {
 		output.textContent = output.textContent.slice(output.textContent.indexOf('\f') + 1);
 	}
 	const result = exec(command.slice(promptText.length));
-	output.textContent += command + '\n';
-	output.textContent += result + '\n' + '\f';
+	if (result != '')
+	{
+		output.textContent += command + '\n';
+		output.textContent += result + '\n' + '\f';
+	}
+	else if (result === '' && command.slice(promptText.length).trim() === 'clear')
+		output.textContent += '\f';
+	else
+		output.textContent += command + '\n' + '\f';
 	resetInput();
 }
 
@@ -237,7 +289,7 @@ function backspaceCase() {
 	}
 }
 
-function defaultCase(event : KeyboardEvent) {
+function defaultCase(event: KeyboardEvent) {
 	if (currentInput && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
 		const cursorPosition = currentInput.selectionStart;
 		currentInput.value = currentInput.value.slice(0, cursorPosition) + event.key + currentInput.value.slice(cursorPosition);
@@ -249,63 +301,121 @@ function defaultCase(event : KeyboardEvent) {
 
 // -------------------------------------------------------------------- Event Listeners ---------------------------------------------------------------------
 
-if (terminal) {
-	terminal.addEventListener('click', () => {
+function setEventListeners() {
+	if (!isBuilded)
+		return;
+
+	if (terminal) {
+		terminal.addEventListener('click', () => {
+			if (currentInput) {
+				currentInput.focus();
+			}
+		});
+
+		window.addEventListener('resize', (e) => {
+			if (currentInput)
+				resize();
+		});
+
 		if (currentInput) {
-			currentInput.focus();
+			currentInput.addEventListener('mousedown', e => {
+				e.preventDefault();
+			});
 		}
-	});
-}
 
-window.addEventListener('resize', (e) => {
-	if (currentInput) {
-		resize();
+		if (currentInput) {
+			currentInput.addEventListener('keydown', (event: KeyboardEvent) => {
+				if (event.key === 'F11' || (event.ctrlKey && event.key.toLowerCase() === 'r')) {
+					return;
+				}
+				event.preventDefault();
+				switch (true) {
+					case (event.key === 'Enter'):
+						enterCase();
+						break;
+					case (event.ctrlKey && event.key.toLowerCase() === 'c'):
+						sigintCase();
+						break;
+					case (event.ctrlKey && event.key.toLowerCase() === 'l'):
+						clearOutput();
+						break;
+					case (event.key === 'ArrowUp'):
+						console.log("Log : Arrow Up");
+						break;
+					case (event.key === 'ArrowDown'):
+						console.log("Log : Arrow Down");
+						break;
+					case (event.key === 'Tab'):
+						console.log("Log : Tab");
+						break;
+					case (event.key === 'ArrowLeft'):
+						cursorLeft();
+						break
+					case (event.key === 'ArrowRight'):
+						cursorRight();
+						break;
+					case (event.key === 'Backspace'):
+						backspaceCase();
+						break;
+					default:
+						defaultCase(event);
+						break;
+				}
+				if (terminal) {
+					terminal.scrollTop = terminal.scrollHeight;
+				}
+			});
+		}
 	}
-});
-
-if (currentInput) {
-	currentInput.addEventListener('mousedown', e => {
-		e.preventDefault();
-	});
 }
 
-if (currentInput) {
-	currentInput.addEventListener('keydown', (event: KeyboardEvent) => {
-		event.preventDefault();
-		switch (true) {
-			case (event.key === 'Enter'):
-				enterCase();
-				break;
-			case (event.ctrlKey && event.key.toLowerCase() === 'c'):
-				sigintCase();
-				break;
-			case (event.ctrlKey && event.key.toLowerCase() === 'l'):
-				clearOutput();
-				break;
-			case (event.key === 'ArrowUp'):
-				console.log("Log : Arrow Up");
-				break;
-			case (event.key === 'ArrowDown'):
-				console.log("Log : Arrow Down");
-				break;
-			case (event.key === 'Tab'):
-				console.log("Log : Tab");
-				break;
-			case (event.key === 'ArrowLeft'):
-				cursorLeft();
-				break
-			case (event.key === 'ArrowRight'):
-				cursorRight();
-				break;
-			case (event.key === 'Backspace'):
-				backspaceCase();
-				break;
-			default:
-				defaultCase(event);
-				break;
-		}
-		if (terminal) {
-			terminal.scrollTop = terminal.scrollHeight;
-		}
-	});
+
+// -------------------------------------------------------------------- Initialisation ---------------------------------------------------------------------
+export namespace Terminal {
+	export function buildTerminal() {
+		terminal = document.createElement('div');
+		terminal.id = "terminal";
+		terminal.className = "terminal-font p-4 m-0 bg-black border-2 border-green-500 float-left text-green-400 text-sm overflow-y-auto focus:outline-none cursor-text relative scroll-smooth"
+		terminal.style.height = "calc(100vh)";
+		terminal.style.width = "100%";
+		terminal.tabIndex = 0;
+		terminal.setAttribute('role', 'region');
+		terminal.setAttribute('aria-label', 'Terminal interactif');
+		terminal.setAttribute('aria-readonly', 'true');
+		terminal.setAttribute('aria-hidden', 'false');
+
+		output = document.createElement('div');
+		output.id = "output";
+		output.className = "terminal-output";
+		terminal.appendChild(output);
+
+		inputLine = document.createElement('div');
+		inputLine.id = "input-line";
+		inputLine.className = "input-line";
+
+		currentInput = document.createElement('textarea');
+		currentInput.spellcheck = false;
+		currentInput.autocomplete = "off";
+		currentInput.id = "current-input";
+		currentInput.className = "current-input";
+		currentInput.rows = 1;
+		currentInput.value = promptText;
+		inputLine.appendChild(currentInput);
+		terminal.appendChild(inputLine);
+		document.body.appendChild(terminal);
+
+		isBuilded = true;
+		setEventListeners();
+	}
 }
+
+
+function teste(args: string[]): string {
+	const test = document.getElementById('terminal');
+	if (!test)
+		return '';
+	test.style.width = args[1] + "%";
+	return "Terminal resized to " + args[1] + "%";
+}
+
+

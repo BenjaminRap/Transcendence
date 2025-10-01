@@ -125,15 +125,9 @@ const profile = {
 }
 
 
-
-const profileElement = document.getElementById('profile');
-
-function createProfileCard() {
+function createProfileCard(profileElement: HTMLElement | null) {
 	if (!profileElement)
-	{
-		console.log("No profile element found");
 		return;
-	}
 	const profileCard = document.createElement('div');
 	profileCard.className = "flex flex-col p-4 shadow-lg border border-green-500 align-center justify-center items-center";
 	profileCard.innerHTML = `<img src="${profile.linkofavatar}" alt="Avatar" class="w-24 h-24 border border-green-500"></img>
@@ -148,12 +142,9 @@ function createProfileCard() {
 }
 
 
-function createButtons() {
+function createButtons(profileElement: HTMLElement | null) {
 	if (!profileElement)
-	{
-		console.log("No profile element found");
 		return;
-	}
 	const buttonContainer = document.createElement('div');
 	buttonContainer.className = "grid grid-cols-2 place-content-stretch gap-2";
 	buttonContainer.innerHTML = `<button class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Change Name</button>
@@ -164,12 +155,9 @@ function createButtons() {
 	profileElement.appendChild(buttonContainer);
 }
 
-function createMatchHistory() {
+function createMatchHistory(profileElement: HTMLElement | null) {
 	if (!profileElement)
-	{
-		console.log("No profile element found");
 		return;
-	}
 	const matchHistory = document.createElement('div');
 	matchHistory.className = "flex flex-col min-h-[25vh]"; 
 	matchHistory.innerHTML = `<div class="flex w-full place-content-between">
@@ -208,12 +196,9 @@ function createMatchHistory() {
 	profileElement.appendChild(matchHistory);
 }
 
-function createFriendList() {
+function createFriendList(profileElement: HTMLElement | null) {
 	if (!profileElement)
-	{
-		console.log("No profile element found");
 		return;
-	}
 	const friendList = document.createElement('div');
 	friendList.className = "flex flex-col min-h-[25vh]";
 	friendList.innerHTML = `
@@ -243,12 +228,25 @@ function createFriendList() {
 	profileElement.appendChild(friendList);
 }
 
-createProfileCard();
-createButtons();
-createMatchHistory();
-createFriendList();
-
-console.log("Profile Loaded --");
-
-const test = document.getElementById('profile');
-console.log(test);
+export namespace ProfileBuilder {
+	export function buildProfile(user: string) {
+		const profileElement = document.createElement('div');
+		profileElement.id = "profile";
+		profileElement.className = "p-4 m-0 terminal-font bg-black border-2 border-collapse border-green-500 flex flex-col gap-y-4"
+		profileElement.style.height = "calc(100vh)";
+		profileElement.style.width = "max(25%, 350px)";
+		createProfileCard(profileElement);
+		createButtons(profileElement);
+		createMatchHistory(profileElement);
+		createFriendList(profileElement);
+		
+		document.body.appendChild(profileElement);
+		window.location.replace(`#/profile/user`);
+	}
+	export function removeProfile() {
+		const profileElement = document.getElementById('profile');
+		if (profileElement) {
+			document.body.removeChild(profileElement);
+		}
+	}
+}
