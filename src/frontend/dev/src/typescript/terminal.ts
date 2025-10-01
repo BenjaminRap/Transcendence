@@ -77,6 +77,8 @@ var commandAvailable =
 ];
 
 var currentDirectory = '/';
+var commandHistory: string[] = [];
+var indexCommandHistory = -2;
 
 var isBuilded = false;
 var isProfileActive = false;
@@ -171,6 +173,20 @@ function checkArgs(args: string): boolean {
 	return quote === null;
 }
 
+
+function updateCurrentHistory(command: string) {
+	if (command == '')
+		return;	
+	if (commandHistory.length === 0 || commandHistory[commandHistory.length - 1] !== command) {
+		commandHistory.push(command);
+	}
+	if (commandHistory.length > 100) {
+		commandHistory.shift();
+	}
+	indexCommandHistory = -2;
+}
+
+
 //---------------------------------------------------------------------------------- CASE ---------------------------------------------------------------------
 
 // FIND --> DEBUG, remove later
@@ -237,6 +253,7 @@ function enterCase() {
 	else
 		output.textContent += command + '\n' + '\f';
 	resetInput();
+	updateCurrentHistory(command.slice(promptText.length));
 }
 
 function clearOutput() {
@@ -299,6 +316,26 @@ function defaultCase(event: KeyboardEvent) {
 	}
 }
 
+function ArrowUpCase() {
+	if (!currentInput || commandHistory.length === 0 || indexCommandHistory === -1)
+		return;
+	if (indexCommandHistory === -2)
+		indexCommandHistory = commandHistory.length - 1;
+	else if (indexCommandHistory > 0)
+		indexCommandHistory--;
+	currentInput.value = promptText + commandHistory[indexCommandHistory];
+	resize();
+}
+
+function ArrowDownCase() {
+	if (!currentInput || commandHistory.length === 0 || indexCommandHistory === -2)
+		return;
+	if (indexCommandHistory < commandHistory.length - 1) {
+		indexCommandHistory++;
+		currentInput.value = promptText + commandHistory[indexCommandHistory];
+	}
+}
+
 // -------------------------------------------------------------------- Event Listeners ---------------------------------------------------------------------
 
 function setEventListeners() {
@@ -340,10 +377,10 @@ function setEventListeners() {
 						clearOutput();
 						break;
 					case (event.key === 'ArrowUp'):
-						console.log("Log : Arrow Up");
+						ArrowUpCase();
 						break;
 					case (event.key === 'ArrowDown'):
-						console.log("Log : Arrow Down");
+						ArrowDownCase();
 						break;
 					case (event.key === 'Tab'):
 						console.log("Log : Tab");
