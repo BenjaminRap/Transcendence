@@ -73,6 +73,12 @@ var commandAvailable =
 		'description': 'Terminate a process',
 		'usage': 'kill [process_name]',
 		function: killCommand
+	},
+	{
+		'name': 'modal',
+		'description': 'Create a modal with text',
+		'usage': 'modal [text]',
+		function: modalCommand
 	}
 ];
 
@@ -139,6 +145,14 @@ function clearCommand(): string
 {
 	clearOutput();
 	return ''
+}
+
+function modalCommand(args: string[]): string {
+	if (args.length < 2) {
+		return 'Usage: modal [text]';
+	}
+	makeModal(args.slice(1).join(' '));
+	return `Modal created with text: ${args.slice(1).join(' ')}`;
 }
 
 
@@ -447,6 +461,64 @@ export namespace Terminal {
 }
 
 
+/*
+
+  <!-- <div class="absolute top-[50%] left-[50%] border p-4 border-green-500 bg-black z-2 flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 w-[20%]">
+    <div class="container">
+      <p class="terminal-font p-1">Change Name :</p>
+      <textarea id="nameInput" placeholder="Shadow-01" maxlength="20" spellcheck="false" autocomplete="off" rows="1" class="terminal-font border-green-500 border-2 resize-none w-full outline-0 p-2 h-auto overflow-y-hidden"></textarea>
+    </div>
+    <button id="changeNameButton" class="terminal-font border-green-500 border-2 w-full p-2 hover:underline hover:underline-offset-2">Change</button>
+    <button id="changeNameButton" class="terminal-font absolute top-0 right-1 hover:underline hover:underline-offset-2 p-1">x</button>
+  </div> -->
+
+*/
+
+function makeModal(args: string)
+{
+	const modal = document.createElement('div');
+	modal.className = "absolute top-[50%] left-[50%] border p-4 border-green-500 bg-black z-2 flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 w-[20%]";
+	modal.id = "modal";
+	const container = document.createElement('div');
+	container.className = "container";
+	const p = document.createElement('p');
+	p.className = "terminal-font p-1";
+	p.textContent = args;
+	const textarea = document.createElement('textarea');
+	textarea.id = "nameInput";
+	textarea.placeholder = "Shadow-01";
+	textarea.maxLength = 20;
+	textarea.spellcheck = false;
+	textarea.autocomplete = "off";
+	textarea.rows = 1;
+	textarea.className = "terminal-font border-green-500 border-2 resize-none w-full outline-0 p-2 h-auto overflow-y-hidden";
+	container.appendChild(p);
+	container.appendChild(textarea);
+	modal.appendChild(container);
+	const changeNameButton = document.createElement('button');
+	changeNameButton.id = "changeNameButton";
+	changeNameButton.className = "terminal-font border-green-500 border-2 w-full p-2 hover:underline hover:underline-offset-2";
+	changeNameButton.textContent = "Change";
+	modal.appendChild(changeNameButton);
+	const closeButton = document.createElement('button');
+	closeButton.className = "terminal-font absolute top-0 right-1 hover:underline hover:underline-offset-2 p-1";
+	closeButton.textContent = "x";
+	closeButton.addEventListener('click', () => {
+		if (modal.parentNode) {
+			modal.parentNode.removeChild(modal);
+		}
+	});
+	modal.appendChild(closeButton);
+	const terminal = document.getElementById('terminal');
+	if (terminal) {
+		terminal.appendChild(modal);
+	}
+	else {
+		console.error("Terminal not found");
+		return;
+	}
+}
+
 function teste(args: string[]): string {
 	const test = document.getElementById('terminal');
 	if (!test)
@@ -454,5 +526,3 @@ function teste(args: string[]): string {
 	test.style.width = args[1] + "%";
 	return "Terminal resized to " + args[1] + "%";
 }
-
-
