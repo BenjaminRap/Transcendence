@@ -32,7 +32,7 @@ export class	Float32Array2D {
 		return (x >= 0 && y >= 0 && x < this.width && y < this.height);
 	}
 
-	public forEach(callback : (value : int, x : int, y : int, index : int) => void) : void
+	public forEach(callback : (value : number, x : int, y : int, index : int) => void) : void
 	{
 		for (let y = 0; y < this.height; y++) {
 			for (let x = 0; x < this.width; x++) {
