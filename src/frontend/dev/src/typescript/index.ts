@@ -29,7 +29,7 @@ class PongGame extends HTMLElement {
 			this._scene = await this.loadScene();
 			this._engine.runRenderLoop(this.renderScene.bind(this));
 		} catch (error) {
-			console.log(`Could not initialize the scene : ${error}`)
+			console.error(`Could not initialize the scene : ${error}`)
 		}
     }
 
@@ -38,7 +38,7 @@ class PongGame extends HTMLElement {
 		try {
 			this._scene.render();
 		} catch (error) {
-			console.log(`Could not render the scene : ${error}`)
+			console.error(`Could not render the scene : ${error}`)
 		}
 	}
 
