@@ -88,6 +88,7 @@ var indexCommandHistory = -2;
 
 var isBuilded = false;
 var isProfileActive = false;
+var isModalActive = false;
 
 
 let terminal: HTMLDivElement | null = null;
@@ -358,7 +359,7 @@ function setEventListeners() {
 
 	if (terminal) {
 		terminal.addEventListener('click', () => {
-			if (currentInput) {
+			if (currentInput && !isModalActive) {
 				currentInput.focus();
 			}
 		});
@@ -457,25 +458,14 @@ export namespace Terminal {
 
 		isBuilded = true;
 		setEventListeners();
+		currentInput.focus();
 	}
 }
 
-
-/*
-
-  <!-- <div class="absolute top-[50%] left-[50%] border p-4 border-green-500 bg-black z-2 flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 w-[20%]">
-    <div class="container">
-      <p class="terminal-font p-1">Change Name :</p>
-      <textarea id="nameInput" placeholder="Shadow-01" maxlength="20" spellcheck="false" autocomplete="off" rows="1" class="terminal-font border-green-500 border-2 resize-none w-full outline-0 p-2 h-auto overflow-y-hidden"></textarea>
-    </div>
-    <button id="changeNameButton" class="terminal-font border-green-500 border-2 w-full p-2 hover:underline hover:underline-offset-2">Change</button>
-    <button id="changeNameButton" class="terminal-font absolute top-0 right-1 hover:underline hover:underline-offset-2 p-1">x</button>
-  </div> -->
-
-*/
-
 function makeModal(args: string)
 {
+	if (isModalActive)
+		return;
 	const modal = document.createElement('div');
 	modal.className = "absolute top-[50%] left-[50%] border p-4 border-green-500 bg-black z-2 flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 w-[20%]";
 	modal.id = "modal";
@@ -502,12 +492,16 @@ function makeModal(args: string)
 	modal.appendChild(changeNameButton);
 	const closeButton = document.createElement('button');
 	closeButton.className = "terminal-font absolute top-0 right-1 hover:underline hover:underline-offset-2 p-1";
-	closeButton.textContent = "x";
-	closeButton.addEventListener('click', () => {
+	closeButton.textContent = "×";
+	
+	const closeModal = () => {
 		if (modal.parentNode) {
 			modal.parentNode.removeChild(modal);
+			isModalActive = false;
+			terminal?.removeEventListener('click', handleOutsideClick);
 		}
-	});
+	};
+	closeButton.addEventListener('click', closeModal);
 	modal.appendChild(closeButton);
 	const terminal = document.getElementById('terminal');
 	if (terminal) {
@@ -517,8 +511,19 @@ function makeModal(args: string)
 		console.error("Terminal not found");
 		return;
 	}
+	
+	const handleOutsideClick = (event: MouseEvent) => {
+		if (!modal.contains(event.target as Node)) {
+			closeModal();
+		}
+		event.stopPropagation();
+	};
+	setTimeout(() => {
+		terminal?.addEventListener('click', handleOutsideClick);
+	}, 0);
+	isModalActive = true;
+	textarea.focus();
 }
-
 function teste(args: string[]): string {
 	const test = document.getElementById('terminal');
 	if (!test)
