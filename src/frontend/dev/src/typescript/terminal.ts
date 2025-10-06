@@ -254,6 +254,22 @@ function updateCursorPosition(position: number) {
 	currentInput.selectionEnd = position;
 }
 
+
+
+export namespace TerminalUtils {
+	export function displayOnTerminal(text: string) {
+		if (!output)
+			return;
+		if (countChar('\f') > maxOutputLines) {
+			output.textContent = output.textContent.slice(output.textContent.indexOf('\f') + 1);
+		}
+		output.textContent += promptText+ text + '\n' + '\f';
+		if (terminal) {
+			terminal.scrollTop = terminal.scrollHeight;
+		}
+	}
+}
+
 function enterCase() {
 	if (!currentInput || !output)
 		return;
@@ -285,7 +301,6 @@ function clearOutput() {
 function sigintCase() {
 	if (!currentInput || !output)
 		return;
-
 	if (countChar('\f') > maxOutputLines) {
 		output.textContent = output.textContent.slice(output.textContent.indexOf('\f') + 1);
 	}

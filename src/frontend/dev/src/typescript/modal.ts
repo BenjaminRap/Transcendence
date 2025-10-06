@@ -1,3 +1,5 @@
+import { TerminalUtils } from './terminal.ts'
+
 
 export namespace Modal { 
 	export var isModalActive = false;
@@ -6,7 +8,7 @@ export namespace Modal {
 		if (isModalActive)
 			return;
 		const modal = document.createElement('div');
-		modal.className = "absolute top-[50%] left-[50%] border p-4 border-green-500 bg-black z-2 flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 w-[20%]";
+		modal.className = "fixed top-[50%] left-[50%] border p-4 border-green-500 bg-black z-2 flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 w-[20%]";
 		modal.id = "modal";
 		const container = document.createElement('div');
 		container.className = "container";
@@ -31,6 +33,20 @@ export namespace Modal {
 		changeNameButton.addEventListener('click', () => {
 			exec(textarea.value);
 		});
+
+		modal.addEventListener('keydown', (event: KeyboardEvent) => {
+			if (event.key === 'Enter') {
+				event.preventDefault();
+				exec(textarea.value);
+			}
+			else if (event.key === 'Escape' || event.key ==='c' && event.ctrlKey) {
+				event.preventDefault();
+				closeModal();
+				TerminalUtils.displayOnTerminal("^C");
+			}
+		});
+
+
 		modal.appendChild(changeNameButton);
 		const closeButton = document.createElement('button');
 		closeButton.className = "terminal-font absolute top-0 right-1 hover:underline hover:underline-offset-2 p-1";
@@ -52,7 +68,6 @@ export namespace Modal {
 			console.error("Terminal not found");
 			return;
 		}
-
 
 		isModalActive = true;
 		textarea.focus();
