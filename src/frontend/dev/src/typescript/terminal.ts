@@ -1,6 +1,7 @@
 export { };
 
 import { ProfileBuilder } from './profile.ts'
+import { Modal } from './modal.ts'
 
 var maxOutputLines = 100;
 var promptText = "usa@terminal:~$ ";
@@ -88,7 +89,7 @@ var indexCommandHistory = -2;
 
 var isBuilded = false;
 var isProfileActive = false;
-var isModalActive = false;
+
 
 
 let terminal: HTMLDivElement | null = null;
@@ -152,7 +153,10 @@ function modalCommand(args: string[]): string {
 	if (args.length < 2) {
 		return 'Usage: modal [text]';
 	}
-	makeModal(args.slice(1).join(' '));
+	Modal.makeModal(args.slice(1).join(' '), (text: string) => {
+		console.log(`Modal input: ${text}`);
+		Modal.closeModal();
+	});
 	return `Modal created with text: ${args.slice(1).join(' ')}`;
 }
 
@@ -359,7 +363,7 @@ function setEventListeners() {
 
 	if (terminal) {
 		terminal.addEventListener('click', () => {
-			if (currentInput && !isModalActive) {
+			if (currentInput && !Modal.isModalActive) {
 				currentInput.focus();
 			}
 		});
@@ -462,68 +466,7 @@ export namespace Terminal {
 	}
 }
 
-function makeModal(args: string)
-{
-	if (isModalActive)
-		return;
-	const modal = document.createElement('div');
-	modal.className = "absolute top-[50%] left-[50%] border p-4 border-green-500 bg-black z-2 flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 w-[20%]";
-	modal.id = "modal";
-	const container = document.createElement('div');
-	container.className = "container";
-	const p = document.createElement('p');
-	p.className = "terminal-font p-1";
-	p.textContent = args;
-	const textarea = document.createElement('textarea');
-	textarea.id = "nameInput";
-	textarea.placeholder = "Shadow-01";
-	textarea.maxLength = 20;
-	textarea.spellcheck = false;
-	textarea.autocomplete = "off";
-	textarea.rows = 1;
-	textarea.className = "terminal-font border-green-500 border-2 resize-none w-full outline-0 p-2 h-auto overflow-y-hidden";
-	container.appendChild(p);
-	container.appendChild(textarea);
-	modal.appendChild(container);
-	const changeNameButton = document.createElement('button');
-	changeNameButton.id = "changeNameButton";
-	changeNameButton.className = "terminal-font border-green-500 border-2 w-full p-2 hover:underline hover:underline-offset-2";
-	changeNameButton.textContent = "Change";
-	modal.appendChild(changeNameButton);
-	const closeButton = document.createElement('button');
-	closeButton.className = "terminal-font absolute top-0 right-1 hover:underline hover:underline-offset-2 p-1";
-	closeButton.textContent = "×";
-	
-	const closeModal = () => {
-		if (modal.parentNode) {
-			modal.parentNode.removeChild(modal);
-			isModalActive = false;
-			terminal?.removeEventListener('click', handleOutsideClick);
-		}
-	};
-	closeButton.addEventListener('click', closeModal);
-	modal.appendChild(closeButton);
-	const terminal = document.getElementById('terminal');
-	if (terminal) {
-		terminal.appendChild(modal);
-	}
-	else {
-		console.error("Terminal not found");
-		return;
-	}
-	
-	const handleOutsideClick = (event: MouseEvent) => {
-		if (!modal.contains(event.target as Node)) {
-			closeModal();
-		}
-		event.stopPropagation();
-	};
-	setTimeout(() => {
-		terminal?.addEventListener('click', handleOutsideClick);
-	}, 0);
-	isModalActive = true;
-	textarea.focus();
-}
+
 function teste(args: string[]): string {
 	const test = document.getElementById('terminal');
 	if (!test)
