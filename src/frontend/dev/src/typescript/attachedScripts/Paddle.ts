@@ -1,6 +1,6 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
-import { IUnityTransform, SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
+import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
 import { InputManager } from "./InputManager";
@@ -11,8 +11,8 @@ import { Scalar } from "@babylonjs/core/Maths/math.scalar";
 
 export class Paddle extends ScriptComponent {
 	private	_speed : number = 6.0;
-	private	_inputManagerTransform! : IUnityTransform;
-	private	_gameManagerTransform! : IUnityTransform;
+	private	_inputManagerTransform! : TransformNode;
+	private	_gameManagerTransform! : TransformNode;
 	private	_upKeyStringCode : string = "z";
 	private	_downKeyStringCode : string = "s";
 	private _minReboundSpeed : number = 10;
@@ -66,8 +66,7 @@ export class Paddle extends ScriptComponent {
 
 	protected start()
 	{
-		const	inputManagerNode = SceneManager.GetTransformNodeByID(this.scene, this._inputManagerTransform.id);
-		const	inputManager = SceneManager.GetComponent<InputManager>(inputManagerNode, "InputManager", false);
+		const	inputManager = SceneManager.GetComponent<InputManager>(this._inputManagerTransform, "InputManager", false);
 
 		this._upKeyInfo = inputManager.getInputKey(this._upKeyStringCode);
 		this._downKeyInfo = inputManager.getInputKey(this._downKeyStringCode);
@@ -77,8 +76,7 @@ export class Paddle extends ScriptComponent {
 			throw new Error("The Paddle script should be attached to a mesh with a physic body !");
 		this._physicsBody = physicsBody;
 
-		const	gameManagerNode = SceneManager.GetTransformNodeByID(this.scene, this._gameManagerTransform.id);
-		const	gameManager = SceneManager.GetComponent<GameManager>(gameManagerNode, "GameManager", false);
+		const	gameManager = SceneManager.GetComponent<GameManager>(this._gameManagerTransform, "GameManager", false);
 
 		this._movementRange = gameManager.getPaddleMovementRange();
 	}

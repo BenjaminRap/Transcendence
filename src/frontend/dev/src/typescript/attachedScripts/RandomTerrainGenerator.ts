@@ -1,7 +1,7 @@
 import { Scene } from "@babylonjs/core/scene";
 import { GroundMesh, MeshBuilder, TransformNode } from "@babylonjs/core/Meshes";
-import { IUnityMaterial, IUnityVector2, SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
-import { float, int, Scalar, Vector2, VertexBuffer } from "@babylonjs/core";
+import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
+import { float, int, Material, Scalar, VertexBuffer } from "@babylonjs/core";
 import { getDiamondSquareArray } from "../diamondSquareAlgorithm";
 import { Range } from "../Range";
 
@@ -13,7 +13,7 @@ export class RandomTerrainGenerator extends ScriptComponent {
 	private _subdivisionsFactor : int = 8;
 	private _heightRange : Range = new Range(1, 16);
 	private _randomnessRange : Range = new Range(-2, 2);
-	private _groundMaterial! : IUnityMaterial;
+	private _groundMaterial! : Material;
 	private _flattenHeightDistance : number = 20;
 	private _flattenHeightTransitionDistance : number = 100;
 
@@ -30,8 +30,7 @@ export class RandomTerrainGenerator extends ScriptComponent {
 		const	heights = this.getVerticesHeights();
 		this.setVerticesPositions(heights);
 		this._ground.position.y -= this._ground.getHeightAtCoordinates(0, 0);
-
-		this.setMaterial();
+		this._ground.material = this._groundMaterial;
 	}
 
 	protected	start()
@@ -121,11 +120,6 @@ export class RandomTerrainGenerator extends ScriptComponent {
 		const newValue = Scalar.Lerp(heightInMiddle, value, distancePercent);
 
 		return newValue;
-	}
-
-	private setMaterial()
-	{
-		this._ground.material = this.scene.getMaterialById(this._groundMaterial.id);
 	}
 
 	public	getHeightAtCoordinates(x : number, y : number) : number
