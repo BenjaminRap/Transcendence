@@ -1,6 +1,6 @@
 import { Scene } from "@babylonjs/core/scene";
 import { Mesh, TransformNode } from "@babylonjs/core/Meshes";
-import { IUnityTransform, SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
+import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { buildGrassMaterial } from "../shaders/grass";
 import { Camera } from "@babylonjs/core/Cameras/camera";
 import { Matrix, Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";

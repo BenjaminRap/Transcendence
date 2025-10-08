@@ -72,7 +72,7 @@ class PongGame extends HTMLElement {
 
 		const	sceneName = "Magic.gltf";
 
-		assetsManager.addMeshTask("scene", null, "/games/pong/",sceneName)
+		assetsManager.addMeshTask("scene", null, "/scenes/", sceneName)
 
 		await SceneManager.LoadRuntimeAssets(assetsManager, [ sceneName ], () => {
 			cam.dispose(); // removing the unecessary camera
