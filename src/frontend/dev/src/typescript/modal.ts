@@ -76,13 +76,14 @@ export namespace Modal {
 	export function closeModal() {
 		const modal = document.getElementById('modal');
 		const terminal = document.getElementById('terminal');
-		if (!modal || !terminal)
+		const inputLine = document.getElementById('current-input');
+		if (!modal || !terminal || !inputLine)
 			return;
 		if (modal.parentNode) {
 			modal.parentNode.removeChild(modal);
 			isModalActive = false;
 			terminal?.removeEventListener('click', handleOutsideClick);
-			terminal.focus();
+			inputLine.focus();
 		}
 	};
 
