@@ -3,14 +3,14 @@ export { };
 import { ProfileBuilder } from './profile.ts'
 import { Modal } from './modal.ts'
 
-var maxOutputLines = 100;
-var promptText = "usa@terminal:~$ ";
-var env = {
+let maxOutputLines = 100;
+let promptText = "usa@terminal:~$ ";
+let env = {
 	'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
 	'HOME': '/home/usa',
 	'TERM': 'minishell'
 };
-var fileSystem = {
+let fileSystem = {
 	'/': {
 		'type': 'dir',
 		'content': {
@@ -37,58 +37,48 @@ var fileSystem = {
 
 // HASH_MAP
 
-var commandAvailable =
-[
-	{
-		'name': 'echo',
-		'description': 'Display a line of text',
-		'usage': 'echo [text]',
-		function: echoCommand
-	},
-	{
-		'name': 'help',
-		'description': 'Display this help message',
-		'usage': 'help',
-		function: helpCommand
-	},
-	{
-		'name': 'profile',
-		'description': 'Display user profile information',
-		'usage': 'profile',
-		function: profileCommand
-	},
-	{
-		'name': 'clear',
-		'description': 'Clear the terminal screen',
-		'usage': 'clear',
-		function: clearCommand
-	},
-	{
-		'name': 'test',
-		'description': 'Test command to resize terminal',
-		'usage': 'test [size in %]',
-		function: teste
-	},
-	{
-		'name': 'kill',
-		'description': 'Terminate a process',
-		'usage': 'kill [process_name]',
-		function: killCommand
-	},
-	{
-		'name': 'modal',
-		'description': 'Create a modal with text',
-		'usage': 'modal [text]',
-		function: modalCommand
+
+
+class Command {
+	name: string;
+	description: string;
+	usage: string;
+	execute: (args: string[], description: string, usage: string) => string;
+
+	constructor(name: string, description: string, usage: string, execute: (args: string[], description: string, usage: string) => string) {
+		this.name = name;
+		this.description = description;
+		this.usage = usage;
+		this.execute = execute;
 	}
+
+	launchCommand(args: string[]): string {
+		return this.execute(args, this.description, this.usage);
+	}
+}
+
+// const test = new Command('test', 'A test command', 'test [args]', (args: string[]) => {
+// 	return 'Test command executed with args: ' + args.join(' ');
+// });
+
+
+let commandAvailable =
+[
+	new Command('echo', 'Display a line of text', 'echo [text]', echoCommand),
+	new Command('help', 'Display this help message', 'help', helpCommand),
+	new Command('profile', 'Display user profile', 'profile [username]', profileCommand),
+	new Command('kill', 'Terminate a process', 'kill [process_name]', killCommand),
+	new Command('clear', 'Clear the terminal screen', 'clear', clearCommand),
+	new Command('modal', 'Create a modal dialog', 'modal [text]', modalCommand),
+	// new Command('teste', 'Resize the terminal width', 'teste [percentage]', teste),
 ];
 
-var currentDirectory = '/';
-var commandHistory: string[] = [];
-var indexCommandHistory = -2;
+let currentDirectory = '/';
+let commandHistory: string[] = [];
+let indexCommandHistory = -2;
 
-var isBuilded = false;
-var isProfileActive = false;
+let isBuilded = false;
+let isProfileActive = false;
 
 
 
@@ -99,8 +89,12 @@ let currentInput: HTMLTextAreaElement | null = null;
 
 // ------------------------------------------------------------------------ Command ---------------------------------------------------------------------
 
-function echoCommand(args: string[]): string {
-	var result = '';
+function echoCommand(args: string[], description: string, usage: string): string {
+	let result = '';
+
+	if (args[1] === '-h' || args[1] === '--help') {
+		return `${description}\n> Usage: ${usage}`;
+	}
 
 	for (let i = 1; i < args.length; i++) {
 		result += args[i] + ' ';
@@ -111,7 +105,7 @@ function echoCommand(args: string[]): string {
 function helpCommand(): string {
 	let helpText = 'Available commands:\n';
 	for (let i = 0; i < commandAvailable.length; i++) {
-		helpText += `${commandAvailable[i].name}: ${commandAvailable[i].description}\nUsage: ${commandAvailable[i].usage}\n\n`;
+		helpText += `${commandAvailable[i].name}\n\n`;
 	}
 	return helpText;
 }
@@ -224,7 +218,7 @@ function exec(command: string) {
 
 	for (let i = 0; i < commandAvailable.length; i++) {
 		if (args[0] === commandAvailable[i].name) {
-			const result = commandAvailable[i].function(args);
+			const result = commandAvailable[i].launchCommand(args);
 			if (result === undefined || result === null || result === '')
 				return '';
 			return '> ' + result;
