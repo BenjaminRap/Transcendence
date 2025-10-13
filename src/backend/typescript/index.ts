@@ -1,31 +1,41 @@
-import Fastify from 'fastify'
+import Fastify from 'fastify';
+import cors from '@fastify/cors';
 import { fpSqlitePlugin } from 'fastify-sqlite-typed';
 import { initDb } from './initDb.js';
+import { authRoutes } from './routes/auth.js';
 
 const fastify = Fastify({
-	logger: true
-})
-
-fastify.register(fpSqlitePlugin, {
-	dbFilename: "./databases/main.db",
+    logger: true
 });
 
-fastify.get('/', (_request, reply) => {
-	reply.send({ hello: 'world' });
-})
+// Plugin SQLite
+fastify.register(fpSqlitePlugin, {
+    dbFilename: "./databases/main.db",
+});
 
-async function	start() : Promise<void>
-{
-	try
-	{
-		await initDb(fastify);
-		await fastify.listen({ port: 8181, host: '0.0.0.0' });
-		fastify.log.info(`Server listening at address 0.0.0.0:8181`)
-	}
-	catch (error)
-	{
-		fastify.log.error(`Could not launch the server, error : ${error}`);	
-	}
+// CORS pour permettre les requêtes depuis le frontend
+fastify.register(cors, {
+    origin: true,
+    credentials: true
+});
+
+// Route de base
+fastify.get('/', (_request, reply) => {
+    reply.send({ hello: 'world' });
+});
+
+// Enregistrer les routes d'authentification
+fastify.register(authRoutes, { prefix: '/auth' });
+
+async function start(): Promise<void> {
+    try {
+        await initDb(fastify);
+        await fastify.listen({ port: 8181, host: '0.0.0.0' });
+        fastify.log.info(`Server listening at address 0.0.0.0:8181`);
+    } catch (error) {
+        fastify.log.error(`Could not launch the server, error : ${error}`);
+        process.exit(1);
+    }
 }
 
 start();

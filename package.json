@@ -12,7 +12,11 @@
 		"fastify-sqlite-typed": "^5.0.2",
 		"tailwindcss": "^4.1.11",
 		"typescript": "^5.9.2",
-		"vite": "^7.0.6"
+		"vite": "^7.0.6",
+		"@fastify/cors": "11.1.0",
+		"jsonwebtoken": "9.0.2",
+		"fastify-bcrypt": "1.0.1"
+
 	},
 	"scripts": {
 		"build": "make build",
