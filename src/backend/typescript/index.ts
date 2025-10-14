@@ -1,8 +1,8 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import { fpSqlitePlugin } from 'fastify-sqlite-typed';
 import { initDb } from './initDb.js';
 import { authRoutes } from './routes/auth.js';
+import { fpSqlitePlugin } from 'fastify-sqlite-typed';
 
 const fastify = Fastify({
     logger: true

@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { registerUser, LoginRequest, authResponse, user } from '../API/auth.js';
-import { hashPassword, comparePassword, generateToken, validateRegisterData, existingUser } from '../authUtils.js';
+import { comparePassword, generateToken, validateRegisterData, isExistingUser, addUserInDB } from '../authUtils.js';
 
 export async function authRoutes(fastify: FastifyInstance)
 { 
@@ -12,7 +12,7 @@ export async function authRoutes(fastify: FastifyInstance)
         {
             const { username, email, password, avatar } = request.body ;
 
-            const response = validateRegisterData({username, email, password});
+            const response = validateRegisterData(username, email, password);
             if (!response.success)
             {
                 return reply.status(400).send({
@@ -22,7 +22,7 @@ export async function authRoutes(fastify: FastifyInstance)
             }
 
             // Check if user already exists
-            if (existingUser(fastify, email))
+            if (isExistingUser(fastify, email))
             {
                 return reply.status(400).send({
                     success: false,
@@ -30,29 +30,16 @@ export async function authRoutes(fastify: FastifyInstance)
                 } as authResponse);
             }
 
-            // Hash the password
-            const hashedPassword = await hashPassword(password);
-
-            // default avatar if not provided
-            const userAvatar = avatar || 'https://i.pravatar.cc/150?img=7';
-
-            // insert the new user into the database
-            const result = await fastify.db.run(
-                'INSERT INTO users (name, email, password, avatar) VALUES (?, ?, ?, ?)',
-                [username, email, hashedPassword, userAvatar]
-            );
-
-            // generate a jwt token
-            const token = generateToken(result.lastID as number, email);
+            const newUser = await addUserInDB(username, email, password, avatar, fastify);
 
             return reply.status(201).send( {
                 success: true,
                 message: 'User registered successfully',
                 user: {
-                    id: result.lastID as number,
+                    id: newUser.id as number,
                     username,
                     email,
-                    avatar: userAvatar
+                    avatar: newUser.avatar
                 }
             } as authResponse);
 

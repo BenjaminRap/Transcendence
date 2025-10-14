@@ -1,26 +1,14 @@
 import { FastifyInstance } from 'fastify';
-import { bcrypt } from 'bcryptjs';
-import { jwt } from 'jsonwebtoken';
-import { authResponse, user } from './API/auth';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import { user } from './API/auth.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'complEcatEd-kEy';
 const SALT_ROUNDS = 12;
 
-export async function hashPassword(password: string): Promise<string> {
-    return await bcrypt.hash(password, SALT_ROUNDS);
-}
 
 export async function comparePassword(password: string, hashedPassword: string): Promise<boolean> {
     return await bcrypt.compare(password, hashedPassword);
-}
-
-export function generateToken(userId: number, email: string): string
-{
-    return jwt.sign(
-        { userId, email },
-        JWT_SECRET,
-        { expiresIn: '7d' }
-    );
 }
 
 export function verifyToken(token: string): { userId: number; email: string } | null {
@@ -89,7 +77,7 @@ export function validateRegisterData( username: string, email: string, password:
     };
 }
 
-export async function existingUser(fastify: FastifyInstance, email: string) : Promise<boolean>
+export async function isExistingUser(fastify: FastifyInstance, email: string) : Promise<boolean>
 {
     const user = await fastify.db.get<user>(
         'SELECT * FROM users WHERE email = ?',
@@ -98,4 +86,42 @@ export async function existingUser(fastify: FastifyInstance, email: string) : Pr
     if (user)
         return true;
     return false;
+}
+
+// ----------------------------------------------------------------------------------------------------------------------------------------------- //
+
+async function hashPassword(password: string): Promise<string> {
+    return await bcrypt.hash(password, SALT_ROUNDS);
+}
+
+export function generateToken(userId: number, email: string): string
+{
+    return jwt.sign(
+        { userId, email },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+    );
+}
+
+export async function addUserInDB(username: string, email: string, password: string, avatar: string, fastify: FastifyInstance): Promise<{ id: number, avatar: string }>
+{
+    const hashedPassword = await hashPassword(password);
+
+    // default avatar if not provided
+    const userAvatar = avatar || 'https://i.pravatar.cc/150?img=7';
+
+    // insert the new user into the database
+    const result = await fastify.db.run(
+        'INSERT INTO users (name, email, password, avatar) VALUES (?, ?, ?, ?)',
+        [username, email, hashedPassword, userAvatar]
+    );
+
+    // generate a jwt token
+    // attention, la gestion du token n'est pas encore faite
+    const token = generateToken(result.lastID as number, email);
+
+    return {
+        id: result.lastID,
+        avatar: userAvatar
+    };
 }
