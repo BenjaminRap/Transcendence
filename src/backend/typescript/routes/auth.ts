@@ -1,12 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { registerUser, LoginRequest, authResponse, user } from '../API/auth.js';
-import { hashPassword, comparePassword, generateToken, validateEmail, validatePassword } from '../auth.js';
-
-/*
-post :   registerUser
-            -> validate data (all data is sended)
-            -> validate data one by one (username, email, password)
-*/
+import { hashPassword, comparePassword, generateToken, validateRegisterData, existingUser } from '../authUtils.js';
 
 export async function authRoutes(fastify: FastifyInstance)
 { 
@@ -16,45 +10,21 @@ export async function authRoutes(fastify: FastifyInstance)
     {
         try
         {
-            const username = request.body.username;
-            const email = request.body.email;
-            const password = request.body.password;
-            const avatar = request.body.avatar;
+            const { username, email, password, avatar } = request.body ;
 
-            // validate data
-            if (!username || !email || !password)
+            const response = validateRegisterData({username, email, password});
+            if (!response.success)
             {
-                return reply.status(400).send( {
-                    success: false,
-                    message: 'all fields are required'
-                } as authResponse);
-            }
-
-            // email validation
-            if (!validateEmail(email)) {
                 return reply.status(400).send({
                     success: false,
-                    message: 'Format d\'email invalide'
-                } as authResponse);
-            }
-
-            // password validation
-            const passwordValidation = validatePassword(password);
-            if (!passwordValidation.isValid) {
-                return reply.status(400).send({
-                    success: false,
-                    message: passwordValidation.message
+                    message: response.message
                 } as authResponse);
             }
 
             // Check if user already exists
-            const existingUser = await fastify.db.get<user>(
-                'SELECT * FROM users WHERE email = ?',
-                [email]
-            );
-
-            if (existingUser) {
-                return reply.status(409).send({
+            if (existingUser(fastify, email))
+            {
+                return reply.status(400).send({
                     success: false,
                     message: 'A user with this email already exists'
                 } as authResponse);
@@ -64,7 +34,7 @@ export async function authRoutes(fastify: FastifyInstance)
             const hashedPassword = await hashPassword(password);
 
             // default avatar if not provided
-            const userAvatar = avatar || '/https://www.freepik.com/free-vector/user-circles-set_145856997.htm#fromView=keyword&page=1&position=2&uuid=55abf82a-b233-47d9-a131-b2b90b06539b&query=Default+avatar';
+            const userAvatar = avatar || 'https://i.pravatar.cc/150?img=7';
 
             // insert the new user into the database
             const result = await fastify.db.run(
@@ -155,8 +125,8 @@ export async function authRoutes(fastify: FastifyInstance)
     });
 
     // Route to get user profile
-    fastify.get('/profile', {
-            preHandler: async (request: FastifyRequest, reply: FastifyReply) => {
+    fastify.get('/profile', {    
+        preHandler: async (request: FastifyRequest, reply: FastifyReply) => {
             // Middleware to check authentication
             const authHeader = request.headers.authorization;
             
@@ -182,6 +152,8 @@ export async function authRoutes(fastify: FastifyInstance)
         }
     }, async (request: FastifyRequest, reply: FastifyReply) => {
         try {
+            console.log('IN AUTH');
+
             const { userId } = (request as any).user.userId;
 
             const user = await fastify.db.get<user>(
