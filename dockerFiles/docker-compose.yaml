@@ -30,6 +30,8 @@ services:
       "prod",
       "dev"
     ]
+    ports:
+      - "8181:8181"
 
 volumes:
   frontend:
