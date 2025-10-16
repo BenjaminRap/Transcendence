@@ -11,7 +11,7 @@ async function initUserTable(fastify: FastifyInstance): Promise<void>
 		await fastify.db.exec(`
 			CREATE TABLE IF NOT EXISTS users (
 				id INTEGER PRIMARY KEY AUTOINCREMENT,
-				username VARCHAR(128) NOT NULL,
+				username VARCHAR(128) UNIQUE NOT NULL,
 				email VARCHAR(256) UNIQUE NOT NULL,
 				password VARCHAR(256) NOT NULL,
 				avatar TEXT NOT NULL,

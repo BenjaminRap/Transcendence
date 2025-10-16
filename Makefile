@@ -52,14 +52,14 @@ stop:
 	$(DOCKER_EXEC) stop
 
 clean: stop
-	-docker stop $(docker ps -qa) 2>/dev/null
+	-docker stop $(docker ps -qa)
 	-docker rm $(docker ps -qa) 2>/dev/null
 	-docker rmi -f $(docker images -qa) 2>/dev/null
-	-docker volume rm $(docker volume ls -q) 2>/dev/null
+	-docker volume rm $(docker volume ls -q)
 	-docker network rm $(docker network ls -q) 2>/dev/null
 
 fclean: clean
-	-docker system prune -af
+	-docker system prune -af --volumes
 	-rm -rf ./dockerFiles/nginx/website/
 	-rm -rf ./src/backend/javascript/*
 	-rm -r ./dockerFiles/secrets/ssl/*

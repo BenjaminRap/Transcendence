@@ -28,13 +28,13 @@ export interface registerUser
 
 export interface LoginRequest
 {
-    email:      string,
+    identifier: string,
     password:   string
 };
 
 // ----------------------------------------------- //
 
-// response from the backend
+// response from the backend to the front end
 
 export interface authResponse
 {
@@ -47,4 +47,5 @@ export interface authResponse
         email:      string,
         avatar:     string
     };
+    accesstoken?:   string
 };

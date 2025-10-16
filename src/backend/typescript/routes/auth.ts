@@ -1,11 +1,13 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { registerUser, LoginRequest, authResponse, user } from '../API/auth.js';
-import { comparePassword, generateToken, validateRegisterData, isExistingUser, addUserInDB } from '../authUtils.js';
+import { validateRegisterData, isExistingUser, addUserInDB, findUser, verifyToken } from '../authUtils.js';
+
+async function checkAuth(request: FastifyRequest, reply: FastifyReply) {
+
+}
 
 export async function authRoutes(fastify: FastifyInstance)
 { 
-    // Route d'enregistrement
-    // "/register"
     fastify.post<{ Body: registerUser }>('/register', async (request: FastifyRequest<{ Body: registerUser }>, reply: FastifyReply) =>
     {
         try
@@ -21,8 +23,9 @@ export async function authRoutes(fastify: FastifyInstance)
                 } as authResponse);
             }
 
-            // Check if user already exists
-            if (isExistingUser(fastify, email))
+            // Check if user already exists in the DB
+            // VERIFIER SI LE USERNAME EST DEJA UTILISE !!
+            if (await isExistingUser(fastify, email))
             {
                 return reply.status(400).send({
                     success: false,
@@ -40,70 +43,65 @@ export async function authRoutes(fastify: FastifyInstance)
                     username,
                     email,
                     avatar: newUser.avatar
-                }
+                },
+                accesstoken: newUser.token
             } as authResponse);
 
         } catch (error) {
-            fastify.log.error("Error while saving:");
+            fastify.log.error("Error registering new user:");
             return reply.status(500).send({
                 success: false,
                 message: 'Internal server error'
             } as authResponse);
         }
     });
+
     // connection route
     fastify.post<{ Body: LoginRequest }>('/login', async (request: FastifyRequest<{ Body: LoginRequest }>, reply: FastifyReply) => {
         try {
-            const { email, password } = request.body;
+            const { identifier, password } = request.body;
 
-            // data validation
-            if (!email || !password) {
-                return reply.status(400).send({
-                    success: false,
-                    message: 'Email and password are required'
-                } as authResponse);
-            }
-
-            // find user by email
-            const user = await fastify.db.get<user>(
-                'SELECT * FROM users WHERE email = ?',
-                [email]
-            );
-
-            if (!user) {
+            if (!identifier || !password) {
                 return reply.status(401).send({
                     success: false,
-                    message: 'Incorrect email or password'
+                    message: 'Email or username and password are required'
                 } as authResponse);
             }
 
-            // Vérifier le mot de passe
-            const isPasswordValid = await comparePassword(password, user.password);
-            
-            if (!isPasswordValid) {
+            const userFound = await findUser(fastify, identifier, password);
+            if (!userFound.user) {
                 return reply.status(401).send({
                     success: false,
-                    message: 'Incorrect email or password'
+                    message: userFound.message
                 } as authResponse);
             }
-
-            // Générer un token JWT
-            const token = generateToken(user.id, user.email);
+            else if (!userFound.accesstoken) {
+                return reply.status(500).send({
+                    success: false,
+                    message: userFound.message
+                } as authResponse);
+            }
+            else if (!userFound.validPass) {
+                return reply.status(401).send( {
+                    success: false,
+                    message: userFound.message
+                } as authResponse);
+            }
 
             return reply.status(200).send({
                 success: true,
                 message: 'Connection successful',
-                token,
                 user: {
-                    id: user.id,
-                    username: user.username,
-                    email: user.email,
-                    avatar: user.avatar
-                }
+                    id: userFound.user.id,
+                    username: userFound.user.username,
+                    email: userFound.user.email,
+                    avatar: userFound.user.avatar
+                },
+                accesstoken: userFound.accesstoken
             } as authResponse);
 
         } catch (error) {
-            fastify.log.error('Error while connection:');
+            fastify.log.error(error);
             return reply.status(500).send({
                 success: false,
                 message: 'Internal server error'
@@ -112,11 +110,12 @@ export async function authRoutes(fastify: FastifyInstance)
     });
 
     // Route to get user profile
-    fastify.get('/profile', {    
-        preHandler: async (request: FastifyRequest, reply: FastifyReply) => {
-            // Middleware to check authentication
+    fastify.get('/profile', { preHandler: async (request: FastifyRequest, reply: FastifyReply) => {
+            // Middleware to check authentication token in the header
             const authHeader = request.headers.authorization;
             
+            console.log(authHeader);
+
             if (!authHeader || !authHeader.startsWith('Bearer ')) {
                 return reply.status(401).send({
                     success: false,
@@ -125,7 +124,7 @@ export async function authRoutes(fastify: FastifyInstance)
             }
 
             const token = authHeader.substring(7);
-            const decoded = require('../auth.js').verifyToken(token);
+            const decoded = verifyToken(token);
             
             if (!decoded) {
                 return reply.status(401).send({
@@ -139,17 +138,15 @@ export async function authRoutes(fastify: FastifyInstance)
         }
     }, async (request: FastifyRequest, reply: FastifyReply) => {
         try {
-            console.log('IN AUTH');
-
             const { userId } = (request as any).user.userId;
 
             const user = await fastify.db.get<user>(
                 'SELECT id, username, email, avatar FROM users WHERE id = ?',
-                [userId]
+                userId
             );
 
             if (!user) {
-                return reply.status(404).send({
+                return reply.status(400).send({
                     success: false,
                     message: 'User not found'
                 } as authResponse);
