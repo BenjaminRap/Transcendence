@@ -3,8 +3,10 @@ export { };
 import { ProfileBuilder } from './profile.ts'
 import { Modal } from './modal.ts'
 
+
 let maxOutputLines = 100;
-let promptText = "usa@terminal:~$ ";
+let promptText = "usah@terminal:~$ ";
+let backUpPromptText = promptText;
 let env = {
 	'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
 	'HOME': '/home/usa',
@@ -70,7 +72,7 @@ let commandAvailable =
 	new Command('kill', 'Terminate a process', 'kill [process_name]', killCommand),
 	new Command('clear', 'Clear the terminal screen', 'clear', clearCommand),
 	new Command('modal', 'Create a modal dialog', 'modal [text]', modalCommand),
-	// new Command('teste', 'Resize the terminal width', 'teste [percentage]', teste),
+	new Command('test', 'Test command for input prompt', 'test [text]', teste),
 ];
 
 let currentDirectory = '/';
@@ -79,13 +81,22 @@ let indexCommandHistory = -2;
 
 let isBuilded = false;
 let isProfileActive = false;
-
+let isHidden = false;
+let HiddenContent = '';
 
 
 let terminal: HTMLDivElement | null = null;
 let output: HTMLDivElement | null = null;
 let inputLine: HTMLDivElement | null = null;
 let currentInput: HTMLTextAreaElement | null = null;
+
+let isWaitingInput = false;
+let InputIncomming = 0;
+let InputArgs: string[] = [];
+let InputResult: string[] = [];
+let WaitingHidden: number[] = [];
+let InputFunction: Function | null = null;
+
 
 // ------------------------------------------------------------------------ Command ---------------------------------------------------------------------
 
@@ -188,7 +199,7 @@ function checkArgs(args: string): boolean {
 
 
 function updateCurrentHistory(command: string) {
-	if (command == '')
+	if (command == '' || isWaitingInput)
 		return;	
 	if (commandHistory.length === 0 || commandHistory[commandHistory.length - 1] !== command) {
 		commandHistory.push(command);
@@ -262,16 +273,72 @@ export namespace TerminalUtils {
 			terminal.scrollTop = terminal.scrollHeight;
 		}
 	}
+	export function printErrorOnTerminal(text: string) {
+		if (!output)
+			return;
+		if (countChar('\f') > maxOutputLines) {
+			output.textContent = output.textContent.slice(output.textContent.indexOf('\f') + 1);
+		}
+		output.textContent += '> ' + text + '\n' + '\f';
+		if (terminal) {
+			terminal.scrollTop = terminal.scrollHeight;
+		}
+	}
+}
+
+function getInputCase(command: string)
+{
+	if (!currentInput || !output)
+		return;
+	if (isWaitingInput) {
+		if (InputIncomming >= 0) {
+			InputResult.push(command.slice(promptText.length));
+			InputIncomming--;
+		}
+		if (InputIncomming == 0 && InputFunction) {
+			InputFunction(InputResult);
+			isWaitingInput = false;
+			isHidden = false;
+			InputFunction = null;
+			promptText = backUpPromptText;
+		}
+	}
+	if (isHidden)
+		command = promptText + '*'.repeat(command.length - promptText.length);
+	output.textContent += command + '\n';
+	if (isWaitingInput && InputIncomming > 0)
+		promptText = InputArgs[InputArgs.length - InputIncomming] + ': ';
+	resetInput();
+	updateCurrentHistory(command.slice(promptText.length));
 }
 
 function enterCase() {
 	if (!currentInput || !output)
 		return;
-	const command = currentInput.value;
+	let command = currentInput.value;
+	let changeHidden = false;
 	if (countChar('\f') > maxOutputLines) {
 		output.textContent = output.textContent.slice(output.textContent.indexOf('\f') + 1);
 	}
+	if (isHidden)
+	{
+		command = promptText + HiddenContent;
+		HiddenContent = '';
+		changeHidden = true;
+	}
+	if (isWaitingInput)
+	{
+		getInputCase(command);
+		if (isWaitingInput && WaitingHidden.includes(InputArgs.length - InputIncomming + 1))
+			isHidden = true;
+		if (changeHidden)
+			isHidden = false;
+		return;
+	}
+	
 	const result = exec(command.slice(promptText.length));
+	if (isHidden)
+		command = promptText + '*'.repeat(command.length - promptText.length);
 	if (result != '')
 	{
 		output.textContent += command + '\n';
@@ -281,7 +348,11 @@ function enterCase() {
 		output.textContent += '\f';
 	else
 		output.textContent += command + '\n' + '\f';
+	if (isWaitingInput)
+		promptText = InputArgs[InputArgs.length - InputIncomming] + ': ';
 	resetInput();
+	if (changeHidden)
+		isHidden = false;
 	updateCurrentHistory(command.slice(promptText.length));
 }
 
@@ -299,6 +370,15 @@ function sigintCase() {
 		output.textContent = output.textContent.slice(output.textContent.indexOf('\f') + 1);
 	}
 	output.textContent += currentInput.value + '^C\n' + '\f';
+	if (isWaitingInput) {
+		isWaitingInput = false;
+		InputIncomming = 0;
+		InputArgs = [];
+		InputResult = [];
+		InputFunction = null;
+		isHidden = false;
+		promptText = backUpPromptText;
+	}
 	resetInput();
 }
 
@@ -337,7 +417,13 @@ function backspaceCase() {
 function defaultCase(event: KeyboardEvent) {
 	if (currentInput && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
 		const cursorPosition = currentInput.selectionStart;
-		currentInput.value = currentInput.value.slice(0, cursorPosition) + event.key + currentInput.value.slice(cursorPosition);
+		if (!isHidden)
+			currentInput.value = currentInput.value.slice(0, cursorPosition) + event.key + currentInput.value.slice(cursorPosition);
+		else
+		{
+			currentInput.value = currentInput.value.slice(0, cursorPosition) + '*' + currentInput.value.slice(cursorPosition);
+			HiddenContent = HiddenContent.slice(0, cursorPosition - promptText.length) + event.key + HiddenContent.slice(cursorPosition - promptText.length);
+		}
 		currentInput.selectionStart = cursorPosition + 1;
 		currentInput.selectionEnd = cursorPosition + 1;
 		resize();
@@ -345,7 +431,7 @@ function defaultCase(event: KeyboardEvent) {
 }
 
 function ArrowUpCase() {
-	if (!currentInput || commandHistory.length === 0 || indexCommandHistory === -1)
+	if (!currentInput || commandHistory.length === 0 || indexCommandHistory === -1 || isWaitingInput)
 		return;
 	if (indexCommandHistory === -2)
 		indexCommandHistory = commandHistory.length - 1;
@@ -356,7 +442,7 @@ function ArrowUpCase() {
 }
 
 function ArrowDownCase() {
-	if (!currentInput || commandHistory.length === 0 || indexCommandHistory === -2)
+	if (!currentInput || commandHistory.length === 0 || indexCommandHistory === -2 || isWaitingInput)
 		return;
 	if (indexCommandHistory < commandHistory.length - 1) {
 		indexCommandHistory++;
@@ -438,6 +524,8 @@ function setEventListeners() {
 // -------------------------------------------------------------------- Initialisation ---------------------------------------------------------------------
 export namespace Terminal {
 	export function buildTerminal() {
+		if (isBuilded)
+			return;
 		terminal = document.createElement('div');
 		terminal.id = "terminal";
 		terminal.className = "terminal-font p-4 m-0 bg-black border-2 border-green-500 float-left text-green-400 text-sm overflow-y-auto focus:outline-none cursor-text relative scroll-smooth"
@@ -475,11 +563,24 @@ export namespace Terminal {
 	}
 }
 
+function testeeee(args: string[]): string {
+	console.log("Test function called with args:", args);
+	return 'Test command executed with args: ' + args.join(' ');
+}
 
 function teste(args: string[]): string {
-	const test = document.getElementById('terminal');
-	if (!test)
-		return '';
-	test.style.width = args[1] + "%";
-	return "Terminal resized to " + args[1] + "%";
+	let argsTest = ["Test 1", "Test 2", "Test 3"];
+	AskInput(argsTest, [2], testeeee);
+	return '';
+}
+
+function AskInput(args: string[], hideInput: number[], fun: Function): string
+{
+	InputIncomming = args.length;
+	WaitingHidden = hideInput;
+	isWaitingInput = true;
+	InputArgs = args;
+	InputResult = [];
+	InputFunction = fun;
+	return '';
 }

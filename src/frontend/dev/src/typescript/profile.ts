@@ -241,12 +241,16 @@ export namespace ProfileBuilder {
 		createFriendList(profileElement);
 		
 		document.body.appendChild(profileElement);
-		window.location.replace(`#/profile/user`);
+		history.pushState({}, '', `/profile/${user}`);
+		isActive = true;
 	}
 	export function removeProfile() {
 		const profileElement = document.getElementById('profile');
 		if (profileElement) {
 			document.body.removeChild(profileElement);
+			isActive = false;
+			history.pushState({}, '', `/`);
 		}
 	}
+	export let isActive = false;
 }
