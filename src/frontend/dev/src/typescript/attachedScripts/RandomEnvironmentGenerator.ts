@@ -46,13 +46,15 @@ export class RandomEnvironmentGenerator extends ScriptComponent {
 			throw new Error(`An EnvElement in the RandomEnvironmentGenerator script is not a mesh ! : ${mesh?.name}`);
 		for (let i = 0; i < envElement.instanceCount * this._instancesCountFactor; i++) {
 			const	position = this.getRandomPositionOnGround(ground, posRange);
+
 			if (position.length() < this._distanceWithoutElements)
 				continue ;
 
 			position.subtractInPlace(mesh.absolutePosition);
-			const	matrix = Matrix.Translation(position.x, position.y, position.z);
 
-			mesh.thinInstanceAdd(matrix, i === this._instancesCountFactor - 1);
+			const instance = mesh.createInstance(mesh.name + "Instance");
+
+			instance.position = position;
 		}
 	}
 
@@ -66,6 +68,7 @@ export class RandomEnvironmentGenerator extends ScriptComponent {
 
 		return position;
 	}
+
 }
 
 SceneManager.RegisterClass("RandomEnvironmentGenerator", RandomEnvironmentGenerator);

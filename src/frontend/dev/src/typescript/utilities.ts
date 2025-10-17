@@ -26,3 +26,5 @@ function	remap(value : number, min : number, max : number, newMin : number, newM
 {
 	return newMin + (newMax - newMin) * (value - min) / (max - min);
 }
+
+export const delay = (ms : number) => new Promise(res => setTimeout(res, ms));
