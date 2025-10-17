@@ -14,7 +14,9 @@ services:
     ports:
       - "8080:443"
     volumes:
-      - frontend:/app/dev/
+      - frontend:/app/frontend/
+      - shared:/app/shared/
+      - babylonjs-toolkit:/app/@babylonjs-toolkit/
     profiles: [
       "dev"
     ]
@@ -24,8 +26,9 @@ services:
   fastify:
     build: ./fastify/
     volumes:
-      - backend:/app/backend/
+      - backend:/app/dev/
       - databases:/app/databases/
+      - babylonjs-toolkit:/app/@babylonjs-toolkit/
     profiles: [
       "prod",
       "dev"
@@ -42,7 +45,19 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: ../src/backend/
+      device: ../src/backend/dev/
+      o: bind
+  shared:
+    driver: local
+    driver_opts:
+      type: none
+      device: ../src/shared/
+      o: bind
+  babylonjs-toolkit:
+    driver: local
+    driver_opts:
+      type: none
+      device: ../@babylonjs-toolkit/
       o: bind
   databases:
     driver: local

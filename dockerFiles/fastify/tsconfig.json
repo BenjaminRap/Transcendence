@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+	"rootDir": "./",
+    "outDir": "dev/javascript",
+    "lib": ["ESNext"],
+    "types": ["node"],
+	"paths": {
+		"shared/*": ["./shared/*"]
+	}
+  },
+  "include": ["./backend/typescript", "./shared/"]
+}

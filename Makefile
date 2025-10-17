@@ -24,7 +24,6 @@ build: compile
 ifeq ($(PROFILE), prod)
 	npx vite build
 endif
-	cp ./src/frontend/tsconfig.json ./dockerFiles/vite/tsconfig.json
 	$(DOCKER_EXEC) build
 
 compile-watch:

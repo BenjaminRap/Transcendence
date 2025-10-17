@@ -6,13 +6,14 @@ import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
 import { InputManager } from "./InputManager";
 import { InputKey } from "../InputKey";
 import { IBasePhysicsCollisionEvent, PhysicsEventType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
-import { GameManager } from "./GameManager";
 import { Scalar } from "@babylonjs/core/Maths/math.scalar";
+import { Epsilon } from "@babylonjs/core";
 
 export class Paddle extends ScriptComponent {
+	private static _range : number = 9.4 + Epsilon;
+
 	private	_speed : number = 6.0;
 	private	_inputManagerTransform! : TransformNode;
-	private	_gameManagerTransform! : TransformNode;
 	private	_upKeyStringCode : string = "z";
 	private	_downKeyStringCode : string = "s";
 	private _minReboundSpeed : number = 10;
@@ -21,7 +22,6 @@ export class Paddle extends ScriptComponent {
 	private	_physicsBody! : PhysicsBody;
 	private	_upKeyInfo! : InputKey;
 	private	_downKeyInfo! : InputKey;
-	private _movementRange : number = 8;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "Paddle") {
         super(transform, scene, properties, alias);
@@ -76,17 +76,14 @@ export class Paddle extends ScriptComponent {
 			throw new Error("The Paddle script should be attached to a mesh with a physic body !");
 		this._physicsBody = physicsBody;
 
-		const	gameManager = SceneManager.GetComponent<GameManager>(this._gameManagerTransform, "GameManager", false);
-
-		this._movementRange = gameManager.getPaddleMovementRange();
 	}
 
 	protected update()
 	{
 		const	isUpPressed : boolean = this._upKeyInfo.isKeyDown();
 		const	isDownPressed : boolean = this._downKeyInfo.isKeyDown();
-		const	canMoveUp : boolean = this.transform.position.y + this.transform.scaling.y / 2 < this._movementRange / 2;
-		const	canMoveDown : boolean = this.transform.position.y - this.transform.scaling.y / 2 > -this._movementRange / 2;
+		const	canMoveUp : boolean = this.transform.position.y + this.transform.scaling.y / 2 < Paddle._range / 2;
+		const	canMoveDown : boolean = this.transform.position.y - this.transform.scaling.y / 2 > -Paddle._range / 2;
 		let		yVelocity : number = 0;
 
 		if (isUpPressed && !isDownPressed && canMoveUp)

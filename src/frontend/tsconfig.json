@@ -9,13 +9,16 @@
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "Node",
-    "rootDir": "./dev/src/typescript",
+	"rootDir": "../",
     "lib": ["DOM", "ESNext"],
     "types": [
 		"node",
 		"vite/client"
 	],
-	"experimentalDecorators": true
+	"experimentalDecorators": true,
+	"paths": {
+		"@shared/*": ["../shared/*"]
+	}
   },
-  "include": ["./dev/src/typescript/", "./dev/src/types/"]
+  "include": ["./dev/src/typescript/", "../shared/"]
 }

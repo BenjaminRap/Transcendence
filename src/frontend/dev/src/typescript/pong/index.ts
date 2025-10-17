@@ -9,6 +9,7 @@ import { HavokPlugin } from "@babylonjs/core/Physics";
 import HavokPhysics from "@babylonjs/havok";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
+import.meta.glob("@shared/attachedScripts/*", { eager: true});
 
 class PongGame extends HTMLElement {
 	private _canvas : HTMLCanvasElement;

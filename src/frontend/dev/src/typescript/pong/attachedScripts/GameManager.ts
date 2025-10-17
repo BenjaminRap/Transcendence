@@ -1,14 +1,12 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
-import { IUnityTransform, SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
+import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { IBasePhysicsCollisionEvent, PhysicsEventType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { int } from "@babylonjs/core/types";
-import { Epsilon } from "@babylonjs/core";
 import { Text } from "./Text"
-import { Ball } from "./Ball";
+import { Ball } from "@shared/attachedScripts/Ball";
 
 export class GameManager extends ScriptComponent {
-	private static _paddleRange : number = 9.4;
 
 	private	_goalLeft! : TransformNode;
 	private	_goalRight! : TransformNode;
@@ -51,11 +49,6 @@ export class GameManager extends ScriptComponent {
 		this._scoreLeftText.text = SceneManager.GetComponent<Text>(this._scoreLeftText, "Text", false);
 		this._scoreRightText.text = SceneManager.GetComponent<Text>(this._scoreRightText, "Text", false);
 		this._ball.script = SceneManager.GetComponent<Ball>(this._ball, "Ball", false);
-	}
-
-	public getPaddleMovementRange()
-	{
-		return GameManager._paddleRange + Epsilon;
 	}
 }
 

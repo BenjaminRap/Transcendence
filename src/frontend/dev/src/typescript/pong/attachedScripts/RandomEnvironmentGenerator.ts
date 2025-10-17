@@ -68,7 +68,6 @@ export class RandomEnvironmentGenerator extends ScriptComponent {
 
 		return position;
 	}
-
 }
 
 SceneManager.RegisterClass("RandomEnvironmentGenerator", RandomEnvironmentGenerator);

@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import fs from 'fs'
+import path from 'path';
 
 export default defineConfig({
 	server: {
@@ -19,7 +20,7 @@ export default defineConfig({
 			}
 		}
 	},
-	root: '/app/dev/',
+	root: '/app/frontend/',
 	plugins: [
 		{
 			name: 'set-babylon-json-header',
@@ -36,4 +37,9 @@ export default defineConfig({
 	optimizeDeps: {
 		exclude: ['@babylonjs/havok'],
 	},
+	resolve: {
+		alias: {
+			"@shared": path.resolve(__dirname, "./shared")
+		}
+	}
 })

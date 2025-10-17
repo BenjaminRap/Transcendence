@@ -7,12 +7,15 @@
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true,
     "target": "ESNext",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "outDir": "./javascript",
-    "rootDir": "./typescript",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+	"rootDir": "../",
+    "outDir": "dev/",
     "lib": ["ESNext"],
-    "types": ["node"]
+    "types": ["node"],
+	"paths": {
+		"@shared/*": ["../shared/*"]
+	}
   },
-  "include": ["typescript/"]
+  "include": ["./typescript", "../shared/"]
 }
