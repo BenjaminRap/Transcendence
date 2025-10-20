@@ -306,7 +306,6 @@ function getInputCase(command: string)
 	output.textContent += command + '\n';
 	if (isWaitingInput && InputIncomming >= 0)
 		promptText = InputArgs[InputArgs.length - InputIncomming] + ': ';
-	updateCurrentHistory(command.slice(promptText.length));
 	if (InputIncomming === 0 && !isWaitingInput)
 		promptText = backUpPromptText;
 	resetInput();
