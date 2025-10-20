@@ -298,18 +298,18 @@ function getInputCase(command: string)
 		if (InputIncomming == 0 && InputFunction) {
 			InputFunction(InputResult);
 			isWaitingInput = false;
-			isHidden = false;
 			InputFunction = null;
-			promptText = backUpPromptText;
 		}
 	}
 	if (isHidden)
 		command = promptText + '*'.repeat(command.length - promptText.length);
 	output.textContent += command + '\n';
-	if (isWaitingInput && InputIncomming > 0)
+	if (isWaitingInput && InputIncomming >= 0)
 		promptText = InputArgs[InputArgs.length - InputIncomming] + ': ';
-	resetInput();
 	updateCurrentHistory(command.slice(promptText.length));
+	if (InputIncomming === 0 && !isWaitingInput)
+		promptText = backUpPromptText;
+	resetInput();
 }
 
 function enterCase() {
@@ -569,8 +569,8 @@ function testeeee(args: string[]): string {
 }
 
 function teste(args: string[]): string {
-	let argsTest = ["Test 1", "Test 2", "Test 3"];
-	AskInput(argsTest, [2], testeeee);
+	let argsTest = ["Mail", "Login", "Password"];
+	AskInput(argsTest, [3], testeeee);
 	return '';
 }
 
