@@ -59,6 +59,7 @@ clean: stop
 	-docker network rm $(docker network ls -q) 2>/dev/null
 
 fclean: clean
+	$(DOCKER_EXEC) down -v
 	-docker system prune -af --volumes
 	-rm -rf ./dockerFiles/nginx/website/
 	-rm -rf ./src/backend/javascript/*
