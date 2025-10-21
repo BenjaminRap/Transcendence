@@ -1,8 +1,13 @@
 
 // API register / login user
 
-// represent an user in the database
-export interface user
+export interface Tokens
+{
+    token:          string,
+    refresh_token:  string
+};
+
+export interface User
 {
     id:         number,
     username:   string,
@@ -16,9 +21,7 @@ export interface user
 
 // ----------------------------------------------- //
 
-// data received from the front request
-
-export interface registerUser
+export interface RegisterUser
 {
     username:   string,
     email:      string,
@@ -32,20 +35,25 @@ export interface LoginRequest
     password:   string
 };
 
+export interface UpdateUser
+{
+    username?:  string,
+    password?:  string,
+    avatar?:    string
+};
+
 // ----------------------------------------------- //
 
-// response from the backend to the front end
-
-export interface authResponse
+export interface AuthResponse
 {
     success:    boolean,
-    message:    string,         // message from the backend for user (on success or fail)
-    user?:                      // user information (on success)
+    message:    string,
+    user?:
     {
         id:         number,
         username:   string,
         email:      string,
         avatar:     string
-    };
-    accesstoken?:   string
+    },
+    tokens?:        Tokens
 };

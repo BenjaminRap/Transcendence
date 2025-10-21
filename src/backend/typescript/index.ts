@@ -2,6 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import { initDb } from './initDb.js';
 import { authRoutes } from './routes/auth.js';
+import { usersRoutes } from './routes/users.js';
 import { fpSqlitePlugin } from 'fastify-sqlite-typed';
 
 const fastify = Fastify({
@@ -26,6 +27,8 @@ fastify.get('/', (_request, reply) => {
 
 // Enregistrer les routes d'authentification
 fastify.register(authRoutes, { prefix: '/auth' });
+
+fastify.register(usersRoutes, { prefix: '/users' });
 
 async function start(): Promise<void> {
     try {

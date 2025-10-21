@@ -1,36 +1,36 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { registerUser, LoginRequest, authResponse, user } from '../API/auth.js';
-import { validateRegisterData, isExistingUser, addUserInDB, findUser, verifyToken } from '../authUtils.js';
-
-async function checkAuth(request: FastifyRequest, reply: FastifyReply) {
-
-}
+import { RegisterUser, LoginRequest, AuthResponse} from '../data_structure/auth.js';
+import { validateRegisterData } from './utils/authTokenValidation.js';
+import { isExistingUser, addUserInDB, findUser } from './utils/utils.js'
+import { generateToken, checkAuth } from './utils/JWTmanagement.js'
 
 export async function authRoutes(fastify: FastifyInstance)
 { 
-    fastify.post<{ Body: registerUser }>('/register', async (request: FastifyRequest<{ Body: registerUser }>, reply: FastifyReply) =>
+    fastify.post<{ Body: RegisterUser }>('/register', async (request: FastifyRequest<{ Body: RegisterUser }>, reply: FastifyReply) =>
     {
         try
         {
+            if (!request.body)
+                return reply.status(400).send( { success: false, message: "the body of the request is empty" } as AuthResponse);
+            
             const { username, email, password, avatar } = request.body ;
-
+            
+            // have to check for SQLi
             const response = validateRegisterData(username, email, password);
             if (!response.success)
             {
                 return reply.status(400).send({
                     success: false,
                     message: response.message
-                } as authResponse);
+                } as AuthResponse);
             }
 
-            // Check if user already exists in the DB
-            // VERIFIER SI LE USERNAME EST DEJA UTILISE !!
-            if (await isExistingUser(fastify, email))
+            if (await isExistingUser(fastify, email, username))
             {
-                return reply.status(400).send({
+                return reply.status(401).send({
                     success: false,
-                    message: 'A user with this email already exists'
-                } as authResponse);
+                    message: 'A user with this email or username already exists'
+                } as AuthResponse);
             }
 
             const newUser = await addUserInDB(username, email, password, avatar, fastify);
@@ -44,48 +44,44 @@ export async function authRoutes(fastify: FastifyInstance)
                     email,
                     avatar: newUser.avatar
                 },
-                accesstoken: newUser.token
-            } as authResponse);
+                tokens: {
+                    token: newUser.tokens.token ,
+                    refresh_token: newUser.tokens.refresh_token
+                }
+            } as AuthResponse);
 
         } catch (error) {
             fastify.log.error("Error registering new user:");
             return reply.status(500).send({
                 success: false,
                 message: 'Internal server error'
-            } as authResponse);
+            } as AuthResponse);
         }
     });
 
-    // connection route
     fastify.post<{ Body: LoginRequest }>('/login', async (request: FastifyRequest<{ Body: LoginRequest }>, reply: FastifyReply) => {
-        try {
+        try
+        {
+            if (!request.body)
+                return reply.status(400).send( { success: false, message: "the body of the request is empty" } as AuthResponse);
+
             const { identifier, password } = request.body;
 
+            // have to check for SQLi
+
             if (!identifier || !password) {
-                return reply.status(401).send({
+                return reply.status(400).send({
                     success: false,
                     message: 'Email or username and password are required'
-                } as authResponse);
+                } as AuthResponse);
             }
 
             const userFound = await findUser(fastify, identifier, password);
-            if (!userFound.user) {
+            if (!userFound.user || !userFound.validPass) {
                 return reply.status(401).send({
                     success: false,
                     message: userFound.message
-                } as authResponse);
-            }
-            else if (!userFound.accesstoken) {
-                return reply.status(500).send({
-                    success: false,
-                    message: userFound.message
-                } as authResponse);
-            }
-            else if (!userFound.validPass) {
-                return reply.status(401).send( {
-                    success: false,
-                    message: userFound.message
-                } as authResponse);
+                } as AuthResponse);
             }
 
             return reply.status(200).send({
@@ -97,78 +93,30 @@ export async function authRoutes(fastify: FastifyInstance)
                     email: userFound.user.email,
                     avatar: userFound.user.avatar
                 },
-                accesstoken: userFound.accesstoken
-            } as authResponse);
+                tokens: {
+                    token: userFound.tokens.token,
+                    refresh_token: userFound.tokens.refresh_token
+                }
+            } as AuthResponse);
 
         } catch (error) {
             fastify.log.error(error);
             return reply.status(500).send({
                 success: false,
                 message: 'Internal server error'
-            } as authResponse);
+            } as AuthResponse);
         }
     });
 
-    // Route to get user profile
-    fastify.get('/profile', { preHandler: async (request: FastifyRequest, reply: FastifyReply) => {
-            // Middleware to check authentication token in the header
-            const authHeader = request.headers.authorization;
-            
-            console.log(authHeader);
+    fastify.get('/refresh', { preHandler: checkAuth}, async (request: FastifyRequest, reply: FastifyReply) => {
 
-            if (!authHeader || !authHeader.startsWith('Bearer ')) {
-                return reply.status(401).send({
-                    success: false,
-                    message: 'Missing authentication token'
-                });
-            }
-
-            const token = authHeader.substring(7);
-            const decoded = verifyToken(token);
-            
-            if (!decoded) {
-                return reply.status(401).send({
-                    success: false,
-                    message: 'Token invalide'
-                });
-            }
-
-            // Add user information to the query
-            (request as any).user = decoded;
-        }
-    }, async (request: FastifyRequest, reply: FastifyReply) => {
-        try {
-            const { userId } = (request as any).user.userId;
-
-            const user = await fastify.db.get<user>(
-                'SELECT id, username, email, avatar FROM users WHERE id = ?',
-                userId
-            );
-
-            if (!user) {
-                return reply.status(400).send({
-                    success: false,
-                    message: 'User not found'
-                } as authResponse);
-            }
-
-            return reply.status(200).send({
-                success: true,
-                message: 'Profile retrieved successfully',
-                user: {
-                    id: user.id,
-                    username: user.username,
-                    email: user.email,
-                    avatar: user.avatar
-                }
-            } as authResponse);
-
-        } catch (error) {
-            fastify.log.error('Error retrieving profile:');
-            return reply.status(500).send({
-                success: false,
-                message: 'inernal server error'
-            } as authResponse);
-        }
+        const tokens = generateToken((request as any).user.lastID, (request as any).user.email);
+        return reply.status(201).send({
+            tokens: {
+                token: (await tokens).token,
+                refresh_token: (await tokens).refresh_token
+            },
+            message: "Authentification token renewal successful"
+        });
     });
 }
