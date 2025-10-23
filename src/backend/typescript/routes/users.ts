@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { AuthResponse, User, UpdateUser } from '../data_structure/auth.js';
+import { AuthResponse, UpdateUser } from '../data_structure/auth.js';
 import { checkAuth } from './utils/JWTmanagement.js'
 
 // /users/me
@@ -7,11 +7,12 @@ export async function usersRoutes(fastify: FastifyInstance) {
     fastify.get('/me', { preHandler: checkAuth }, async (request: FastifyRequest, reply: FastifyReply) => {
         try {
             const userMail  = (request as any).user.email;
-            
-            const user = await fastify.db.get<User>(
-                'SELECT id, username, email, avatar FROM users WHERE email = ?',
-                userMail
-            );
+
+            const user = await fastify.prisma.user.findUnique({
+                where: {
+                    email: userMail
+                }
+            });
 
             if (!user) {
                 return reply.status(401).send({
@@ -32,7 +33,7 @@ export async function usersRoutes(fastify: FastifyInstance) {
             } as AuthResponse);
 
         } catch (error) {
-            fastify.log.error('Error retrieving profile:');
+            fastify.log.error(error);
             return reply.status(500).send({
                 success: false,
                 message: 'inernal server error'

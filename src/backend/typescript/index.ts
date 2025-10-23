@@ -1,9 +1,11 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import { initDb } from './initDb.js';
+import { fpSqlitePlugin } from 'fastify-sqlite-typed';
 import { authRoutes } from './routes/auth.js';
 import { usersRoutes } from './routes/users.js';
-import { fpSqlitePlugin } from 'fastify-sqlite-typed';
+import prismaPlugin from './plugins/prisma.js'
+// import { initDb } from './initDb.js';
+
 
 const fastify = Fastify({
     logger: true
@@ -13,6 +15,8 @@ const fastify = Fastify({
 fastify.register(fpSqlitePlugin, {
     dbFilename: "./databases/main.db",
 });
+
+fastify.register(prismaPlugin)
 
 // CORS pour permettre les requêtes depuis le frontend
 fastify.register(cors, {
@@ -32,7 +36,7 @@ fastify.register(usersRoutes, { prefix: '/users' });
 
 async function start(): Promise<void> {
     try {
-        await initDb(fastify);
+        // await initDb(fastify);
         await fastify.listen({ port: 8181, host: '0.0.0.0' });
         fastify.log.info(`Server listening at address 0.0.0.0:8181`);
     } catch (error) {

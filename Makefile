@@ -1,6 +1,6 @@
 .IGNORE: clean, fclean
 .SILENT: clean, fclean
-.PHONY: restart-nginx, restart-fastify, compile, build, compile-watch, up, all, stop, clean, fclean, re, fre
+.PHONY: compile, build, compile-watch, up, all, stop, clean, fclean, re, fre
 
 PROFILE = prod
 DOCKER_DIR	=	./dockerFiles/

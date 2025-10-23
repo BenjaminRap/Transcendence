@@ -13,5 +13,11 @@ RUN [ "npm", "cache", "clean", "--force" ]
 
 RUN [ "mkdir", "/app/backend" ]
 
-ENTRYPOINT [ "npm", "run", "start" ]
+COPY ./prisma ./prisma
+
+# Générer le client Prisma à la construction
+RUN ["npx", "prisma", "generate"]
+
 EXPOSE 8181
+
+CMD npx prisma migrate dev --name init && npm run start

@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { RegisterUser, LoginRequest, AuthResponse} from '../data_structure/auth.js';
-import { validateRegisterData } from './utils/authTokenValidation.js';
+import { validateRegisterData } from './utils/authValidation.js';
 import { isExistingUser, addUserInDB, findUser } from './utils/utils.js'
 import { generateToken, checkAuth } from './utils/JWTmanagement.js'
 
@@ -39,7 +39,7 @@ export async function authRoutes(fastify: FastifyInstance)
                 success: true,
                 message: 'User registered successfully',
                 user: {
-                    id: newUser.id as number,
+                    id: newUser.id,
                     username,
                     email,
                     avatar: newUser.avatar
@@ -51,7 +51,7 @@ export async function authRoutes(fastify: FastifyInstance)
             } as AuthResponse);
 
         } catch (error) {
-            fastify.log.error("Error registering new user:");
+            fastify.log.error(error);
             return reply.status(500).send({
                 success: false,
                 message: 'Internal server error'
