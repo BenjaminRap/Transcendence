@@ -1,6 +1,8 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { AuthResponse, UpdateUser } from '../data_structure/auth.js';
 import { checkAuth } from './utils/JWTmanagement.js'
+import { updateUser } from './utils/utils.js';
+import { updateSchema } from './schemas/authSchema.js';
 
 // /users/me
 export async function usersRoutes(fastify: FastifyInstance) {
@@ -43,40 +45,18 @@ export async function usersRoutes(fastify: FastifyInstance) {
 
     // /users/update
     fastify.put<{ Body: UpdateUser }>('/update', { preHandler: checkAuth }, async (request: FastifyRequest<{ Body : UpdateUser }>, reply: FastifyReply) => {
-        // route pour modifier les infos de l'utilisateur dans la db
-        const { username, password, avatar } = request.body;
-
-        if (!username && !password && !avatar)
-        {
-            return reply.status(400).send({
-                success: false,
-                message: "The request does not contain any data to be updated"
-            });
-        }
-        
-        const userID = (request as any).user.userId;
 
         try {
+            const userEmail = (request as any).user.email;
+            const updateData: UpdateUser = request.body;
 
-            if (username)
+            const newData = updateSchema.safeParse(updateData);
+            if (!newData.success)
             {
-                // check SQLi
-                // check username validity
-                // change the username in the DB
+                
             }
-            if (password)
-            {
-                // check SQLi
-                // check password validity
-                // hash password
-                // change the password in the DB
-            }
-            
-            if (avatar)
-            {
-                // check SQLi
-                // change avatar in the DB
-            }            
+            updateUser(fastify, updateData, userEmail);
+
         } catch (error) {
             fastify.log.error(error);
             return reply.status(500).send({

@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { RegisterUser, LoginRequest, AuthResponse} from '../data_structure/auth.js';
-import { isExistingUser, addUserInDB, findUser } from './utils/utils.js'
+import { isExistingUser, addUserInDB, findUser, comparePassword } from './utils/utils.js'
 import { generateToken, checkAuth } from './utils/JWTmanagement.js'
 import { userSchema } from './schemas/authSchema.js'
 
@@ -67,7 +67,6 @@ export async function authRoutes(fastify: FastifyInstance)
         try
         {
             const { identifier, password } = request.body;
-
             if (!identifier || !password) {
                 return reply.status(400).send({
                     success: false,

@@ -11,3 +11,9 @@ export const userSchema = z.object({
     password: passwordSchema,
     email: emailSchema
 }).strict();
+
+export const updateSchema = z.object({
+    username: usernameSchema.optional(),
+    password: passwordSchema.optional(),
+    avatar: z.string().optional()
+}).strict();

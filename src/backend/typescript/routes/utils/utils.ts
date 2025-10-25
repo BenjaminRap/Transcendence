@@ -3,11 +3,11 @@ import bcrypt from 'bcryptjs';
 import { generateToken } from './JWTmanagement.js';
 import { emailSchema } from '../schemas/commonSchema.js';
 import { usernameSchema } from '../schemas/authSchema.js';
-import { User, Tokens, RegisterUser } from '../../data_structure/auth.js';
+import { User, Tokens, RegisterUser, UpdateUser } from '../../data_structure/auth.js';
 
 const SALT_ROUNDS = 12;
 
-async function comparePassword(password: string, hashedPassword: string): Promise<boolean> {
+export async function comparePassword(password: string, hashedPassword: string): Promise<boolean> {
     return await bcrypt.compare(password, hashedPassword);
 }
 
@@ -93,7 +93,7 @@ Promise<{user: User | undefined, tokens: Tokens, validPass: boolean, message: st
         };
     }
 
-    if (!comparePassword(password, user.password)) {
+    if (!await comparePassword(password, user.password)) {
         return {
             user: user,
             validPass: false,
@@ -117,3 +117,32 @@ Promise<{user: User | undefined, tokens: Tokens, validPass: boolean, message: st
         message: ''
     };
 }
+
+export async function updateUser(fastify: FastifyInstance, user: UpdateUser, email: string) : Promise<{ success: boolean }>
+{
+    fastify.prisma.user.updateMany({
+        where: {
+            email
+        },
+        data: user
+    });
+    return {
+        success: true
+    };
+}
+
+/*
+{
+    "username": "flo",
+    "password": "aGre4tP@SSWOrdVeryC0mPlic4tED",
+    "email": "mail@mail.com"
+}
+
+
+{
+    "username": "flo",
+    "password": "aGre4tP@SSWOrdVeryC0mPlic4t",
+    "email": "mail@mail.com",
+    "avatar": "http://avatar.com"
+}
+*/
