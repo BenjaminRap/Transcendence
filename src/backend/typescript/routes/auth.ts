@@ -1,31 +1,32 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { RegisterUser, LoginRequest, AuthResponse} from '../data_structure/auth.js';
-import { validateRegisterData } from './utils/authValidation.js';
 import { isExistingUser, addUserInDB, findUser } from './utils/utils.js'
 import { generateToken, checkAuth } from './utils/JWTmanagement.js'
+import { userSchema } from './schemas/authSchema.js'
 
 export async function authRoutes(fastify: FastifyInstance)
-{ 
+{
+    // /auth/register
     fastify.post<{ Body: RegisterUser }>('/register', async (request: FastifyRequest<{ Body: RegisterUser }>, reply: FastifyReply) =>
     {
         try
         {
-            if (!request.body)
-                return reply.status(400).send( { success: false, message: "the body of the request is empty" } as AuthResponse);
-            
-            const { username, email, password, avatar } = request.body ;
-            
-            // have to check for SQLi
-            const response = validateRegisterData(username, email, password);
+            const requiredData = { 
+                username: request.body.username,
+                password: request.body.password,
+                email: request.body.email,
+            };
+
+            const response = userSchema.safeParse(requiredData);
             if (!response.success)
             {
                 return reply.status(400).send({
                     success: false,
-                    message: response.message
+                    message: response.error.issues[0].message
                 } as AuthResponse);
             }
 
-            if (await isExistingUser(fastify, email, username))
+            if (await isExistingUser(fastify, requiredData.email, requiredData.username))
             {
                 return reply.status(401).send({
                     success: false,
@@ -33,15 +34,17 @@ export async function authRoutes(fastify: FastifyInstance)
                 } as AuthResponse);
             }
 
-            const newUser = await addUserInDB(username, email, password, avatar, fastify);
+            (requiredData as RegisterUser).avatar = request.body.avatar;
+
+            const newUser = await addUserInDB((requiredData as RegisterUser), fastify);
 
             return reply.status(201).send( {
                 success: true,
                 message: 'User registered successfully',
                 user: {
                     id: newUser.id,
-                    username,
-                    email,
+                    username: requiredData.username,
+                    email: requiredData.email,
                     avatar: newUser.avatar
                 },
                 tokens: {
@@ -59,15 +62,11 @@ export async function authRoutes(fastify: FastifyInstance)
         }
     });
 
+    // /auth/login
     fastify.post<{ Body: LoginRequest }>('/login', async (request: FastifyRequest<{ Body: LoginRequest }>, reply: FastifyReply) => {
         try
         {
-            if (!request.body)
-                return reply.status(400).send( { success: false, message: "the body of the request is empty" } as AuthResponse);
-
             const { identifier, password } = request.body;
-
-            // have to check for SQLi
 
             if (!identifier || !password) {
                 return reply.status(400).send({
@@ -108,7 +107,8 @@ export async function authRoutes(fastify: FastifyInstance)
         }
     });
 
-    fastify.get('/refresh', { preHandler: checkAuth}, async (request: FastifyRequest, reply: FastifyReply) => {
+    // auth/refresh
+    fastify.get('/refresh', { preHandler: checkAuth }, async (request: FastifyRequest, reply: FastifyReply) => {
 
         const tokens = generateToken((request as any).user.lastID, (request as any).user.email);
         return reply.status(201).send({

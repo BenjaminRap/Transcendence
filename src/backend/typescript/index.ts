@@ -4,7 +4,6 @@ import { fpSqlitePlugin } from 'fastify-sqlite-typed';
 import { authRoutes } from './routes/auth.js';
 import { usersRoutes } from './routes/users.js';
 import prismaPlugin from './plugins/prisma.js'
-// import { initDb } from './initDb.js';
 
 
 const fastify = Fastify({
@@ -29,14 +28,13 @@ fastify.get('/', (_request, reply) => {
     reply.send({ hello: 'world' });
 });
 
-// Enregistrer les routes d'authentification
+// Enregistrer les routes
 fastify.register(authRoutes, { prefix: '/auth' });
 
 fastify.register(usersRoutes, { prefix: '/users' });
 
 async function start(): Promise<void> {
     try {
-        // await initDb(fastify);
         await fastify.listen({ port: 8181, host: '0.0.0.0' });
         fastify.log.info(`Server listening at address 0.0.0.0:8181`);
     } catch (error) {

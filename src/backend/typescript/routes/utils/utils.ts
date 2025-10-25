@@ -1,20 +1,19 @@
 import { FastifyInstance } from 'fastify';
 import bcrypt from 'bcryptjs';
-import { User, Tokens } from '../../data_structure/auth.js';
 import { generateToken } from './JWTmanagement.js';
-import { validateEmail } from './authValidation.js'
+import { emailSchema } from '../schemas/commonSchema.js';
+import { usernameSchema } from '../schemas/authSchema.js';
+import { User, Tokens, RegisterUser } from '../../data_structure/auth.js';
 
 const SALT_ROUNDS = 12;
 
-export async function comparePassword(password: string, hashedPassword: string): Promise<boolean> {
+async function comparePassword(password: string, hashedPassword: string): Promise<boolean> {
     return await bcrypt.compare(password, hashedPassword);
 }
 
 async function hashPassword(password: string) : Promise<string> {
     return await bcrypt.hash(password, SALT_ROUNDS);
 }
-
-// data register validation ---------------------------------------------------------------------------------------------------------------------- //
 
 export async function isExistingUser(fastify: FastifyInstance, email: string, username: string) : Promise<boolean>
 {
@@ -24,7 +23,7 @@ export async function isExistingUser(fastify: FastifyInstance, email: string, us
         }
     });
     if (user)
-            return true;
+        return true;
 
     user = await fastify.prisma.user.findUnique({
         where: {
@@ -32,32 +31,25 @@ export async function isExistingUser(fastify: FastifyInstance, email: string, us
         }
     });
     if (user)
-            return true;
+        return true;
     return false;
 }
 
-// add user in the DB ---------------------------------------------------------------------------------------------------------------------------- //
-
-export async function addUserInDB(username: string, email: string, password: string, avatar: string, fastify: FastifyInstance) :
+export async function addUserInDB(data: RegisterUser, fastify: FastifyInstance) :
 Promise<{ id: number, avatar: string, tokens: Tokens }>
 {
-    const hashedPassword = await hashPassword(password);
+    const hashedPassword = await hashPassword(data.password);
+    const userAvatar = data.avatar || 'https://i.pravatar.cc/150?img=7';
 
-    // default avatar if not provided
-    const userAvatar = avatar || 'https://i.pravatar.cc/150?img=7';
-
-    // insert the new user into the database
     const user = await fastify.prisma.user.create({
         data: {
-            username,
-            email,
+            username: data.username,
+            email: data.email,
             password: hashedPassword,
             avatar: userAvatar
         }
     });
-
-    // generate a jwt token and a refresh token
-    const tokens = generateToken(user.id as number, email);
+    const tokens = generateToken(user.id, data.email);
 
     return {
         id: user.id,
@@ -69,28 +61,26 @@ Promise<{ id: number, avatar: string, tokens: Tokens }>
     };
 }
 
-// retrieve user in the DB ----------------------------------------------------------------------------------------------------------------------- //
-
 export async function findUser(fastify: FastifyInstance, identifier: string, password: string) :
 Promise<{user: User | undefined, tokens: Tokens, validPass: boolean, message: string}>
 {
     let user = undefined;
 
-    if (validateEmail(identifier)) {
+    if (emailSchema.safeParse(identifier).success) {
         user = await fastify.prisma.user.findUnique({
             where: {
                 email: identifier
             }
         });
     }
-    else {
+    else if (usernameSchema.safeParse(identifier).success) {
         user = await fastify.prisma.user.findUnique({
             where: {
                 username: identifier
             }
         });
-    }        
-    
+    }
+
     if (!user) {
         return {
             user: user,
@@ -100,11 +90,10 @@ Promise<{user: User | undefined, tokens: Tokens, validPass: boolean, message: st
             },
             validPass: false,
             message: 'Incorrect email / identifier or password'
-        };        
+        };
     }
 
-    const isPasswordValid = await comparePassword(password, user.password);
-    if (!isPasswordValid) {
+    if (!comparePassword(password, user.password)) {
         return {
             user: user,
             validPass: false,

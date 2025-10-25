@@ -16,7 +16,6 @@ export interface User
     avatar:     string,
     created_at: Date,
     updated_at: Date,
-    is_online:  boolean
 };
 
 // ----------------------------------------------- //

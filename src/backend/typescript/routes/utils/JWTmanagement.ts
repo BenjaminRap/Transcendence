@@ -14,13 +14,13 @@ export function verifyToken(token: string): { userId: number; email: string } | 
 
 export async function generateToken(userId: number, email: string): Promise<Tokens>
 {
-    const token = await jwt.sign(
+    const token = jwt.sign(
         { userId, email },
         JWT_SECRET,
         { expiresIn: '1h' }
     );
 
-    const refresh_token = await jwt.sign(
+    const refresh_token = jwt.sign(
         { userId, email },
         JWT_SECRET,
         { expiresIn: '2h'}
