@@ -32,7 +32,7 @@ _Possibles responses:_
     "message": "Invalid token"
   }
 
-❌ 401 Unauthorized :
+❌ 404 Unauthorized :
   {
     "success": false,
     "message": "User not found"

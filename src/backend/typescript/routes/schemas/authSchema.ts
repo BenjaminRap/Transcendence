@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { string, z } from 'zod'
 import { emailSchema, passwordSchema } from './commonSchema.js';
 
 export const usernameSchema = z.string()
@@ -6,7 +6,7 @@ export const usernameSchema = z.string()
     .max(20, 'Username can\'t exceed 20 characters')
     .regex(/^[a-zA-Z0-9]+$/, 'Username can only contain letters and numbers');
 
-export const userSchema = z.object({
+export const registerUserSchema = z.object({
     username: usernameSchema,
     password: passwordSchema,
     email: emailSchema

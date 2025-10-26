@@ -1,12 +1,12 @@
 import { FastifyRequest, FastifyReply} from 'fastify';
 import jwt from 'jsonwebtoken';
-import { Tokens } from '../../data_structure/auth.js'
+import { Tokens } from '../dataStructure/auth.js'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'complEcatEd-kEy';
 
-export function verifyToken(token: string): { userId: number; email: string } | null {
+export function verifyToken(token: string): { userId: number, email: string } | null {
     try {
-        return jwt.verify(token, JWT_SECRET) as { userId: number; email: string };
+        return jwt.verify(token, JWT_SECRET) as { userId: number, email: string };
     } catch (error) {
         return null;
     }
@@ -45,10 +45,12 @@ export async function checkAuth(request: FastifyRequest, reply: FastifyReply) {
     const token = authHeader.substring(7);
     const decoded = verifyToken(token);
     if (!decoded) {
-        return reply.status(401).send({
-            success: false,
-            message: 'Invalid token'
-        });
+        return reply.status(401)
+            .header('WWW-Authenticate', 'Bearer')        
+            .send({
+                success: false,
+                message: 'Invalid token'
+            });
     }
 
     (request as any).user = decoded;
