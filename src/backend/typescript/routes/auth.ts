@@ -27,10 +27,11 @@ export async function authRoutes(fastify: FastifyInstance)
                 } as AuthResponse);
             }
 
-            if (await isExistingUser(fastify, requiredData.email, requiredData.username)) {
+            const isExist = await isExistingUser(fastify, requiredData.email, requiredData.username); 
+            if (isExist.alreadyExist) {
                 return reply.status(409).send({
                     success: false,
-                    message: 'A user with this email or username already exists'
+                    message: isExist.message
                 } as AuthResponse);
             }
 

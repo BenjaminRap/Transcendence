@@ -33,25 +33,19 @@ _Possibles responses :_
 ❌ 400 Bad Request :
     {
         success: false,
-        message: no body in the request
+        message: bad input (la saisie de l'utilisateur ne remplie pas les condition pour le mot de passe ou le nom ou l'email)
     }
 
-❌ 400 Bad Request :
+❌ 409 Conflict :
     {
         success: false,
-        message: invalid username or password or email
-    }
-
-❌ 401 Unauthorized :
-    {
-        success: false,
-        message: email or username already in use
+        message: A user with this email or username already exists
     }
 
 ❌ 500 Internal Server Error :  _uniquement si la requete DB a echouee_
     {
         success: false,
-        message: Internal Server Error
+        message: Internal Server Error (NON PAS CA !!!!)
     }
 
 -------------------------------------------------------------------------------------------------------------------------
@@ -91,14 +85,20 @@ _Possibles responses:_
 ❌ 400 Bad Request :
   {
     "success": false,
-    "message": "All fields are required"
+    "message": "All fields are required (il manque une ou plusieurs entrees utilisateur email/username et ou password)"
   }
 
 ❌ 401 Unauthorized :
   {
     "success": false,
-    "message": "Incorrect email / identifier or password"
+    "message": "Incorrect email/identifier or password"
   }
+
+❌ 500 Internal Server Error :  _uniquement si la requete DB a echouee_
+    {
+        success: false,
+        message: Internal Server Error (NON PAS CA !!!!)
+    }
 
 -------------------------------------------------------------------------------------------------------------------------
 
@@ -124,7 +124,7 @@ _Possibles responses:_
 ❌ 400 Bad Request :
   {
     "success": false,
-    "message": "Missing authentication token"
+    "message": "Missing authentication token" (si le header Authorization n'est pas rempli)
   }
 
 ❌ 401 Unauthorized :

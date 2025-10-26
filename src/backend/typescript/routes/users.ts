@@ -40,7 +40,7 @@ export async function usersRoutes(fastify: FastifyInstance) {
     });
 
     fastify.get('/search:username', { preHandler: checkAuth }, async (request: FastifyRequest, reply: FastifyReply) => {
-
+        
     });
 
 
@@ -64,16 +64,13 @@ export async function usersRoutes(fastify: FastifyInstance) {
                 }as AuthResponse);
             }
 
-            // doit check si le username n'est pas deja utilise
-            
             const UpUser = await updateUser(fastify, validation.data, user);
-            if (!UpUser) {
+            if (!UpUser.user) {
                 return reply.status(422).send({
                     success: false,
-                    message: 'No changes detected: your new data must differ from your current information.'
+                    message: UpUser.message
                 } as AuthResponse)
             }
-            console.log("NEW USER : ", UpUser);
 
             reply.status(204).send({
                 success: true,

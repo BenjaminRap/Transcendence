@@ -16,17 +16,32 @@ async function comparePassword(password: string, hashedPassword: string): Promis
     return await bcrypt.compare(password, hashedPassword);
 }
 
-export async function isExistingUser(fastify: FastifyInstance, email: string, username: string) : Promise<boolean>
+export async function isExistingUser(fastify: FastifyInstance, email: string, username: string) : Promise<{alreadyExist: boolean, message: string}>
 {
-    if (await getUserByEmail(fastify, email) || await getUserByName(fastify, username))
-        return true;
-    return false;
+    if (await getUserByEmail(fastify, email)) {
+        return {
+            alreadyExist: true,
+            message: 'A user with this email already exists'
+        };
+    }
+    if (await getUserByName(fastify, username)) {
+        return {
+            alreadyExist: true,
+            message: 'A user with this username already exists'
+        };
+    }
+    return {
+        alreadyExist: false,
+        message: ''
+    }
 }
 
 export async function createUser(data: RegisterUser, fastify: FastifyInstance) : Promise<{ user: User, tokens: Tokens }>
 {
     data.password = await hashPassword(data.password);
-    data.avatar = data.avatar || 'https://i.pravatar.cc/150?img=7';
+
+    if (data.avatar)
+        data.avatar = data.avatar;
 
     const user = await createUserInDb(fastify, data);
     const tokens = await generateToken(user.id, user.email);
@@ -46,19 +61,6 @@ Promise<{user: User | undefined, tokens: Tokens, message: string}>
         user = await getUserByEmail(fastify, identifier);
     else if (usernameSchema.safeParse(identifier).success)
         user = await getUserByName(fastify, identifier);
-
-    if (!user)
-    {
-        return {
-            user: user,
-            tokens: {
-                token: '',
-                refresh_token: ''
-            },
-            message: 'Incorrect identifier'
-        };
-
-    }
 
     if (!user || !await comparePassword(password, user.password)) {
         return {
@@ -89,17 +91,27 @@ export async function hasNoDifference(newData: UpdateUser, user: User) : Promise
     return false
 }
 
-export async function updateUser(fastify: FastifyInstance, newData: UpdateUser, user: User) : Promise<User | undefined>
+export async function updateUser(fastify: FastifyInstance, newData: UpdateUser, user: User) : Promise<{user: User | undefined, message: string}>
 {
-    if (await hasNoDifference(newData, user))
-        return undefined;
-    
-    console.log('OLD USER : ', user);
+    if (await hasNoDifference(newData, user)) {
+        return { 
+            user: undefined,
+            message: 'No changes detected: your new data must differ from your current information.'
+        };
+    }
+
+    if (newData.username && await getUserByName(fastify, newData.username)) {
+        return {
+            user: undefined,
+            message: 'this identifier is unavailable'
+        };
+    }
 
     if (newData.password)
         newData.password = await hashPassword(newData.password);
-    
-    return await updateUserById(fastify, newData, user.id);
-    
-    
+
+    return {
+        user: await updateUserById(fastify, newData, user.id),
+        message: ''
+    };
 }
