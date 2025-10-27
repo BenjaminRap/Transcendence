@@ -26,6 +26,8 @@ services:
     volumes:
       - backend:/app/backend/
       - databases:/app/databases/
+    environment:
+      - PROFILE=${PROFILE:-prod} 
     profiles: [
       "prod",
       "dev"

@@ -15,9 +15,11 @@ RUN [ "mkdir", "/app/backend" ]
 
 COPY ./prisma ./prisma
 
-# Générer le client Prisma à la construction
 RUN ["npx", "prisma", "generate"]
+
+COPY    ./entrypoint.sh /entrypoint.sh
+RUN     chmod +x /entrypoint.sh
 
 EXPOSE 8181
 
-CMD npx prisma migrate dev --name init && npm run start
+ENTRYPOINT ["/entrypoint.sh"]
