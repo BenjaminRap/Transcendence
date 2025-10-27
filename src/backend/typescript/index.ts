@@ -3,6 +3,7 @@ import cors from '@fastify/cors';
 import { fpSqlitePlugin } from 'fastify-sqlite-typed';
 import { authRoutes } from './routes/auth.js';
 import { usersRoutes } from './routes/users.js';
+import { persoRoutes } from './routes/persoUser.js';
 import prismaPlugin from './plugins/prisma.js'
 
 
@@ -28,10 +29,16 @@ fastify.get('/', (_request, reply) => {
     reply.send({ hello: 'world' });
 });
 
-// Enregistrer les routes
+// routes functions
+
+// route to authenticate users ( /register, /login, /refresh )
 fastify.register(authRoutes, { prefix: '/auth' });
 
+// route to get others users profiles ( /:id, /:username )
 fastify.register(usersRoutes, { prefix: '/users' });
+
+// route to get personnal informations ( /me )
+fastify.register(persoRoutes, { prefix: '/perso' });
 
 async function start(): Promise<void> {
     try {

@@ -1,5 +1,7 @@
 import { FastifyInstance } from 'fastify';
-import { User, RegisterUser, UpdateUser } from '../dataStructure/auth.js'
+import { User } from '../dataStructure/commonStruct.js'
+import { UpdateData } from '../dataStructure/usersStruct.js'
+import { RegisterData } from '../dataStructure/authStruct.js'
 
 export async function getUserByEmail(fastify: FastifyInstance, email: string) : Promise<User | undefined> {
     return await fastify.prisma.user.findUnique({
@@ -19,14 +21,14 @@ export async function getUserById(fastify: FastifyInstance, id: number) : Promis
     });
 }
 
-export async function createUserInDb(fastify: FastifyInstance, data: RegisterUser) : Promise<User>
+export async function createUserInDb(fastify: FastifyInstance, data: RegisterData) : Promise<User>
 {
     return await fastify.prisma.user.create({
         data
     });
 }
 
-export async function updateUserById(fastify: FastifyInstance, data: UpdateUser, id: number) : Promise<User>
+export async function updateUserById(fastify: FastifyInstance, data: UpdateData, id: number) : Promise<User>
 {
     return await fastify.prisma.user.updateMany({
         where: { id },
@@ -34,6 +36,16 @@ export async function updateUserById(fastify: FastifyInstance, data: UpdateUser,
     });
 }
 
-export async function getAllDb(fastify: FastifyInstance){
-     return await fastify.prisma.user.findMany();
+export async function getManyUsersByName(fastify: FastifyInstance, userSearched: string) {
+    return await fastify.prisma.user.findMany({
+        where: {
+            username: { contains: userSearched }
+        },
+        select: {
+            username: true,
+            id: true,
+        },
+        orderBy: { username: 'asc' },
+        take: 10
+    });
 }

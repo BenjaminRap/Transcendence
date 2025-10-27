@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply} from 'fastify';
 import jwt from 'jsonwebtoken';
-import { Tokens } from '../dataStructure/auth.js'
+import { Tokens } from '../dataStructure/authStruct.js'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'complEcatEd-kEy';
 

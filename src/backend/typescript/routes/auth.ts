@@ -1,15 +1,14 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
-import { RegisterUser, LoginRequest, AuthResponse} from './dataStructure/auth.js';
-import { isExistingUser, createUser, getExistingUser } from './utils/utils.js'
+import { getExistingUser } from './utils/auth.utils.js'
+import { registerUserSchema } from './schemas/schemaObject.js'
+import { createUser, isExistingUser } from './utils/auth.utils.js'
 import { generateToken, checkAuth } from './utils/JWTmanagement.js'
-import { registerUserSchema } from './schemas/authSchema.js'
-
-import { getAllDb } from './DBRequests/users.js'
+import { RegisterData, LoginData, AuthResponse, sanitizeUser} from './dataStructure/authStruct.js';
 
 export async function authRoutes(fastify: FastifyInstance)
 {
     // /auth/register
-    fastify.post<{ Body: RegisterUser }>('/register', async (request: FastifyRequest<{ Body: RegisterUser }>, reply: FastifyReply) =>
+    fastify.post<{ Body: RegisterData }>('/register', async (request: FastifyRequest<{ Body: RegisterData }>, reply: FastifyReply) =>
     {
         try
         {
@@ -36,14 +35,14 @@ export async function authRoutes(fastify: FastifyInstance)
             }
 
             // schema avatar VOIR SI ON GARDE LIEN HTTP OU UNE IMAGE .PNJ etc...
-            (requiredData as RegisterUser).avatar = request.body.avatar;
+            (requiredData as RegisterData).avatar = request.body.avatar;
 
-            const newUser = await createUser((requiredData as RegisterUser), fastify);
+            const newUser = await createUser((requiredData as RegisterData), fastify);
 
             return reply.status(201).send({
                 success: true,
                 message: 'User registered successfully',
-                user: newUser.user,
+                user: sanitizeUser(newUser.user),
                 tokens: newUser.tokens
             } as AuthResponse);
 
@@ -57,7 +56,7 @@ export async function authRoutes(fastify: FastifyInstance)
     });
 
     // /auth/login
-    fastify.post<{ Body: LoginRequest }>('/login', async (request: FastifyRequest<{ Body: LoginRequest }>, reply: FastifyReply) => {
+    fastify.post<{ Body: LoginData }>('/login', async (request: FastifyRequest<{ Body: LoginData }>, reply: FastifyReply) => {
         try
         {
             const { identifier, password } = request.body;
@@ -69,28 +68,20 @@ export async function authRoutes(fastify: FastifyInstance)
             }
 
             const userFound = await getExistingUser(fastify, identifier, password);
-            if (!userFound.user || !userFound.tokens.token) {
+            if (!userFound.user || !userFound.tokens) {
                 return reply.status(401)
                     .header('WWW-Authenticate', 'error="invalid_credentials"')
                     .send({
                         success: false,
-                        message: userFound.message
+                        message: 'Incorrect email/username or password'
                     } as AuthResponse);
             }
 
             return reply.status(200).send({
                 success: true,
                 message: 'Connection successful',
-                user: {
-                    id: userFound.user.id,
-                    username: userFound.user.username,
-                    email: userFound.user.email,
-                    avatar: userFound.user.avatar
-                },
-                tokens: {
-                    token: userFound.tokens.token,
-                    refresh_token: userFound.tokens.refresh_token
-                }
+                user: sanitizeUser(userFound.user),
+                tokens: userFound.tokens
             } as AuthResponse);
 
         } catch (error) {
@@ -105,18 +96,10 @@ export async function authRoutes(fastify: FastifyInstance)
     // auth/refresh
     fastify.get('/refresh', { preHandler: checkAuth }, async (request: FastifyRequest, reply: FastifyReply) => {
 
-        const tokens = generateToken((request as any).user.userId, (request as any).user.email);
+        const tokens = await generateToken((request as any).user.userId, (request as any).user.email);
         return reply.status(201).send({
-            tokens: {
-                token: (await tokens).token,
-                refresh_token: (await tokens).refresh_token
-            },
+            tokens,
             message: "Authentification token renewal successful"
         });
-    });
-
-    fastify.get('/all', async (request: FastifyRequest, reply: FastifyReply) => {
-        const all = await getAllDb(fastify);
-        console.log(all);
     });
 }
