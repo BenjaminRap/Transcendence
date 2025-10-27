@@ -1,6 +1,6 @@
-**GET users/me**
+**GET users/:id**
 
-_Description :_ renvoie le profile de l'utilisateur courant
+_Description :_ renvoie le profile de l'utilisateur avec l'id passe en parametre
 
 _Mandatory headers :_
   Content-Type: application/json,
@@ -9,15 +9,10 @@ _Mandatory headers :_
 _Possibles responses:_
 
 ✅ 200 OK
-  {
+  { ( _voir **dataStructure/usersStruct.js -> PublicProfileResponse** pour le schema de reponse_)
     success: true,
     message: 'Profile retrieved successfully',
-    user: {
-        "id": 1,
-        "username": myUsername,
-        "email": myMail@mail.com,
-        "avatar": "https://avatar.com" 
-    }
+    user: PersoProfile
   }
 
 ❌ 400 Bad Request :
@@ -35,7 +30,8 @@ _Possibles responses:_
 ❌ 404 Unauthorized :
   {
     "success": false,
-    "message": "User not found"
+    "message": "User not found",
+    "user": PublicProfile
   }
 
 ❌ 500 Internal Server Error :
@@ -46,9 +42,9 @@ _Possibles responses:_
 
 -------------------------------------------------------------------------------------------------------------------------
 
-**PUT users/me**
+**GET users/:username**
 
-_Description :_ permet d'update certaines donnes de l'user (username, password, avatar), soit plusieur d'un coup soit une seule. si plusieurs donnees sont demandees a etre mise a jour elles doivent toutes etre valide sinon aucune ne sera mise a jour et il faudra refaire une requete avec des donnees valides
+_Description :_ retourne un tableau avec 10 utilisateurs maximum venant de la DB dont le nom a une occurence avec le paramere username
 
 _Mandatory headers :_
   Content-Type: application/json,
@@ -56,16 +52,11 @@ _Mandatory headers :_
 
 _Possibles responses:_
 
-✅ 204 No Content
-  {
+✅ 200 Ok
+  { ( _voir **dataStructure/usersStruct.js -> searchedUserResponse** pour le schema de reponse_)
     success: true,
     message: 'user update successful',
-    user: {
-        "id": 1,
-        "username": myUsername,
-        "email": myMail@mail.com,
-        "avatar": "https://avatar.com" 
-    }
+    usersFound: PublicProfile[]
   }
 
 ❌ 400 Bad Request :
@@ -83,19 +74,13 @@ _Possibles responses:_
 ❌ 404 Unauthorized :
   {
     "success": false,
-    "message": "User not found"
+    "message": "no profile found"
   }
 
 ❌ 400 Bad Request :
   {
     "success": false,
-    "message": "missing or invalid data (il n'y a pas de donnee ou bien la donnee ne repond pas aux exigences du serveur par exemple username trop long ou password pas assez long)"
-  }
-
-❌ 409 Conflict :
-  {
-    "success": false,
-    "message": "User with this email or username already exist"
+    "message": "message expliquant pourquoi le parametre ne correspond pas au bon criteres de recherche"
   }
 
 ❌ 500 Internal Server Error :

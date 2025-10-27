@@ -3,7 +3,6 @@ import { checkAuth } from './utils/JWTmanagement.js'
 import { getUserById, getManyUsersByName } from './DBRequests/users.js'
 import { idParamSchema, usernameSearchSchema } from './schemas/schemaRules.js';
 import { PublicProfileResponse, sanitizePublicProfile, searchedUserResponse } from './dataStructure/usersStruct.js'
-import { success } from 'zod';
 
 export async function usersRoutes(fastify: FastifyInstance) {
     // /users/:id

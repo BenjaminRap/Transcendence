@@ -56,7 +56,7 @@ export async function persoRoutes(fastify: FastifyInstance) {
 
             const UpUser = await updateUser(fastify, validation.data, user);
             if (!UpUser.user) {
-                return reply.status(422).send({
+                return reply.status(409).send({
                     success: false,
                     message: UpUser.message,
                     redirectTo: '/perso/update'

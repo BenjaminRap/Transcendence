@@ -15,19 +15,11 @@ _Body :_ JSON
 
 _Possibles responses :_
 ✅ 201 Created:
-    {
+    { ( _voir **dataStructure/authStructure.ts -> AuthResponse** pour le schema de reponse_)
         success: true,
         message: 'User registered successfully',
-        user: {
-            "id": 1,
-            "username": "myUsername",
-            "email": "myMailExemple@gmail.com",
-            "avatar": "https://avatar.com"
-        }
-        tokens: {
-            "token": "eyJhbGciOiJIUzI1NiIs...",
-            "refresh_token": "eyJhbGciOiJIUzI1NiIs..."
-        }
+        user: authUser
+        tokens: Tokens
     }
 
 ❌ 400 Bad Request :
@@ -60,27 +52,19 @@ _Mandatory headers :_
 
 _Body :_ JSON
   {
-    "identifier": "string (, format email OU username) **Mandatory field**",
-    "password": "string (, min 8 caractères **Mandatory field**)"
+    "identifier": "string (format email OU username) **Mandatory field**",
+    "password": "string (min 12 caractères, Majuscule, minuscule, caractere special, nombre **Mandatory field**)"
   }
 
 _Possibles responses:_
 
 ✅ 200 Success
-  {
-    "success": true,
-    "message": ""
-    "user": {
-      "id": 1,
-      "username": "myName"
-      "email": "user@example.com",
-      "avatar": "https://avatar.com"
+    { ( _voir **dataStructure/authStructure.ts -> AuthResponse** pour le schema de reponse_)
+        success: true,
+        message: 'User registered successfully',
+        user: authUser
+        tokens: Tokens
     }
-    "tokens": {
-        token: "eyJhbGciOiJIUzI1NiIs...",
-        refresh_token: "eyJhbGciOiJIUzI1NiIs..."
-    }
-  }
 
 ❌ 400 Bad Request :
   {
@@ -113,11 +97,8 @@ _Mandatory headers :_
 _Possibles responses:_
 
 ✅ 201 Success
-  {
-    "tokens": {
-        token: "eyJhbGciOiJIUzI1NiIs...",
-        refresh_token: "eyJhbGciOiJIUzI1NiIs..."
-    }
+  { ( _voir **dataStructure/authStructure.ts -> Token** pour le schema de reponse_)
+    "tokens": Token
     message: "Authentification token renewal successful"
   }
 
