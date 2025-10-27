@@ -2,9 +2,11 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { AuthResponse, UpdateUser } from './dataStructure/auth.js';
 import { updateSchema } from './schemas/authSchema.js';
 import { checkAuth } from './utils/JWTmanagement.js'
-import { getUserById } from './utils/DBRequest.js';
+import { getUserById } from './DBRequests/users.js';
 
 import { updateUser } from './utils/utils.js';
+import { idParamSchema } from './schemas/commonSchema.js';
+import { success } from 'zod';
 
 // /users/me
 export async function usersRoutes(fastify: FastifyInstance) {
@@ -36,10 +38,25 @@ export async function usersRoutes(fastify: FastifyInstance) {
 
     // /users/:id
     fastify.get('/:id', { preHandler: checkAuth }, async (request: FastifyRequest, reply: FastifyReply) => {
+        const idData = idParamSchema.safeParse(request.params['id']);
+        if (!idData.success) {
+            return reply.status(400).send({
+                success: false,
+                message: 'invalid ID'
+            } as AuthResponse);
+        }
 
+        const user = await getUserById(fastify, idData.data);
+        if (!user) {
+            return reply.status(404).send({
+                success: false,
+                message: 'User not found'
+            }  as AuthResponse);
+        }
+        console.log('USER FOUNDED: ', user);
     });
 
-    fastify.get('/search:username', { preHandler: checkAuth }, async (request: FastifyRequest, reply: FastifyReply) => {
+    fastify.get('/search/:username', { preHandler: checkAuth }, async (request: FastifyRequest, reply: FastifyReply) => {
         
     });
 
@@ -60,7 +77,7 @@ export async function usersRoutes(fastify: FastifyInstance) {
             if (!validation.success) {
                 return reply.status(400).send({
                     success: false,
-                    message: 'invalid data'
+                    message: 'missing or invalid data'
                 }as AuthResponse);
             }
 

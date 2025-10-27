@@ -4,7 +4,7 @@ import { isExistingUser, createUser, getExistingUser } from './utils/utils.js'
 import { generateToken, checkAuth } from './utils/JWTmanagement.js'
 import { registerUserSchema } from './schemas/authSchema.js'
 
-import { getAllDb } from './utils/DBRequest.js'
+import { getAllDb } from './DBRequests/users.js'
 
 export async function authRoutes(fastify: FastifyInstance)
 {

@@ -9,3 +9,12 @@ export const passwordSchema = z.string()
     .regex(/(?=.*\d)/, 'Password must contain at least one number')
     .regex(/(?=.*[@$!%*?&.#_\-+=()\[\]{}|:;,<>~])/, 'Password must contain at least one special character included in this list : @$!%*?&.#_\-+=()\[\]{}|:;,<>~');
 
+export const idSchema = z.number()
+    .int()
+    .min(1)
+    .max(2147483647)
+
+export const idParamSchema = z.string()
+    .regex(/^\d+$/)
+    .transform(Number)
+    .pipe(idSchema)

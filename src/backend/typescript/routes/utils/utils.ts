@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 import { generateToken } from './JWTmanagement.js';
 import { emailSchema } from '../schemas/commonSchema.js';
 import { usernameSchema } from '../schemas/authSchema.js';
-import { getUserByEmail, getUserByName, createUserInDb, updateUserById } from './DBRequest.js';
+import { getUserByEmail, getUserByName, createUserInDb, updateUserById } from '../DBRequests/users.js';
 import { User, Tokens, RegisterUser, UpdateUser } from '../dataStructure/auth.js';
 
 const SALT_ROUNDS = 12;

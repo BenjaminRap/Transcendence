@@ -7,12 +7,37 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  BLOCKED
+}
+
 model User {
   id        Int      @id @default(autoincrement())
   username  String   @unique
   email     String   @unique
   password  String
   avatar    String   @default("https://i.pravatar.cc/150?img=7")
+
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now())
+
+  friendshipsA  Friendship[]  @relation("userAFriendships")
+  friendshipsB  Friendship[]  @relation("userBFriendships")
+}
+
+model Friendship {
+  id        Int               @id @default(autoincrement())
+  userAId   Int
+  userBId   Int
+  status    FriendshipStatus  @default(PENDING)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime
+
+  userA     User      @relation("userAFriendships", fields: [userAId], references: [id])
+  userB     User      @relation("userBFriendships", fields: [userBId], references: [id])
+  
+  @@unique([userAId, userBId])
 }
