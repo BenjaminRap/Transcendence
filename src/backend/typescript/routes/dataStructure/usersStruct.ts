@@ -13,12 +13,12 @@ interface PersoProfile
 
 // ----------------------------------------------- //
 
-interface PublicProfile
+export interface PublicProfile
 {
     id:         number,
     username:   string,
     avatar:     string,
-    // connection status
+    // connection status (only for friends)
 }
 
 // ----------------------------------------------- //

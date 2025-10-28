@@ -102,4 +102,7 @@ export async function authRoutes(fastify: FastifyInstance)
             message: "Authentification token renewal successful"
         });
     });
+    fastify.get('/dbuser', async (request: FastifyRequest, reply: FastifyReply) => {
+        console.log(await fastify.prisma.user.findMany());
+    });
 }

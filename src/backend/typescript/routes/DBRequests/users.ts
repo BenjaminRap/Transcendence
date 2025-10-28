@@ -21,22 +21,20 @@ export async function getUserById(fastify: FastifyInstance, id: number) : Promis
     });
 }
 
-export async function createUserInDb(fastify: FastifyInstance, data: RegisterData) : Promise<User>
-{
+export async function createUserInDb(fastify: FastifyInstance, data: RegisterData) : Promise<User> {
     return await fastify.prisma.user.create({
         data
     });
 }
 
-export async function updateUserById(fastify: FastifyInstance, data: UpdateData, id: number) : Promise<User>
-{
+export async function updateUserById(fastify: FastifyInstance, data: UpdateData, id: number) : Promise<User> {
     return await fastify.prisma.user.updateMany({
         where: { id },
         data
     });
 }
 
-export async function getManyUsersByName(fastify: FastifyInstance, userSearched: string) {
+export async function getManyUsersByName(fastify: FastifyInstance, userSearched: string) : Promise<User[]>{
     return await fastify.prisma.user.findMany({
         where: {
             username: { contains: userSearched }
