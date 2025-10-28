@@ -5,7 +5,7 @@ export interface Tokens
 {
     token:          string,
     refresh_token:  string
-};
+}
 
 // ----------------------------------------------- //
 
@@ -15,7 +15,7 @@ export interface authUser
     username:   string,
     email:      string,
     avatar:     string
-};
+}
 
 // ----------------------------------------------- //
 
@@ -25,7 +25,7 @@ export interface RegisterData
     email:      string,
     password:   string,
     avatar?:     string
-};
+}
 
 // ----------------------------------------------- //
 
@@ -33,7 +33,7 @@ export interface LoginData
 {
     identifier: string,
     password:   string
-};
+}
 
 // ----------------------------------------------- //
 
@@ -43,7 +43,7 @@ export interface AuthResponse
     message:    string,
     user?:      authUser,
     tokens?:    Tokens
-};
+}
 
 // ----------------------------------------------- //
 

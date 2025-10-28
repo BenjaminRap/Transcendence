@@ -4,6 +4,7 @@ import { fpSqlitePlugin } from 'fastify-sqlite-typed';
 import { authRoutes } from './routes/auth.js';
 import { usersRoutes } from './routes/users.js';
 import { persoRoutes } from './routes/persoUser.js';
+import { friendship } from './routes/friends.js'
 import prismaPlugin from './plugins/prisma.js'
 
 
@@ -34,11 +35,13 @@ fastify.get('/', (_request, reply) => {
 // route to authenticate users ( /register, /login, /refresh )
 fastify.register(authRoutes, { prefix: '/auth' });
 
-// route to get others users profiles ( /:id, /:username )
+// route to get others users public profiles ( /:id, /:username )
 fastify.register(usersRoutes, { prefix: '/users' });
 
-// route to get personnal informations ( /me )
+// route to get personnal profile ( /me, /update )
 fastify.register(persoRoutes, { prefix: '/perso' });
+
+fastify.register(friendship, { prefix: '/friends'});
 
 async function start(): Promise<void> {
     try {

@@ -28,7 +28,7 @@ export interface UpdateData
     username?:  string,
     password?:  string,
     avatar?:    string
-};
+}
 
 // ----------------------------------------------- //
 
@@ -55,7 +55,7 @@ export interface UpdateResponse
     success:    boolean,
     message:    string,
     redirectTo: string
-};
+}
 
 // ----------------------------------------------- //
 
@@ -64,7 +64,7 @@ export interface searchedUserResponse
     success:        boolean,
     message:        string,
     usersFound?:   PublicProfile[]
-};
+}
 
 // ----------------------------------------------- //
 

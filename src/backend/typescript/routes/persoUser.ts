@@ -77,5 +77,4 @@ export async function persoRoutes(fastify: FastifyInstance) {
             });
         }
     });
-
 }
