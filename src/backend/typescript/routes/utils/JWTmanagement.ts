@@ -17,7 +17,7 @@ export async function generateToken(userId: number, email: string): Promise<Toke
     const token = jwt.sign(
         { userId, email },
         JWT_SECRET,
-        { expiresIn: '1h' }
+        { expiresIn: '11h' }
     );
 
     const refresh_token = jwt.sign(

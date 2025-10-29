@@ -48,11 +48,20 @@ export interface FriendshipResponse
 
 // ----------------------------------------------- //
 
+export interface PendingList
+{
+    createdAt:  string,
+    user:       PublicProfile,
+    recieved:   boolean
+}
+
+// ----------------------------------------------- //
+
 export interface PendingListResponse
 {
     success:        boolean,
     message:        string,
-    pendingList:    PublicProfile[]
+    pendingList:    PendingList[]
 }
 
 // ----------------------------------------------- //
