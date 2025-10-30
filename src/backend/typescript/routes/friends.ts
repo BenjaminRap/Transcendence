@@ -2,8 +2,8 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { checkAuth } from './utils/JWTmanagement.js';
 import { getUserById } from './DBRequests/users.js';
 import { idParamSchema } from './schemas/schemaRules.js';
-import { FriendshipResponse, FriendshipRequest, PendingListResponse, sanitizeFriends } from './dataStructure/friendStruct.js';
-import { createNewFriendRequest, getPendingList, getFriendRelation, updateFriendStatus } from './DBRequests/friendships.js'
+import { FriendshipResponse, FriendshipRequest, PendingListResponse, FriendListResponse, sanitizeFriends } from './dataStructure/friendStruct.js';
+import { createNewFriendRequest, getPendingList, getFriendRelation,  getFriendlist, updateFriendStatus, deleteRelationship } from './DBRequests/friendships.js'
 import { success } from 'zod';
 
 export async function friendship(fastify: FastifyInstance) {
@@ -30,7 +30,7 @@ export async function friendship(fastify: FastifyInstance) {
             if (friendFinder.id === friendReceiver.id) {
                 return reply.status(409).send({
                     success: false,
-                    message: 'try meditation to be friends with yourself :)'
+                    message: 'try meditation to be friends with yourself ;)'
                 } as FriendshipResponse);
             }
 
@@ -60,7 +60,36 @@ export async function friendship(fastify: FastifyInstance) {
             } as FriendshipResponse);            
         }
     });
-    
+
+    // GET	/friends -> Liste les amis (status = ACCEPTED)
+    fastify.get('/friends', { preHandler: checkAuth }, async (request: FastifyRequest, reply: FastifyReply) => {
+        try {
+            const userId = (request as any).user.userId;
+            const user = getUserById(fastify, userId);
+            if (!user) {
+                return reply.status(404).send({
+                    success: false,
+                    message: 'User not found'
+                });
+            }
+
+            const friendList = await getFriendlist(fastify, userId);
+
+            return reply.status(200).send({
+                success: true,
+                message: 'friend list retrieved successful',
+                friendList
+            } as FriendListResponse);
+
+        } catch (error) {
+            fastify.log.error(error);
+            return reply.status(500).send({
+                success: false,
+                message: 'internal server error'
+            });            
+        }
+    })
+
     // GET	/friends/requests -> retourne la liste des amis en attente
     fastify.get('/requests', { preHandler: checkAuth }, async (request: FastifyRequest, reply: FastifyReply) => {
         try {
@@ -95,7 +124,7 @@ export async function friendship(fastify: FastifyInstance) {
     });
 
     // POST	/friends/accept/:userId	Accepte une demande d’ami
-    fastify.put('/accept/:userId', { preHandler: checkAuth}, async (request: FastifyRequest, reply: FastifyReply) => {
+    fastify.put('/accept/:userId', { preHandler: checkAuth }, async (request: FastifyRequest, reply: FastifyReply) => {
         try {
             const frienId = idParamSchema.safeParse(request.params['userId']).data;
             if (!frienId) {
@@ -106,22 +135,23 @@ export async function friendship(fastify: FastifyInstance) {
             }
     
             const newFriend = await getUserById(fastify, frienId);
-            if (!newFriend) {
+            const currentUser = await getUserById(fastify, (request as any).user.userId);
+            if (!newFriend || !currentUser) {
                 return reply.status(404).send({
                     success: false,
                     message: 'User not found'
                 });
             }
 
-            const relationId = await getFriendRelation(fastify, newFriend.id, (request as any).userId);
-            if (!relationId) {
+            const relationShip = await getFriendRelation(fastify, newFriend.id, currentUser.id);
+            if (!relationShip) {
                 return reply.status(404).send({
                     success: false,
                     message: 'No relationship currently exists between these users',
                 });
             }
 
-            await updateFriendStatus(fastify, relationId.data, 'ACCEPTED')
+            await updateFriendStatus(fastify, relationShip.id, 'ACCEPTED')
             return reply.status(204).send({
                 success: true,
                 message: 'There are new friends in the world, yay!'
@@ -132,18 +162,77 @@ export async function friendship(fastify: FastifyInstance) {
             return reply.status(500).send({
                 success: false,
                 message: 'internal server error'
+            } as FriendshipResponse);
+        }
+    });
+
+    // POST	/friends/reject/:userId -> Refuser une demande d’ami / supprimer ami
+    fastify.put('/reject/:userId', { preHandler: checkAuth }, async (request: FastifyRequest, reply: FastifyReply) => {
+        try {
+            const frienId = idParamSchema.safeParse(request.params['userId']).data;
+            if (!frienId) {
+                return reply.status(400).send({
+                    sucess: false,
+                    message: 'Bad userId format'
+                });
+            }
+    
+            const newFriend = await getUserById(fastify, frienId);
+            const currentUser = await getUserById(fastify, (request as any).user.userId);
+            if (!newFriend || !currentUser) {
+                return reply.status(404).send({
+                    success: false,
+                    message: 'User not found'
+                });
+            }
+
+            const relationShip = await getFriendRelation(fastify, newFriend.id, currentUser.id);
+            if (!relationShip) {
+                return reply.status(404).send({
+                    success: false,
+                    message: 'No relationship currently exists between these users',
+                });
+            }
+
+            await deleteRelationship(fastify, relationShip.id);
+            return reply.status(204).send({
+                success: true,
+                message: 'delete successful'
+            });
+
+        } catch (error) {
+            fastify.log.error(error);
+            return reply.status(500).send({
+                success: false,
+                message: 'internal server error'
             } as FriendshipResponse);            
         }
-    })
+    });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
     fastify.get('/db', async (request: FastifyRequest, reply: FastifyReply) => {
         const res = await fastify.prisma.friendship.findMany() ;
         console.log(res);
     });  
 
-    // POST	/friends/reject/:userId Refuse une demande d’ami
     // POST /friends/block/:userId  bloquer un user
-    // GET	/friends	                    Liste les amis (status = ACCEPTED)
-    // DELETE	/friends/:friendshipId	    Supprime un ami
+    // DELETE	/friends/delete/:friendshipId	    Supprime un ami
 
 }

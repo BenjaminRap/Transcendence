@@ -17,8 +17,7 @@ export interface Friendship
 export enum FriendshipStatus
 {
     PENDING,
-    ACCEPTED,
-    BLOCKED
+    ACCEPTED
 }
 
 // ----------------------------------------------- //
@@ -57,11 +56,28 @@ export interface PendingList
 
 // ----------------------------------------------- //
 
+interface FriendList
+{
+    updatedAt:  string,
+    user:       PublicProfile,
+}
+
+// ----------------------------------------------- //
+
 export interface PendingListResponse
 {
     success:        boolean,
     message:        string,
     pendingList:    PendingList[]
+}
+
+// ----------------------------------------------- //
+
+export interface FriendListResponse
+{
+    success:        boolean,
+    message:        string,
+    friendList:     FriendList[]
 }
 
 // ----------------------------------------------- //

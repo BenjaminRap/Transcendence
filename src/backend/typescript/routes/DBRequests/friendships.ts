@@ -1,6 +1,38 @@
 import { FastifyInstance } from 'fastify';
 import { FriendsData } from '../dataStructure/commonStruct.js'
 import { FriendshipRequest, PendingList } from '../dataStructure/friendStruct.js'
+import { friendship } from '../friends.js';
+
+function formatPendingList(list: any[], currentUserId: number) {
+  return list.map(friendship => {
+    const otherUser =
+      friendship.requester.id === currentUserId
+        ? friendship.receiver
+        : friendship.requester;
+
+    return {
+      status: friendship.status,
+      createdAt: friendship.createdAt,
+      user: otherUser,
+    };
+  });
+}
+
+function formatFriendList(list: any[], currentUserId: number)
+{
+    return list.map(friendship => {
+        const otherUser =
+        friendship.requester.id === currentUserId
+            ? friendship.receiver
+            : friendship.requester;
+
+        return {
+            status: friendship.status,
+            updatedAt: friendship.updatedAt,
+            user: otherUser,
+        };
+    });
+}
 
 export async function thisRelationExist(fastify: FastifyInstance, data: FriendshipRequest) : Promise<boolean> {
     const friendship = await fastify.prisma.friendship.findFirst({
@@ -24,7 +56,7 @@ export async function createNewFriendRequest(fastify: FastifyInstance, data: Fri
     });
 }
 
-export async function getPendingList(fastify: FastifyInstance, id: number) : Promise<PendingList[]> {
+export async function getPendingList(fastify: FastifyInstance, id: number) {
     const pendingList =  await fastify.prisma.friendship.findMany({
         where: {
             OR: [
@@ -53,20 +85,7 @@ export async function getPendingList(fastify: FastifyInstance, id: number) : Pro
         },
     });
 
-    return pendingList.map(friendship => {
-        const otherUser =
-            friendship.requester.id === id
-            ? friendship.receiver
-            : friendship.requester;
-
-        return {
-            status: friendship.status,
-            createdAt: friendship.createdAt,
-            user: otherUser,
-            recieved: friendship.requester.id === id ? true : false
-        };
-    });
-
+    return formatPendingList(pendingList, id);
 }
 
 export async function getFriendRelation(fastify: FastifyInstance, userAId: number, userBId: number) {
@@ -78,6 +97,7 @@ export async function getFriendRelation(fastify: FastifyInstance, userAId: numbe
             ],
         },
         select: {
+            id: true,
             status: true,
             receiver: true,
             requester: true,
@@ -85,9 +105,45 @@ export async function getFriendRelation(fastify: FastifyInstance, userAId: numbe
     });
 }
 
-export async function updateFriendStatus(fastify: FastifyInstance, relationId: number, status: string) {
-    return await fastify.prisma.Friendship.updateUnique({
-        where: { relationId },
-        data: status,
+export async function getFriendlist(fastify: FastifyInstance, userId: number) {
+    const friendList = await fastify.prisma.Friendship.findMany({
+        where: {
+            OR: [
+                { receiverId: userId },
+                { requesterId: userId },
+            ],
+            status: 'ACCEPTED',
+        },
+        select: {
+            updatedAt: true,
+            receiver: {
+                select: {
+                    id: true,
+                    username: true,
+                    avatar: true,
+                },
+            },
+            requester: {
+                select: {
+                    id: true,
+                    username: true,
+                    avatar: true,
+                },
+            },
+        },
     });
+    return formatFriendList(friendList, userId);;
+}
+
+export async function updateFriendStatus(fastify: FastifyInstance, relationId: number, status: string) {
+    return await fastify.prisma.Friendship.update({
+        where: { id: relationId },
+        data: { status }
+    });
+}
+
+export async function deleteRelationship(fastify: FastifyInstance, relationId: number) {
+    return fastify.prisma.Friendship.delete({
+        where: { id: relationId }
+    })
 }

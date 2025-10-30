@@ -10,7 +10,6 @@ datasource db {
 enum FriendshipStatus {
   PENDING
   ACCEPTED
-  BLOCKED
 }
 
 model User {
