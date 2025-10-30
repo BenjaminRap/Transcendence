@@ -34,7 +34,7 @@ function formatFriendList(list: any[], currentUserId: number)
     });
 }
 
-export async function thisRelationExist(fastify: FastifyInstance, data: FriendshipRequest) : Promise<boolean> {
+async function doesThisRelationExist(fastify: FastifyInstance, data: FriendshipRequest) : Promise<boolean> {
     const friendship = await fastify.prisma.friendship.findFirst({
         where: {
             OR: [
@@ -49,7 +49,7 @@ export async function thisRelationExist(fastify: FastifyInstance, data: Friendsh
 }
 
 export async function createNewFriendRequest(fastify: FastifyInstance, data: FriendshipRequest) : Promise<FriendsData | undefined> {
-    if (await thisRelationExist(fastify, data))
+    if (await doesThisRelationExist(fastify, data))
         return undefined;
     return await fastify.prisma.friendship.create({
         data

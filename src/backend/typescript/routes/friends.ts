@@ -48,7 +48,7 @@ export async function friendship(fastify: FastifyInstance) {
             }
             return reply.status(201).send({
                 success: true,
-                message: 'Friend request sent successfully',
+                message: 'Friend request successfully sent',
                 friendship: sanitizeFriends(newFriend)
             } as FriendshipResponse);
 

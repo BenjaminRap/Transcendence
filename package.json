@@ -16,7 +16,7 @@
 		"@fastify/cors": "11.1.0",
 		"jsonwebtoken": "9.0.2",
 		"fastify-bcrypt": "1.0.1",
-		"@prisma/client": "^5.20.0",
+		"@prisma/client": "^6.18.0",
 		"zod": "^4.1.12",
   		"fastify-type-provider-zod": "^6.1.0"
 	},
