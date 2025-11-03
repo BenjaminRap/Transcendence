@@ -5,7 +5,7 @@ import { KeyboardEventTypes, KeyboardInfo } from "@babylonjs/core/Events/keyboar
 import { InputKey } from "../InputKey";
 
 export class InputManager extends ScriptComponent {
-	private inputKeys : Map<string, InputKey> = new Map<string, InputKey>([
+	private _inputKeys : Map<string, InputKey> = new Map<string, InputKey>([
 		["z", new InputKey()],
 		["s", new InputKey()],
 		["ArrowUp", new InputKey()],
@@ -19,7 +19,7 @@ export class InputManager extends ScriptComponent {
 
 	private onKeyboardInput(info : KeyboardInfo)
 	{
-		let	keyPressed : InputKey | undefined = this.inputKeys.get(info.event.key);
+		let	keyPressed : InputKey | undefined = this._inputKeys.get(info.event.key);
 
 		if (keyPressed === undefined)
 			return ;
@@ -31,7 +31,7 @@ export class InputManager extends ScriptComponent {
 
 	public addKeyObserver(key : string, callback : () => void) : void
 	{
-		let	inputKey : InputKey | undefined = this.inputKeys.get(key);
+		let	inputKey : InputKey | undefined = this._inputKeys.get(key);
 
 		if (inputKey === undefined)
 			throw new Error("addKeyObserver called with an unsupported key: " + key);
@@ -40,7 +40,7 @@ export class InputManager extends ScriptComponent {
 
 	public removeKeyObserver(key : string, callback : () => void) : void
 	{
-		let	inputKey : InputKey | undefined = this.inputKeys.get(key);
+		let	inputKey : InputKey | undefined = this._inputKeys.get(key);
 
 		if (inputKey === undefined)
 			throw new Error("addKeyObserver called with an unsupported key: " + key);
@@ -49,7 +49,7 @@ export class InputManager extends ScriptComponent {
 
 	public getInputKey(key : string) : InputKey
 	{
-		const	inputKey : InputKey | undefined = this.inputKeys.get(key);
+		const	inputKey : InputKey | undefined = this._inputKeys.get(key);
 
 		if (inputKey === undefined)
 			throw new Error("getInputKey called with an unsupported key: " + key);

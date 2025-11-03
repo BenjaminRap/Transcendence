@@ -16,7 +16,6 @@ services:
     volumes:
       - frontend:/app/frontend/
       - shared:/app/shared/
-      - babylonjs-toolkit:/app/@babylonjs-toolkit/
     profiles: [
       "dev"
     ]
@@ -28,7 +27,6 @@ services:
     volumes:
       - backend:/app/dev/
       - databases:/app/databases/
-      - babylonjs-toolkit:/app/@babylonjs-toolkit/
     profiles: [
       "prod",
       "dev"
@@ -52,12 +50,6 @@ volumes:
     driver_opts:
       type: none
       device: ../src/shared/
-      o: bind
-  babylonjs-toolkit:
-    driver: local
-    driver_opts:
-      type: none
-      device: ../@babylonjs-toolkit/
       o: bind
   databases:
     driver: local
