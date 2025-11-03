@@ -2,6 +2,7 @@ export { };
 
 import { ProfileBuilder } from './profile.ts'
 import { Modal } from './modal.ts'
+import { ExtProfileBuilder } from './extprofile.ts'
 
 
 let maxOutputLines = 100;
@@ -80,7 +81,6 @@ let commandHistory: string[] = [];
 let indexCommandHistory = -2;
 
 let isBuilded = false;
-let isProfileActive = false;
 let isHidden = false;
 let HiddenContent = '';
 
@@ -125,13 +125,12 @@ function profileCommand(args: string[]): string {
 	if (args.length > 2) {
 		return 'Usage: profile to see your profile or profile [username] to see another user\'s profile.';
 	}
-	if (isProfileActive)
+	if (ProfileBuilder.isActive || ExtProfileBuilder.isActive)
 		return 'Profile is already open. Type "kill profile" to close it.';
 	if (args.length === 1)
 		ProfileBuilder.buildProfile('');
 	else
-		ProfileBuilder.buildProfile(args[1]);
-	isProfileActive = true;
+		ExtProfileBuilder.buildExtProfile(args[1]);
 	return 'Profile is now open.';
 }
 
@@ -139,9 +138,12 @@ function profileCommand(args: string[]): string {
 function killCommand(args: string[]): string {
 	if (args.length !== 2)
 		return 'Usage: kill [process_name]';
-	if (args[1] === 'profile' && isProfileActive) {
+	if (args[1] === 'profile' && ProfileBuilder.isActive) {
 		ProfileBuilder.removeProfile();
-		isProfileActive = false;
+		return 'kill profile';
+	}
+	if (args[1] === 'profile' && ExtProfileBuilder.isActive) {
+		ExtProfileBuilder.removeExtProfile();
 		return 'kill profile';
 	}
 	return `No such process: ${args[1]}`;
