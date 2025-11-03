@@ -32,7 +32,7 @@ export async function generateToken(userId: number, email: string): Promise<Toke
     };
 }
 
-export async function checkAuth(request: FastifyRequest, reply: FastifyReply) {
+export function checkAuth(request: FastifyRequest, reply: FastifyReply) {
     const authHeader = request.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
