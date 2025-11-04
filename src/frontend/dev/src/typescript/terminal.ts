@@ -4,41 +4,19 @@ import { ProfileBuilder } from './profile.ts'
 import { Modal } from './modal.ts'
 import { ExtProfileBuilder } from './extprofile.ts'
 
+import FileSystem from './filesystem.json' with { type: "json" };
 
 let maxOutputLines = 100;
-let promptText = "usah@terminal:~$ ";
+let username = "usah";
+let currentDirectory = '/';
+
+let promptText =  username + "@terminal:" + currentDirectory +"$ ";
 let backUpPromptText = promptText;
 let env = {
 	'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
-	'HOME': '/home/usa',
+	'HOME': '/home/' + username,
 	'TERM': 'minishell'
 };
-let fileSystem = {
-	'/': {
-		'type': 'dir',
-		'content': {
-			'file1.txt': {
-				'type': 'file',
-				'content': 'This is the content of file1.txt'
-			},
-			'file2.txt': {
-				'type': 'file',
-				'content': 'This is the content of file2.txt'
-			},
-			'subdir': {
-				'type': 'dir',
-				'content': {
-					'file3.txt': {
-						'type': 'file',
-						'content': 'This is the content of file3.txt in subdir'
-					}
-				}
-			}
-		}
-	}
-};
-
-// HASH_MAP
 
 
 
@@ -60,11 +38,6 @@ class Command {
 	}
 }
 
-// const test = new Command('test', 'A test command', 'test [args]', (args: string[]) => {
-// 	return 'Test command executed with args: ' + args.join(' ');
-// });
-
-
 let commandAvailable =
 [
 	new Command('echo', 'Display a line of text', 'echo [text]', echoCommand),
@@ -74,9 +47,12 @@ let commandAvailable =
 	new Command('clear', 'Clear the terminal screen', 'clear', clearCommand),
 	new Command('modal', 'Create a modal dialog', 'modal [text]', modalCommand),
 	new Command('test', 'Test command for input prompt', 'test [text]', teste),
+	new Command('cd', 'Change the current directory', 'cd [directory]', cdCommand),
+	new Command('ls', 'List directory contents', 'ls', lsCommand),
+	new Command('pwd', 'Print working directory', 'pwd', pwdCommand),
+	new Command('cat', 'Concatenate and display file content', 'cat [file]', catCommand),
 ];
 
-let currentDirectory = '/';
 let commandHistory: string[] = [];
 let indexCommandHistory = -2;
 
@@ -96,6 +72,20 @@ let InputArgs: string[] = [];
 let InputResult: string[] = [];
 let WaitingHidden: number[] = [];
 let InputFunction: Function | null = null;
+
+type FileNode = {
+	type: "file";
+	name: string;
+	content: string;
+};
+
+type DirNode = {
+	type: "directory";
+	name: string;
+	children: Array<FileNode | DirNode>;
+};
+
+type Node = FileNode | DirNode;
 
 
 // ------------------------------------------------------------------------ Command ---------------------------------------------------------------------
@@ -167,9 +157,109 @@ function modalCommand(args: string[]): string {
 	return `Modal created with text: ${args.slice(1).join(' ')}`;
 }
 
+function cdCommand(args: string[], description: string, usage: string): string {
+	if (args.length !== 2) {
+		currentDirectory = '/';
+		updatePromptText(username + "@terminal:" + currentDirectory +"$ ");
+		return '';
+	}
+	let targetPath = '';
+	if (currentDirectory === '/')
+		targetPath = currentDirectory + args[1];
+	else
+		targetPath = currentDirectory + '/' + args[1];
+	targetPath = normalizePath(targetPath);
+	if (args[1] === '/') {
+		currentDirectory = '/';
+		updatePromptText(username + "@terminal:" + currentDirectory +"$ ");
+		return '';
+	}
+	const node = getNode(targetPath);
+	if (!node || node.type !== 'directory') {
+		return `cd: no such file or directory: ${targetPath}`;
+	}
+	currentDirectory = targetPath;
+	updatePromptText(username + "@terminal:" + currentDirectory +"$ ");
+	return '';
+}
 
+function lsCommand(args: string[], description: string, usage: string): string {
+	let node: Node | null;
+	let targetPath: string;
+
+	if (args.length === 1) {
+		node = getNode(currentDirectory);
+		targetPath = currentDirectory;
+	}
+	else if (args.length === 2) {
+		targetPath = normalizePath(currentDirectory + '/' + args[1]);
+		node = getNode(targetPath);
+	}
+	else 
+		return `Usage: ${usage}`;
+	if (!node || node.type !== 'directory') {
+		return `ls: cannot access '${targetPath}': No such directory`;
+	}
+	return node.children.map(child => (child.type === 'directory' ? child.name + '/' : child.name)).join('\n> ');
+}
+
+function pwdCommand(args: string[], description: string, usage: string): string {
+	return currentDirectory;
+}
+
+function catCommand(args: string[], description: string, usage: string): string {
+	if (args.length !== 2) {
+		return `Usage: ${usage}`;
+	}
+	const targetPath = normalizePath(currentDirectory + '/' + args[1]);
+	const fileNode = getNode(targetPath);
+	if (!fileNode || fileNode.type !== 'file') {
+		return `cat: ${args[1]}: No such file`;
+	}
+	return fileNode.content;
+}
 
 // ------------------------------------------------------------------------ Utilities ---------------------------------------------------------------------
+
+function normalizePath(path: string): string {
+	const parts = path.split('/').filter(p => p.length > 0);
+	const stack: string[] = [];
+
+	for (const part of parts) {
+		if (part === '.') {
+			continue;
+		} else if (part === '..') {
+			if (stack.length > 0) {
+				stack.pop();
+			}
+		} else {
+			stack.push(part);
+		}
+	}
+	return '/' + stack.join('/');
+}
+
+function getNode(path: string): Node | null
+{
+	const parts = path.split("/").filter(p => p.length > 0);
+	console.log("getNode called with path:", path, "parts:", parts);
+	let node = FileSystem as Node;
+	if (parts.length === 0)
+		return node;
+	for (const part of parts) {
+		if (node.type === "directory") {
+			const child = node.children.find(c => c.name === part);
+			if (child) {
+				node = child;
+			} else {
+				return null;
+			}
+		} else {
+			return null;
+		}
+	}
+	return node;
+}
 
 function countChar(char: string): number {
 	if (!output)
@@ -261,7 +351,10 @@ function updateCursorPosition(position: number) {
 	currentInput.selectionEnd = position;
 }
 
-
+function updatePromptText(newPrompt: string) {
+	promptText = newPrompt;
+	backUpPromptText = newPrompt;
+}
 
 export namespace TerminalUtils {
 	export function displayOnTerminal(text: string) {
@@ -405,7 +498,15 @@ function cursorRight() {
 
 function backspaceCase() {
 	if (currentInput && currentInput.value !== null) {
-		if (currentInput.value.length > promptText.length && currentInput.selectionStart > promptText.length) {
+		if (isHidden && currentInput.selectionStart > promptText.length) {
+			const cursorPosition = currentInput.selectionStart;
+			currentInput.value = currentInput.value.slice(0, cursorPosition - 1) + currentInput.value.slice(cursorPosition);
+			HiddenContent = HiddenContent.slice(0, cursorPosition - promptText.length - 1) + HiddenContent.slice(cursorPosition - promptText.length);
+			currentInput.selectionStart = cursorPosition - 1;
+			currentInput.selectionEnd = cursorPosition - 1;
+			resize();
+		}
+		else if (currentInput.value.length > promptText.length && currentInput.selectionStart > promptText.length) {
 			const cursorPosition = currentInput.selectionStart;
 			currentInput.value = currentInput.value.slice(0, cursorPosition - 1) + currentInput.value.slice(cursorPosition);
 			currentInput.selectionStart = cursorPosition - 1;
@@ -570,7 +671,7 @@ function testeeee(args: string[]): string {
 }
 
 function teste(args: string[]): string {
-	let argsTest = ["Mail", "Login", "Password"];
+	let argsTest = ["Mail", "Username", "Password"];
 	AskInput(argsTest, [3], testeeee);
 	return '';
 }

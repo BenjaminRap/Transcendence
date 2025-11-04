@@ -15,13 +15,14 @@ export namespace Modal {
 		const p = document.createElement('p');
 		p.className = "terminal-font p-1";
 		p.textContent = args;
-		const textarea = document.createElement('textarea');
+		const textarea = document.createElement('input');
+		textarea.type = "text"; // File pour fichier mais CSS a voir
 		textarea.id = "nameInput";
 		textarea.placeholder = "Shadow-01";
 		textarea.maxLength = 20;
 		textarea.spellcheck = false;
 		textarea.autocomplete = "off";
-		textarea.rows = 1;
+		// textarea.rows = 1;
 		textarea.className = "terminal-font border-green-500 border-2 resize-none w-full outline-0 p-2 h-auto overflow-y-hidden";
 		container.appendChild(p);
 		container.appendChild(textarea);

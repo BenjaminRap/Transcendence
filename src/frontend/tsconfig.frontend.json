@@ -1,13 +1,14 @@
 {
-  "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Node",
-    "rootDir": "./dev/src/",
-    "lib": ["DOM", "ESNext"],
-    "types": ["node"],
-    "allowImportingTsExtensions": true
-  },
-  "include": ["./dev/src/"]
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "ESNext",
+		"moduleResolution": "Node",
+		"resolveJsonModule": true,
+		"esModuleInterop": true,
+		"allowImportingTsExtensions": true,
+		"types": ["node"],
+		"lib": ["DOM","ESNext"],
+		"rootDir": "./dev/src/"
+	},
+	"include": ["./dev/src/"]
 }
-
