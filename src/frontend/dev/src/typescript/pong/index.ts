@@ -16,7 +16,7 @@ class PongGame extends HTMLElement {
 	private _engine! : Engine;
 	private _scene! : Scene;
 
-    constructor() {
+    public constructor() {
 		super();
 		this._canvas = document.createElement("canvas");
 		this._canvas.style.width = "100%";
@@ -24,7 +24,7 @@ class PongGame extends HTMLElement {
 		this.appendChild(this._canvas);
 	}
 
-	async connectedCallback() : Promise<void> {
+	public async connectedCallback() : Promise<void> {
 		try {
 			this._engine = this.createEngine();
 			this._scene = await this.loadScene();
@@ -90,7 +90,7 @@ class PongGame extends HTMLElement {
 		this._scene.activeCameras[0].attachControl();
 	}
 
-	disconnectedCallback() : void {
+	public disconnectedCallback() : void {
 		if (globalThis.HKP)
 			delete globalThis.HKP;
 		if (globalThis.HKP)
