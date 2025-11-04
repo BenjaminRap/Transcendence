@@ -1,25 +1,18 @@
 import { PrismaClient } from "@prisma/client";
+import { PublicProfile } from "../types/users.types.js";
 
-interface PublicProfile
+export enum UserErrors
 {
-    id:         number,
-    username:   string,
-    avatar:     string
+    USER_NOT_FOUND = 'User not found'
 }
-
-interface Public
-{
-    id:         number,
-    username:   string
-}
-
 
 export class UsersService {
-    constructor( private prisma: PrismaClient ) {}
+    constructor(
+        private prisma: PrismaClient
+    ) {}
 
     // ----------------------------------------------------------------------------- //
-
-    async getUserById(id: number): Promise<PublicProfile | null> {
+    async getById(id: number): Promise<PublicProfile> {
         const user = await this.prisma.user.findFirst({
             where: { id },
             select: {
@@ -29,27 +22,27 @@ export class UsersService {
             }
         });
         if (!user) {
-            throw new Error('User not found');
+            throw new Error(UserErrors.USER_NOT_FOUND);
         }
         return user;
     }
 
     // ----------------------------------------------------------------------------- //
-
-    async getUserByName(username: string): Promise<Public[] | null> {
+    async getByName(username: string): Promise<PublicProfile[]> {
         const user = await this.prisma.user.findMany({
             where: {
                 username: { contains: username }
             },
             select: {
-                username: true,
                 id: true,
+                username: true,
+                avatar: true,
             },
             orderBy: { username: 'asc' },
             take: 10
         });
         if (!user) {
-            throw new Error('User not found');
+            throw new Error(UserErrors.USER_NOT_FOUND);
         }
         return user;
     }

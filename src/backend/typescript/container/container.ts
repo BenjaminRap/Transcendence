@@ -1,6 +1,13 @@
 import { PrismaClient } from '@prisma/client';
+
 import { AuthService } from '../services/authService.js';
+import { UsersService } from '../services/usersService.js';
+import { SuscriberService } from '../services/suscriberService.js';
+
 import { AuthController } from '../controllers/authController.js';
+import { UsersController } from '../controllers/usersController.js';
+import { SuscriberController } from '../controllers/suscriberController.js';
+
 import { AuthMiddleware } from '../middleware/authMiddleware.js';
 import { PasswordHasher } from '../utils/passwordHasher.js';
 import { TokenManager } from '../utils/tokenManager.js';
@@ -45,9 +52,26 @@ export class Container {
             this.getService('tokenManager')
         ));
 
+        this.registerService('usersService', () => new UsersService(
+            prisma
+        ));
+
+        this.registerService('suscriberService', () => new SuscriberService(
+            prisma,
+            this.getService('passwordHasher')
+        ));
+
         // Controllers
         this.registerService('authController', () => new AuthController(
             this.getService('authService')
+        ));
+
+        this.registerService('usersController', () => new UsersController(
+            this.getService('usersService')
+        ));
+
+        this.registerService('suscriberController', () => new SuscriberController(
+            this.getService('suscriberService')
         ));
 
         // Middleware

@@ -65,6 +65,7 @@ import prismaPlugin from './plugins/prisma.js';
 import { fpSqlitePlugin } from 'fastify-sqlite-typed';
 import { Container } from './container/container.js';
 import { authRoutes } from './routes/auth.routes.js';
+import { usersRoutes } from './routes/users.routes.js';
 
 const fastify = Fastify({ logger: true });
 
@@ -94,6 +95,15 @@ fastify.addHook('onReady', async () => {
         );
         done();
     }, { prefix: '/auth' });
+
+    fastify.register((instance, opts, done) => {
+        usersRoutes(
+            instance,
+            container.getService('usersController'),
+            container.getService('authMiddleware')
+        );
+        done();
+    }, { prefix: '/users' });
 });
 
 async function start(): Promise<void> {

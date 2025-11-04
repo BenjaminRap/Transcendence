@@ -1,3 +1,5 @@
+import { User } from '@prisma/client'
+
 export interface RegisterData
 {
     username:   string,
@@ -17,4 +19,12 @@ export interface SanitizedUser
     id:         number,
     username:   string,
     avatar:     string
+}
+
+export function sanitizeUser(user: User): SanitizedUser {
+    return {
+        id: user.id,
+        username: user.username,
+        avatar: user.avatar
+    } as SanitizedUser;
 }

@@ -1,12 +1,15 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { AuthService } from '../services/authService.js';
+import { AuthService, AuthError } from '../services/authService.js';
 import { RegisterData, LoginData } from '../types/auth.types.js';
 
 import { registerUserSchema } from '../validators/auth.validator.js';
 
 export class AuthController {
-    constructor(private authService: AuthService) {}
+    constructor(
+        private authService: AuthService
+    ) {}
 
+    // --------------------------------------------------------------------------------- //
     async register(request: FastifyRequest<{ Body: RegisterData }>, reply: FastifyReply) {
         try {
             // Body validation
@@ -18,7 +21,7 @@ export class AuthController {
                 });
             }
 
-            // service call
+            // Checks if the user already exists; if not, creates it; returns sanitized user + tokens
             const result = await this.authService.register(request.body);
 
             return reply.status(201).send({
@@ -27,7 +30,8 @@ export class AuthController {
                 ...result,
             });
         } catch (error) {
-            if (error.message === 'User already exists') {
+            if (error.message === AuthError.EMAIL_TAKEN ||
+                error.message === AuthError.USERNAME_TAKEN) {
                 return reply.status(409).send({
                     success: false,
                     message: error.message,
@@ -42,6 +46,7 @@ export class AuthController {
         }
     }
 
+    // --------------------------------------------------------------------------------- //
     async login(request: FastifyRequest<{ Body: LoginData }>, reply: FastifyReply) {
         try {
             // body validation
@@ -50,11 +55,11 @@ export class AuthController {
             if (!identifier || !password) {
                 return reply.status(400).send({
                     success: false,
-                    message: 'Email or username and password are required',
+                    message: 'Identifier and password are required',
                 });
             }
 
-            // service call
+            // Finds the user and generates the tokens, returns the sanitized user + tokens
             const result = await this.authService.login(identifier, password);
 
             return reply.status(200).send({
@@ -63,13 +68,11 @@ export class AuthController {
                 ...result,
             });
         } catch (error) {
-            if (error.message === 'Invalid credentials') {
-                return reply.status(401)
-                    .header('WWW-Authenticate', 'error="invalid_credentials"')
-                    .send({
-                        success: false,
-                        message: 'Incorrect email/username or password',
-                    });
+            if (error.message === AuthError.INVALID_CREDENTIALS) {
+                return reply.status(401).send({
+                    success: false,
+                    message: '"Invalid credentials"',
+                });
             }
 
             request.log.error(error);
@@ -80,10 +83,13 @@ export class AuthController {
         }
     }
 
+    // --------------------------------------------------------------------------------- //
     async refresh(request: FastifyRequest, reply: FastifyReply) {
         try {
-            // body validation & check if user exist
+            // checkAuth en amont
             const user = (request as any).user;
+
+            // check if user exist and generate new tokens
             const tokens = await this.authService.refreshTokens(user.userId, user.email);
 
             return reply.status(200).send({
@@ -92,6 +98,13 @@ export class AuthController {
                 message: 'Authentication token renewal successful',
             });
         } catch (error) {
+            if (error.message === AuthError.USR_NOT_FOUND) {
+                return reply.status(404).send({
+                    success: false,
+                    message: "User not found",
+                });
+            }
+
             request.log.error(error);
             return reply.status(500).send({
                 success: false,
