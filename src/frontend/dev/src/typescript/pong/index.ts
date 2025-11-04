@@ -5,6 +5,7 @@ import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
 import { HavokPlugin } from "@babylonjs/core/Physics";
+import { io } from 'socket.io-client'
 
 import HavokPhysics from "@babylonjs/havok";
 
@@ -58,6 +59,10 @@ class PongGame extends HTMLElement {
 	}
 
 	private async loadScene() : Promise<Scene> {
+
+		const	socket = io("/", {
+			path: "/api/socket.io/"
+		});
 
 		const	scene = new Scene(this._engine);
 		const	cam = new FreeCamera("camera1", Vector3.Zero(), scene);

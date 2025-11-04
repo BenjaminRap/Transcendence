@@ -3,10 +3,17 @@ import { fpSqlitePlugin } from 'fastify-sqlite-typed';
 import { ServerPongGame } from './ServerPongGame';
 import fastifyStatic from '@fastify/static';
 import path from 'path';
+import { Server } from 'socket.io';
 
 const fastify = Fastify({
 	logger: true
-})
+});
+
+const	io = new Server(fastify.server);
+
+io.on('connection', () => {
+	console.log("user connected !");
+});
 
 fastify.register(fpSqlitePlugin, {
 	dbFilename: "./databases/main.db",

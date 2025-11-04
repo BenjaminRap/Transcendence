@@ -17,6 +17,12 @@ export default defineConfig({
 				target: 'http://fastify:8181',
 				changeOrigin: true,
 				rewrite: (path) => path.replace(/^\/api/, ''),
+			},
+			'/api/socket.io': {
+				target: 'http://fastify:8181',
+				changeOrigin: true,
+				ws: true,
+				rewrite: (path) => path.replace(/^\/api/, ''),
 			}
 		}
 	},
