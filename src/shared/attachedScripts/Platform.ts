@@ -39,7 +39,7 @@ export class Platform extends ScriptComponent {
 
 	protected start()
 	{
-		const	physicsBody = this.getAbstractMesh().getPhysicsBody();
+		const	physicsBody = this.transform.getPhysicsBody();
 
 		if (!physicsBody)
 			throw new Error("The Platform script should be attached to a mesh with a physic body !");

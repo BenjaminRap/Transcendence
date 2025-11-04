@@ -70,7 +70,7 @@ export class Paddle extends ScriptComponent {
 
 		this._upKeyInfo = inputManager.getInputKey(this._upKeyStringCode);
 		this._downKeyInfo = inputManager.getInputKey(this._downKeyStringCode);
-		const	physicsBody = this.getAbstractMesh().getPhysicsBody();
+		const	physicsBody = this.transform.getPhysicsBody();
 
 		if (!physicsBody)
 			throw new Error("The Paddle script should be attached to a mesh with a physic body !");
