@@ -29,9 +29,10 @@ export class ServerPongGame {
 			this._engine = this.createEngine();
 			this._scene = await this.loadScene();
 			this._engine.runRenderLoop(this.renderScene.bind(this));
-		} catch (error) {
+		} catch (error : any) {
 			console.error(`Could not initialize the scene : ${error}`)
-			console.error((error as any).stack);
+			if (error.stack)
+				console.error(error.stack);
 		}
     }
 
@@ -39,9 +40,10 @@ export class ServerPongGame {
 	{
 		try {
 			this._scene.render();
-		} catch (error) {
+		} catch (error : any) {
 			console.error(`Could not render the scene : ${error}`)
-			console.error((error as any).stack);
+			if (error.stack)
+				console.error((error as any).stack);
 		}
 	}
 
@@ -52,12 +54,19 @@ export class ServerPongGame {
 
 	private async loadScene() : Promise<Scene> {
 		const	scene = new Scene(this._engine);
-		const	cam = new FreeCamera("camera1", Vector3.Zero(), scene);
-		const	assetsManager = new AssetsManager(scene);
 
+		new FreeCamera("camera1", Vector3.Zero(), scene);
 		await SceneManager.InitializeRuntime(this._engine, {
 			hardwareScalingLevel: 0
 		});
+		await this.loadPhysics(scene);
+		await this.loadAssets(scene);
+
+		return scene;
+	}
+
+	private async loadPhysics(scene : Scene) : Promise<void>
+	{
 
 		const wasmPath = path.resolve('./node_modules/@babylonjs/havok/lib/esm/HavokPhysics.wasm');
 		const wasmBinary = fs.readFileSync(wasmPath).buffer; // ArrayBuffer
@@ -68,19 +77,21 @@ export class ServerPongGame {
 
 		if (!scene.enablePhysics(Vector3.Zero(), globalThis.HKP))
 			throw new Error("The physics engine hasn't been initialized !");
+	}
 
+	private async loadAssets(scene : Scene) : Promise<void>
+	{
+		const	assetsManager = new AssetsManager(scene);
 		const	sceneName = "Server.gltf";
 
 		assetsManager.addMeshTask("scene", null, "http://localhost:8181/scenes/", sceneName);
 
-		(globalThis as any).window = globalThis;
+		(globalThis as any).window = { setTimeout: setTimeout };
 		(globalThis as any).XMLHttpRequest = XMLHttpRequest;
 		SceneManager.ForceHideLoadingScreen = () => {};
 		InputController.ConfigureUserInput = () => {};
 		await SceneManager.LoadRuntimeAssets(assetsManager, [ sceneName ], () => {
 		});
-
-		return scene;
 	}
 
 	public dispose() : void {
