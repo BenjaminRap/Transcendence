@@ -3,25 +3,22 @@ import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
-import { InputManager } from "./InputManager";
-import { InputKey } from "../InputKey";
+import { InputManager, PlayerInput } from "./InputManager";
 import { IBasePhysicsCollisionEvent, PhysicsEventType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { Scalar } from "@babylonjs/core/Maths/math.scalar";
-import { Epsilon } from "@babylonjs/core";
+import { Epsilon, int } from "@babylonjs/core";
 
 export class Paddle extends ScriptComponent {
 	private static _range : number = 9.4 + Epsilon;
 
 	private	_speed : number = 6.0;
 	private	_inputManagerTransform! : TransformNode;
-	private	_upKeyStringCode : string = "z";
-	private	_downKeyStringCode : string = "s";
 	private _minReboundSpeed : number = 10;
 	private _maxReboundSpeed : number = 15;
+	private _playerIndex : int = 0;
 
 	private	_physicsBody! : PhysicsBody;
-	private	_upKeyInfo! : InputKey;
-	private	_downKeyInfo! : InputKey;
+	private _playerInput! : PlayerInput;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "Paddle") {
         super(transform, scene, properties, alias);
@@ -68,8 +65,7 @@ export class Paddle extends ScriptComponent {
 	{
 		const	inputManager = SceneManager.GetComponent<InputManager>(this._inputManagerTransform, "InputManager", false);
 
-		this._upKeyInfo = inputManager.getInputKey(this._upKeyStringCode);
-		this._downKeyInfo = inputManager.getInputKey(this._downKeyStringCode);
+		this._playerInput = inputManager.getPlayerInput(this._playerIndex);
 		const	physicsBody = this.transform.getPhysicsBody();
 
 		if (!physicsBody)
@@ -80,8 +76,8 @@ export class Paddle extends ScriptComponent {
 
 	protected update()
 	{
-		const	isUpPressed : boolean = this._upKeyInfo.isKeyDown();
-		const	isDownPressed : boolean = this._downKeyInfo.isKeyDown();
+		const	isUpPressed : boolean = this._playerInput.up.isKeyDown();
+		const	isDownPressed : boolean = this._playerInput.down.isKeyDown();
 		const	canMoveUp : boolean = this.transform.position.y + this.transform.scaling.y / 2 < Paddle._range / 2;
 		const	canMoveDown : boolean = this.transform.position.y - this.transform.scaling.y / 2 > -Paddle._range / 2;
 		let		yVelocity : number = 0;

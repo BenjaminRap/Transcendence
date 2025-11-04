@@ -1,59 +1,28 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
-import { KeyboardEventTypes, KeyboardInfo } from "@babylonjs/core/Events/keyboardEvents";
 import { InputKey } from "../InputKey";
+import { int } from "@babylonjs/core";
+
+export class PlayerInput
+{
+	up: InputKey = new InputKey;
+	down: InputKey = new InputKey;
+}
 
 export class InputManager extends ScriptComponent {
-	private _inputKeys : Map<string, InputKey> = new Map<string, InputKey>([
-		["z", new InputKey()],
-		["s", new InputKey()],
-		["ArrowUp", new InputKey()],
-		["ArrowDown", new InputKey()]
-	]);
+	private _playersInputs : PlayerInput[];
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "InputManager") {
         super(transform, scene, properties, alias);
-		this.scene.onKeyboardObservable.add(this.onKeyboardInput.bind(this))
+		this._playersInputs = Array.from({ length : 2}, () => new PlayerInput);
     }
 
-	private onKeyboardInput(info : KeyboardInfo)
+	public getPlayerInput(playerIndex : int)
 	{
-		let	keyPressed : InputKey | undefined = this._inputKeys.get(info.event.key);
-
-		if (keyPressed === undefined)
-			return ;
-		if (info.type === KeyboardEventTypes.KEYDOWN)
-			keyPressed.setKeyDown();
-		else
-			keyPressed.setKeyUp();
-	}
-
-	public addKeyObserver(key : string, callback : () => void) : void
-	{
-		let	inputKey : InputKey | undefined = this._inputKeys.get(key);
-
-		if (inputKey === undefined)
-			throw new Error("addKeyObserver called with an unsupported key: " + key);
-		inputKey.addOnKeyDownObserver(callback);
-	}
-
-	public removeKeyObserver(key : string, callback : () => void) : void
-	{
-		let	inputKey : InputKey | undefined = this._inputKeys.get(key);
-
-		if (inputKey === undefined)
-			throw new Error("addKeyObserver called with an unsupported key: " + key);
-		inputKey.removeOnKeyDownObserver(callback);
-	}
-
-	public getInputKey(key : string) : InputKey
-	{
-		const	inputKey : InputKey | undefined = this._inputKeys.get(key);
-
-		if (inputKey === undefined)
-			throw new Error("getInputKey called with an unsupported key: " + key);
-		return (inputKey);
+		if (playerIndex > this._playersInputs.length)
+			throw new Error("The player index is too big !");
+		return this._playersInputs[playerIndex];
 	}
 }
 

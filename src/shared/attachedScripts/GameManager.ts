@@ -1,18 +1,17 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
-import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
+import { LocalMessageBus, SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { IBasePhysicsCollisionEvent, PhysicsEventType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { int } from "@babylonjs/core/types";
-import { Text } from "./Text"
 import { Ball } from "@shared/attachedScripts/Ball";
 
 export class GameManager extends ScriptComponent {
 
+	public readonly messageBus  = new LocalMessageBus();
+
 	private	_goalLeft! : TransformNode;
 	private	_goalRight! : TransformNode;
 	private	_ball! : TransformNode & { script : Ball};
-	private	_scoreLeftText! : TransformNode & {text : Text};
-	private	_scoreRightText! : TransformNode & {text : Text};
 
 	private _scoreRight : int = 0;
 	private _scoreLeft : int = 0;
@@ -32,12 +31,12 @@ export class GameManager extends ScriptComponent {
 		if (collidedNode === this._goalLeft)
 		{
 			this._scoreRight++;
-			this._scoreRightText.text.setText(this._scoreRight.toString());
+			this.messageBus.PostMessage("scoreFromRight", this._scoreRight);
 		}
 		else if (collidedNode === this._goalRight)
 		{
 			this._scoreLeft++;
-			this._scoreLeftText.text.setText(this._scoreLeft.toString());
+			this.messageBus.PostMessage("scoreFromLeft", this._scoreLeft);
 		}
 		else
 			return ;
@@ -46,9 +45,12 @@ export class GameManager extends ScriptComponent {
 
 	protected awake()
 	{
-		this._scoreLeftText.text = SceneManager.GetComponent<Text>(this._scoreLeftText, "Text", false);
-		this._scoreRightText.text = SceneManager.GetComponent<Text>(this._scoreRightText, "Text", false);
 		this._ball.script = SceneManager.GetComponent<Ball>(this._ball, "Ball", false);
+	}
+
+	protected destroy()
+	{
+		this.messageBus.Dispose();
 	}
 }
 
