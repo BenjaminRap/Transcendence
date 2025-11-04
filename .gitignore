@@ -1,7 +1,7 @@
 *.logs
 node_modules/
 package-lock.json
-/src/backend/dev/*
+/src/backend/dev/**/*.js
 tailwind.css
 secrets/
 *.key
