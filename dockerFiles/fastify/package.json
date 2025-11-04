@@ -3,7 +3,8 @@
 	"version": "1.0.0",
 	"type": "module",
 	"dependencies": {
-		"fastify-sqlite-typed": "^5.0.2",
+		"fastify": "~5.4.0",
+		"fastify-sqlite-typed": "~5.0.2",
 		"@babylonjs/core": "~8.33.4",
 		"@babylonjs/loaders": "~8.33.4",
         "@babylonjs/materials": "~8.33.4",
@@ -12,9 +13,10 @@
 		"fast-glob": "~3.3.3",
 		"extensionless": "~2.0.2",
 		"w3c-xmlhttprequest": "~3.0.4",
-		"@fastify/static": "~8.3.0"
+		"@fastify/static": "~8.3.0",
+		"nodemon": "~3.1.10"
 	},
 	"scripts": {
-		"start": "node --import=extensionless/register dev/backend/pong/index.js"
+		"start": "nodemon --import=extensionless/register dev/backend/pong/index.js"
 	}
 }
