@@ -56,6 +56,8 @@ export class ServerPongGame {
 	private async loadScene(sceneData : SceneData) : Promise<Scene> {
 		const	scene = new Scene(this._engine);
 
+		if (!scene.metadata)
+			scene.metadata = {};
 		scene.metadata.sceneData = sceneData;
 		new FreeCamera("camera1", Vector3.Zero(), scene);
 		await SceneManager.InitializeRuntime(this._engine, {
