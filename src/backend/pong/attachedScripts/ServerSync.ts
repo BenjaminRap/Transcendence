@@ -37,7 +37,7 @@ export class ServerSync extends ScriptComponent {
 		this._sendInfosInterval = setInterval(this.sendInfos.bind(this), ServerSync._sendInfoDelay);
 	}
 
-    protected sendInfos(): void {
+    private sendInfos(): void {
 		const	message : GameInfos = {
 			type : "itemsUpdate",
 			infos: {
