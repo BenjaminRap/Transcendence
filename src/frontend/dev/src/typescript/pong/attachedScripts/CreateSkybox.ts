@@ -22,9 +22,10 @@ export class CreateSkybox extends ScriptComponent {
 		skyboxMaterial.reflectionTexture = texture;
 		skyboxMaterial.reflectionTexture.coordinatesMode = Texture.SKYBOX_MODE;
 
-		const skybox = MeshBuilder.CreateBox("skyBox", { size: 100.0 }, this.scene);
+		const skybox = MeshBuilder.CreateBox("skyBox", { size: 1000.0 }, this.scene);
 		skybox.material = skyboxMaterial;
 		skybox.infiniteDistance = true;
+		skybox.layerMask = 2;
 	}
 }
 
