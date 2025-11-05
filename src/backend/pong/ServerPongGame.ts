@@ -12,6 +12,7 @@ import { XMLHttpRequest } from 'w3c-xmlhttprequest';
 import HavokPhysics from "@babylonjs/havok";
 import { NullEngine } from "@babylonjs/core";
 import { importGlob } from "./importUtils";
+import { SceneData } from "./SceneData";
 
 importGlob("dev/backend/pong/attachedScripts/*.js");
 importGlob("dev/shared/attachedScripts/*.js");
@@ -20,14 +21,14 @@ export class ServerPongGame {
 	private _engine! : Engine;
 	private _scene! : Scene;
 
-    constructor() {
-		this.init();
+    constructor(sceneData : SceneData) {
+		this.init(sceneData);
 	}
 
-	private async init() : Promise<void> {
+	private async init(sceneData : SceneData) : Promise<void> {
 		try {
 			this._engine = this.createEngine();
-			this._scene = await this.loadScene();
+			this._scene = await this.loadScene(sceneData);
 			this._engine.runRenderLoop(this.renderScene.bind(this));
 		} catch (error : any) {
 			console.error(`Could not initialize the scene : ${error}`)
@@ -52,9 +53,10 @@ export class ServerPongGame {
 		return new NullEngine();
 	}
 
-	private async loadScene() : Promise<Scene> {
+	private async loadScene(sceneData : SceneData) : Promise<Scene> {
 		const	scene = new Scene(this._engine);
 
+		scene.metadata.sceneData = sceneData;
 		new FreeCamera("camera1", Vector3.Zero(), scene);
 		await SceneManager.InitializeRuntime(this._engine, {
 			hardwareScalingLevel: 0

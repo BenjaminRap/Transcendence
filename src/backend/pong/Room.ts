@@ -1,4 +1,5 @@
 import { DefaultSocket } from ".";
+import { SceneData } from "./SceneData";
 import { ServerPongGame } from "./ServerPongGame";
 
 export class	Room
@@ -14,7 +15,9 @@ export class	Room
 		this._secondSocket = secondSocket;
 		this.addSocketToRoom(firstSocket);
 		this.addSocketToRoom(secondSocket);;
-		this._serverPongGame = new ServerPongGame();
+
+		const	sceneData = new SceneData(firstSocket, secondSocket);
+		this._serverPongGame = new ServerPongGame(sceneData);
 	}
 
 	public dispose()
