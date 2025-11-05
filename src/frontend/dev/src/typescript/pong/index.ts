@@ -59,10 +59,7 @@ class PongGame extends HTMLElement {
 	}
 
 	private async loadScene() : Promise<Scene> {
-
-		const	socket = io("/", {
-			path: "/api/socket.io/"
-		});
+		this.joinMultiplayer();
 
 		const	scene = new Scene(this._engine);
 		const	cam = new FreeCamera("camera1", Vector3.Zero(), scene);
@@ -86,6 +83,27 @@ class PongGame extends HTMLElement {
 		});
 
 		return scene;
+	}
+
+	private	joinMultiplayer()
+	{
+		const	socket = io("/", {
+			path: "/api/socket.io/"
+		});
+
+		socket.on("connect_error", (error : Error) => {
+			console.log(`Socket error : ${error}`);
+			socket.disconnect();
+		});
+		socket.emit("join-matchmaking");
+		socket.on("room-closed", () => {
+			console.log("room-closed !");
+			socket.emit("join-matchmaking");
+		});
+
+		socket.on("joined-game", () => {
+			console.log("joined a room !");
+		});
 	}
 
 	private onSceneLoaded() : void {

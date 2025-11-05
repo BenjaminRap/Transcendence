@@ -1,18 +1,15 @@
 import Fastify from 'fastify';
 import { fpSqlitePlugin } from 'fastify-sqlite-typed';
-import { ServerPongGame } from './ServerPongGame';
 import fastifyStatic from '@fastify/static';
 import path from 'path';
-import { Server } from 'socket.io';
+import { DefaultEventsMap, Server, Socket } from 'socket.io';
+import { MatchMaker } from './MatchMaker';
+import { SocketData } from './SocketData';
+
+export type DefaultSocket = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>;
 
 const fastify = Fastify({
 	logger: true
-});
-
-const	io = new Server(fastify.server);
-
-io.on('connection', () => {
-	console.log("user connected !");
 });
 
 fastify.register(fpSqlitePlugin, {
@@ -41,20 +38,23 @@ async function	init() : Promise<void>
 		);
 	`);
 }
+const	io = new Server(fastify.server);
 
 async function	start() : Promise<void>
 {
 	try
 	{
-		const	gameInstance = new ServerPongGame();
-
-		fastify.addHook("onClose", (_instance, done) => {
-			if (gameInstance)
-				gameInstance.dispose();
-			done();
-		});
 		await init();
 		await fastify.listen({ port: 8181, host: '0.0.0.0' });
+
+		const	matchMaker = new MatchMaker();
+		io.on('connection', (socket) => {
+			console.log("user connected !");
+			socket.data = new SocketData();
+			socket.on("join-matchmaking", () => matchMaker.addUserToMatchMaking(socket));
+			socket.on("disconnect", () => matchMaker.removeUserToMatchMaking(socket));
+			socket.on("leave-matchmaking", () => matchMaker.removeUserToMatchMaking(socket));
+		});
 	}
 	catch (error)
 	{

@@ -49,7 +49,7 @@ export class ServerPongGame {
 
 	private createEngine() : Engine
 	{
-		return new NullEngine;
+		return new NullEngine();
 	}
 
 	private async loadScene() : Promise<Scene> {
@@ -86,7 +86,7 @@ export class ServerPongGame {
 
 		assetsManager.addMeshTask("scene", null, "http://localhost:8181/scenes/", sceneName);
 
-		(globalThis as any).window = { setTimeout: setTimeout };
+		(globalThis as any).window = { setTimeout: setTimeout, removeEventListener: () => {} };
 		(globalThis as any).XMLHttpRequest = XMLHttpRequest;
 		SceneManager.ForceHideLoadingScreen = () => {};
 		InputController.ConfigureUserInput = () => {};
