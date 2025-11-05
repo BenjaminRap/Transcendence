@@ -76,7 +76,7 @@ class PongGame extends HTMLElement {
 		if (!scene.enablePhysics(Vector3.Zero(), globalThis.HKP))
 			throw new Error("The physics engine hasn't been initialized !");
 
-		const	sceneName = "Magic.gltf";
+		const	sceneName = "Menu.gltf";
 
 		assetsManager.addMeshTask("scene", null, "/scenes/", sceneName)
 
