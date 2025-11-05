@@ -20,20 +20,20 @@ export class SuscriberService {
     ) {}
 
     // ----------------------------------------------------------------------------- //
-    async me(id: number): Promise<SanitizedUser> {
+    async getProfile(id: number): Promise<SanitizedUser> {
         const user = await this.getById(id);
         if (!user) {
-            throw new SuscriberException(SuscriberError.USER_NOT_FOUND);
+            throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
         }
         
         return sanitizeUser(user);
     }
 
     // ----------------------------------------------------------------------------- //
-    async update(id: number, data: UpdateData): Promise<SanitizedUser> {
+    async updateProfile(id: number, data: UpdateData): Promise<SanitizedUser> {
         const user = await this.getById(id);
         if (!user) {
-            throw new SuscriberException(SuscriberError.USER_NOT_FOUND);
+            throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
         }
 
         // throw SuscriberException if data match
@@ -45,7 +45,7 @@ export class SuscriberService {
                 where: { username: data.username }
             });
             if (existingUser) {
-                throw new SuscriberException(SuscriberError.USRNAME_ALREADY_USED);
+                throw new SuscriberException(SuscriberError.USRNAME_ALREADY_USED,SuscriberError.USRNAME_ALREADY_USED);
             }
         }
 
@@ -69,10 +69,10 @@ export class SuscriberService {
             }
         });
 
-        return updatedUser as SanitizedUser;
+        return sanitizeUser(updatedUser);
     }
 
-    // ==================================== PRIVATE ==================================== //
+    // ================================== PRIVATE ================================== //
 
     // ----------------------------------------------------------------------------- //
     private async getById(id: number) {
@@ -90,12 +90,12 @@ export class SuscriberService {
     // ----------------------------------------------------------------------------- //
     private async hasChanged(user: User, data: UpdateData) {
         if (data.username && user.username === data.username)
-            throw new SuscriberException(SuscriberError.USRNAME_ERROR);
+            throw new SuscriberException(SuscriberError.USRNAME_ERROR, SuscriberError.USRNAME_ERROR);
 
         if (data.password && await this.passwordHasher.verify(data.password, user.password))
-            throw new SuscriberException(SuscriberError.PASSWD_ERROR);
+            throw new SuscriberException(SuscriberError.PASSWD_ERROR, SuscriberError.PASSWD_ERROR);
 
         if (data.avatar && user.avatar === data.avatar)
-            throw new SuscriberException(SuscriberError.AVATAR_ERROR);
+            throw new SuscriberException(SuscriberError.AVATAR_ERROR, SuscriberError.AVATAR_ERROR);
     }
 }

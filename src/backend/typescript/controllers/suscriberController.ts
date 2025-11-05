@@ -8,13 +8,13 @@ export class SuscriberController {
         private suscriberService: SuscriberService
     ) {}
 
-    async me(request: FastifyRequest, reply: FastifyReply) {
+    async getProfile(request: FastifyRequest, reply: FastifyReply) {
         try {
-            // check auth en amont donc id dans request
+            // get id from auth middleware: checkAuth
             const id = (request as any).user.userId;
 
-            // retourne user sinon throw user not found
-            const user =  await this.suscriberService.me(Number(id))
+            // get user or throw exception
+            const user =  await this.suscriberService.getProfile(Number(id))
 
             return reply.status(200).send({
                 success: true,
@@ -22,11 +22,11 @@ export class SuscriberController {
                 user
             });            
         } catch (error) {
-            if (error.message === SuscriberError.USER_NOT_FOUND) {
-                return reply.status(404).send({
-                    success: false,
-                    message: error.message
-                });
+            if (error instanceof SuscriberException) {
+                if (error.code === SuscriberError.USER_NOT_FOUND)
+                    return reply.status(404).send({ success: false, message: error.message });
+                else
+                    return reply.status(409).send({ success: false, message: error.message })
             }
 
             request.log.error(error);
@@ -37,9 +37,9 @@ export class SuscriberController {
         }
     }
 
-    async update(request: FastifyRequest, reply: FastifyReply) {
+    async updateProfile(request: FastifyRequest, reply: FastifyReply) {
         try {
-            // check body
+            // check body content & get id from auth middleware: checkAuth
             const id = (request as any).user.userId;
             const validation = updateSchema.safeParse(request.body);
             if (!validation.success) {
@@ -50,10 +50,9 @@ export class SuscriberController {
                 });
             }
 
-            // appel service
-            const user = this.suscriberService.update(id, validation.data);
+            // check data and user existence then update and returns user or throw exception
+            const user = this.suscriberService.updateProfile(id, validation.data);
     
-            //reponse
             return reply.status(200).send({
                 success: true,
                 message: 'Profile successfully updated',

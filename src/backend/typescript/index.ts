@@ -66,6 +66,7 @@ import { fpSqlitePlugin } from 'fastify-sqlite-typed';
 import { Container } from './container/container.js';
 import { authRoutes } from './routes/auth.routes.js';
 import { usersRoutes } from './routes/users.routes.js';
+import { suscriberRoute } from './routes/suscriber.route.js';
 
 const fastify = Fastify({ logger: true });
 
@@ -81,12 +82,12 @@ fastify.register(fpSqlitePlugin, {
 fastify.register(prismaPlugin);
 
 
-// Initialisation du container après le démarrage
 fastify.addHook('onReady', async () => {
+    // Instanciation and intialiasation of the dependency injection container
     const container = Container.getInstance();
     container.initialize(fastify.prisma);
 
-    // Enregistrement des routes avec injection de dépendances
+    // route registrations
     fastify.register((instance, opts, done) => {
         authRoutes(
             instance,
@@ -104,6 +105,15 @@ fastify.addHook('onReady', async () => {
         );
         done();
     }, { prefix: '/users' });
+
+    fastify.register((instance, opts, done) => {
+        suscriberRoute(
+            instance,
+            container.getService('suscriberController'),
+            container.getService('authMiddleware')
+        );
+        done();
+    }, { prefix: '/suscriber' });
 });
 
 async function start(): Promise<void> {

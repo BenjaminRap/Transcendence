@@ -3,21 +3,6 @@ import { FriendsData } from '../dataStructure/commonStruct.js'
 import { FriendshipRequest, PendingList } from '../dataStructure/friendStruct.js'
 import { friendship } from '../friends.js';
 
-function formatPendingList(list: any[], currentUserId: number) {
-  return list.map(friendship => {
-    const otherUser =
-      friendship.requester.id === currentUserId
-        ? friendship.receiver
-        : friendship.requester;
-
-    return {
-      status: friendship.status,
-      createdAt: friendship.createdAt,
-      user: otherUser,
-    };
-  });
-}
-
 function formatFriendList(list: any[], currentUserId: number)
 {
     return list.map(friendship => {

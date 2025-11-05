@@ -11,13 +11,16 @@ import { SuscriberController } from '../controllers/suscriberController.js';
 import { AuthMiddleware } from '../middleware/authMiddleware.js';
 import { PasswordHasher } from '../utils/passwordHasher.js';
 import { TokenManager } from '../utils/tokenManager.js';
+import { FriendController } from '../controllers/friendController.js';
+import { FriendService } from '../services/friendService.js';
 
 export class Container {
-    private static instance: Container;
-    private services: Map<string, any> = new Map();
-
     private constructor() {}
+    private static instance: Container;
 
+    private services: Map<string, any> = new Map();
+    
+    // ----------------------------------------------------------------------------- //
     static getInstance(): Container {
         if (!Container.instance) {
             Container.instance = new Container();
@@ -25,10 +28,12 @@ export class Container {
         return Container.instance;
     }
 
+    // ----------------------------------------------------------------------------- //
     registerService<T>(key: string, factory: () => T): void {
         this.services.set(key, factory());
     }
 
+    // ----------------------------------------------------------------------------- //
     getService<T>(key: string): T {
         if (!this.services.has(key)) {
             throw new Error(`Service ${key} not found`);
@@ -36,9 +41,9 @@ export class Container {
         return this.services.get(key);
     }
 
-    // Méthode d'initialisation
+    // ----------------------------------------------------------------------------- //
     initialize(prisma: PrismaClient): void {
-        // Utilitaires
+        // Utils
         this.registerService('passwordHasher', () => new PasswordHasher());
         this.registerService('tokenManager', () => new TokenManager(
             process.env.JWT_ACCESS_SECRET!,
@@ -61,6 +66,10 @@ export class Container {
             this.getService('passwordHasher')
         ));
 
+        this.registerService('FriendService', () => new FriendService(
+            prisma
+        ))
+
         // Controllers
         this.registerService('authController', () => new AuthController(
             this.getService('authService')
@@ -73,6 +82,10 @@ export class Container {
         this.registerService('suscriberController', () => new SuscriberController(
             this.getService('suscriberService')
         ));
+
+        this.registerService('FriendController', () => new FriendController(
+            this.getService('FriendService')
+        ))
 
         // Middleware
         this.registerService('authMiddleware', () => new AuthMiddleware(
