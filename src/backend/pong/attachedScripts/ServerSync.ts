@@ -6,11 +6,14 @@ import { SceneData } from "../SceneData";
 import { GameInfos } from "@shared/ServerMessage"
 
 export class ServerSync extends ScriptComponent {
+	private static readonly	_sendInfoDelay = 100;
+
 	private _ball! : TransformNode & { physicsBody : PhysicsBody };
 	private _paddleRight! : TransformNode;
 	private _paddleLeft! : TransformNode;
 
 	private _sceneData : SceneData;
+	private _sendInfosInterval? : NodeJS.Timeout;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "ServerSync") {
         super(transform, scene, properties, alias);
@@ -29,7 +32,12 @@ export class ServerSync extends ScriptComponent {
 		this._ball.physicsBody = physicsBody;
 	}
 
-    protected fixed(): void {
+	protected	start()
+	{
+		this._sendInfosInterval = setInterval(this.sendInfos.bind(this), ServerSync._sendInfoDelay);
+	}
+
+    protected sendInfos(): void {
 		const	message : GameInfos = {
 			type : "itemsUpdate",
 			infos: {
@@ -44,6 +52,12 @@ export class ServerSync extends ScriptComponent {
 		this._sceneData.firstSocket.emit("game-infos", message);
 		this._sceneData.secondSocket.emit("game-infos", message);
     }
+
+	protected	destroy()
+	{
+		if (this._sendInfosInterval)
+			clearInterval(this._sendInfosInterval);
+	}
 }
 
 SceneManager.RegisterClass("ServerSync", ServerSync);
