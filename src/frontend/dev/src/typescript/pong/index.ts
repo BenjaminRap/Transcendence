@@ -39,6 +39,9 @@ class PongGame extends HTMLElement {
 	{
 		try {
 			this._scene.render();
+
+
+
 		} catch (error) {
 			console.error(`Could not render the scene : ${error}`)
 		}
@@ -96,13 +99,17 @@ class PongGame extends HTMLElement {
 			socket.disconnect();
 		});
 		socket.emit("join-matchmaking");
+
 		socket.on("room-closed", () => {
 			console.log("room-closed !");
+			socket.off("game-infos");
 			socket.emit("join-matchmaking");
 		});
 
 		socket.on("joined-game", () => {
 			console.log("joined a room !");
+			socket.on("game-infos", (gameInfos : any) => {
+			})
 		});
 	}
 
