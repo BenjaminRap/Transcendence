@@ -190,6 +190,8 @@ function lsCommand(args: string[], description: string, usage: string): string {
 	let node: Node | null;
 	let targetPath: string;
 
+	console.log("ls command args:", args);
+
 	if (args.length === 1) {
 		node = getNode(currentDirectory);
 		targetPath = currentDirectory;
@@ -278,7 +280,6 @@ function normalizePath(path: string): string {
 function getNode(path: string): Node | null
 {
 	const parts = path.split("/").filter(p => p.length > 0);
-	console.log("getNode called with path:", path, "parts:", parts);
 	let node = FileSystem as Node;
 	if (parts.length === 0)
 		return node;
@@ -663,27 +664,21 @@ function tabCase() {
 		const path = command.slice(0, cursorPosition).split(' ').pop() || '';
 		if (path.includes('/'))
 		{
-			console.log("Salut");
-			let clearedPath = path.slice(0, path.lastIndexOf('/') + 1);
+			let clearedPath =  path.slice(0, path.lastIndexOf('/') + 1);
 			let filePart = path.slice(path.lastIndexOf('/') + 1);
-			if (clearedPath.startsWith('/'))
-				clearedPath = clearedPath.slice(1);
-			result = lsCommand(['ls', currentDirectory + clearedPath], '', '').split('\n> ').filter(item => item !== '');
+			if (!clearedPath.startsWith('/'))
+				clearedPath = '/' + clearedPath;
+			result = lsCommand(['ls', clearedPath], '', '').split('\n> ').filter(item => item !== '');
 			if (filePart !== '')
 				result = getStartWithList(filePart, result);
 		}
 		else
 		{
-			console.log("Path:", path);
 			result = lsCommand(['ls'], '', '').split('\n> ').filter(item => item !== '');
-			console.log("SORTIE", result);
 			if (path !== '')
-			{
 				result = getStartWithList(path, result);
-			}
 		}
 	}
-	console.log("Tab completion result:", result);
 	if (!result || !result[0] || result[0].startsWith('ls:'))
 		return;
 	if (result.length === 0)
