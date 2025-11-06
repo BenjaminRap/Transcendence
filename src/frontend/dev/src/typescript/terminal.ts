@@ -73,6 +73,9 @@ let InputResult: string[] = [];
 let WaitingHidden: number[] = [];
 let InputFunction: Function | null = null;
 
+let isTabInProcess = false;
+let TabCompletionIndex = -1;
+
 type FileNode = {
 	type: "file";
 	name: string;
@@ -221,6 +224,39 @@ function catCommand(args: string[], description: string, usage: string): string 
 
 // ------------------------------------------------------------------------ Utilities ---------------------------------------------------------------------
 
+
+
+
+/*
+	Pour faire tab :
+		-Liste de Command
+			- Si [TAB] sur premier mot, .startWith sur liste des commandes
+			- Si [TAB] sur deuxieme mot, regarder si la commande prend un argument, si oui afficher le resultat d'un ls sur le repertoire courant
+*/
+
+function getCommandList(): string[] {
+	let tabCommand: string[] = [];
+	for (const command of commandAvailable) {
+		tabCommand.push(command.name);
+	}
+	return tabCommand;
+}
+
+function getStartWithList(prefix: string, list: string[]): string[] {
+	let tabCommand: string[] = [];
+	for (const command of list) {
+		if (command.startsWith(prefix) && prefix !== command) {
+			tabCommand.push(command);
+		}
+	}
+	return tabCommand.sort();
+}
+
+function isFirstWord(command: string, cursorPosition: number): boolean {
+	const beforeCursor = command.slice(0, cursorPosition);
+	return !beforeCursor.includes(' ');
+}
+
 function normalizePath(path: string): string {
 	const parts = path.split('/').filter(p => p.length > 0);
 	const stack: string[] = [];
@@ -302,6 +338,16 @@ function updateCurrentHistory(command: string) {
 	indexCommandHistory = -2;
 }
 
+function clearTabCompletion() {
+	if (!terminal)
+		return;
+	const tabElement = document.getElementById('tab-completion');
+	if (tabElement) {
+		terminal.removeChild(tabElement);
+	}
+	isTabInProcess = false;
+	TabCompletionIndex = -1;
+}
 
 //---------------------------------------------------------------------------------- CASE ---------------------------------------------------------------------
 
@@ -406,9 +452,45 @@ function getInputCase(command: string)
 	resetInput();
 }
 
+
+function insertIntoCurrentInput(completion: string): void {
+	if (!currentInput)
+		return;
+	const full = currentInput.value;
+	const cursor = currentInput.selectionStart ?? full.length;
+	const cmdAfterPrompt = full.slice(promptText.length);
+	const cursorRel = Math.max(0, cursor - promptText.length);
+	const cmdBeforeCursor = cmdAfterPrompt.slice(0, cursorRel);
+	const lastSpace = cmdBeforeCursor.lastIndexOf(' ');
+	const lastSlash = cmdBeforeCursor.lastIndexOf('/');
+	const tokenStartRel = Math.max(lastSpace + 1, lastSlash + 1);
+
+	const absStart = promptText.length + tokenStartRel;
+	const absEnd = promptText.length + cursorRel;
+	currentInput.value = full.slice(0, absStart) + completion + full.slice(absEnd);
+	updateCursorPosition(absStart + completion.length);
+}
+
 function enterCase() {
 	if (!currentInput || !output)
 		return;
+	if (isTabInProcess) {
+		const tabElement = document.getElementById('tab-completion');
+		if (tabElement) {
+			terminal?.removeChild(tabElement);
+		}
+		if (tabElement && currentInput) {
+			const selectedItem = tabElement.children[TabCompletionIndex] as HTMLElement;
+			if (selectedItem) {
+				const completionText = selectedItem.textContent?.slice(2) || '';
+				insertIntoCurrentInput(completionText);
+			}
+		}
+		resize();
+		isTabInProcess = false;
+		TabCompletionIndex = -1;
+		return;
+	}
 	let command = currentInput.value;
 	let changeHidden = false;
 	if (countChar('\f') > maxOutputLines) {
@@ -552,6 +634,79 @@ function ArrowDownCase() {
 	}
 }
 
+
+function tabCase() {
+	if (!currentInput || !terminal)
+		return;
+	if (isTabInProcess) {
+		const tabElement = document.querySelector('.tab-completion');
+		if (!tabElement)
+			return;
+		TabCompletionIndex = (TabCompletionIndex + 1) % tabElement.children.length;
+		for (let i = 0; i < tabElement.children.length; i++) {
+			const item = tabElement.children[i] as HTMLElement;
+			if (i === TabCompletionIndex) {
+				item.style.backgroundColor = 'rgba(34, 197, 94, 0.2)';
+			} else {
+				item.style.backgroundColor = 'transparent';
+			}
+		}
+		return;
+	}
+	const command = currentInput.value.slice(promptText.length);
+	const cursorPosition = currentInput.selectionStart - promptText.length;
+	let result: string[] | null = null;
+	if (isFirstWord(command, cursorPosition))
+		result = getStartWithList(command.trim(), commandAvailable.map(cmd => cmd.name));
+	else
+	{
+		const path = command.slice(0, cursorPosition).split(' ').pop() || '';
+		if (path.includes('/'))
+		{
+			console.log("Salut");
+			let clearedPath = path.slice(0, path.lastIndexOf('/') + 1);
+			let filePart = path.slice(path.lastIndexOf('/') + 1);
+			if (clearedPath.startsWith('/'))
+				clearedPath = clearedPath.slice(1);
+			result = lsCommand(['ls', currentDirectory + clearedPath], '', '').split('\n> ').filter(item => item !== '');
+			if (filePart !== '')
+				result = getStartWithList(filePart, result);
+		}
+		else
+		{
+			console.log("Path:", path);
+			result = lsCommand(['ls'], '', '').split('\n> ').filter(item => item !== '');
+			console.log("SORTIE", result);
+			if (path !== '')
+			{
+				result = getStartWithList(path, result);
+			}
+		}
+	}
+	console.log("Tab completion result:", result);
+	if (!result || !result[0] || result[0].startsWith('ls:'))
+		return;
+	if (result.length === 0)
+		return;
+	if (result.length === 1) {
+		insertIntoCurrentInput(result[0]);
+		resize();
+		return;
+	}
+	isTabInProcess = true;
+
+	const element = document.createElement('div');
+	element.id = "tab-completion";
+	element.className = "tab-completion bg-black text-green-400 text-sm flex gap-x-4 flex-wrap";
+	for (let i = 0; i < result.length; i++) {
+		const item = document.createElement('p');
+		item.id = "tab-item-" + i;
+		item.textContent = '> ' + result[i];
+		element.appendChild(item);
+	}
+	terminal.appendChild(element);
+}
+
 // -------------------------------------------------------------------- Event Listeners ---------------------------------------------------------------------
 
 function setEventListeners() {
@@ -599,7 +754,7 @@ function setEventListeners() {
 						ArrowDownCase();
 						break;
 					case (event.key === 'Tab'):
-						console.log("Log : Tab");
+						tabCase();
 						break;
 					case (event.key === 'ArrowLeft'):
 						cursorLeft();
@@ -616,6 +771,9 @@ function setEventListeners() {
 				}
 				if (terminal) {
 					terminal.scrollTop = terminal.scrollHeight;
+				}
+				if (event.key !== 'Tab' && isTabInProcess) {
+					clearTabCompletion();
 				}
 			});
 		}
