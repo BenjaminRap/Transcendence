@@ -13,16 +13,16 @@ import { FrontendSceneData } from "./FrontendSceneData";
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
 
-class PongGame extends HTMLElement {
+export class PongGame extends HTMLElement {
 	private _canvas : HTMLCanvasElement;
 	private _engine! : Engine;
 	private _scene! : Scene;
 
     public constructor() {
 		super();
+		this.classList.add("relative", "block");
 		this._canvas = document.createElement("canvas");
-		this._canvas.style.width = "100%";
-		this._canvas.style.aspectRatio = "16 / 9"
+		this._canvas.className = "w-full aspect-video relative"
 		this.appendChild(this._canvas);
 	}
 
@@ -69,7 +69,7 @@ class PongGame extends HTMLElement {
 
 		if (!scene.metadata)
 			scene.metadata = {};
-		scene.metadata.sceneData = new FrontendSceneData(this._canvas);
+		scene.metadata.sceneData = new FrontendSceneData(this);
 		const	cam = new FreeCamera("camera1", Vector3.Zero(), scene);
 		const	assetsManager = new AssetsManager(scene);
 
