@@ -8,6 +8,7 @@ import { HavokPlugin } from "@babylonjs/core/Physics";
 import { io } from 'socket.io-client'
 
 import HavokPhysics from "@babylonjs/havok";
+import { FrontendSceneData } from "./FrontendSceneData";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
@@ -65,6 +66,10 @@ class PongGame extends HTMLElement {
 		this.joinMultiplayer();
 
 		const	scene = new Scene(this._engine);
+
+		if (!scene.metadata)
+			scene.metadata = {};
+		scene.metadata.sceneData = new FrontendSceneData(this._canvas);
 		const	cam = new FreeCamera("camera1", Vector3.Zero(), scene);
 		const	assetsManager = new AssetsManager(scene);
 
