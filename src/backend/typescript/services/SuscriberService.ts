@@ -1,17 +1,8 @@
 import { PrismaClient, User } from "@prisma/client";
 import { UpdateData } from "../types/suscriber.types";
-import { sanitizeUser, SanitizedUser } from '../types/auth.types'
-import { SuscriberException } from "../error_handlers/suscriber.error";
 import { PasswordHasher } from "../utils/passwordHasher";
-
-export enum SuscriberError
-{
-    USER_NOT_FOUND = 'User not found',
-    USRNAME_ERROR = 'Username must change',
-    PASSWD_ERROR = 'Password must change',
-    AVATAR_ERROR = 'Avatar must change',
-    USRNAME_ALREADY_USED = 'This username is already used',
-}
+import { sanitizeUser, SanitizedUser } from '../types/auth.types'
+import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error";
 
 export class SuscriberService {
     constructor(

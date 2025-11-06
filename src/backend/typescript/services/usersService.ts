@@ -1,10 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import { PublicProfile } from "../types/users.types.js";
-
-export enum UserErrors
-{
-    USER_NOT_FOUND = 'User not found'
-}
+import { UsersException, UsersError } from "../error_handlers/Users.error.js";
 
 export class UsersService {
     constructor(
@@ -22,7 +18,7 @@ export class UsersService {
             }
         });
         if (!user) {
-            throw new Error(UserErrors.USER_NOT_FOUND);
+            throw new UsersException(UsersError.USER_NOT_FOUND, UsersError.USER_NOT_FOUND);
         }
         return user;
     }
@@ -41,9 +37,6 @@ export class UsersService {
             orderBy: { username: 'asc' },
             take: 10
         });
-        if (!user) {
-            throw new Error(UserErrors.USER_NOT_FOUND);
-        }
         return user;
     }
 }

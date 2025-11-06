@@ -1,28 +1,31 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { AuthService, AuthError } from '../services/authService.js';
+import { AuthService } from '../services/AuthService.js';
 import { RegisterData, LoginData } from '../types/auth.types.js';
+import { AuthException, AuthError } from '../error_handlers/Auth.error.js';
 
-import { registerUserSchema } from '../validators/auth.validator.js';
+import { Validator } from '../validators/Validator.js';
+import { AuthSchema } from '../validators/schemas/auth.schema.js';
+import { CommonSchema } from '../validators/schemas/common.schema.js';
 
 export class AuthController {
     constructor(
-        private authService: AuthService
+        private authService: AuthService,
     ) {}
 
     // --------------------------------------------------------------------------------- //
     async register(request: FastifyRequest<{ Body: RegisterData }>, reply: FastifyReply) {
         try {
-            // Body validation
-            const validation = registerUserSchema.safeParse(request.body);
-            if (!validation.success) {
-                return reply.status(400).send({
-                    success: false,
-                    message: validation.error.issues[0].message,
-                });
-            }
+            /*  - Check presence and the syntax of all these fields
+                    .username
+                    .password
+                    .email
+            */
+            const validation = Validator.validate(AuthSchema.register, request.body);
+            if (!validation.data)
+                return reply.status(400).send({ success: false, message: validation.errors });
 
             // Checks if the user already exists; if not, creates it; returns sanitized user + tokens
-            const result = await this.authService.register(request.body);
+            const result = await this.authService.register(validation.data);
 
             return reply.status(201).send({
                 success: true,
@@ -30,12 +33,8 @@ export class AuthController {
                 ...result,
             });
         } catch (error) {
-            if (error.message === AuthError.EMAIL_TAKEN ||
-                error.message === AuthError.USERNAME_TAKEN) {
-                return reply.status(409).send({
-                    success: false,
-                    message: error.message,
-                });
+            if (error instanceof AuthException) {
+                return reply.status(409).send({ success: false, message: error.message });
             }
 
             request.log.error(error);
@@ -49,18 +48,19 @@ export class AuthController {
     // --------------------------------------------------------------------------------- //
     async login(request: FastifyRequest<{ Body: LoginData }>, reply: FastifyReply) {
         try {
-            // body validation
-            const { identifier, password } = request.body;
+            // Check if the fields are not empty and verify the password format
+            const validation = Validator.validate(AuthSchema.login, request.body);
+            if (!validation.data)
+                return reply.status(400).send({ success: false, message: validation.errors });
 
-            if (!identifier || !password) {
-                return reply.status(400).send({
-                    success: false,
-                    message: 'Identifier and password are required',
-                });
+            // Check if the username or email address is in the correct format
+            if (!Validator.validate(CommonSchema.email, request.body.identifier).success &&
+                !Validator.validate(CommonSchema.username, request.body.identifier).success) {
+                throw new AuthException(AuthError.INVALID_CREDENTIALS, 'Bad email or username format');
             }
 
             // Finds the user and generates the tokens, returns the sanitized user + tokens
-            const result = await this.authService.login(identifier, password);
+            const result = await this.authService.login(validation.data.identifier, validation.data.password);
 
             return reply.status(200).send({
                 success: true,
@@ -68,11 +68,8 @@ export class AuthController {
                 ...result,
             });
         } catch (error) {
-            if (error.message === AuthError.INVALID_CREDENTIALS) {
-                return reply.status(401).send({
-                    success: false,
-                    message: '"Invalid credentials"',
-                });
+            if (error instanceof AuthException) {
+                return reply.status(401).send({ success: false, message: error.message });
             }
 
             request.log.error(error);
@@ -86,7 +83,6 @@ export class AuthController {
     // --------------------------------------------------------------------------------- //
     async refresh(request: FastifyRequest, reply: FastifyReply) {
         try {
-            // checkAuth en amont
             const user = (request as any).user;
 
             // check if user exist and generate new tokens
@@ -94,15 +90,12 @@ export class AuthController {
 
             return reply.status(200).send({
                 success: true,
-                tokens,
                 message: 'Authentication token renewal successful',
+                tokens,
             });
         } catch (error) {
-            if (error.message === AuthError.USR_NOT_FOUND) {
-                return reply.status(404).send({
-                    success: false,
-                    message: "User not found",
-                });
+            if (error instanceof AuthException) {
+                return reply.status(404).send({ success: false, message: "User not found", });
             }
 
             request.log.error(error);

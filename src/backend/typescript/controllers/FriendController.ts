@@ -1,8 +1,9 @@
 import { FastifyRequest, FastifyReply } from 'fastify'
-import { FriendError, FriendService } from '../services/friendService.js'
-import { FriendException } from '../error_handlers/Friend.error.js';
+import { FriendService } from '../services/FriendService.js'
+import { FriendException, FriendError } from '../error_handlers/Friend.error.js';
 
-import { idParamSchema } from '../routes/schemas/schemaRules.js';
+import { Validator } from '../validators/Validator.js';
+import { CommonSchema } from '../validators/schemas/common.schema.js';
 
 export class FriendController {
     constructor(
@@ -13,12 +14,14 @@ export class FriendController {
     // /friend/request/:id
     async createFriendRequest(request: FastifyRequest, reply: FastifyReply) {
         try {
-            // returns parsed ids or throw error
-            const friendId = this.parseId(request.params['id']);
             const userId = (request as any).user.userId;
+            const friendId = Validator.validate(CommonSchema.idParam, request.params['id']);
+            if (!friendId.data) {
+                throw new FriendException(FriendError.INVALID_ID, 'Invalid Id format');
+            }
 
-            // check the data and link existance and create the friend request
-            await this.friendService.createFriendRequest(Number(friendId), Number(userId));
+            // check users existance; their connection; create the friend request
+            await this.friendService.createFriendRequest(friendId.data, Number(userId));
     
             return reply.status(201).send({
                 success: true,
@@ -26,7 +29,7 @@ export class FriendController {
             });
         } catch (error) {
             if (error instanceof FriendException ) {
-                switch (error.message) {
+                switch (error.code) {
                     case FriendError.USR_NOT_FOUND:
                         return reply.status(404).send({ success: false, message: error.message });
                     default:
@@ -46,11 +49,14 @@ export class FriendController {
     // /friend/accept/:id
     async acceptFriendRequest(request: FastifyRequest, reply: FastifyReply) {
         try {
-            // returns parsed ids or throw error
-            const friendId = this.parseId(request.params['id']);
             const userId = (request as any).user.userId;
+            const friendId = Validator.validate(CommonSchema.idParam, request.params['id']);
+            if (!friendId.data) {
+                throw new FriendException(FriendError.INVALID_ID, 'Invalid Id format');
+            }
 
-            await this.friendService.acceptFriendRequest(friendId, userId);
+            // check users existance; their connection; update the friendship status
+            await this.friendService.acceptFriendRequest(friendId.data, userId);
             
             return reply.status(204).send({
                 success: true,
@@ -78,11 +84,13 @@ export class FriendController {
     // /friend/delete/:id
     async deleteFriend(request: FastifyRequest, reply: FastifyReply) {
         try {
-            // returns parsed ids or throw error
-            const friendId = this.parseId(request.params['id']);
             const userId = (request as any).user.userId;
+            const friendId = Validator.validate(CommonSchema.idParam, request.params['id']);
+            if (!friendId.data) {
+                throw new FriendException(FriendError.INVALID_ID, 'Invalid Id format');
+            }
 
-            await this.friendService.deleteFriend(friendId, userId);
+            await this.friendService.deleteFriend(friendId.data, userId);
             
             return reply.status(204).send({
                 success: true,
@@ -158,17 +166,5 @@ export class FriendController {
                 message: 'Internal server error'
             });            
         }
-    }
-
-
-    // ================================== PRIVATE ================================== //
-
-    // ----------------------------------------------------------------------------- //
-    private parseId(id: string) {
-        const fetchedId = idParamSchema.safeParse(id).data;
-        if (!fetchedId)
-            throw new FriendException(FriendError.INVALID_ID, FriendError.INVALID_ID);
-        
-        return fetchedId;
     }
 }

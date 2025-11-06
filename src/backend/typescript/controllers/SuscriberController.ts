@@ -1,19 +1,21 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { SuscriberService, SuscriberError } from "../services/suscriberService";
-import { SuscriberException } from "../error_handlers/suscriber.error.js";
+import { SuscriberService } from "../services/SuscriberService.js";
 import { updateSchema } from '../routes/schemas/schemaObject.js'
+import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
+import { Validator } from "../validators/Validator.js";
+import { SuscriberSchema } from "../validators/schemas/suscriber.schema.js";
 
 export class SuscriberController {
     constructor(
         private suscriberService: SuscriberService
     ) {}
 
+    // ----------------------------------------------------------------------------- //
     async getProfile(request: FastifyRequest, reply: FastifyReply) {
         try {
-            // get id from auth middleware: checkAuth
             const id = (request as any).user.userId;
 
-            // get user or throw exception
+            // returns user or throw exception
             const user =  await this.suscriberService.getProfile(Number(id))
 
             return reply.status(200).send({
@@ -23,10 +25,12 @@ export class SuscriberController {
             });            
         } catch (error) {
             if (error instanceof SuscriberException) {
-                if (error.code === SuscriberError.USER_NOT_FOUND)
-                    return reply.status(404).send({ success: false, message: error.message });
-                else
-                    return reply.status(409).send({ success: false, message: error.message })
+                switch (error.code) {
+                    case SuscriberError.USER_NOT_FOUND:
+                        return reply.status(404).send({ success: false, message: error.code });
+                    default:
+                        return reply.status(409).send({ success: false, message: error.code, redirectTo: '/suscriber/update' });
+                }
             }
 
             request.log.error(error);
@@ -37,20 +41,18 @@ export class SuscriberController {
         }
     }
 
+    // ----------------------------------------------------------------------------- //
     async updateProfile(request: FastifyRequest, reply: FastifyReply) {
         try {
             // check body content & get id from auth middleware: checkAuth
+
             const id = (request as any).user.userId;
-            const validation = updateSchema.safeParse(request.body);
-            if (!validation.success) {
-                return reply.status(400).send({
-                    success: false,
-                    message: 'missing or invalid data',
-                    redirectTo: '/suscriber/update'
-                });
+            const validation = Validator.validate(SuscriberSchema.update, request.body);
+            if (!validation.data) {
+                throw new SuscriberException(SuscriberError.BAD_FORMAT, SuscriberError.BAD_FORMAT);
             }
 
-            // check data and user existence then update and returns user or throw exception
+            // check data, user existence, mail and username availability then update and returns user or throw exception
             const user = this.suscriberService.updateProfile(id, validation.data);
     
             return reply.status(200).send({
@@ -62,10 +64,12 @@ export class SuscriberController {
             });    
         } catch (error) {
             if (error instanceof SuscriberException) {
-                if (error.code === SuscriberError.USER_NOT_FOUND)
-                    return reply.status(404).send({ success: false, message: error.code });
-                else
-                    return reply.status(409).send({ success: false, message: error.code, redirectTo: '/suscriber/update' });
+                switch (error.code) {
+                    case SuscriberError.USER_NOT_FOUND:
+                        return reply.status(404).send({ success: false, message: error.code });
+                    default:
+                        return reply.status(409).send({ success: false, message: error.code, redirectTo: '/suscriber/update' });
+                }
             }
             
             request.log.error(error);

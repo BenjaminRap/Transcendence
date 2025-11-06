@@ -63,10 +63,12 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import prismaPlugin from './plugins/prisma.js';
 import { fpSqlitePlugin } from 'fastify-sqlite-typed';
-import { Container } from './container/container.js';
+
+import { Container } from './container/Container.js';
 import { authRoutes } from './routes/auth.routes.js';
 import { usersRoutes } from './routes/users.routes.js';
 import { suscriberRoute } from './routes/suscriber.route.js';
+import { friendRoute } from './routes/friend.routes.js';
 
 const fastify = Fastify({ logger: true });
 
@@ -91,8 +93,8 @@ fastify.addHook('onReady', async () => {
     fastify.register((instance, opts, done) => {
         authRoutes(
             instance,
-            container.getService('authController'),
-            container.getService('authMiddleware')
+            container.getService('AuthController'),
+            container.getService('AuthMiddleware')
         );
         done();
     }, { prefix: '/auth' });
@@ -100,8 +102,8 @@ fastify.addHook('onReady', async () => {
     fastify.register((instance, opts, done) => {
         usersRoutes(
             instance,
-            container.getService('usersController'),
-            container.getService('authMiddleware')
+            container.getService('UsersController'),
+            container.getService('AuthMiddleware')
         );
         done();
     }, { prefix: '/users' });
@@ -109,11 +111,20 @@ fastify.addHook('onReady', async () => {
     fastify.register((instance, opts, done) => {
         suscriberRoute(
             instance,
-            container.getService('suscriberController'),
-            container.getService('authMiddleware')
+            container.getService('SuscriberController'),
+            container.getService('AuthMiddleware')
         );
         done();
     }, { prefix: '/suscriber' });
+
+    fastify.register((instance, opts, done) => {
+        friendRoute(
+            instance,
+            container.getService('FriendController'),
+            container.getService('Authmiddleware')
+        );
+        done();
+    }, { prefix: '/friend' });
 });
 
 async function start(): Promise<void> {

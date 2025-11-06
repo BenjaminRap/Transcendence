@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify'
-import { AuthController } from '../controllers/authController.js'
+import { AuthController } from '../controllers/AuthController.js'
 import { AuthMiddleware } from '../middleware/authMiddleware.js'
 
 export function authRoutes(

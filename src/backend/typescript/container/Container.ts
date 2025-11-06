@@ -1,18 +1,18 @@
 import { PrismaClient } from '@prisma/client';
 
-import { AuthService } from '../services/authService.js';
+import { AuthService } from '../services/AuthService.js';
 import { UsersService } from '../services/usersService.js';
-import { SuscriberService } from '../services/suscriberService.js';
+import { SuscriberService } from '../services/SuscriberService.js';
 
-import { AuthController } from '../controllers/authController.js';
-import { UsersController } from '../controllers/usersController.js';
+import { AuthController } from '../controllers/AuthController.js';
+import { UsersController } from '../controllers/UsersController.js';
 import { SuscriberController } from '../controllers/suscriberController.js';
 
 import { AuthMiddleware } from '../middleware/authMiddleware.js';
 import { PasswordHasher } from '../utils/passwordHasher.js';
 import { TokenManager } from '../utils/tokenManager.js';
-import { FriendController } from '../controllers/friendController.js';
-import { FriendService } from '../services/friendService.js';
+import { FriendController } from '../controllers/FriendController.js';
+import { FriendService } from '../services/FriendService.js';
 
 export class Container {
     private constructor() {}
@@ -43,27 +43,29 @@ export class Container {
 
     // ----------------------------------------------------------------------------- //
     initialize(prisma: PrismaClient): void {
+        
         // Utils
-        this.registerService('passwordHasher', () => new PasswordHasher());
-        this.registerService('tokenManager', () => new TokenManager(
+        this.registerService('PasswordHasher', () => new PasswordHasher());
+        
+        this.registerService('TokenManager', () => new TokenManager(
             process.env.JWT_ACCESS_SECRET!,
             process.env.JWT_REFRESH_SECRET!
         ));
 
         // Services
-        this.registerService('authService', () => new AuthService(
+        this.registerService('AuthService', () => new AuthService(
             prisma,
-            this.getService('passwordHasher'),
-            this.getService('tokenManager')
+            this.getService('PasswordHasher'),
+            this.getService('TokenManager')
         ));
 
-        this.registerService('usersService', () => new UsersService(
+        this.registerService('UsersService', () => new UsersService(
             prisma
         ));
 
-        this.registerService('suscriberService', () => new SuscriberService(
+        this.registerService('SuscriberService', () => new SuscriberService(
             prisma,
-            this.getService('passwordHasher')
+            this.getService('PasswordHasher')
         ));
 
         this.registerService('FriendService', () => new FriendService(
@@ -71,16 +73,16 @@ export class Container {
         ))
 
         // Controllers
-        this.registerService('authController', () => new AuthController(
-            this.getService('authService')
+        this.registerService('AuthController', () => new AuthController(
+            this.getService('AuthService')
         ));
 
-        this.registerService('usersController', () => new UsersController(
-            this.getService('usersService')
+        this.registerService('UsersController', () => new UsersController(
+            this.getService('UsersService')
         ));
 
-        this.registerService('suscriberController', () => new SuscriberController(
-            this.getService('suscriberService')
+        this.registerService('SuscriberController', () => new SuscriberController(
+            this.getService('SuscriberService')
         ));
 
         this.registerService('FriendController', () => new FriendController(
@@ -88,8 +90,8 @@ export class Container {
         ))
 
         // Middleware
-        this.registerService('authMiddleware', () => new AuthMiddleware(
-            this.getService('tokenManager')
+        this.registerService('AuthMiddleware', () => new AuthMiddleware(
+            this.getService('TokenManager')
         ));
     }
 }

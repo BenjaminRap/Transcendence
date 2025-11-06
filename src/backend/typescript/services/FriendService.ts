@@ -1,14 +1,6 @@
 import { PrismaClient, Friendship, FriendshipStatus } from "@prisma/client"
-import { FriendException } from "../error_handlers/Friend.error.js";
+import { FriendException, FriendError } from "../error_handlers/Friend.error.js";
 import { ListFormat } from '../types/friend.types.js'
-
-export enum FriendError {
-    USR_NOT_FOUND = 'User not found',
-    INVALID_ID = 'Invalid Id',
-    ACCEPTED = 'Already friends',
-    PENDING = 'Friendship in pending mod',
-    NO_LINK = 'No relationship'
-}
 
 export class FriendService {
     constructor(
@@ -27,12 +19,11 @@ export class FriendService {
         // throw an error if a link exist between users
         const friendship = await this.getExistingLink(friendId, userId);
         if (friendship) {
-            if (friendship.status === 'ACCEPTED')
+            if (friendship.status === FriendshipStatus.ACCEPTED)
                 throw new FriendException(FriendError.ACCEPTED, FriendError.ACCEPTED);
             else
                 throw new FriendException(FriendError.PENDING, FriendError.PENDING);
         }
-
 
         await this.prisma.friendship.create({ requesterId: userId, receiverId: friendId });        
     }
@@ -81,7 +72,7 @@ export class FriendService {
 
     // ----------------------------------------------------------------------------- //
     async getFriendsList(userId: number): Promise<ListFormat> {
-        // check users account validity
+        // check user account validity
         if ( !this.checkId(userId) )
             throw new FriendException(FriendError.USR_NOT_FOUND, FriendError.USR_NOT_FOUND);
         
@@ -120,7 +111,7 @@ export class FriendService {
 
     // ----------------------------------------------------------------------------- //
     async getPendingList(userId: number): Promise<ListFormat> {
-        // check users account validity
+        // check user account validity
         if ( !this.checkId(userId) )
             throw new FriendException(FriendError.USR_NOT_FOUND, FriendError.USR_NOT_FOUND);
 

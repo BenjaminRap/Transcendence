@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify'
 import { AuthMiddleware } from '../middleware/authMiddleware'
-import { FriendController } from '../controllers/friendController'
+import { FriendController } from '../controllers/FriendController'
 
 export function friendRoute(
     fastify: FastifyInstance,
