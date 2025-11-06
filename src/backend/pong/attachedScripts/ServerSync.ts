@@ -2,7 +2,7 @@ import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
-import { SceneData } from "../SceneData";
+import { ServerSceneData } from "../ServerSceneData";
 import { GameInfos } from "@shared/ServerMessage"
 
 export class ServerSync extends ScriptComponent {
@@ -12,14 +12,14 @@ export class ServerSync extends ScriptComponent {
 	private _paddleRight! : TransformNode;
 	private _paddleLeft! : TransformNode;
 
-	private _sceneData : SceneData;
+	private _sceneData : ServerSceneData;
 	private _sendInfosInterval? : NodeJS.Timeout;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "ServerSync") {
         super(transform, scene, properties, alias);
 
 		const	sceneData = this.scene.metadata.sceneData;
-		if (!(sceneData instanceof SceneData))
+		if (!(sceneData instanceof ServerSceneData))
 			throw new Error("The SceneData hasn't been attached to the scene !");
 		this._sceneData = sceneData;
     }

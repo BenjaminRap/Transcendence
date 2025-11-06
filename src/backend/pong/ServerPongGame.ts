@@ -12,7 +12,7 @@ import { XMLHttpRequest } from 'w3c-xmlhttprequest';
 import HavokPhysics from "@babylonjs/havok";
 import { NullEngine } from "@babylonjs/core";
 import { importGlob } from "./importUtils";
-import { SceneData } from "./SceneData";
+import { ServerSceneData } from "./ServerSceneData";
 
 importGlob("dev/backend/pong/attachedScripts/*.js");
 importGlob("dev/shared/attachedScripts/*.js");
@@ -21,11 +21,11 @@ export class ServerPongGame {
 	private _engine! : Engine;
 	private _scene! : Scene;
 
-    constructor(sceneData : SceneData) {
+    constructor(sceneData : ServerSceneData) {
 		this.init(sceneData);
 	}
 
-	private async init(sceneData : SceneData) : Promise<void> {
+	private async init(sceneData : ServerSceneData) : Promise<void> {
 		try {
 			this._engine = this.createEngine();
 			this._scene = await this.loadScene(sceneData);
@@ -53,7 +53,7 @@ export class ServerPongGame {
 		return new NullEngine();
 	}
 
-	private async loadScene(sceneData : SceneData) : Promise<Scene> {
+	private async loadScene(sceneData : ServerSceneData) : Promise<Scene> {
 		const	scene = new Scene(this._engine);
 
 		if (!scene.metadata)

@@ -1,5 +1,5 @@
 import { DefaultSocket } from ".";
-import { SceneData } from "./SceneData";
+import { ServerSceneData } from "./ServerSceneData";
 import { ServerPongGame } from "./ServerPongGame";
 
 export class	Room
@@ -16,7 +16,7 @@ export class	Room
 		this.addSocketToRoom(firstSocket);
 		this.addSocketToRoom(secondSocket);;
 
-		const	sceneData = new SceneData(firstSocket, secondSocket);
+		const	sceneData = new ServerSceneData(firstSocket, secondSocket);
 		this._serverPongGame = new ServerPongGame(sceneData);
 	}
 

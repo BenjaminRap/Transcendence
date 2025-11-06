@@ -1,6 +1,6 @@
 import { DefaultSocket } from ".";
 
-export class	SceneData
+export class	ServerSceneData
 {
 	constructor(
 		public readonly firstSocket : DefaultSocket,
