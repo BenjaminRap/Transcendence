@@ -1,8 +1,8 @@
 import { PrismaClient, User } from "@prisma/client";
-import { UpdateData } from "../types/suscriber.types";
-import { PasswordHasher } from "../utils/passwordHasher";
-import { sanitizeUser, SanitizedUser } from '../types/auth.types'
-import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error";
+import { UpdateData } from "../types/suscriber.types.js";
+import { PasswordHasher } from "../utils/PasswordHasher.js";
+import { sanitizeUser, SanitizedUser } from '../types/auth.types.js'
+import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
 
 export class SuscriberService {
     constructor(

@@ -1,6 +1,6 @@
 import { PrismaClient, User } from '@prisma/client';
-import { PasswordHasher } from '../utils/passwordHasher.js';
-import { TokenManager, TokenPair } from '../utils/tokenManager.js';
+import { PasswordHasher } from '../utils/PasswordHasher.js';
+import { TokenManager, TokenPair } from '../utils/TokenManager.js';
 import { AuthException, AuthError } from '../error_handlers/Auth.error.js';
 import { RegisterData, sanitizeUser, SanitizedUser } from '../types/auth.types.js';
 

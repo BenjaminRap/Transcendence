@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CommonSchema } from './common.schema'
+import { CommonSchema } from './common.schema.js'
 
 export const SuscriberSchema = {
     update: z.object({
@@ -7,5 +7,4 @@ export const SuscriberSchema = {
         password: CommonSchema.password.optional(),
         avatar: CommonSchema.avatar.optional()
     }).strict(),
-
 }

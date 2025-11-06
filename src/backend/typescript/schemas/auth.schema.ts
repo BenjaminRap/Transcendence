@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { CommonSchema } from './common.schema'
+import { CommonSchema } from './common.schema.js'
 
 export const AuthSchema = {
     

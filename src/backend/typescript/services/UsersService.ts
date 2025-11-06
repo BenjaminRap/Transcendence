@@ -25,7 +25,7 @@ export class UsersService {
 
     // ----------------------------------------------------------------------------- //
     async getByName(username: string): Promise<PublicProfile[]> {
-        const user = await this.prisma.user.findMany({
+        const users = await this.prisma.user.findMany({
             where: {
                 username: { contains: username }
             },
@@ -37,6 +37,9 @@ export class UsersService {
             orderBy: { username: 'asc' },
             take: 10
         });
-        return user;
+        if (!users){
+            throw new UsersException(UsersError.USER_NOT_FOUND, 'No one was found');
+        }
+        return users;
     }
 }

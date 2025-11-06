@@ -18,15 +18,15 @@ export const CommonSchema = {
             .regex(/^[a-zA-Z0-9]+$/, 'Username can only contain letters and numbers')
             .trim(),
 
-	id: z.number()
-		.int()
-		.min(1)
-		.max(2147483647),
+    id: z.number()
+	    .int()
+	    .min(1)
+	    .max(2147483647),
 
-	idParam: z.string()
-			.regex(/^\d+$/)
-			.transform(Number)
-			.pipe(z.number().int().min(1).max(2147483647)),
+    idParam: z.string()
+	    .regex(/^\d+$/)
+	    .transform(Number)
+	    .pipe(z.number().int().min(1).max(2147483647)),
 	
-	avatar: z.string()
+    avatar: z.string()
 }

@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify'
-import { AuthMiddleware } from '../middleware/authMiddleware'
-import { FriendController } from '../controllers/FriendController'
+import { AuthMiddleware } from '../middleware/authMiddleware.js'
+import { FriendController } from '../controllers/FriendController.js'
 
 export function friendRoute(
     fastify: FastifyInstance,
@@ -19,11 +19,11 @@ export function friendRoute(
         preHandler: middleware.authenticate
     }, controller.deleteFriend.bind(controller));
 
-    fastify.get('/myfriends', {
+    fastify.get('/search/myfriends', {
         preHandler: middleware.authenticate
     }, controller.getFriendList.bind(controller));
 
-    fastify.get('/pending', {
+    fastify.get('/search/pendinglist', {
         preHandler: middleware.authenticate
     }, controller.getPendingList.bind(controller));
 }

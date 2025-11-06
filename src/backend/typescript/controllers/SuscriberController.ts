@@ -1,9 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { SuscriberService } from "../services/SuscriberService.js";
-import { updateSchema } from '../routes/schemas/schemaObject.js'
 import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
-import { Validator } from "../validators/Validator.js";
-import { SuscriberSchema } from "../validators/schemas/suscriber.schema.js";
+import { SuscriberSchema } from "../schemas/suscriber.schema.js";
 
 export class SuscriberController {
     constructor(
@@ -11,6 +9,7 @@ export class SuscriberController {
     ) {}
 
     // ----------------------------------------------------------------------------- //
+    // /suscriber/profile
     async getProfile(request: FastifyRequest, reply: FastifyReply) {
         try {
             const id = (request as any).user.userId;
@@ -42,13 +41,13 @@ export class SuscriberController {
     }
 
     // ----------------------------------------------------------------------------- //
+    // suscriber/update
     async updateProfile(request: FastifyRequest, reply: FastifyReply) {
         try {
             // check body content & get id from auth middleware: checkAuth
-
             const id = (request as any).user.userId;
-            const validation = Validator.validate(SuscriberSchema.update, request.body);
-            if (!validation.data) {
+            const validation = SuscriberSchema.update.safeParse(request.body);
+            if (!validation.success) {
                 throw new SuscriberException(SuscriberError.BAD_FORMAT, SuscriberError.BAD_FORMAT);
             }
 

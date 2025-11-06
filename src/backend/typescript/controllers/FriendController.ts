@@ -1,9 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify'
 import { FriendService } from '../services/FriendService.js'
 import { FriendException, FriendError } from '../error_handlers/Friend.error.js';
-
-import { Validator } from '../validators/Validator.js';
-import { CommonSchema } from '../validators/schemas/common.schema.js';
+import { CommonSchema } from '../schemas/common.schema.js';
 
 export class FriendController {
     constructor(
@@ -15,13 +13,13 @@ export class FriendController {
     async createFriendRequest(request: FastifyRequest, reply: FastifyReply) {
         try {
             const userId = (request as any).user.userId;
-            const friendId = Validator.validate(CommonSchema.idParam, request.params['id']);
-            if (!friendId.data) {
+            const friendId = CommonSchema.idParam.safeParse(request.params['id']);
+            if (!friendId.success) {
                 throw new FriendException(FriendError.INVALID_ID, 'Invalid Id format');
             }
 
             // check users existance; their connection; create the friend request
-            await this.friendService.createFriendRequest(friendId.data, Number(userId));
+            await this.friendService.createFriendRequest(friendId.data, userId);
     
             return reply.status(201).send({
                 success: true,
@@ -50,8 +48,8 @@ export class FriendController {
     async acceptFriendRequest(request: FastifyRequest, reply: FastifyReply) {
         try {
             const userId = (request as any).user.userId;
-            const friendId = Validator.validate(CommonSchema.idParam, request.params['id']);
-            if (!friendId.data) {
+            const friendId = CommonSchema.idParam.safeParse(request.params['id']);
+            if (!friendId.success) {
                 throw new FriendException(FriendError.INVALID_ID, 'Invalid Id format');
             }
 
@@ -85,8 +83,8 @@ export class FriendController {
     async deleteFriend(request: FastifyRequest, reply: FastifyReply) {
         try {
             const userId = (request as any).user.userId;
-            const friendId = Validator.validate(CommonSchema.idParam, request.params['id']);
-            if (!friendId.data) {
+            const friendId = CommonSchema.idParam.safeParse(request.params['id']);
+            if (!friendId.success) {
                 throw new FriendException(FriendError.INVALID_ID, 'Invalid Id format');
             }
 
@@ -117,7 +115,7 @@ export class FriendController {
     }
 
     // ----------------------------------------------------------------------------- //
-    // /friend/myfriends
+    // /friend/search/myfriends
     async getFriendList(request: FastifyRequest, reply: FastifyReply) {
         try {
             const userId = (request as any).user.userId;
@@ -142,7 +140,7 @@ export class FriendController {
     }
 
     // ----------------------------------------------------------------------------- //
-    // /friend/pending
+    // /friend/search/pendinglist
     async getPendingList(request: FastifyRequest, reply: FastifyReply) {
         try {
             const userId = (request as any).user.userId;

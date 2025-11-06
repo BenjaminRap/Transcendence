@@ -1,8 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { UsersService} from "../services/usersService.js";
-import { Validator } from "../validators/Validator.js";
-import { CommonSchema } from "../validators/schemas/common.schema.js";
-import { UsersSchema } from "../validators/schemas/users.schema.js";
+import { UsersService} from "../services/UsersService.js";
+import { CommonSchema } from "../schemas/common.schema.js";
+import { UsersSchema } from "../schemas/users.schema.js";
 import { UsersException, UsersError } from "../error_handlers/Users.error.js";
 
 export class UsersController {
@@ -11,11 +10,12 @@ export class UsersController {
     ) {}
     
     // ----------------------------------------------------------------------------- //
+    // /users/search/:id
     async getById(request: FastifyRequest, reply: FastifyReply) {
         try {
             // params validation
-            const idData = Validator.validate(CommonSchema.idParam, request.params['id']);
-            if (!idData.data) {
+            const idData = CommonSchema.idParam.safeParse(request.params['id']);
+            if (!idData.success) {
                 throw new UsersException(UsersError.INVALID_ID, UsersError.INVALID_ID);
             }
             // fetch user throw exception if not found
@@ -45,11 +45,12 @@ export class UsersController {
     }
 
     // ----------------------------------------------------------------------------- //
+    // /users/search/username
     async getByName(request: FastifyRequest, reply: FastifyReply) {
         try {
             // params validation
-            const searchedUser = Validator.validate(UsersSchema.fetchedName, request.params['id']);
-            if (!searchedUser.data) {
+            const searchedUser = UsersSchema.fetchedName.safeParse(request.params['username']);
+            if (!searchedUser.success) {
                 throw new UsersException(UsersError.INVALID_NAME, UsersError.INVALID_NAME);
             }
 

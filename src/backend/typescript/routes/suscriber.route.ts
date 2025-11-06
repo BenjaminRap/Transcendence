@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
-import { SuscriberController } from '../controllers/suscriberController';
-import { AuthMiddleware } from '../middleware/authMiddleware';
+import { SuscriberController } from '../controllers/SuscriberController.js';
+import { AuthMiddleware } from '../middleware/authMiddleware.js';
 
 export async function suscriberRoute(
     fastify: FastifyInstance, 

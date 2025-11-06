@@ -1,18 +1,19 @@
 import { PrismaClient } from '@prisma/client';
 
 import { AuthService } from '../services/AuthService.js';
-import { UsersService } from '../services/usersService.js';
+import { UsersService } from '../services/UsersService.js';
 import { SuscriberService } from '../services/SuscriberService.js';
+import { FriendService } from '../services/FriendService.js';
 
 import { AuthController } from '../controllers/AuthController.js';
 import { UsersController } from '../controllers/UsersController.js';
-import { SuscriberController } from '../controllers/suscriberController.js';
+import { SuscriberController } from '../controllers/SuscriberController.js';
+import { FriendController } from '../controllers/FriendController.js';
+
+import { PasswordHasher } from '../utils/PasswordHasher.js';
+import { TokenManager } from '../utils/TokenManager.js';
 
 import { AuthMiddleware } from '../middleware/authMiddleware.js';
-import { PasswordHasher } from '../utils/passwordHasher.js';
-import { TokenManager } from '../utils/tokenManager.js';
-import { FriendController } from '../controllers/FriendController.js';
-import { FriendService } from '../services/FriendService.js';
 
 export class Container {
     private constructor() {}

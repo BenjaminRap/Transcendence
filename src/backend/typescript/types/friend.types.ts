@@ -10,5 +10,4 @@ export interface ListFormat
     status:     string,
     updatedAt:  string,
     user:       FriendProfile,
-    
 }

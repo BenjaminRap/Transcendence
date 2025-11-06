@@ -14,6 +14,7 @@ export class TokenManager {
     private accessExpiry: string = '15m';
     private refreshExpiry: string = '7d';
     
+    // --------------------------------------------------------------------------------- //
     async generate(userId: string, email: string): Promise<TokenPair> {
         const payload = { userId, email };
 
@@ -28,6 +29,7 @@ export class TokenManager {
         return { accessToken, refreshToken };
     }
 
+    // --------------------------------------------------------------------------------- //
     verify(token: string, isRefresh: boolean = false): any {
         const secret = isRefresh ? this.refreshSecret : this.accessSecret;
         return jwt.verify(token, secret);
