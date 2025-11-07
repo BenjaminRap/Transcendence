@@ -9,6 +9,10 @@ export class CreateMenuGUI extends ScriptComponent {
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "CreateMenuGUI") {
         super(transform, scene, properties, alias);
+    }
+
+	protected	awake()
+	{
 		const	sceneData = this.scene.metadata.sceneData;
 
 		if (!(sceneData instanceof FrontendSceneData))
@@ -16,8 +20,10 @@ export class CreateMenuGUI extends ScriptComponent {
 		const	pongHTMLElement = sceneData.pongHTMLElement;
 
 		const	menuGUI = new MenuGUI();
+
+		menuGUI.setAttribute("button-image-url", this._upImagePath);
 		pongHTMLElement.appendChild(menuGUI);
-    }
+	}
 }
 
 SceneManager.RegisterClass("CreateMenuGUI", CreateMenuGUI);
