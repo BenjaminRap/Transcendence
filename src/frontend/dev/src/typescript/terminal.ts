@@ -51,6 +51,7 @@ let commandAvailable =
 	new Command('ls', 'List directory contents', 'ls', lsCommand),
 	new Command('pwd', 'Print working directory', 'pwd', pwdCommand),
 	new Command('cat', 'Concatenate and display file content', 'cat [file]', catCommand),
+	new Command('whoami', 'Display the current username', 'whoami', whoamiCommand),
 ];
 
 let commandHistory: string[] = [];
@@ -114,6 +115,10 @@ function helpCommand(): string {
 	return helpText;
 }
 
+function whoamiCommand(): string {
+	return username;
+}
+
 function profileCommand(args: string[]): string {
 	if (args.length > 2) {
 		return 'Usage: profile to see your profile or profile [username] to see another user\'s profile.';
@@ -126,7 +131,6 @@ function profileCommand(args: string[]): string {
 		ExtProfileBuilder.buildExtProfile(args[1]);
 	return 'Profile is now open.';
 }
-
 
 function killCommand(args: string[]): string {
 	if (args.length !== 2)
@@ -142,7 +146,6 @@ function killCommand(args: string[]): string {
 	return `No such process: ${args[1]}`;
 }
 
-
 function clearCommand(): string
 {
 	clearOutput();
@@ -153,7 +156,7 @@ function modalCommand(args: string[]): string {
 	if (args.length < 2) {
 		return 'Usage: modal [text]';
 	}
-	Modal.makeModal(args.slice(1).join(' '), (text: string) => {
+	Modal.makeModal(args.slice(1).join(' '),'text', '', (text: string) => {
 		console.log(`Modal input: ${text}`);
 		Modal.closeModal();
 	});
@@ -225,24 +228,6 @@ function catCommand(args: string[], description: string, usage: string): string 
 }
 
 // ------------------------------------------------------------------------ Utilities ---------------------------------------------------------------------
-
-
-
-
-/*
-	Pour faire tab :
-		-Liste de Command
-			- Si [TAB] sur premier mot, .startWith sur liste des commandes
-			- Si [TAB] sur deuxieme mot, regarder si la commande prend un argument, si oui afficher le resultat d'un ls sur le repertoire courant
-*/
-
-function getCommandList(): string[] {
-	let tabCommand: string[] = [];
-	for (const command of commandAvailable) {
-		tabCommand.push(command.name);
-	}
-	return tabCommand;
-}
 
 function getStartWithList(prefix: string, list: string[]): string[] {
 	let tabCommand: string[] = [];
@@ -326,7 +311,6 @@ function checkArgs(args: string): boolean {
 	return quote === null;
 }
 
-
 function updateCurrentHistory(command: string) {
 	if (command == '' || isWaitingInput)
 		return;	
@@ -349,34 +333,6 @@ function clearTabCompletion() {
 	isTabInProcess = false;
 	TabCompletionIndex = -1;
 }
-
-//---------------------------------------------------------------------------------- CASE ---------------------------------------------------------------------
-
-// FIND --> DEBUG, remove later
-function exec(command: string) {
-	const args = command.match(/"[^"]*"|'[^']*'|\S+/g) || [];
-	for (let i = 0; i < args.length; i++) {
-		if (!checkArgs(args[i])) {
-			return `Erreur de syntaxe dans l'argument : ${args[i]}`;
-		}
-		args[i] = args[i].replace(/^['"]|['"]$/g, '');
-	}
-
-	if (args.length === 0 || args[0] === '') {
-		return '';
-	}
-
-	for (let i = 0; i < commandAvailable.length; i++) {
-		if (args[0] === commandAvailable[i].name) {
-			const result = commandAvailable[i].launchCommand(args);
-			if (result === undefined || result === null || result === '')
-				return '';
-			return '> ' + result;
-		}
-	}
-	return `> Unknown command: ${args[0]}`;
-}
-
 function resize() {
 	if (!currentInput)
 		return;
@@ -428,6 +384,75 @@ export namespace TerminalUtils {
 	}
 }
 
+function TabProcessInTab() {
+	const tabElement = document.querySelector('.tab-completion');
+	if (!tabElement)
+		return;
+	TabCompletionIndex = (TabCompletionIndex + 1) % tabElement.children.length;
+	for (let i = 0; i < tabElement.children.length; i++) {
+		const item = tabElement.children[i] as HTMLElement;
+		if (i === TabCompletionIndex) {
+			item.style.backgroundColor = 'rgba(34, 197, 94, 0.2)';
+		} else {
+			item.style.backgroundColor = 'transparent';
+		}
+	}
+	return;
+}
+
+function getListOfElementTabCompletion(command: string, cursorPosition: number): string[] {
+	let result: string[] | null = null;
+	if (isFirstWord(command, cursorPosition))
+		result = getStartWithList(command.trim(), commandAvailable.map(cmd => cmd.name));
+	else
+	{
+		const path = command.slice(0, cursorPosition).split(' ').pop() || '';
+		if (path.includes('/'))
+		{
+			let clearedPath =  path.slice(0, path.lastIndexOf('/') + 1);
+			let filePart = path.slice(path.lastIndexOf('/') + 1);
+			if (!clearedPath.startsWith('/'))
+				clearedPath = '/' + clearedPath;
+			result = lsCommand(['ls', clearedPath], '', '').split('\n> ').filter(item => item !== '');
+			if (filePart !== '')
+				result = getStartWithList(filePart, result);
+		}
+		else
+		{
+			result = lsCommand(['ls'], '', '').split('\n> ').filter(item => item !== '');
+			if (path !== '')
+				result = getStartWithList(path, result);
+		}
+	}
+	return result;
+}
+
+//---------------------------------------------------------------------------------- CASE ---------------------------------------------------------------------
+
+function exec(command: string) {
+	const args = command.match(/"[^"]*"|'[^']*'|\S+/g) || [];
+	for (let i = 0; i < args.length; i++) {
+		if (!checkArgs(args[i])) {
+			return `Erreur de syntaxe dans l'argument : ${args[i]}`;
+		}
+		args[i] = args[i].replace(/^['"]|['"]$/g, '');
+	}
+
+	if (args.length === 0 || args[0] === '') {
+		return '';
+	}
+
+	for (let i = 0; i < commandAvailable.length; i++) {
+		if (args[0] === commandAvailable[i].name) {
+			const result = commandAvailable[i].launchCommand(args);
+			if (result === undefined || result === null || result === '')
+				return '';
+			return '> ' + result;
+		}
+	}
+	return `> Unknown command: ${args[0]}`;
+}
+
 function getInputCase(command: string)
 {
 	if (!currentInput || !output)
@@ -453,7 +478,6 @@ function getInputCase(command: string)
 	resetInput();
 }
 
-
 function insertIntoCurrentInput(completion: string): void {
 	if (!currentInput)
 		return;
@@ -472,26 +496,29 @@ function insertIntoCurrentInput(completion: string): void {
 	updateCursorPosition(absStart + completion.length);
 }
 
+function TabProcessInEnter() {
+	const tabElement = document.getElementById('tab-completion');
+	if (tabElement) {
+		terminal?.removeChild(tabElement);
+	}
+	if (tabElement && currentInput) {
+		const selectedItem = tabElement.children[TabCompletionIndex] as HTMLElement;
+		if (selectedItem) {
+			const completionText = selectedItem.textContent?.slice(2) || '';
+			insertIntoCurrentInput(completionText);
+		}
+	}
+	resize();
+	isTabInProcess = false;
+	TabCompletionIndex = -1;
+	return;
+}
+
 function enterCase() {
 	if (!currentInput || !output)
 		return;
-	if (isTabInProcess) {
-		const tabElement = document.getElementById('tab-completion');
-		if (tabElement) {
-			terminal?.removeChild(tabElement);
-		}
-		if (tabElement && currentInput) {
-			const selectedItem = tabElement.children[TabCompletionIndex] as HTMLElement;
-			if (selectedItem) {
-				const completionText = selectedItem.textContent?.slice(2) || '';
-				insertIntoCurrentInput(completionText);
-			}
-		}
-		resize();
-		isTabInProcess = false;
-		TabCompletionIndex = -1;
-		return;
-	}
+	if (isTabInProcess)
+		return TabProcessInEnter();
 	let command = currentInput.value;
 	let changeHidden = false;
 	if (countChar('\f') > maxOutputLines) {
@@ -635,50 +662,14 @@ function ArrowDownCase() {
 	}
 }
 
-
 function tabCase() {
 	if (!currentInput || !terminal)
 		return;
-	if (isTabInProcess) {
-		const tabElement = document.querySelector('.tab-completion');
-		if (!tabElement)
-			return;
-		TabCompletionIndex = (TabCompletionIndex + 1) % tabElement.children.length;
-		for (let i = 0; i < tabElement.children.length; i++) {
-			const item = tabElement.children[i] as HTMLElement;
-			if (i === TabCompletionIndex) {
-				item.style.backgroundColor = 'rgba(34, 197, 94, 0.2)';
-			} else {
-				item.style.backgroundColor = 'transparent';
-			}
-		}
-		return;
-	}
+	if (isTabInProcess)
+		return TabProcessInTab();
 	const command = currentInput.value.slice(promptText.length);
 	const cursorPosition = currentInput.selectionStart - promptText.length;
-	let result: string[] | null = null;
-	if (isFirstWord(command, cursorPosition))
-		result = getStartWithList(command.trim(), commandAvailable.map(cmd => cmd.name));
-	else
-	{
-		const path = command.slice(0, cursorPosition).split(' ').pop() || '';
-		if (path.includes('/'))
-		{
-			let clearedPath =  path.slice(0, path.lastIndexOf('/') + 1);
-			let filePart = path.slice(path.lastIndexOf('/') + 1);
-			if (!clearedPath.startsWith('/'))
-				clearedPath = '/' + clearedPath;
-			result = lsCommand(['ls', clearedPath], '', '').split('\n> ').filter(item => item !== '');
-			if (filePart !== '')
-				result = getStartWithList(filePart, result);
-		}
-		else
-		{
-			result = lsCommand(['ls'], '', '').split('\n> ').filter(item => item !== '');
-			if (path !== '')
-				result = getStartWithList(path, result);
-		}
-	}
+	let result = getListOfElementTabCompletion(command, cursorPosition);
 	if (!result || !result[0] || result[0].startsWith('ls:'))
 		return;
 	if (result.length === 0)
@@ -714,18 +705,15 @@ function setEventListeners() {
 				currentInput.focus();
 			}
 		});
-
 		window.addEventListener('resize', (e) => {
 			if (currentInput)
 				resize();
 		});
-
 		if (currentInput) {
 			currentInput.addEventListener('mousedown', e => {
 				e.preventDefault();
 			});
 		}
-
 		if (currentInput) {
 			currentInput.addEventListener('keydown', (event: KeyboardEvent) => {
 				if (event.key === 'F11' || (event.ctrlKey && event.key.toLowerCase() === 'r')) {
@@ -733,36 +721,16 @@ function setEventListeners() {
 				}
 				event.preventDefault();
 				switch (true) {
-					case (event.key === 'Enter'):
-						enterCase();
-						break;
-					case (event.ctrlKey && event.key.toLowerCase() === 'c'):
-						sigintCase();
-						break;
-					case (event.ctrlKey && event.key.toLowerCase() === 'l'):
-						clearOutput();
-						break;
-					case (event.key === 'ArrowUp'):
-						ArrowUpCase();
-						break;
-					case (event.key === 'ArrowDown'):
-						ArrowDownCase();
-						break;
-					case (event.key === 'Tab'):
-						tabCase();
-						break;
-					case (event.key === 'ArrowLeft'):
-						cursorLeft();
-						break
-					case (event.key === 'ArrowRight'):
-						cursorRight();
-						break;
-					case (event.key === 'Backspace'):
-						backspaceCase();
-						break;
-					default:
-						defaultCase(event);
-						break;
+					case (event.key === 'Enter'): enterCase(); break;
+					case (event.ctrlKey && event.key.toLowerCase() === 'c'): sigintCase(); break;
+					case (event.ctrlKey && event.key.toLowerCase() === 'l'): clearOutput(); break;
+					case (event.key === 'ArrowUp'): ArrowUpCase(); break;
+					case (event.key === 'ArrowDown'): ArrowDownCase(); break;
+					case (event.key === 'Tab'): tabCase(); break;
+					case (event.key === 'ArrowLeft'): cursorLeft(); break;
+					case (event.key === 'ArrowRight'): cursorRight(); break;
+					case (event.key === 'Backspace'): backspaceCase(); break;
+					default: defaultCase(event); break;
 				}
 				if (terminal) {
 					terminal.scrollTop = terminal.scrollHeight;

@@ -1,10 +1,41 @@
 import { TerminalUtils } from './terminal.ts'
 
+function createInputTextElement(placeholder: string): HTMLInputElement {
+	const input = document.createElement('input');
+	input.type = "password";
+	input.id = "modalInput";
+	input.placeholder = placeholder;
+	input.maxLength = 20;
+	input.spellcheck = false;
+	input.autocomplete = "off";
+	input.className = "terminal-font border-green-500 border-2 resize-none w-full outline-0 p-2 h-auto overflow-y-hidden";
+	return input;
+}
+
+function createInputFileElement(isPassword: boolean): HTMLInputElement {
+	const input = document.createElement('input');
+	if (isPassword)
+		input.type = "password";
+	else
+		input.type = "file";
+	input.id = "modalInput";
+	input.accept = "image/*";
+	input.className = "terminal-font border-green-500 border-2 resize-none w-full outline-0 p-2 h-auto overflow-y-hidden bg-black text-green-500";
+	const style = document.createElement('style');
+	style.textContent = `
+		#modalInput::-webkit-file-upload-button { display: none; }
+		#modalInput::file-selector-button { display: none; }
+		#modalInput::-ms-browse { display: none; }
+		`;
+	document.head.appendChild(style);
+	return input;
+}
+
 
 export namespace Modal { 
 	export var isModalActive = false;
 
-	export function makeModal(args: string, exec: Function) {
+	export function makeModal(args: string, inputType: 'text' | 'file' | 'password', placeholder: string, exec: Function) {
 		if (isModalActive)
 			return;
 		const modal = document.createElement('div');
@@ -15,15 +46,11 @@ export namespace Modal {
 		const p = document.createElement('p');
 		p.className = "terminal-font p-1";
 		p.textContent = args;
-		const textarea = document.createElement('input');
-		textarea.type = "text"; // File pour fichier mais CSS a voir
-		textarea.id = "nameInput";
-		textarea.placeholder = "Shadow-01";
-		textarea.maxLength = 20;
-		textarea.spellcheck = false;
-		textarea.autocomplete = "off";
-		// textarea.rows = 1;
-		textarea.className = "terminal-font border-green-500 border-2 resize-none w-full outline-0 p-2 h-auto overflow-y-hidden";
+		let textarea: HTMLInputElement;
+		if (inputType === 'text')
+			textarea = createInputTextElement(placeholder);
+		else
+			textarea = createInputFileElement(inputType === 'password');
 		container.appendChild(p);
 		container.appendChild(textarea);
 		modal.appendChild(container);
@@ -55,8 +82,7 @@ export namespace Modal {
 
 
 		setTimeout(() => {
-			const terminal = document.getElementById('terminal');
-			terminal?.addEventListener('click', handleOutsideClick);
+			window?.addEventListener('click', handleOutsideClick);
 		}, 0);
 
 		closeButton.addEventListener('click', closeModal);
@@ -83,7 +109,7 @@ export namespace Modal {
 		if (modal.parentNode) {
 			modal.parentNode.removeChild(modal);
 			isModalActive = false;
-			terminal?.removeEventListener('click', handleOutsideClick);
+			window?.removeEventListener('click', handleOutsideClick);
 			inputLine.focus();
 		}
 	};
@@ -93,9 +119,8 @@ export namespace Modal {
 		const terminal = document.getElementById('terminal');
 		if (!modal || !terminal)
 			return;
-		if (!modal.contains(event.target as Node)) {
+		if (!modal.contains(event.target as Node))
 			closeModal();
-		}
 		else
 			event.stopPropagation();
 	};
