@@ -1,8 +1,11 @@
 import { TerminalUtils } from './terminal.ts'
 
-function createInputTextElement(placeholder: string): HTMLInputElement {
+function createInputTextElement(placeholder: string, isPassword: boolean): HTMLInputElement {
 	const input = document.createElement('input');
-	input.type = "password";
+	if (isPassword)
+		input.type = "password";
+	else
+		input.type = "text";
 	input.id = "modalInput";
 	input.placeholder = placeholder;
 	input.maxLength = 20;
@@ -12,12 +15,9 @@ function createInputTextElement(placeholder: string): HTMLInputElement {
 	return input;
 }
 
-function createInputFileElement(isPassword: boolean): HTMLInputElement {
+function createInputFileElement(): HTMLInputElement {
 	const input = document.createElement('input');
-	if (isPassword)
-		input.type = "password";
-	else
-		input.type = "file";
+	input.type = "file";
 	input.id = "modalInput";
 	input.accept = "image/*";
 	input.className = "terminal-font border-green-500 border-2 resize-none w-full outline-0 p-2 h-auto overflow-y-hidden bg-black text-green-500";
@@ -47,10 +47,10 @@ export namespace Modal {
 		p.className = "terminal-font p-1";
 		p.textContent = args;
 		let textarea: HTMLInputElement;
-		if (inputType === 'text')
-			textarea = createInputTextElement(placeholder);
+		if (inputType === 'text' || inputType === 'password')
+			textarea = createInputTextElement(placeholder, inputType === 'password');
 		else
-			textarea = createInputFileElement(inputType === 'password');
+			textarea = createInputFileElement();
 		container.appendChild(p);
 		container.appendChild(textarea);
 		modal.appendChild(container);

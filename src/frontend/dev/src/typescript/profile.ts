@@ -1,6 +1,7 @@
 export { };
 
 import { Modal } from './modal.ts'
+import { ExtendedView } from './extendedView.ts'
 
 /*
 	Attente des donnes backend. Penser a sanitize les donnes avant de les afficher https://github.com/cure53/DOMPurify
@@ -170,8 +171,12 @@ function createMatchHistory(profileElement: HTMLElement | null) {
 	matchHistory.className = "flex flex-col min-h-[25vh]"; 
 	matchHistory.innerHTML = `<div class="flex w-full place-content-between">
 								<p class="text-center">Last match</p>
-								<button class="cursor-pointer hover:underline hover:underline-offset-2">View More</button>
+								<button id="moreMatch" class="cursor-pointer hover:underline hover:underline-offset-2">View More</button>
 							</div>`
+	const moreMatchButton = matchHistory.querySelector('#moreMatch');
+	moreMatchButton?.addEventListener('click', () => {
+		ExtendedView.makeExtendedView('match', '');
+	});
 	const matchElement = document.createElement('div');
 	matchElement.className = "border py-4 border-green-500 flex flex-col gap-y-4 h-full";		
 	for (let i = 0; i < Math.min(matches.length, 4); i++) {
@@ -212,9 +217,13 @@ function createFriendList(profileElement: HTMLElement | null) {
 	friendList.innerHTML = `
 		<div class="flex w-full place-content-between">
 			<p class="text-center">Friends</p>
-			<button class="cursor-pointer hover:underline hover:underline-offset-2">View More</button>
+			<button id="moreFriends" class="cursor-pointer hover:underline hover:underline-offset-2">View More</button>
 		</div>
 	`
+	const moreFriendsButton = friendList.querySelector('#moreFriends');
+	moreFriendsButton?.addEventListener('click', () => {
+		ExtendedView.makeExtendedView('friend', '');
+	});
 	const friendElement = document.createElement('div');
 	friendElement.className = "border border-green-500 py-4 flex flex-col gap-y-4 h-full";
 	for (let i = 0; i < Math.min(friends.length, 4); i++) {

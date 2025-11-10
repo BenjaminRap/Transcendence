@@ -5,6 +5,7 @@ import { Modal } from './modal.ts'
 import { ExtProfileBuilder } from './extprofile.ts'
 
 import FileSystem from './filesystem.json' with { type: "json" };
+import { ExtendedView } from './extendedView.ts';
 
 let maxOutputLines = 100;
 let username = "usah";
@@ -701,7 +702,7 @@ function setEventListeners() {
 
 	if (terminal) {
 		terminal.addEventListener('click', () => {
-			if (currentInput && !Modal.isModalActive) {
+			if (currentInput && !Modal.isModalActive && !ExtendedView.isExtendedViewIsActive) {
 				currentInput.focus();
 			}
 		});
