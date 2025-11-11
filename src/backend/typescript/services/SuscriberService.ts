@@ -60,22 +60,14 @@ export class SuscriberService {
             }
         });
 
-        return sanitizeUser(updatedUser);
+        return updatedUser;
     }
 
     // ================================== PRIVATE ================================== //
 
     // ----------------------------------------------------------------------------- //
     private async getById(id: number) {
-        const user = await this.prisma.user.findFirst({
-            where: { id },
-            select: {
-                id: true,
-                username: true,
-                avatar: true
-            }
-        });
-        return user;
+        return await this.prisma.user.findFirst({ where: { id } });
     }
 
     // ----------------------------------------------------------------------------- //

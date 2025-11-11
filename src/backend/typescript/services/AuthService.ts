@@ -34,7 +34,7 @@ export class AuthService {
             },
         });
 
-        const tokens = await this.tokenManager.generate(user.id, user.email);
+        const tokens = await this.tokenManager.generate(String(user.id), user.email);
 
         return {
             user: sanitizeUser(user),
@@ -57,7 +57,7 @@ export class AuthService {
         }
 
         // generate JWT tokens for the session
-        const tokens = await this.tokenManager.generate(user.id, user.email);
+        const tokens = await this.tokenManager.generate(String(user.id), user.email);
 
         return {
             user: sanitizeUser(user),

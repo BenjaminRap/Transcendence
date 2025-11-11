@@ -1,4 +1,4 @@
-import { PrismaClient, Friendship, FriendshipStatus } from "@prisma/client"
+import { PrismaClient, Friendship } from "@prisma/client"
 import { FriendException, FriendError } from "../error_handlers/Friend.error.js";
 import { ListFormat } from '../types/friend.types.js'
 
@@ -19,13 +19,13 @@ export class FriendService {
         // throw an error if a link exist between users
         const friendship = await this.getExistingLink(friendId, userId);
         if (friendship) {
-            if (friendship.status === FriendshipStatus.ACCEPTED)
+            if (friendship.status === 'ACCEPTED')
                 throw new FriendException(FriendError.ACCEPTED, FriendError.ACCEPTED);
             else
                 throw new FriendException(FriendError.PENDING, FriendError.PENDING);
         }
 
-        await this.prisma.friendship.create({ requesterId: userId, receiverId: friendId });        
+        await this.prisma.friendship.create({ data: {requesterId: userId, receiverId: friendId} });        
     }
 
     // ----------------------------------------------------------------------------- //
@@ -41,12 +41,12 @@ export class FriendService {
         const friendship = await this.getExistingLink(friendId, userId);
         if (!friendship)
             throw new FriendException(FriendError.NO_LINK, FriendError.NO_LINK);
-        if (friendship.status === FriendshipStatus.ACCEPTED)
+        if (friendship.status === 'ACCEPTED')
             throw new FriendException(FriendError.ACCEPTED, FriendError.ACCEPTED);
 
-        await this.prisma.Friendship.update({
+        await this.prisma.friendship.update({
             where: { id: friendship.id },
-            data: { status: FriendshipStatus.ACCEPTED }
+            data: { status: 'ACCEPTED' }
         });
     }
 
@@ -64,7 +64,7 @@ export class FriendService {
         if (!friendship)
             throw new FriendException(FriendError.NO_LINK, FriendError.NO_LINK);
 
-        await this.prisma.Friendship.delete({ 
+        await this.prisma.friendship.delete({ 
             where: { id: friendship.id }
         });
 
@@ -77,31 +77,17 @@ export class FriendService {
             throw new FriendException(FriendError.USR_NOT_FOUND, FriendError.USR_NOT_FOUND);
         
         // extract friend list from the DB
-        const friendList = await this.prisma.Friendship.findMany({
+        const friendList = await this.prisma.friendship.findMany({
             where: {
                 OR: [
                     { receiverId: userId },
                     { requesterId: userId },
                 ],
-                status: FriendshipStatus.ACCEPTED,
+                status: 'ACCEPTED',
             },
-            select: {
-                status: true,
-                updatedAt: true,
-                receiver: {
-                    select: {
-                        id: true,
-                        username: true,
-                        avatar: true,
-                    },
-                },
-                requester: {
-                    select: {
-                        id: true,
-                        username: true,
-                        avatar: true,
-                    },
-                },
+            include: {
+                requester: true,
+                receiver: true,
             },
         });
 
@@ -121,25 +107,11 @@ export class FriendService {
                     { receiverId: userId },
                     { requesterId: userId },
                 ],
-                status: FriendshipStatus.PENDING,
+                status: 'PENDING',
             },
-            select: {
-                status: true,
-                createdAt: true,
-                receiver: {
-                    select: {
-                        id: true,
-                        username: true,
-                        avatar: true,
-                    },
-                },
-                requester: {
-                    select: {
-                        id: true,
-                        username: true,
-                        avatar: true,
-                    },
-                },
+            include: {
+                requester: true,
+                receiver: true,
             },
         });
 
@@ -150,7 +122,7 @@ export class FriendService {
 
     // ----------------------------------------------------------------------------- //
     private async checkId(id: number): Promise<boolean> {
-        if (await this.prisma.findFirst({where: { id }, select: { id: true }}))
+        if (await this.prisma.user.findFirst({where: { id }, select: { id: true }}))
             return true;
         return false;
     }
@@ -171,14 +143,19 @@ export class FriendService {
     // ----------------------------------------------------------------------------- //
     private async formatList(list: Friendship[], userId: number): Promise<any> {
         return list.map(friendship => {
-            const otherUser = friendship.requester.id === userId
-                            ? friendship.receiver
-                            : friendship.requester;
-            return {
-                status: friendship.status,
-                updatedAt: friendship.updatedAt,
-                user: otherUser,
-            };
+            const otherUserId = friendship.requesterId === userId
+                            ? friendship.receiverId
+                            : friendship.requesterId;
+
+            const otherUser = this.prisma.user.findFirst({
+                where: { id: otherUserId },
+                select: {
+                    id: true,
+                    username: true,
+                    avatar: true
+                }
+            });
+            return otherUser;
         });
     }
 }
