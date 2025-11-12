@@ -23,62 +23,66 @@ fastify.register(fpSqlitePlugin, {
 fastify.register(prismaPlugin);
 
 
-fastify.addHook('onReady', async () => {
-    // Instanciation and intialiasation of the dependency injection container
-    const container = Container.getInstance();
-    container.initialize(fastify.prisma);
+// fastify.addHook('onReady', async () => {
+//     // Instanciation and intialiasation of the dependency injection container
+    
+// });
+const container = Container.getInstance();
+container.initialize(fastify.prisma);
 
-    // auth /register /login - /refresh
-    fastify.register((instance, opts, done) => {
-        authRoutes(
-            instance,
-            container.getService('AuthController'),
-            container.getService('AuthMiddleware')
-        );
-        done();
-    }, { prefix: '/auth' });
+// auth /register /login - /refresh
+fastify.register((instance, opts, done) => {
+    authRoutes(
+        instance,
+        Container.getInstance().getService('AuthController'),
+        Container.getInstance().getService('AuthMiddleware')
+    );
+    done();
+}, { prefix: '/auth' });
 
-    // users /search/:id - /search/username
-    fastify.register((instance, opts, done) => {
-        usersRoutes(
-            instance,
-            container.getService('UsersController'),
-            container.getService('AuthMiddleware')
-        );
-        done();
-    }, { prefix: '/users' });
+// users /search/:id - /search/username
+fastify.register((instance, opts, done) => {
+    usersRoutes(
+        instance,
+        Container.getInstance().getService('UsersController'),
+        Container.getInstance().getService('AuthMiddleware')
+    );
+    done();
+}, { prefix: '/users' });
 
-    // suscriber /profile - /update
-    fastify.register((instance, opts, done) => {
-        suscriberRoute(
-            instance,
-            container.getService('SuscriberController'),
-            container.getService('AuthMiddleware')
-        );
-        done();
-    }, { prefix: '/suscriber' });
+// suscriber /profile - /update
+fastify.register((instance, opts, done) => {
+    suscriberRoute(
+        instance,
+        Container.getInstance().getService('SuscriberController'),
+        Container.getInstance().getService('AuthMiddleware')
+    );
+    done();
+}, { prefix: '/suscriber' });
 
-    /* friend/
-        - request/:id
-        - accept/:id
-        - delete/:id
-        - search/myfriends
-        - search/pendinglist
-    */
-    fastify.register((instance, opts, done) => {
-        friendRoute(
-            instance,
-            container.getService('FriendController'),
-            container.getService('Authmiddleware')
-        );
-        done();
-    }, { prefix: '/friend' });
-});
+/* friend/
+    - request/:id
+    - accept/:id
+    - delete/:id
+    - search/myfriends
+    - search/pendinglist
+*/
+fastify.register((instance, opts, done) => {
+    friendRoute(
+        instance,
+        Container.getInstance().getService('FriendController'),
+        Container.getInstance().getService('AuthMiddleware')
+    );
+    done();
+}, { prefix: '/friend' });
 
 async function start(): Promise<void> {
     try {
-        await fastify.listen({ port: 8181, host: '0.0.0.0' });
-        fastify.log.info('Server listening at 0.0.0.0:8181');
+        const port = Number(process.env.PORT) || 8181;
+        const host = process.env.HOST || '0.0.0.0';
+
+        await fastify.listen({ port: port, host: host });
+        fastify.log.info(`Server listening at ${ host }:${ port }`);
     } catch (error) {
         fastify.log.error(`Could not launch the server: ${error}`);
         process.exit(1);

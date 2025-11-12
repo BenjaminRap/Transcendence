@@ -7,11 +7,11 @@ export function usersRoutes(
     controller: UsersController,
     middleware: AuthMiddleware
 ) {
-    fastify.get('/search/:id', {
+    fastify.get('/search/id/:id', {
         preHandler: middleware.authenticate,
     }, controller.getById.bind(controller));
 
-    fastify.get('/search/:username', {
+    fastify.get('/search/username/:username', {
         preHandler: middleware.authenticate,
     }, controller.getByName.bind(controller));
 }
