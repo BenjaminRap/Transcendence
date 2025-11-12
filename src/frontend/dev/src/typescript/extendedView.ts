@@ -357,7 +357,7 @@ export namespace ExtendedView {
 			if (event.key === 'Escape' || (event.key === 'c' && event.ctrlKey)) {
 				event.preventDefault();
 				closeExtendedView();
-				TerminalUtils.displayOnTerminal("^C");
+				TerminalUtils.displayOnTerminal("^C", true);
 			}
 		});
 		const closeButton = document.createElement('button');

@@ -70,7 +70,7 @@ export namespace Modal {
 			else if (event.key === 'Escape' || event.key ==='c' && event.ctrlKey) {
 				event.preventDefault();
 				closeModal();
-				TerminalUtils.displayOnTerminal("^C");
+				TerminalUtils.displayOnTerminal("^C", true);
 			}
 		});
 

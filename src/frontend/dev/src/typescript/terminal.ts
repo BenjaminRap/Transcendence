@@ -361,13 +361,16 @@ function updatePromptText(newPrompt: string) {
 }
 
 export namespace TerminalUtils {
-	export function displayOnTerminal(text: string) {
+	export function displayOnTerminal(text: string, showPrompt: boolean) {
 		if (!output)
 			return;
 		if (countChar('\f') > maxOutputLines) {
 			output.textContent = output.textContent.slice(output.textContent.indexOf('\f') + 1);
 		}
-		output.textContent += promptText+ text + '\n' + '\f';
+		if (showPrompt)
+			output.textContent += promptText + text + '\n' + '\f';
+		else
+		output.textContent += text + '\n' + '\f';
 		if (terminal) {
 			terminal.scrollTop = terminal.scrollHeight;
 		}
@@ -382,6 +385,39 @@ export namespace TerminalUtils {
 		if (terminal) {
 			terminal.scrollTop = terminal.scrollHeight;
 		}
+	}
+
+	export function notification(args: string[]) {
+		let title: string | null = null;
+		let message: string;
+		if (args.length >= 2) {
+			title = args[0];
+			message = args.slice(1).join(' ');
+		} else {
+			message = args.slice(0).join(' ');
+		}
+		TerminalUtils.displayOnTerminal("Wall :", false);
+		
+		const lines = message.split('\n');
+		let maxLen = Math.max(...lines.map(l => l.length));
+		if (title)
+			maxLen = Math.max(maxLen, title.length);
+
+		const innerWidth = maxLen + 2;
+		if (title) {
+			const titleStr = ` ${title} `;
+			const left = Math.floor((innerWidth - titleStr.length) / 2);
+			const right = innerWidth - titleStr.length - left;
+			TerminalUtils.displayOnTerminal('╭' + '─'.repeat(left) + titleStr + '─'.repeat(right) + '╮', false);
+		} else {
+			TerminalUtils.displayOnTerminal('╭' + '─'.repeat(innerWidth) + '╮', false);
+		}
+
+		for (const line of lines) {
+			const padded = line.padEnd(maxLen, ' ');
+			TerminalUtils.displayOnTerminal('│ ' + padded + ' │', false);
+		}
+		TerminalUtils.displayOnTerminal('╰' + '─'.repeat(innerWidth) + '╯', false);
 	}
 }
 

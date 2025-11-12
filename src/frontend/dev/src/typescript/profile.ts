@@ -2,6 +2,7 @@ export { };
 
 import { Modal } from './modal.ts'
 import { ExtendedView } from './extendedView.ts'
+import { TerminalUtils } from './terminal.ts';
 
 /*
 	Attente des donnes backend. Penser a sanitize les donnes avant de les afficher https://github.com/cure53/DOMPurify
@@ -281,6 +282,8 @@ function ChangeName() {
 		// Sanitize
 		// Send Backend
 		// Update 2/3 variable
+		// let args: string[] = ["System Notification (Wall) - Change Name", "You've try to change your name, attempt succesfull, your new name is " + text];
+		// TerminalUtils.notification(args);
 	});
 }
 

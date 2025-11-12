@@ -12,7 +12,7 @@ const errors404 = ["You are the reason why everthing in your life is miserable",
 
 
 function Error404() {
-	TerminalUtils.displayOnTerminal(`cat error404.html`);
+	TerminalUtils.displayOnTerminal(`cat error404.html`, true);
 	TerminalUtils.printErrorOnTerminal(errors404[Math.floor(Math.random() * errors404.length)]);
 	history.pushState({}, '', `/`);
 }
