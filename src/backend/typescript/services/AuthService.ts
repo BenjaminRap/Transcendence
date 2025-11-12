@@ -14,7 +14,9 @@ export class AuthService {
     // --------------------------------------------------------------------------------- //
     async register(data: RegisterData): Promise<{ user: SanitizedUser; tokens: TokenPair }> {
         // check if the user already exist
+        console.log('Registering user with data: ', data);
         const existing = await this.findByEmailOrUsername(data.email, data.username);
+
         if (existing) {
             if (existing.email === data.email)
                 throw new AuthException(AuthError.EMAIL_TAKEN, AuthError.EMAIL_TAKEN);
@@ -30,7 +32,7 @@ export class AuthService {
                 username: data.username,
                 email: data.email,
                 password: hashedPassword,
-                avatar: data.avatar || null,
+                avatar: data.avatar,
             },
         });
 
@@ -78,7 +80,7 @@ export class AuthService {
 
     // --------------------------------------------------------------------------------- //
     private async findByEmailOrUsername(email: string, username: string): Promise<User | null> {
-        return await this.prisma.user.findFirst({
+        const user = await this.prisma.user.findFirst({
             where: {
                 OR: [
                     { email },
@@ -86,14 +88,22 @@ export class AuthService {
                 ],
             },
         });
+        if (!user?.id) {
+            return null;
+        }
+        return user;
     }
 
     // --------------------------------------------------------------------------------- //
     private async findById(id: number): Promise<User | null> {
-        return await this.prisma.user.findUnique({
+        const user = await this.prisma.user.findUnique({
             where: {
                 id,
             },
         });
+        if (!user) {
+            return null;
+        }
+        return user;
     }
 }

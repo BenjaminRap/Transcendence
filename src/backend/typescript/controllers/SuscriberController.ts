@@ -1,5 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { SuscriberService } from "../services/SuscriberService.js";
+import { UpdateData } from "../types/suscriber.types.js";
 import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
 import { SuscriberSchema } from "../schemas/suscriber.schema.js";
 
@@ -42,11 +43,16 @@ export class SuscriberController {
 
     // ----------------------------------------------------------------------------- //
     // suscriber/update
-    async updateProfile(request: FastifyRequest, reply: FastifyReply) {
+    async updateProfile(request: FastifyRequest<{ Body: UpdateData }>, reply: FastifyReply) {
         try {
             // check body content & get id from auth middleware: checkAuth
             const id = (request as any).user.userId;
-            const validation = SuscriberSchema.update.safeParse(request.body);
+            const requiredData = {
+                username: request.body.username,
+                password: request.body.password,
+                avatar: request.body.avatar,
+            }
+            const validation = SuscriberSchema.update.safeParse(requiredData);
             if (!validation.success) {
                 throw new SuscriberException(SuscriberError.BAD_FORMAT, SuscriberError.BAD_FORMAT);
             }

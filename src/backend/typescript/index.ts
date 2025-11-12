@@ -23,58 +23,58 @@ fastify.register(fpSqlitePlugin, {
 fastify.register(prismaPlugin);
 
 
-// fastify.addHook('onReady', async () => {
-//     // Instanciation and intialiasation of the dependency injection container
+fastify.addHook('onReady', async () => {
+    // Instanciation and intialiasation of the dependency injection container
     
-// });
-const container = Container.getInstance();
-container.initialize(fastify.prisma);
-
-// auth /register /login - /refresh
-fastify.register((instance, opts, done) => {
-    authRoutes(
-        instance,
-        Container.getInstance().getService('AuthController'),
-        Container.getInstance().getService('AuthMiddleware')
-    );
-    done();
-}, { prefix: '/auth' });
-
-// users /search/:id - /search/username
-fastify.register((instance, opts, done) => {
-    usersRoutes(
-        instance,
-        Container.getInstance().getService('UsersController'),
-        Container.getInstance().getService('AuthMiddleware')
-    );
-    done();
-}, { prefix: '/users' });
-
-// suscriber /profile - /update
-fastify.register((instance, opts, done) => {
-    suscriberRoute(
-        instance,
-        Container.getInstance().getService('SuscriberController'),
-        Container.getInstance().getService('AuthMiddleware')
-    );
-    done();
-}, { prefix: '/suscriber' });
-
-/* friend/
-    - request/:id
-    - accept/:id
-    - delete/:id
-    - search/myfriends
-    - search/pendinglist
-*/
-fastify.register((instance, opts, done) => {
-    friendRoute(
-        instance,
-        Container.getInstance().getService('FriendController'),
-        Container.getInstance().getService('AuthMiddleware')
-    );
-    done();
-}, { prefix: '/friend' });
+    const container = Container.getInstance();
+    container.initialize(fastify.prisma);
+    
+    // auth /register /login - /refresh
+    fastify.register((instance, opts, done) => {
+        authRoutes(
+            instance,
+            Container.getInstance().getService('AuthController'),
+            Container.getInstance().getService('AuthMiddleware')
+        );
+        done();
+    }, { prefix: '/auth' });
+    
+    // users /search/:id - /search/username
+    fastify.register((instance, opts, done) => {
+        usersRoutes(
+            instance,
+            Container.getInstance().getService('UsersController'),
+            Container.getInstance().getService('AuthMiddleware')
+        );
+        done();
+    }, { prefix: '/users' });
+    
+    // suscriber /profile - /update
+    fastify.register((instance, opts, done) => {
+        suscriberRoute(
+            instance,
+            Container.getInstance().getService('SuscriberController'),
+            Container.getInstance().getService('AuthMiddleware')
+        );
+        done();
+    }, { prefix: '/suscriber' });
+    
+    /* friend/
+        - request/:id
+        - accept/:id
+        - delete/:id
+        - search/myfriends
+        - search/pendinglist
+    */
+    fastify.register((instance, opts, done) => {
+        friendRoute(
+            instance,
+            Container.getInstance().getService('FriendController'),
+            Container.getInstance().getService('AuthMiddleware')
+        );
+        done();
+    }, { prefix: '/friend' });
+});
 
 async function start(): Promise<void> {
     try {

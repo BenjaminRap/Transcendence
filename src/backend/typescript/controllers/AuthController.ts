@@ -19,7 +19,12 @@ export class AuthController {
                     .password
                     .email
             */
-            const validation = AuthSchema.register.safeParse(request.body);
+           const requiredData = {
+                username: request.body.username,
+                password: request.body.password,
+                email: request.body.email,
+            };
+            const validation = AuthSchema.register.safeParse(requiredData);
             if (!validation.success)
                 return reply.status(400).send({ success: false, message: validation.error.message });
 
@@ -49,7 +54,11 @@ export class AuthController {
     async login(request: FastifyRequest<{ Body: LoginData }>, reply: FastifyReply) {
         try {
             // Check if the fields are not empty and verify the password format
-            const validation = AuthSchema.login.safeParse(request.body);
+            const requiredData = {
+                identifier: request.body.identifier,
+                password: request.body.password,
+            };
+            const validation = AuthSchema.login.safeParse(requiredData);
             if (!validation.success)
                 return reply.status(400).send({ success: false, message: validation.error.message });
 

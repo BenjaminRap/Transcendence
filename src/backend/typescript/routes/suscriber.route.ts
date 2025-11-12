@@ -11,7 +11,7 @@ export async function suscriberRoute(
         preHandler: middleware.authenticate,
     }, controller.getProfile.bind(controller));
 
-    fastify.get('/update', {
+    fastify.post('/update', {
         preHandler: middleware.authenticate,
     }, controller.updateProfile.bind(controller));
 }
