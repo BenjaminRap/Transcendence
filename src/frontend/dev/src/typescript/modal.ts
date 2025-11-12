@@ -72,6 +72,10 @@ export namespace Modal {
 				closeModal();
 				TerminalUtils.displayOnTerminal("^C", true);
 			}
+			else if (event.key === 'Tab') {
+				event.preventDefault();
+				textarea.focus();
+			}
 		});
 
 
