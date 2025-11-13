@@ -1,4 +1,4 @@
-import { PrismaClient, Friendship } from "@prisma/client"
+import { PrismaClient, Friendship, User } from "@prisma/client"
 import { FriendException, FriendError } from "../error_handlers/Friend.error.js";
 import { ListFormat } from '../types/friend.types.js'
 
@@ -71,7 +71,7 @@ export class FriendService {
     }
 
     // ----------------------------------------------------------------------------- //
-    async getFriendsList(userId: number): Promise<ListFormat> {
+    async getFriendsList(userId: number): Promise<ListFormat[]> {
         // check user account validity
         if ( !this.checkId(userId) )
             throw new FriendException(FriendError.USR_NOT_FOUND, FriendError.USR_NOT_FOUND);
@@ -92,11 +92,11 @@ export class FriendService {
         });
 
         // returns the formated friend list
-        return (await this.formatList(friendList, userId) as ListFormat);
+        return (await this.formatList(friendList, userId) as ListFormat[]);
     }
 
     // ----------------------------------------------------------------------------- //
-    async getPendingList(userId: number): Promise<ListFormat> {
+    async getPendingList(userId: number): Promise<ListFormat[]> {
         // check user account validity
         if ( !this.checkId(userId) )
             throw new FriendException(FriendError.USR_NOT_FOUND, FriendError.USR_NOT_FOUND);
@@ -115,7 +115,7 @@ export class FriendService {
             },
         });
 
-        return (await this.formatList(pendingList, userId) as ListFormat);
+        return (await this.formatList(pendingList, userId) as ListFormat[]);
     }
 
     // ================================== PRIVATE ================================== //
@@ -125,6 +125,11 @@ export class FriendService {
         if (await this.prisma.user.findFirst({where: { id }, select: { id: true }}))
             return true;
         return false;
+    }
+
+    // ----------------------------------------------------------------------------- //
+    private async getById(id: number): Promise<User | null> {
+        return await this.prisma.user.findUnique({ where: { id } });
     }
 
     // ----------------------------------------------------------------------------- //
@@ -141,21 +146,27 @@ export class FriendService {
     }
 
     // ----------------------------------------------------------------------------- //
-    private async formatList(list: Friendship[], userId: number): Promise<any> {
-        return list.map(friendship => {
-            const otherUserId = friendship.requesterId === userId
-                            ? friendship.receiverId
-                            : friendship.requesterId;
+    private async formatList(list: Friendship[], userId: number): Promise<ListFormat[]> {
+        return await Promise.all(
+            list.map(async (friendship) => {
+                const friendId = friendship.requesterId === userId
+                    ? friendship.receiverId
+                    : friendship.requesterId;
 
-            const otherUser = this.prisma.user.findFirst({
-                where: { id: otherUserId },
-                select: {
-                    id: true,
-                    username: true,
-                    avatar: true
-                }
-            });
-            return otherUser;
-        });
+                const otherUser = await this.getById(friendId);
+                if (!otherUser)
+                    throw new FriendException(FriendError.USR_NOT_FOUND, FriendError.USR_NOT_FOUND);
+
+                return {
+                    status: friendship.status,
+                    updatedAt: friendship.updatedAt.toISOString(),
+                    user: {
+                        id: otherUser.id.toString(),
+                        username: otherUser.username,
+                        avatar: otherUser.avatar
+                    }
+                } as ListFormat;
+            })
+        );
     }
 }
