@@ -7,11 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum FriendshipStatus {
-  PENDING
-  ACCEPTED
-}
-
 // -------------------------------------------------------------------------------------------- //
 
 model User {
@@ -34,8 +29,8 @@ model User {
 // -------------------------------------------------------------------------------------------- //
 
 model Friendship {
-  id          Int               @id @default(autoincrement())
-  status      FriendshipStatus  @default(PENDING)
+  id          Int       @id @default(autoincrement())
+  status      String    @default("PENDING")
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -43,7 +38,7 @@ model Friendship {
   requester   User    @relation("requesterFriendships", fields: [requesterId], references: [id])
   requesterId Int
 
-  receiver  User      @relation("receiverFriendships", fields: [receiverId], references: [id])
+  receiver    User      @relation("receiverFriendships", fields: [receiverId], references: [id])
   receiverId  Int
 
   @@unique([requesterId, receiverId])
