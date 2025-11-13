@@ -19,7 +19,7 @@ export class FriendController {
             }
 
             // check users existance; their connection; create the friend request
-            await this.friendService.createFriendRequest(friendId.data, userId);
+            await this.friendService.createFriendRequest(Number(friendId.data), Number(userId));
     
             return reply.status(201).send({
                 success: true,
@@ -54,7 +54,7 @@ export class FriendController {
             }
 
             // check users existance; their connection; update the friendship status
-            await this.friendService.acceptFriendRequest(friendId.data, userId);
+            await this.friendService.acceptFriendRequest(Number(friendId.data), Number(userId));
             
             return reply.status(204).send({
                 success: true,
@@ -88,7 +88,7 @@ export class FriendController {
                 throw new FriendException(FriendError.INVALID_ID, 'Invalid Id format');
             }
 
-            await this.friendService.deleteFriend(friendId.data, userId);
+            await this.friendService.deleteFriend(Number(friendId.data), Number(userId));
             
             return reply.status(204).send({
                 success: true,
@@ -120,7 +120,7 @@ export class FriendController {
         try {
             const userId = (request as any).user.userId;
 
-            const friendList = await this.friendService.getFriendsList(userId);
+            const friendList = await this.friendService.getFriendsList(Number(userId));
 
             return reply.status(200).send({
                 success: true,
@@ -145,7 +145,7 @@ export class FriendController {
         try {
             const userId = (request as any).user.userId;
 
-            const friendList = await this.friendService.getPendingList(userId);
+            const friendList = await this.friendService.getPendingList(Number(userId));
 
             return reply.status(200).send({
                 success: true,

@@ -11,8 +11,8 @@ export class TokenManager {
         private refreshSecret: string
     ) {}
 
-    private accessExpiry: string = '15m';
-    private refreshExpiry: string = '7d';
+    private accessExpiry: string = '15h';
+    private refreshExpiry: string = '2h';
     
     // --------------------------------------------------------------------------------- //
     async generate(userId: string, email: string): Promise<TokenPair> {

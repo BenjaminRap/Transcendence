@@ -37,7 +37,7 @@ export class UsersService {
             orderBy: { username: 'asc' },
             take: 10
         });
-        if (!users){
+        if ( !users.length ){
             throw new UsersException(UsersError.USER_NOT_FOUND, 'No one was found');
         }
         return users;

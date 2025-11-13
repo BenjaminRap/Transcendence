@@ -12,7 +12,7 @@ export class SuscriberService {
 
     // ----------------------------------------------------------------------------- //
     async getProfile(id: number): Promise<SanitizedUser> {
-        const user = await this.getById(id);
+        const user = await this.getById(Number(id));
         if (!user) {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
         }
@@ -22,13 +22,13 @@ export class SuscriberService {
 
     // ----------------------------------------------------------------------------- //
     async updateProfile(id: number, data: UpdateData): Promise<SanitizedUser> {
-        const user = await this.getById(id);
+        const user = await this.getById(Number(id));
         if (!user) {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
         }
 
         // throw SuscriberException if data match
-        this.hasChanged(user, data);
+        await this.hasChanged(user, data);
 
         // check username availability
         if (data.username) {
@@ -47,7 +47,7 @@ export class SuscriberService {
 
         // update user in DB
         const updatedUser = await this.prisma.user.update({
-            where: { id },
+            where: { id: Number(id) },
             data: {
                 username: data.username ?? user.username,
                 password: data.password ?? user.password,

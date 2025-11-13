@@ -23,9 +23,13 @@ fastify.register(fpSqlitePlugin, {
 fastify.register(prismaPlugin);
 
 
-fastify.addHook('onReady', async () => {
-    // Instanciation and intialiasation of the dependency injection container
-    
+// fastify.addHook('onReady', async () => {
+// });
+// Instanciation and intialiasation of the dependency injection container
+fastify.after(async (err) => {
+    if (err)
+        throw err;
+
     const container = Container.getInstance();
     container.initialize(fastify.prisma);
     

@@ -15,7 +15,7 @@ export class SuscriberController {
         try {
             const id = (request as any).user.userId;
 
-            // returns user or throw exception
+            // returns user or throw exception USER NOT FOUND
             const user =  await this.suscriberService.getProfile(Number(id))
 
             return reply.status(200).send({
@@ -25,12 +25,8 @@ export class SuscriberController {
             });            
         } catch (error) {
             if (error instanceof SuscriberException) {
-                switch (error.code) {
-                    case SuscriberError.USER_NOT_FOUND:
-                        return reply.status(404).send({ success: false, message: error.code });
-                    default:
-                        return reply.status(409).send({ success: false, message: error.code, redirectTo: '/suscriber/update' });
-                }
+                if (error.code === SuscriberError.USER_NOT_FOUND)
+                    return reply.status(404).send({ success: false, message: error.code });
             }
 
             request.log.error(error);
@@ -58,12 +54,12 @@ export class SuscriberController {
             }
 
             // check data, user existence, mail and username availability then update and returns user or throw exception
-            const user = this.suscriberService.updateProfile(id, validation.data);
+            const user = await this.suscriberService.updateProfile(id, validation.data);
     
             return reply.status(200).send({
                 success: true,
                 message: 'Profile successfully updated',
-                redirectTo: '/suscriber/me',
+                redirectTo: '/suscriber/profile',
                 user
 
             });    

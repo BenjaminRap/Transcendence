@@ -14,7 +14,6 @@ export class AuthService {
     // --------------------------------------------------------------------------------- //
     async register(data: RegisterData): Promise<{ user: SanitizedUser; tokens: TokenPair }> {
         // check if the user already exist
-        console.log('Registering user with data: ', data);
         const existing = await this.findByEmailOrUsername(data.email, data.username);
 
         if (existing) {
@@ -101,7 +100,7 @@ export class AuthService {
                 id,
             },
         });
-        if (!user) {
+        if (!user?.id) {
             return null;
         }
         return user;

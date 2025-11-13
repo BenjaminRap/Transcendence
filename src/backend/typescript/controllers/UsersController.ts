@@ -10,7 +10,7 @@ export class UsersController {
     ) {}
     
     // ----------------------------------------------------------------------------- //
-    // /users/search/:id
+    // /users/search/id/:id
     async getById(request: FastifyRequest, reply: FastifyReply) {
         try {
             // params validation
@@ -45,7 +45,7 @@ export class UsersController {
     }
 
     // ----------------------------------------------------------------------------- //
-    // /users/search/username
+    // /users/search/username/:username
     async getByName(request: FastifyRequest, reply: FastifyReply) {
         try {
             // params validation

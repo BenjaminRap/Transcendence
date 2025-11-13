@@ -10,6 +10,6 @@ export function authRoutes(
     fastify.post('/register', controller.register.bind(controller));
     fastify.post('/login', controller.login.bind(controller));
     fastify.get('/refresh', {
-        preHandler: middleware.authenticate,
+        preHandler: middleware.refreshAuthenticate,
     }, controller.refresh.bind(controller));
 }

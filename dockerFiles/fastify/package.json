@@ -10,7 +10,7 @@
 		"fastify-bcrypt": "1.0.1",
 		"@prisma/client": "^6.19.0",
 		"zod": "^4.1.12",
-  		"fastify-type-provider-zod": "^6.1.0"
+  		"fastify-type-provider-zod": "^5.1.0"
 	},
 	"scripts": {
 		"start": "node backend/javascript/index.js"
