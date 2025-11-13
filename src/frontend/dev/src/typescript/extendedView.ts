@@ -330,7 +330,12 @@ function createFriendList() : HTMLDivElement
 					<p>${friend.username}</p>
 					<p style="font-size: 10px;">${friend.status}</p>
 				</div>
+				<button id="removeFriendButton" class="ml-auto p-1 border border-green-500 hover:underline hover:underline-offset-2 cursor-pointer">Remove</button>
 		`
+		const removeButton = friendDiv.querySelector('#removeFriendButton') as HTMLButtonElement;
+		removeButton.addEventListener('click', () => {
+			removeFriend(friend.username);
+		});
 		friendElement.appendChild(friendDiv);
 		if (i < friends.length - 1)
 			friendElement.appendChild(lign.cloneNode());
@@ -428,4 +433,9 @@ export namespace ExtendedView {
 		else
 			event.stopPropagation();
 	};
+}
+
+function removeFriend(username: string) {
+	// Implement friend removal logic here
+	console.log(`Removing friend: ${username}`);
 }
