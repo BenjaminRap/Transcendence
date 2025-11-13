@@ -85,10 +85,7 @@ export namespace Modal {
 		closeButton.textContent = "×";
 
 
-		setTimeout(() => {
-			window?.addEventListener('click', handleOutsideClick);
-		}, 0);
-
+		
 		closeButton.addEventListener('click', closeModal);
 		modal.appendChild(closeButton);
 		const terminal = document.getElementById('terminal');
@@ -99,9 +96,12 @@ export namespace Modal {
 			console.error("Terminal not found");
 			return;
 		}
-
+		
 		isModalActive = true;
 		textarea.focus();
+		setTimeout(() => {
+			window?.addEventListener('click', handleOutsideClick);
+		}, 0);
 	}
 
 	export function closeModal() {
