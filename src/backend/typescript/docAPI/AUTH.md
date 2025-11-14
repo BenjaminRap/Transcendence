@@ -15,11 +15,11 @@ _Body :_ JSON
 
 _Possibles responses :_
 ✅ 201 Created:
-    { ( _voir **dataStructure/authStructure.ts -> AuthResponse** pour le schema de reponse_)
+    {
         success: true,
         message: 'User registered successfully',
-        user: authUser
-        tokens: Tokens
+        user: SanitizedUser (**voir dans types/auth.types.ts**)
+        tokens: TokenPair (**voir dans types/tokenManager.types.ts**)
     }
 
 ❌ 400 Bad Request :
@@ -59,11 +59,11 @@ _Body :_ JSON
 _Possibles responses:_
 
 ✅ 200 Success
-    { ( _voir **dataStructure/authStructure.ts -> AuthResponse** pour le schema de reponse_)
+    {
         success: true,
         message: 'User registered successfully',
-        user: authUser
-        tokens: Tokens
+        user: SanitizedUser (**voir dans types/auth.types.ts**)
+        tokens: TokenPair (**voir dans types/tokenManager.types.ts**)
     }
 
 ❌ 400 Bad Request :
@@ -96,20 +96,68 @@ _Mandatory headers :_
 
 _Possibles responses:_
 
-✅ 201 Success
-  { ( _voir **dataStructure/authStructure.ts -> Token** pour le schema de reponse_)
-    "tokens": Token
-    message: "Authentification token renewal successful"
-  }
-
-❌ 400 Bad Request :
+✅ 200 Ok
   {
-    "success": false,
-    "message": "Missing authentication token" (si le header Authorization n'est pas rempli)
+    tokens: TokenPair (**voir dans types/tokenManager.types.ts**),
+    message: "Authentification token renewal successful"
   }
 
 ❌ 401 Unauthorized :
   {
     "success": false,
-    "message": "Invalid token"
+    "message": "Invalid or missing token"
+  }
+
+❌ 404 Not Found :
+  {
+    "success": false,
+    "message": "User Not Found"
+  }
+
+-------------------------------------------------------------------------------------------------------------------------
+
+**GET auth/verifyPassword**
+
+_Description :_ Renouvelle le token JWT lorsque le premier a expire
+
+_Mandatory headers :_
+  Content-Type: application/json,
+  Authorization: Bearer <TOKEN>
+
+_Body :_ JSON
+  {
+    "password": "string (min 12 caractères, Majuscule, minuscule, caractere special, nombre **Mandatory field**)"
+  }
+
+_Possibles responses:_
+
+✅ 200 Ok
+  {
+    success: true,
+    tokens: TokenKey (**voir dans types/tokenManager.types.ts**, token jwt valable 5 minutes),
+    message: "Password verification successful"
+  }
+
+❌ 401 Unauthorized :
+  {
+    "success": false,
+    "message": "Invalid or missing token"
+  }
+
+❌ 400 Bad Request :
+  {
+    "success": false,
+    "message": "invalid password format"
+  }
+
+❌ 404 User Not Found :
+  {
+    "success": false,
+    "message": "User Not Found"
+  }
+
+❌ 401 Conflict :
+  {
+    "success": false,
+    "message": "Invalid password"
   }

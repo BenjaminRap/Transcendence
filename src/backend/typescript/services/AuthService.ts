@@ -1,8 +1,10 @@
 import { PrismaClient, User } from '@prisma/client';
 import { PasswordHasher } from '../utils/PasswordHasher.js';
-import { TokenManager, TokenPair } from '../utils/TokenManager.js';
+import { TokenManager } from '../utils/TokenManager.js';
+import { TokenPair, TokenKey } from '../types/tokenManager.types.js';
 import { AuthException, AuthError } from '../error_handlers/Auth.error.js';
 import { RegisterData, sanitizeUser, SanitizedUser } from '../types/auth.types.js';
+import { fr } from 'zod/v4/locales';
 
 export class AuthService {
     constructor(
@@ -35,7 +37,7 @@ export class AuthService {
             },
         });
 
-        const tokens = await this.tokenManager.generate(String(user.id), user.email);
+        const tokens = await this.tokenManager.generatePair(String(user.id), user.email);
 
         return {
             user: sanitizeUser(user),
@@ -58,7 +60,7 @@ export class AuthService {
         }
 
         // generate JWT tokens for the session
-        const tokens = await this.tokenManager.generate(String(user.id), user.email);
+        const tokens = await this.tokenManager.generatePair(String(user.id), user.email);
 
         return {
             user: sanitizeUser(user),
@@ -72,7 +74,21 @@ export class AuthService {
         if ( !await this.findById(Number(userId)) ) {
             throw new AuthException(AuthError.USR_NOT_FOUND, AuthError.USR_NOT_FOUND);
         }
-        return await this.tokenManager.generate(userId, email);
+        return await this.tokenManager.generatePair(userId, email);
+    }
+
+    // --------------------------------------------------------------------------------- //
+    async verifyPassword(userId: number, password: string): Promise<TokenKey> {
+        const user = await this.findById(userId);
+        if (!user) {
+            throw new AuthException(AuthError.USR_NOT_FOUND, AuthError.USR_NOT_FOUND);
+        }
+        
+        if ( !await this.passwordHasher.verify(password, user.password) ) {
+            throw new AuthException(AuthError.INVALID_CREDENTIALS, 'Invalid password');
+        }
+        
+        return await this.tokenManager.generateUnique(String(user.id), user.email, "5m");
     }
 
     // ==================================== PRIVATE ==================================== //

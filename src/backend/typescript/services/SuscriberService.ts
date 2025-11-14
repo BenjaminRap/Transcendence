@@ -21,6 +21,23 @@ export class SuscriberService {
     }
 
     // ----------------------------------------------------------------------------- //
+    async updatePassword(id: number, newPassword: string): Promise<void> {
+        const user = await this.getById(Number(id));
+        if (!user) {
+            throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
+        }
+
+        const hashedPassword = await this.passwordHasher.hash(newPassword);
+
+        await this.prisma.user.update({
+            where: { id: Number(id) },
+            data: {
+                password: hashedPassword
+            }
+        });
+    }
+
+    // ----------------------------------------------------------------------------- //
     async updateProfile(id: number, data: UpdateData): Promise<SanitizedUser> {
         const user = await this.getById(Number(id));
         if (!user) {
@@ -40,17 +57,11 @@ export class SuscriberService {
             }
         }
 
-        // hash password if changed
-        if (data.password) {
-            data.password = await this.passwordHasher.hash(data.password);
-        }
-
         // update user in DB
         const updatedUser = await this.prisma.user.update({
             where: { id: Number(id) },
             data: {
                 username: data.username ?? user.username,
-                password: data.password ?? user.password,
                 avatar: data.avatar ?? user.avatar
             },
             select: {
@@ -74,9 +85,6 @@ export class SuscriberService {
     private async hasChanged(user: User, data: UpdateData) {
         if (data.username && user.username === data.username)
             throw new SuscriberException(SuscriberError.USRNAME_ERROR, SuscriberError.USRNAME_ERROR);
-
-        if (data.password && await this.passwordHasher.verify(data.password, user.password))
-            throw new SuscriberException(SuscriberError.PASSWD_ERROR, SuscriberError.PASSWD_ERROR);
 
         if (data.avatar && user.avatar === data.avatar)
             throw new SuscriberException(SuscriberError.AVATAR_ERROR, SuscriberError.AVATAR_ERROR);

@@ -1,6 +1,11 @@
 export interface UpdateData
 {
     username?:  string,
-    password?:  string,
     avatar?:    string,
+}
+
+export interface UpdatePassword
+{
+    tokenKey:       string,
+    newPassword:   string,
 }

@@ -1,9 +1,5 @@
 import jwt from 'jsonwebtoken';
-
-export interface TokenPair {
-    accessToken: string;
-    refreshToken: string;
-}
+import { TokenPair, TokenKey } from '../types/tokenManager.types.js';
 
 export class TokenManager {
     constructor(
@@ -15,7 +11,7 @@ export class TokenManager {
     private refreshExpiry: string = '2h';
     
     // --------------------------------------------------------------------------------- //
-    async generate(userId: string, email: string): Promise<TokenPair> {
+    async generatePair(userId: string, email: string): Promise<TokenPair> {
         const payload = { userId, email };
 
         const accessToken = jwt.sign(payload, this.accessSecret, {
@@ -27,6 +23,17 @@ export class TokenManager {
         });
 
         return { accessToken, refreshToken };
+    }
+
+    // --------------------------------------------------------------------------------- //
+    async generateUnique(userId: string, email: string, timeValidity: string): Promise<TokenKey> {
+        const payload = { userId, email };
+
+        const uniqueToken = jwt.sign(payload, this.accessSecret, {
+            expiresIn: timeValidity,
+        });
+
+        return uniqueToken;
     }
 
     // --------------------------------------------------------------------------------- //

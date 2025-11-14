@@ -21,6 +21,11 @@ export interface SanitizedUser
     avatar:     string
 }
 
+export interface VerifData
+{
+    password:   string
+}
+
 export function sanitizeUser(user: User): SanitizedUser {
     return {
         id: user.id,
