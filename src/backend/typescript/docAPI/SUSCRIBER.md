@@ -41,7 +41,7 @@ _Possibles responses:_
 
 -------------------------------------------------------------------------------------------------------------------------
 
-**PUT perso/updatepassword**
+**PUT suscriber/updatepassword**
 
 _Description :_ permet de changer de mot de passe
 

@@ -1,4 +1,11 @@
-**GET users/:id**
+
+
+**PAS TOUT A JOUR (SAUF LES ROUTES)**
+
+
+
+
+**GET users/search/id/:id**
 
 _Description :_ renvoie le profile de l'utilisateur avec l'id passe en parametre
 
@@ -42,7 +49,7 @@ _Possibles responses:_
 
 -------------------------------------------------------------------------------------------------------------------------
 
-**GET users/:username**
+**GET users//search/username/:username**
 
 _Description :_ retourne un tableau avec 10 utilisateurs maximum venant de la DB dont le nom a une occurence avec le paramere username
 
