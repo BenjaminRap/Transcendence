@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { AuthService } from '../services/AuthService.js';
-import { RegisterData, LoginData } from '../types/auth.types.js';
+import { RegisterData, LoginData, VerifData } from '../types/auth.types.js';
 import { AuthException, AuthError } from '../error_handlers/Auth.error.js';
 import { AuthSchema } from '../schemas/auth.schema.js';
 import { CommonSchema } from '../schemas/common.schema.js';
@@ -19,12 +19,7 @@ export class AuthController {
                     .password
                     .email
             */
-           const requiredData = {
-                username: request.body.username,
-                password: request.body.password,
-                email: request.body.email,
-            };
-            const validation = AuthSchema.register.safeParse(requiredData);
+            const validation = AuthSchema.register.safeParse(request.body);
             if (!validation.success)
                 return reply.status(400).send({ success: false, message: validation.error.message });
 
@@ -106,6 +101,42 @@ export class AuthController {
         } catch (error) {
             if (error instanceof AuthException) {
                 return reply.status(404).send({ success: false, message: "User not found", });
+            }
+
+            request.log.error(error);
+            return reply.status(500).send({
+                success: false,
+                message: 'Internal server error',
+            });
+        }
+    }
+
+    // --------------------------------------------------------------------------------- //
+    // auth/verifypassword
+    async verifyPassword(request: FastifyRequest<{ Body: VerifData }>, reply: FastifyReply) {
+        try {
+            const user = (request as any).user;
+
+            const validation = AuthSchema.verifyPassword.safeParse(request.body);
+            if (!validation.success)
+                return reply.status(400).send({ success: false, message: validation.error.message });
+
+            // verify password
+            const tokenKey = await this.authService.verifyPassword(user.userId, validation.data.password);
+
+            return reply.status(200).send({
+                success: true,
+                message: 'Password verification successful',
+                tokenKey,
+            });
+        } catch (error) {
+            if (error instanceof AuthException) {
+                switch (error.code) {
+                    case AuthError.USR_NOT_FOUND:
+                        return reply.status(404).send({ success: false, message: error.message });
+                    default:
+                        return reply.status(401).send({ success: false, message: error.message });
+                }
             }
 
             request.log.error(error);
