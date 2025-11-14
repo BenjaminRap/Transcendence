@@ -13,7 +13,8 @@ import { FriendController } from '../controllers/FriendController.js';
 import { PasswordHasher } from '../utils/PasswordHasher.js';
 import { TokenManager } from '../utils/TokenManager.js';
 
-import { AuthMiddleware } from '../middleware/authMiddleware.js';
+import { AuthMiddleware } from '../middleware/AuthMiddleware.js';
+import { PreparsingMiddleware} from '../middleware/PreparsingMiddleware.js';
 
 export class Container {
     private constructor() {}
@@ -71,7 +72,7 @@ export class Container {
 
         this.registerService('FriendService', () => new FriendService(
             prisma
-        ))
+        ));
 
         // Controllers
         this.registerService('AuthController', () => new AuthController(
@@ -88,12 +89,14 @@ export class Container {
 
         this.registerService('FriendController', () => new FriendController(
             this.getService('FriendService')
-        ))
+        ));
 
         // Middleware
         this.registerService('AuthMiddleware', () => new AuthMiddleware(
             this.getService('TokenManager')
         ));
+
+        this.registerService('PreparsingMiddleware', () => new PreparsingMiddleware());
     }
 }
 

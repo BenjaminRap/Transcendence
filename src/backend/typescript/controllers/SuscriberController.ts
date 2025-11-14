@@ -38,16 +38,20 @@ export class SuscriberController {
     }
 
     // ----------------------------------------------------------------------------- //
+    // PUT /suscriber/updatepassword
     async updatePassword(request: FastifyRequest<{ Body: UpdatePassword }>, reply: FastifyReply) {
         try {
-            // the accessToken and tokenKey are already validated in the middleware
-            const userId = (request as any).user.userId;
-            const password = request.body.newPassword;
-
+            // the accessToken and tokenKey are already validated in the middleware            
             const validation = SuscriberSchema.updatePassword.safeParse(request.body);
             if (!validation.success) {
-                throw new SuscriberException(SuscriberError.BAD_FORMAT, validation.error.message);
+                throw new SuscriberException(
+                    SuscriberError.BAD_FORMAT,
+                    validation.error?.issues?.[0]?.message || 'Invalid input'
+                );
             }
+            
+            const userId = (request as any).user.userId;
+            const password = request.body.newPassword;
 
             // proceed to update profile
             await this.suscriberService.updatePassword(userId, password);
@@ -58,11 +62,11 @@ export class SuscriberController {
             if (error instanceof SuscriberException) {
                 switch (error.code) {
                     case SuscriberError.USER_NOT_FOUND:
-                        return reply.status(404).send({ success: false, message: error.code });
+                        return reply.status(404).send({ success: false, message: error.message });
                     default:
                         return reply.status(409).send({
                             success: false,
-                            message: error.code,
+                            message: error.message,
                             redirectTo: '/suscriber/updatepassword'
                         });
                 }
@@ -81,12 +85,11 @@ export class SuscriberController {
     async updateProfile(request: FastifyRequest<{ Body: UpdateData }>, reply: FastifyReply) {
         try {          
             const id = (request as any).user.userId;
-
             const validation = SuscriberSchema.update.safeParse(request.body);
             if (!validation.success) {
                 return reply.status(401).send({
                     success: false,
-                    message: 'invalid body content',
+                    message: validation.error?.issues?.[0]?.message || 'Invalid input',
                     redirectTo: '/suscriber/updateprofile'
                 });
             }
@@ -107,7 +110,7 @@ export class SuscriberController {
                     default:
                         return reply.status(409).send({
                             success: false,
-                            message: error.code,
+                            message: error.message,
                             redirectTo: '/suscriber/updateprofile'
                         });
                 }

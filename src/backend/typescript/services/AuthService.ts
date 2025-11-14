@@ -79,7 +79,7 @@ export class AuthService {
 
     // --------------------------------------------------------------------------------- //
     async verifyPassword(userId: number, password: string): Promise<TokenKey> {
-        const user = await this.findById(userId);
+        const user = await this.findById(Number(userId));
         if (!user) {
             throw new AuthException(AuthError.USR_NOT_FOUND, AuthError.USR_NOT_FOUND);
         }

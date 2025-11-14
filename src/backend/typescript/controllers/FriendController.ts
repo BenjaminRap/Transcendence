@@ -10,7 +10,7 @@ export class FriendController {
 
     // ----------------------------------------------------------------------------- //
     // /friend/request/:id
-    async createFriendRequest(request: FastifyRequest, reply: FastifyReply) {
+    async createFriendRequest(request: FastifyRequest<{ Params: {id: string} }>, reply: FastifyReply) {
         try {
             const userId = (request as any).user.userId;
             const friendId = CommonSchema.idParam.safeParse(request.params['id']);
@@ -45,7 +45,7 @@ export class FriendController {
 
     // ----------------------------------------------------------------------------- //
     // /friend/accept/:id
-    async acceptFriendRequest(request: FastifyRequest, reply: FastifyReply) {
+    async acceptFriendRequest(request: FastifyRequest<{ Params: {id: string} }>, reply: FastifyReply) {
         try {
             const userId = (request as any).user.userId;
             const friendId = CommonSchema.idParam.safeParse(request.params['id']);
@@ -80,7 +80,7 @@ export class FriendController {
 
     // ----------------------------------------------------------------------------- //
     // /friend/delete/:id
-    async deleteFriend(request: FastifyRequest, reply: FastifyReply) {
+    async deleteFriend(request: FastifyRequest<{ Params: {id: string} }>, reply: FastifyReply) {
         try {
             const userId = (request as any).user.userId;
             const friendId = CommonSchema.idParam.safeParse(request.params['id']);

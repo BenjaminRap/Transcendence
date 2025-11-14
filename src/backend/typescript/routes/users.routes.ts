@@ -1,6 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { UsersController } from '../controllers/UsersController.js';
-import { AuthMiddleware } from '../middleware/authMiddleware.js';
+import { AuthMiddleware } from '../middleware/AuthMiddleware.js';
 
 export function usersRoutes(
     fastify: FastifyInstance,

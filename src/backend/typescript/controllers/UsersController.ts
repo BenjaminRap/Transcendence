@@ -11,7 +11,7 @@ export class UsersController {
     
     // ----------------------------------------------------------------------------- //
     // /users/search/id/:id
-    async getById(request: FastifyRequest, reply: FastifyReply) {
+    async getById(request: FastifyRequest<{ Params: {id: string} }>, reply: FastifyReply) {
         try {
             // params validation
             const idData = CommonSchema.idParam.safeParse(request.params['id']);
@@ -46,7 +46,7 @@ export class UsersController {
 
     // ----------------------------------------------------------------------------- //
     // /users/search/username/:username
-    async getByName(request: FastifyRequest, reply: FastifyReply) {
+    async getByName(request: FastifyRequest<{ Params: {username: string} }>, reply: FastifyReply) {
         try {
             // params validation
             const searchedUser = UsersSchema.fetchedName.safeParse(request.params['username']);
