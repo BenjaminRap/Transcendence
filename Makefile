@@ -1,6 +1,6 @@
 .IGNORE: clean, fclean
 .SILENT: clean, fclean
-.PHONY: restart-nginx, restart-fastify, compile, build, compile-watch, up, all, stop, clean, fclean, re, fre
+.PHONY: compile, build, compile-watch, up, all, stop, clean, fclean, re, fre
 
 PROFILE = prod
 DOCKER_DIR	=	./dockerFiles/
@@ -8,6 +8,7 @@ DOCKER_FILE	=	docker-compose.yaml
 DOCKER_EXEC	=	docker compose -f $(DOCKER_DIR)$(DOCKER_FILE) --profile $(PROFILE)
 
 compile:
+	npx prisma generate --schema=./dockerFiles/fastify/prisma/schema.prisma
 	npx tsc -p ./src/backend/tsconfig.backend.json
 	npx tsc --noEmit -p ./src/frontend/tsconfig.frontend.json
 	npx @tailwindcss/cli -i ./input.css -o ./src/frontend/dev/public/css/tailwind.css
@@ -52,14 +53,15 @@ stop:
 	$(DOCKER_EXEC) stop
 
 clean: stop
-	-docker stop $(docker ps -qa) 2>/dev/null
+	-docker stop $(docker ps -qa)
 	-docker rm $(docker ps -qa) 2>/dev/null
 	-docker rmi -f $(docker images -qa) 2>/dev/null
-	-docker volume rm $(docker volume ls -q) 2>/dev/null
+	-docker volume rm $(docker volume ls -q)
 	-docker network rm $(docker network ls -q) 2>/dev/null
 
 fclean: clean
-	-docker system prune -af
+	$(DOCKER_EXEC) down -v
+	-docker system prune -af --volumes
 	-rm -rf ./dockerFiles/nginx/website/
 	-rm -rf ./src/backend/javascript/*
 	-rm -r ./dockerFiles/secrets/ssl/*

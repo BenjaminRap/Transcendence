@@ -13,5 +13,13 @@ RUN [ "npm", "cache", "clean", "--force" ]
 
 RUN [ "mkdir", "/app/backend" ]
 
-ENTRYPOINT [ "npm", "run", "start" ]
+COPY ./prisma ./prisma
+
+RUN ["npx", "prisma", "generate"]
+
+COPY    ./entrypoint.sh /entrypoint.sh
+RUN     chmod +x /entrypoint.sh
+
 EXPOSE 8181
+
+ENTRYPOINT ["/entrypoint.sh"]
