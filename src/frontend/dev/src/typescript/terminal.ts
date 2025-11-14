@@ -47,12 +47,13 @@ let commandAvailable =
 	new Command('kill', 'Terminate a process', 'kill [process_name]', killCommand),
 	new Command('clear', 'Clear the terminal screen', 'clear', clearCommand),
 	new Command('modal', 'Create a modal dialog', 'modal [text]', modalCommand),
-	new Command('test', 'Test command for input prompt', 'test [text]', teste),
+	new Command('register', 'Register a new user', 'register [text]', registerInput),
 	new Command('cd', 'Change the current directory', 'cd [directory]', cdCommand),
 	new Command('ls', 'List directory contents', 'ls', lsCommand),
 	new Command('pwd', 'Print working directory', 'pwd', pwdCommand),
 	new Command('cat', 'Concatenate and display file content', 'cat [file]', catCommand),
 	new Command('whoami', 'Display the current username', 'whoami', whoamiCommand),
+	new Command('login', 'Login to your account', 'login [email] [password]', loginInput),
 ];
 
 let commandHistory: string[] = [];
@@ -823,14 +824,77 @@ export namespace Terminal {
 	}
 }
 
-function testeeee(args: string[]): string {
-	console.log("Test function called with args:", args);
+function register(args: string[]): string {
+	fetch('http://localhost:8181/auth/register', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({
+			username: args[1],
+			password: args[2],
+			email: args[0]
+		})
+	})
+	.then(response => response.json())
+	.then(data => {
+		if (data.success) {
+			TerminalUtils.displayOnTerminal("Registration successful!", false);
+			document.cookie = `accessToken=${data.tokens.accessToken}; path=/;`;
+			document.cookie = `refreshToken=${data.tokens.refreshToken}; path=/auth/refresh;`;
+			loadUser();
+		} else {
+			let message = data.message || "Unknown error";
+			TerminalUtils.printErrorOnTerminal("Registration failed: " + message);
+		}
+	})
+	.catch(error => {
+		console.error("Error:", error);
+	});
+
 	return 'Test command executed with args: ' + args.join(' ');
 }
 
-function teste(args: string[]): string {
+function login(args: string[]): string {
+	fetch('http://localhost:8181/auth/login', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({
+			identifier: args[0],
+			password: args[1],
+		})
+	})
+	.then(response => response.json())
+	.then(data => {
+		if (data.success) {
+			document.cookie = `accessToken=${data.tokens.accessToken}; path=/;`;
+			document.cookie = `refreshToken=${data.tokens.refreshToken}; path=/auth/refresh;`;
+			loadUser();
+			TerminalUtils.displayOnTerminal("Login successful!", false);
+		} else {
+			let message = data.message || "Unknown error";
+			TerminalUtils.printErrorOnTerminal("Login failed: " + message);
+		}
+	})
+	.catch(error => {
+		console.error("Error:", error);
+	});
+
+	return 'Test command executed with args: ' + args.join(' ');
+
+}
+
+function loginInput(args: string[]): string {
+	let argsTest = ["Mail", "Password"];
+	AskInput(argsTest, [2], login);
+	return '';
+}
+
+function registerInput(args: string[]): string {
 	let argsTest = ["Mail", "Username", "Password"];
-	AskInput(argsTest, [3], testeeee);
+	AskInput(argsTest, [3], register);
 	return '';
 }
 
@@ -843,4 +907,94 @@ function AskInput(args: string[], hideInput: number[], fun: Function): string
 	InputResult = [];
 	InputFunction = fun;
 	return '';
+}
+
+
+/*
+
+**GET perso/me**
+
+_Description :_ renvoie le profile de l'utilisateur courant
+
+_Mandatory headers :_
+  Content-Type: application/json,
+  Authorization: Bearer <TOKEN>
+
+_Possibles responses:_
+
+✅ 200 OK
+  { ( _voir **dataStructure/usersStruct.js -> PersoProfileResponse** pour le schema de reponse_)
+    success: true,
+    message: 'Profile retrieved successfully',
+    user: PersoProfile
+  }
+
+
+
+*/
+
+function getCookie(name: string): string | undefined {
+	const matches = document.cookie.match(
+	new RegExp(
+		"(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+	)
+	);
+	return matches ? decodeURIComponent(matches[1]) : undefined;
+}
+
+function tryRefreshToken() : boolean
+{
+	let token = getCookie('refreshToken') || '';
+		fetch('http://localhost:8181/auth/refresh/', {
+		method: 'GET',
+		headers: {
+			'Content-Type': 'application/json',
+			'Authorization': 'Bearer ' + token
+		},
+	})
+	.then(response => response.json())
+	.then(data => {
+		if (data.success) {
+			document.cookie = `accessToken=${data.tokens.accessToken}; path=/;`;
+			document.cookie = `refreshToken=${data.tokens.refreshToken}; path=/auth/refresh;`;
+			return true;
+		} else {
+			return false;
+		}
+	})
+	.catch(error => {
+		console.error("Error:", error);
+	});
+	return false;
+}
+
+
+function loadUser()
+{
+	let token = getCookie('accessToken') || '';
+	fetch('http://localhost:8181/perso/me/', {
+	method: 'GET',
+	headers: {
+		'Content-Type': 'application/json',
+		'Authorization': 'Bearer ' + token
+	},
+	})
+	.then(response => response.json())
+	.then(data => {
+		if (data.success) {
+			console.log("User data:", data.user);
+		}
+		else if (data.message === 'Token expired') {
+			tryRefreshToken();
+			if (tryRefreshToken() === false)
+			{
+				TerminalUtils.printErrorOnTerminal("Please log in.");
+				return;
+			}
+			loadUser();
+		}
+	})
+	.catch(error => {
+		console.error("Error:", error);
+	});
 }
