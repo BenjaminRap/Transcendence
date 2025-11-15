@@ -33,7 +33,7 @@ export class TokenManager {
             expiresIn: timeValidity,
         });
 
-        return uniqueToken;
+        return String(uniqueToken);
     }
 
     // --------------------------------------------------------------------------------- //

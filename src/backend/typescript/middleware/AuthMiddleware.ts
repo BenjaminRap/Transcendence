@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { TokenManager } from '../utils/TokenManager.js';
-import { UpdatePassword } from '../types/suscriber.types.js';
+import { DeleteAccount, UpdatePassword } from '../types/suscriber.types.js';
 
 export class AuthMiddleware {
     constructor(private tokenManager: TokenManager) {}
@@ -8,7 +8,7 @@ export class AuthMiddleware {
     // --------------------------------------------------------------------------------- //
     authenticate = async (request: FastifyRequest, reply: FastifyReply) => {
         try {
-            const authHeader = request.headers.authorization;
+            const authHeader = request.headers?.authorization;
             if (!authHeader?.startsWith('Bearer ')) {
                 return reply.status(401).send({
                     success: false,
@@ -32,7 +32,7 @@ export class AuthMiddleware {
     // --------------------------------------------------------------------------------- //
     refreshAuthenticate = async (request: FastifyRequest, reply: FastifyReply) => {
         try {
-            const authHeader = request.headers.authorization;
+            const authHeader = request.headers?.authorization;
             if (!authHeader?.startsWith('Bearer ')) {
                 return reply.status(401).send({
                     success: false,
@@ -54,24 +54,24 @@ export class AuthMiddleware {
     };
 
     // --------------------------------------------------------------------------------- //
-    keyAuthenticate = async (request: FastifyRequest<{ Body: UpdatePassword }>, reply: FastifyReply) => {
+    keyAuthenticate = async (request: FastifyRequest<{ Body: UpdatePassword | DeleteAccount }>, reply: FastifyReply) => {
         try {
-            const token = request.body.tokenKey;
+            const token = request.body?.tokenKey;
             const decoded = await this.tokenManager.verify(token, false);
 
             if (decoded.userId !== (request as any).user.userId) {
-                return reply.status(401).send({
+                return reply.status(403).send({
                     success: false,
-                    message: 'Token user mismatch',
+                    message: 'tokenKey user mismatch',
                 });
             }
 
             // Bind user with the request
             (request as any).verifiedUser = decoded;
         } catch (error) {
-            return reply.status(401).send({
+            return reply.status(403).send({
                 success: false,
-                message: 'Invalid or expired token',
+                message: 'Invalid or expired tokenKey',
             });
         }
     };

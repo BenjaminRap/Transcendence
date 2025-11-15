@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { SuscriberService } from "../services/SuscriberService.js";
-import { UpdateData, UpdatePassword } from "../types/suscriber.types.js";
+import { UpdateData, UpdatePassword, DeleteAccount } from "../types/suscriber.types.js";
 import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
 import { SuscriberSchema } from "../schemas/suscriber.schema.js";
 
@@ -41,23 +41,26 @@ export class SuscriberController {
     // PUT /suscriber/updatepassword
     async updatePassword(request: FastifyRequest<{ Body: UpdatePassword }>, reply: FastifyReply) {
         try {
-            // the accessToken and tokenKey are already validated in the middleware            
+            // the accessToken and tokenKey are already validated in the middleware
+
+            // check if the newPassword and the confirmNewPassword are the same and the confirmChoice is true in the body
             const validation = SuscriberSchema.updatePassword.safeParse(request.body);
             if (!validation.success) {
-                throw new SuscriberException(
-                    SuscriberError.BAD_FORMAT,
-                    validation.error?.issues?.[0]?.message || 'Invalid input'
-                );
+                return reply.status(400).send({
+                    success: false,
+                    message: validation.error?.issues?.[0]?.message || 'Invalid input',
+                    redirectTo: '/suscriber/updatepassword'
+                });
             }
             
             const userId = (request as any).user.userId;
             const password = request.body.newPassword;
 
-            // proceed to update profile
+            // check if user exists, if password is different then update or throw exception
             await this.suscriberService.updatePassword(userId, password);
 
             return reply.status(204).send();
-            
+
         } catch (error) {
             if (error instanceof SuscriberException) {
                 switch (error.code) {
@@ -87,7 +90,7 @@ export class SuscriberController {
             const id = (request as any).user.userId;
             const validation = SuscriberSchema.update.safeParse(request.body);
             if (!validation.success) {
-                return reply.status(401).send({
+                return reply.status(400).send({
                     success: false,
                     message: validation.error?.issues?.[0]?.message || 'Invalid input',
                     redirectTo: '/suscriber/updateprofile'
@@ -101,7 +104,8 @@ export class SuscriberController {
                 success: true,
                 message: 'Profile successfully updated',
                 redirectTo: '/suscriber/profile',
-                user});    
+                user
+            }); 
         } catch (error) {
             if (error instanceof SuscriberException) {
                 switch (error.code) {
@@ -121,6 +125,40 @@ export class SuscriberController {
                 success: false,
                 message: 'Internal server error'
             });            
+        }
+    }
+
+    // ----------------------------------------------------------------------------- //
+    // DELETE /suscriber/deleteaccount
+    async deleteAccount(request: FastifyRequest<{ Body: DeleteAccount }>, reply: FastifyReply) {
+        try {
+            // the accessToken and tokenKey are already validated in the middleware
+            const id = (request as any).user.userId;
+            
+            if (!request.body.confirmChoice) {
+                return reply.status(400).send({
+                    success: false,
+                    message: 'Account deletion not confirmed',
+                    redirectTo: '/suscriber/profile'
+                });
+            }
+
+            // delete user or throw exception USER NOT FOUND
+            await this.suscriberService.deleteAccount(Number(id));
+
+            return reply.status(204).send();
+
+        } catch (error) {
+            if (error instanceof SuscriberException) {
+                if (error.code === SuscriberError.USER_NOT_FOUND)
+                    return reply.status(404).send({ success: false, message: error.code });
+            }
+
+            request.log.error(error);
+            return reply.status(500).send({
+                success: false,
+                message: 'Internal server error'
+            });
         }
     }
 }

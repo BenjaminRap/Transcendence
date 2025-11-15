@@ -56,10 +56,7 @@ fastify.after(async (err) => {
         suscriberRoute(
             instance,
             Container.getInstance().getService('SuscriberController'),
-            {
-                authenticate: Container.getInstance().getService('AuthMiddleware'),
-                parseBody: Container.getInstance().getService('PreparsingMiddleware')
-            }
+            Container.getInstance().getService('AuthMiddleware'),
         );
         done();
     }, { prefix: '/suscriber' });

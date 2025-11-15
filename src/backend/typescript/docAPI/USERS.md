@@ -16,30 +16,34 @@ _Mandatory headers :_
 _Possibles responses:_
 
 ✅ 200 OK
-  { ( _voir **dataStructure/usersStruct.js -> PublicProfileResponse** pour le schema de reponse_)
-    success: true,
-    message: 'Profile retrieved successfully',
-    user: PersoProfile
-  }
-
-❌ 400 Bad Request :
   {
-    "success": false,
-    "message": "Missing authentication token"
+    success:  true,
+    message:  'Profile retrieved successfully',
+    user: {
+      id,       -> string
+      username, -> string
+      avatar    -> string
+    }
   }
 
 ❌ 401 Unauthorized :
   {
     "success": false,
-    "message": "Invalid token"
+    "message": "Invalid or missing token JWT"
   }
 
-❌ 404 Unauthorized :
+❌ 400 Bad Request :
   {
     "success": false,
-    "message": "User not found",
-    "user": PublicProfile
+    "message": "invalid input in the body"
   }
+
+
+❌ 404 Not Found :
+  {
+    "success": false,
+    "message": "User not found or suscriber not found",
+x  }
 
 ❌ 500 Internal Server Error :
   {
@@ -49,7 +53,7 @@ _Possibles responses:_
 
 -------------------------------------------------------------------------------------------------------------------------
 
-**GET users//search/username/:username**
+**GET users/search/username/:username**
 
 _Description :_ retourne un tableau avec 10 utilisateurs maximum venant de la DB dont le nom a une occurence avec le paramere username
 
@@ -57,37 +61,45 @@ _Mandatory headers :_
   Content-Type: application/json,
   Authorization: Bearer <TOKEN>
 
+_Mandatory url param :_
+  username: 
+
 _Possibles responses:_
 
 ✅ 200 Ok
-  { ( _voir **dataStructure/usersStruct.js -> searchedUserResponse** pour le schema de reponse_)
+  {
     success: true,
     message: 'user update successful',
-    usersFound: PublicProfile[]
-  }
-
-❌ 400 Bad Request :
-  {
-    "success": false,
-    "message": "Missing authentication token"
+    usersFound: [
+      {
+        id,       -> string
+        username, -> string
+        avatar    -> string        
+      },
+      {
+        id,       -> string
+        username, -> string
+        avatar    -> string        
+      }, ...
+    ] **tableau de users**
   }
 
 ❌ 401 Unauthorized :
   {
     "success": false,
-    "message": "Invalid token"
-  }
-
-❌ 404 Unauthorized :
-  {
-    "success": false,
-    "message": "no profile found"
+    "message": "Invalid or missing token JWT"
   }
 
 ❌ 400 Bad Request :
   {
     "success": false,
-    "message": "message expliquant pourquoi le parametre ne correspond pas au bon criteres de recherche"
+    "message": "invalid username format in the body"
+  }
+
+❌ 404 Not Found :
+  {
+    "success": false,
+    "message": "no profile found"
   }
 
 ❌ 500 Internal Server Error :

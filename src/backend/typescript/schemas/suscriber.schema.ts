@@ -9,12 +9,18 @@ export const SuscriberSchema = {
         (data) => data.username !== undefined || data.avatar !== undefined,
         {
             message: "At least one of 'username' or 'avatar' must be provided",
-            path: ["username"] // ou "avatar", peu importe => juste pour pointer l’erreur
+            path: ["username or avatar or both"]
         }
     ),
 
     updatePassword: z.object({
         tokenKey: string().min(1),
         newPassword: CommonSchema.password,
+        confirmNewPassword: string().min(1, "You must confirm your new password"),
+        confirmChoice: z.boolean().refine((val) => val === true, {
+            message: "You must confirm this action"
+        })
+    }).refine((data) => data.newPassword === data.confirmNewPassword, {
+        message: "New password and confirmation do not match",
     }).strict(),
 }

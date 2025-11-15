@@ -27,6 +27,10 @@ export class SuscriberService {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
         }
 
+        if (user.password === newPassword) {
+            throw new SuscriberException(SuscriberError.PASSWD_ERROR, SuscriberError.PASSWD_ERROR);
+        }
+
         const hashedPassword = await this.passwordHasher.hash(newPassword);
 
         await this.prisma.user.update({
@@ -64,20 +68,27 @@ export class SuscriberService {
                 username: data.username ?? user.username,
                 avatar: data.avatar ?? user.avatar
             },
-            select: {
-                id: true,
-                username: true,
-                avatar: true
-            }
         });
 
-        return updatedUser;
+        return sanitizeUser(updatedUser);
+    }
+
+    // ----------------------------------------------------------------------------- //
+    async deleteAccount(id: number): Promise<void> {
+        const user = await this.getById(Number(id));
+        if (!user) {
+            throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
+        }
+
+        await this.prisma.user.delete({
+            where: { id: Number(id) }
+        });
     }
 
     // ================================== PRIVATE ================================== //
 
     // ----------------------------------------------------------------------------- //
-    private async getById(id: number) {
+    private async getById(id: number): Promise<User | null> {
         return await this.prisma.user.findFirst({ where: { id } });
     }
 

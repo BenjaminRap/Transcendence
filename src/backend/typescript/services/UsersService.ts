@@ -8,7 +8,11 @@ export class UsersService {
     ) {}
 
     // ----------------------------------------------------------------------------- //
-    async getById(id: number): Promise<PublicProfile> {
+    async getById(id: number, userId: number): Promise<PublicProfile> {
+        if ( !await this.checkIfUserExists(userId) ){
+            throw new UsersException(UsersError.USER_NOT_FOUND, 'No suscriber found');
+        }
+
         const user = await this.prisma.user.findFirst({
             where: { id },
             select: {
@@ -18,13 +22,17 @@ export class UsersService {
             }
         });
         if (!user) {
-            throw new UsersException(UsersError.USER_NOT_FOUND, UsersError.USER_NOT_FOUND);
+            throw new UsersException(UsersError.USER_NOT_FOUND, 'User not found');
         }
-        return user;
+        return user as PublicProfile;
     }
 
     // ----------------------------------------------------------------------------- //
-    async getByName(username: string): Promise<PublicProfile[]> {
+    async getByName(username: string, userId: number): Promise<PublicProfile[]> {
+        if ( !await this.checkIfUserExists(userId) ){
+            throw new UsersException(UsersError.USER_NOT_FOUND, 'No suscriber found');
+        }
+
         const users = await this.prisma.user.findMany({
             where: {
                 username: { contains: username }
@@ -41,5 +49,19 @@ export class UsersService {
             throw new UsersException(UsersError.USER_NOT_FOUND, 'No one was found');
         }
         return users;
+    }
+
+    // ==================================== PRIVATE ==================================== //
+
+    // --------------------------------------------------------------------------------- //
+    private async checkIfUserExists(id: number): Promise<boolean> {
+        const user = await this.prisma.user.findUnique({
+            where: { id },
+            select: { id: true }
+        });
+        if (!user) {
+            return false;
+        }
+        return true;
     }
 }
