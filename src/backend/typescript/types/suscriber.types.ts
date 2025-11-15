@@ -19,7 +19,7 @@ export interface DeleteAccount
     confirmChoice:  boolean,
 }
 
-export interface GameStats
+export interface SuscriberStats
 {
     gamesPlayed: number,
     gamesWon:    number,

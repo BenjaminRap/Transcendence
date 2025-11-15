@@ -10,7 +10,9 @@ export const AuthSchema = {
     }).strict(),
 
     login: z.object({
-        identifier: z.string().min(1, 'Email or username is required'),
+        identifier: z.string()
+                    .trim()
+                    .min(1, 'Email or username is required'),
         password: CommonSchema.password
     }).strict(),
 

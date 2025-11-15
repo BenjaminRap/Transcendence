@@ -1,5 +1,5 @@
 import { PrismaClient, User } from "@prisma/client";
-import { UpdateData, GameStats } from "../types/suscriber.types.js";
+import { UpdateData, SuscriberStats } from "../types/suscriber.types.js";
 import { PasswordHasher } from "../utils/PasswordHasher.js";
 import { sanitizeUser, SanitizedUser } from '../types/auth.types.js'
 import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
@@ -86,7 +86,7 @@ export class SuscriberService {
     }
 
     // ----------------------------------------------------------------------------- //
-    async getStats(id: number): Promise<GameStats>{
+    async getStats(id: number): Promise<SuscriberStats>{
         if (!this.isExist(id)) {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
         }
@@ -110,7 +110,7 @@ export class SuscriberService {
             gamesPlayed,
             gamesWon,
             winRate: parseFloat(winRate.toFixed(2))
-        } as GameStats;
+        } as SuscriberStats;
     }
 
     // ================================== PRIVATE ================================== //

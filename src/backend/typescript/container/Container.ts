@@ -4,11 +4,13 @@ import { AuthService } from '../services/AuthService.js';
 import { UsersService } from '../services/UsersService.js';
 import { SuscriberService } from '../services/SuscriberService.js';
 import { FriendService } from '../services/FriendService.js';
+import { MatchService } from '../services/MatchService.js';
 
 import { AuthController } from '../controllers/AuthController.js';
 import { UsersController } from '../controllers/UsersController.js';
 import { SuscriberController } from '../controllers/SuscriberController.js';
 import { FriendController } from '../controllers/FriendController.js';
+import { MatchController } from '../controllers/MatchController.js';
 
 import { PasswordHasher } from '../utils/PasswordHasher.js';
 import { TokenManager } from '../utils/TokenManager.js';
@@ -73,6 +75,10 @@ export class Container {
             prisma
         ));
 
+        this.registerService('MatchService', () => new MatchService(
+            prisma
+        ));
+
         // Controllers
         this.registerService('AuthController', () => new AuthController(
             this.getService('AuthService')
@@ -88,6 +94,10 @@ export class Container {
 
         this.registerService('FriendController', () => new FriendController(
             this.getService('FriendService')
+        ));
+
+        this.registerService('MatchController', () => new MatchController(
+            this.getService('MatchService')
         ));
 
         // Middleware
