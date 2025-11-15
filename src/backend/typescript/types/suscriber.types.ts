@@ -18,3 +18,10 @@ export interface DeleteAccount
     tokenKey:       string,
     confirmChoice:  boolean,
 }
+
+export interface GameStats
+{
+    gamesPlayed: number,
+    gamesWon:    number,
+    winRate:     number,
+}

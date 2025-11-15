@@ -29,4 +29,8 @@ export async function suscriberRoute(
             middleware.keyAuthenticate
         ]
     }, controller.deleteAccount.bind(controller));
+
+    fastify.get('getstats', {
+        preHandler: middleware.authenticate,
+    }, controller.getStats.bind(controller));
 }

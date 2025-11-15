@@ -1,5 +1,5 @@
 import { PrismaClient, User } from "@prisma/client";
-import { UpdateData } from "../types/suscriber.types.js";
+import { UpdateData, GameStats } from "../types/suscriber.types.js";
 import { PasswordHasher } from "../utils/PasswordHasher.js";
 import { sanitizeUser, SanitizedUser } from '../types/auth.types.js'
 import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
@@ -85,6 +85,34 @@ export class SuscriberService {
         });
     }
 
+    // ----------------------------------------------------------------------------- //
+    async getStats(id: number): Promise<GameStats>{
+        if (!this.isExist(id)) {
+            throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
+        }
+
+        const gamesPlayed = await this.prisma.match.count({
+            where: {
+                OR: [
+                    { winnerId: id },
+                    { loserId: id }
+                ]
+            }
+        });
+
+        const gamesWon = await this.prisma.match.count({
+            where: { winnerId: id }
+        });
+
+        const winRate = gamesPlayed > 0 ? (gamesWon / gamesPlayed) * 100 : 0;
+
+        return {
+            gamesPlayed,
+            gamesWon,
+            winRate: parseFloat(winRate.toFixed(2))
+        } as GameStats;
+    }
+
     // ================================== PRIVATE ================================== //
 
     // ----------------------------------------------------------------------------- //
@@ -92,6 +120,11 @@ export class SuscriberService {
         return await this.prisma.user.findFirst({ where: { id } });
     }
 
+    // ----------------------------------------------------------------------------- //
+    private async isExist(id: number): Promise<boolean> {
+        const user = await this.prisma.user.findFirst({ where: { id: Number(id) }, select: { id: true } });
+        return user ? true : false;
+    }
     // ----------------------------------------------------------------------------- //
     private async hasChanged(user: User, data: UpdateData) {
         if (data.username && user.username === data.username)

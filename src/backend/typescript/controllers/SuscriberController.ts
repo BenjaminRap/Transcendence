@@ -161,4 +161,40 @@ export class SuscriberController {
             });
         }
     }
+
+    // ----------------------------------------------------------------------------- //
+    // GET /suscriber/getstats
+    async getStats(request: FastifyRequest, reply: FastifyReply) {
+        try {
+            // the access token is validated in the middleware
+            const id = (request as any).user.userId;
+
+            // returns user stats or throw exception USER NOT FOUND
+            const stats =  await this.suscriberService.getStats(Number(id))
+
+            return reply.status(200).send({
+                success: true,
+                message: 'Stats successfully retrieved',
+                stats
+            });            
+        } catch (error) {
+            if (error instanceof SuscriberException) {
+                switch (error.code) {
+                    case SuscriberError.USER_NOT_FOUND:
+                        return reply.status(404).send({ success: false, message: error.code });
+                    default:
+                        return reply.status(400).send({
+                            success: false,
+                            message: error.message || 'Unknow error',
+                        });
+                }
+            }
+
+            request.log.error(error);
+            return reply.status(500).send({
+                success: false,
+                message: 'Internal server error'
+            });
+        }
+    }
 }

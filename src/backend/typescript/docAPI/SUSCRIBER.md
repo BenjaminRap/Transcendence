@@ -208,3 +208,50 @@ _Possibles responses:_
     "success": false,
     "message": "Internal Server Error"
   }
+
+-------------------------------------------------------------------------------------------------------------------------
+
+**GET suscriber/getstats**
+
+_Description :_ recupere les stats en match de l'utilisateur
+
+_Mandatory headers :_
+  Content-Type: application/json,
+  Authorization: Bearer <TOKEN>
+
+_Possibles responses:_
+
+✅ 200 Ok
+{
+  success:  true,
+  message:  "stats retrieved",
+  stats: {
+    gamesPlayed: number,
+    gamesWon:    number,
+    winRate:     number, 
+  }
+}
+
+❌ 401 Unauthorized :
+  {
+    "success": false,
+    "message": "Invalid or missing token in the header"
+  }
+
+❌ 400 Bad Request :
+  {
+    "success":    false,
+    "message":    "",
+  }
+
+❌ 404 Not Found :
+  {
+    "success": false,
+    "message": "User not found"
+  }
+
+❌ 500 Internal Server Error :
+  {
+    "success": false,
+    "message": "Internal Server Error"
+  }
