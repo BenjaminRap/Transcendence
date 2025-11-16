@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { TokenPair, TokenKey } from '../types/tokenManager.types.js';
+import { CommonSchema } from '../schemas/common.schema.js';
 
 export class TokenManager {
     constructor(
@@ -8,17 +9,17 @@ export class TokenManager {
     ) {}
 
     private accessExpiry: string = '15h';
-    private refreshExpiry: string = '2h';
+    private refreshExpiry: string = '7days';
     
     // --------------------------------------------------------------------------------- //
     async generatePair(userId: string, email: string): Promise<TokenPair> {
         const payload = { userId, email };
 
-        const accessToken = jwt.sign(payload, this.accessSecret, {
+        const accessToken = (jwt as any).sign(payload, this.accessSecret, {
             expiresIn: this.accessExpiry,
         });
 
-        const refreshToken = jwt.sign(payload, this.refreshSecret, {
+        const refreshToken = (jwt as any).sign(payload, this.refreshSecret, {
             expiresIn: this.refreshExpiry,
         });
 
@@ -29,7 +30,8 @@ export class TokenManager {
     async generateUnique(userId: string, email: string, timeValidity: string): Promise<TokenKey> {
         const payload = { userId, email };
 
-        const uniqueToken = jwt.sign(payload, this.accessSecret, {
+        const uniqueToken = (jwt as any).sign(payload, this.accessSecret, {
+            algorith: 'HS256',
             expiresIn: timeValidity,
         });
 
@@ -39,6 +41,10 @@ export class TokenManager {
     // --------------------------------------------------------------------------------- //
     verify(token: string, isRefresh: boolean = false): any {
         const secret = isRefresh ? this.refreshSecret : this.accessSecret;
+        
+        if (!CommonSchema.jwt.safeParse(token))
+            return false;
+
         return jwt.verify(token, secret);
     }
 }

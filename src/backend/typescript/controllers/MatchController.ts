@@ -1,5 +1,6 @@
 import { MatchService } from '../services/MatchService.js';
 import { CommonSchema } from '../schemas/common.schema.js';
+import { GameStats } from '../types/match.types.js';
 
 export class MatchController {
 	constructor(
@@ -7,22 +8,41 @@ export class MatchController {
 	) {}
 
 	// ----------------------------------------------------------------------------- //
-	/*
-		la fonction suivante getStats doit prendre en parametre un tableau de payerId
-		elle doit verifier tous les id en parametre pour voir qu'ils respectent ce schema zod:
-			id: z.number()
-				.int()
-				.min(1)
-				.max(2147483647),
-		puis appeler la fonction getStats de MatchService qui fera les callDb
+	async startMatch(ids: number[]): Promise<{ success: boolean, message?: string, matchId?: number }> {
+		// cree une nouvelle instance dans la db, je dois savoir combien de participants par matchs
+
 		
-		ma question est de savoir comment optimiser le mieux les appels db (avec prisma)
-		est il mieux de boucler sur tous les id et appeler MatchService sur chacun d'entre eux et stocker leurs resultats dans le controller ?
-		ou bien on peut envoyer tous les ids au service qui pourra faire un seul appel a la db avec prisma pour obtenir en une fois les stats de tous les players (si c'est possible)
-		ou tout autre solution viable
-	*/
-	async getStats(ids: number[]) {
-		
+		return { success: true };
+	}
+
+	// ----------------------------------------------------------------------------- //
+	async getStats(ids: number[]) : Promise<{ success: boolean, message?: string, stats?: GameStats[] }> {
+		try {
+			// verification pathern
+			const zodParsing = CommonSchema.Ids.safeParse(ids);
+			if (!zodParsing.success)
+				return { success: false, message: zodParsing.error?.issues?.[0]?.message || 'Error ids format' }
+	
+			// duplication detection
+			const parsedIds = [...new Set(zodParsing.data)] ;
+			if (parsedIds.length !== ids.length)
+				return { success: false, message: 'Duplicate ids detected' }
+			
+			// call db 
+			const stats = await this.matchService.getStats(parsedIds);
+			if (!stats.stats)
+				return { success: false, message: stats.message || 'Error retrieving statistics'}
+	
+			return {
+				success: true,
+				stats: stats.stats
+			};			
+		} catch (error) {
+			return {
+				success: false,
+				message: 'Error retrieving data from the database'
+			}
+		}
 	}
 
 }

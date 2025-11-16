@@ -6,7 +6,8 @@ export const AuthSchema = {
     register: z.object({
         username: CommonSchema.username,
         password: CommonSchema.password,
-        email: CommonSchema.email
+        email: CommonSchema.email,
+        avatar: CommonSchema.avatar.optional(),
     }).strict(),
 
     login: z.object({

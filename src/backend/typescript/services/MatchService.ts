@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { GameStats } from '../types/match.types.js';
+import { number } from 'zod';
 
 export class MatchService {
 	constructor(
@@ -7,31 +8,34 @@ export class MatchService {
 	) {}
 
 	// ----------------------------------------------------------------------------- //
-	async getStats(playerA: number, playerB: number): Promise<GameStats>{
-		if (!this.isExist(playerA) || !this.isExist(playerB)) {
-			throw new Error('User not found');
-		}
+	async getStats(playerIds: number[]): Promise<{stats: GameStats[] | null, message?: string }> {
+		if (!this.theyExist(playerIds))
+			return { stats: null, message: 'One or more players do not exist' }
 
-		const gamesPlayed = await this.prisma.match.count({
-			where: {
-				OR: [
-					{ winnerId: playerA },
-					{ loserId: playerA }
-				]
-			}
+		const wins = await this.prisma.match.groupBy({
+			by: ['winnerId'],
+			where: { winnerId: { in: playerIds } },
+			_count: true
 		});
 
-		const gamesWon = await this.prisma.match.count({
-			where: { winnerId: playerA }
+		const losses = await this.prisma.match.groupBy({
+			by: ['loserId'],
+			where: { loserId: { in: playerIds } },
+			_count: true
 		});
+		const stats = playerIds.map(id => {
+			const won = wins.find(w => w.winnerId === id)?._count ?? 0;
+			const lost = losses.find(l => l.loserId === id)?._count ?? 0;
 
-		const winRate = gamesPlayed > 0 ? (gamesWon / gamesPlayed) * 100 : 0;
-
-		return {
-			gamesPlayed,
-			gamesWon,
-			winRate: parseFloat(winRate.toFixed(2))
-		} as GameStats;
+			return {
+				playerId: id,
+				wins: won,
+				losses: lost,
+				total: won + lost,
+				winRate: won + lost === 0 ? 0 : won / (won + lost),
+			} as GameStats;
+		});
+		return { stats }
 	}
 
 	// ----------------------------------------------------------------------------- //
@@ -40,11 +44,21 @@ export class MatchService {
 	// ================================== PRIVATE ================================== //
 
 	// ----------------------------------------------------------------------------- //
-	private async isExist(id: number): Promise<boolean> {
-		const user = await this.prisma.user.findFirst({ where: { id: Number(id) }, select: { id: true } });
-		return user ? true : false;
+	private async theyExist(ids: number[]): Promise<boolean> {
+		const existingUsers = await this.prisma.user.findMany({
+			where: { id: { in: ids } },
+			select: { id: true }
+		});
+
+		const existingIds = existingUsers.map(u => u.id);
+
+		const missingIds = ids.filter(ids => !existingIds.includes(ids));
+
+		if (missingIds.length > 0)
+			false;
+		return true;
 	}
 
 	// ----------------------------------------------------------------------------- //
-
+	
 }

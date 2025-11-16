@@ -17,6 +17,8 @@ import { TokenManager } from '../utils/TokenManager.js';
 
 import { AuthMiddleware } from '../middleware/AuthMiddleware.js';
 
+import { GameInterface } from '../interfaces/GameInterface.js';
+
 export class Container {
     private constructor() {}
     private static instance: Container;
@@ -24,10 +26,19 @@ export class Container {
     private services: Map<string, any> = new Map();
     
     // ----------------------------------------------------------------------------- //
-    static getInstance(): Container {
+    static getInstance(prisma?: PrismaClient): Container {
         if (!Container.instance) {
             Container.instance = new Container();
+
+            if (!prisma)
+                throw Error("Init impossible: missed PrismaClient");
+
+            Container.instance.initialize(prisma);
         }
+
+        if (!Container.instance)
+            throw Error('Container initialization has not started or has not completed.')
+
         return Container.instance;
     }
 
@@ -44,8 +55,10 @@ export class Container {
         return this.services.get(key);
     }
 
+    // ==================================== PRIVATE ==================================== //
+
     // ----------------------------------------------------------------------------- //
-    initialize(prisma: PrismaClient): void {
+    private initialize(prisma: PrismaClient): void {
         
         // Utils
         this.registerService('PasswordHasher', () => new PasswordHasher());
@@ -103,6 +116,11 @@ export class Container {
         // Middleware
         this.registerService('AuthMiddleware', () => new AuthMiddleware(
             this.getService('TokenManager')
+        ));
+
+        // Facade
+        this.registerService('GameService', () => new GameInterface(
+            this.getService('MatchController')
         ));
     }
 }

@@ -1,6 +1,8 @@
 export interface GameStats
 {
-	gamesPlayed: number,
-	gamesWon:    number,
-	winRate:     number,
+	playerId:	number,
+	wins:		number,
+	losses:    	number,
+	total:     	number,
+	winRate:	number,
 }
