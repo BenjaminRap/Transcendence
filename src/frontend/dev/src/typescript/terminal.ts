@@ -887,7 +887,7 @@ async function login(args: string[]): Promise<string> {
 }
 
 function loginInput(args: string[]): string {
-	let argsTest = ["Mail", "Password"];
+	let argsTest = ["Identifier", "Password"];
 	AskInput(argsTest, [2], login);
 	return '';
 }
@@ -918,30 +918,34 @@ function getCookie(name: string): string | undefined {
 	return matches ? decodeURIComponent(matches[1]) : undefined;
 }
 
-function tryRefreshToken() : boolean
+async function tryRefreshToken() : Promise<boolean>
 {
-	let token = getCookie('refreshToken') || '';
-		fetch('http://localhost:8181/auth/refresh', {
-		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json',
-			'Authorization': 'Bearer ' + token
-		},
-	})
-	.then(response => response.json())
-	.then(data => {
+	console.log("Trying to refresh token...");
+	const token =  getCookie('refreshToken') || '';
+	if (token === '') {
+		return false;
+	}
+	try {
+		const response = await fetch('http://localhost:8181/auth/refresh', {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': 'Bearer ' + token
+			},
+		});
+		const data = await response.json();
 		if (data.success) {
 			document.cookie = `accessToken=${data.tokens.accessToken}; path=/;`;
 			document.cookie = `refreshToken=${data.tokens.refreshToken}; path=/;`;
 			return true;
-		} else {
-			return false;
 		}
-	})
-	.catch(error => {
+		else
+			return false;
+	} catch (error) {
 		console.error("Error:", error);
-	});
-	return false;
+		return false;
+	}
+
 }
 
 async function loadUser(): Promise<boolean> {
