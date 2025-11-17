@@ -3,12 +3,13 @@ export { };
 import { ProfileBuilder } from './profile.ts'
 import { Modal } from './modal.ts'
 import { ExtProfileBuilder } from './extprofile.ts'
-
-import FileSystem from './filesystem.json' with { type: "json" };
 import { ExtendedView } from './extendedView.ts';
 
+import FileSystem from './filesystem.json' with { type: "json" };
+import { log } from 'console';
+
 let maxOutputLines = 100;
-let username = "usah";
+let username = 'usah';
 let currentDirectory = '/';
 
 let promptText =  username + "@terminal:" + currentDirectory +"$ ";
@@ -19,7 +20,7 @@ let env = {
 	'TERM': 'minishell'
 };
 
-
+let isLoggedIn = false;
 
 class Command {
 	name: string;
@@ -54,6 +55,7 @@ let commandAvailable =
 	new Command('cat', 'Concatenate and display file content', 'cat [file]', catCommand),
 	new Command('whoami', 'Display the current username', 'whoami', whoamiCommand),
 	new Command('login', 'Login to your account', 'login [email] [password]', loginInput),
+	new Command('logout', 'Logout from your account', 'logout', logout),
 ];
 
 let commandHistory: string[] = [];
@@ -491,8 +493,9 @@ function exec(command: string) {
 	return `> Unknown command: ${args[0]}`;
 }
 
-function getInputCase(command: string)
+async function getInputCase(command: string)
 {
+	let result = '';
 	if (!currentInput || !output)
 		return;
 	if (isWaitingInput) {
@@ -500,19 +503,23 @@ function getInputCase(command: string)
 			InputResult.push(command.slice(promptText.length));
 			InputIncomming--;
 		}
-		if (InputIncomming == 0 && InputFunction) {
-			InputFunction(InputResult);
-			isWaitingInput = false;
-			InputFunction = null;
-		}
 	}
 	if (isHidden)
 		command = promptText + '*'.repeat(command.length - promptText.length);
+	if (isWaitingInput && InputIncomming == 0 && InputFunction) {
+		result = await InputFunction(InputResult);
+		console.log("Fonction terminer")
+		isWaitingInput = false;
+		InputFunction = null;
+	}
 	output.textContent += command + '\n';
+	console.log("Creation du prompt suivant", promptText, backUpPromptText);
 	if (isWaitingInput && InputIncomming >= 0)
 		promptText = InputArgs[InputArgs.length - InputIncomming] + ': ';
 	if (InputIncomming === 0 && !isWaitingInput)
 		promptText = backUpPromptText;
+	if (result && result != '')
+		TerminalUtils.displayOnTerminal(result, false);
 	resetInput();
 }
 
@@ -781,12 +788,12 @@ function setEventListeners() {
 	}
 }
 
-
 // -------------------------------------------------------------------- Initialisation ---------------------------------------------------------------------
 export namespace Terminal {
-	export function buildTerminal() {
+	export async function buildTerminal() {
 		if (isBuilded)
 			return;
+		const success = await loadUser();
 		terminal = document.createElement('div');
 		terminal.id = "terminal";
 		terminal.className = "terminal-font p-4 m-0 bg-black border-2 border-green-500 float-left text-green-400 text-sm overflow-y-auto focus:outline-none cursor-text relative scroll-smooth"
@@ -841,7 +848,7 @@ function register(args: string[]): string {
 		if (data.success) {
 			TerminalUtils.displayOnTerminal("Registration successful!", false);
 			document.cookie = `accessToken=${data.tokens.accessToken}; path=/;`;
-			document.cookie = `refreshToken=${data.tokens.refreshToken}; path=/auth/refresh;`;
+			document.cookie = `refreshToken=${data.tokens.refreshToken}; path=/;`;
 			loadUser();
 		} else {
 			let message = data.message || "Unknown error";
@@ -855,35 +862,32 @@ function register(args: string[]): string {
 	return 'Test command executed with args: ' + args.join(' ');
 }
 
-function login(args: string[]): string {
-	fetch('http://localhost:8181/auth/login', {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify({
-			identifier: args[0],
-			password: args[1],
-		})
-	})
-	.then(response => response.json())
-	.then(data => {
+async function login(args: string[]): Promise<string> {
+	try {
+		const response = await fetch('http://localhost:8181/auth/login', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				identifier: args[0],
+				password: args[1],
+			})
+		});
+		const data = await response.json();
 		if (data.success) {
 			document.cookie = `accessToken=${data.tokens.accessToken}; path=/;`;
-			document.cookie = `refreshToken=${data.tokens.refreshToken}; path=/auth/refresh;`;
-			loadUser();
-			TerminalUtils.displayOnTerminal("Login successful!", false);
+			document.cookie = `refreshToken=${data.tokens.refreshToken}; path=/;`;
+			await loadUser();
+			return 'Login successful!';
 		} else {
 			let message = data.message || "Unknown error";
-			TerminalUtils.printErrorOnTerminal("Login failed: " + message);
+			return 'Login failed: ' + message;
 		}
-	})
-	.catch(error => {
+	} catch (error) {
 		console.error("Error:", error);
-	});
-
-	return 'Test command executed with args: ' + args.join(' ');
-
+		return 'Login failed due to an error.';
+	}
 }
 
 function loginInput(args: string[]): string {
@@ -909,30 +913,6 @@ function AskInput(args: string[], hideInput: number[], fun: Function): string
 	return '';
 }
 
-
-/*
-
-**GET perso/me**
-
-_Description :_ renvoie le profile de l'utilisateur courant
-
-_Mandatory headers :_
-  Content-Type: application/json,
-  Authorization: Bearer <TOKEN>
-
-_Possibles responses:_
-
-✅ 200 OK
-  { ( _voir **dataStructure/usersStruct.js -> PersoProfileResponse** pour le schema de reponse_)
-    success: true,
-    message: 'Profile retrieved successfully',
-    user: PersoProfile
-  }
-
-
-
-*/
-
 function getCookie(name: string): string | undefined {
 	const matches = document.cookie.match(
 	new RegExp(
@@ -944,8 +924,9 @@ function getCookie(name: string): string | undefined {
 
 function tryRefreshToken() : boolean
 {
+	console.log("Trying to refresh token...");
 	let token = getCookie('refreshToken') || '';
-		fetch('http://localhost:8181/auth/refresh/', {
+		fetch('http://localhost:8181/auth/refresh', {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
@@ -956,7 +937,7 @@ function tryRefreshToken() : boolean
 	.then(data => {
 		if (data.success) {
 			document.cookie = `accessToken=${data.tokens.accessToken}; path=/;`;
-			document.cookie = `refreshToken=${data.tokens.refreshToken}; path=/auth/refresh;`;
+			document.cookie = `refreshToken=${data.tokens.refreshToken}; path=/;`;
 			return true;
 		} else {
 			return false;
@@ -968,33 +949,49 @@ function tryRefreshToken() : boolean
 	return false;
 }
 
-
-function loadUser()
-{
-	let token = getCookie('accessToken') || '';
-	fetch('http://localhost:8181/perso/me/', {
-	method: 'GET',
-	headers: {
-		'Content-Type': 'application/json',
-		'Authorization': 'Bearer ' + token
-	},
-	})
-	.then(response => response.json())
-	.then(data => {
+async function loadUser(): Promise<boolean> {
+	const token = getCookie('accessToken') || '';
+	if (token === '') {
+		return false;
+	}
+	try {
+		const response = await fetch('http://localhost:8181/suscriber/profile', {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': 'Bearer ' + token
+			},
+		});
+		const data = await response.json();
 		if (data.success) {
-			console.log("User data:", data.user);
+			username = data.user.username;
+			updatePromptText( username + "@terminal:" + currentDirectory +"$ " );
+			isLoggedIn = true;
+			return true;
 		}
-		else if (data.message === 'Token expired') {
-			tryRefreshToken();
-			if (tryRefreshToken() === false)
-			{
+		if (data.message === 'Token expired') {
+			const refreshed = await tryRefreshToken();
+			if (!refreshed) {
 				TerminalUtils.printErrorOnTerminal("Please log in.");
-				return;
+				return false;
 			}
-			loadUser();
+			return await loadUser();
 		}
-	})
-	.catch(error => {
+		return false;
+	} catch (error) {
 		console.error("Error:", error);
-	});
+		return false;
+	}
+}
+
+function logout(): string
+{
+	if (!isLoggedIn)
+		return 'You are not logged in.';
+	document.cookie = 'accessToken=; path=/;';
+	document.cookie = 'refreshToken=; path=/;';
+	isLoggedIn = false;
+	username = 'usah';
+	updatePromptText( username + "@terminal:" + currentDirectory +"$ " );
+	return 'Logged out successfully.';
 }
