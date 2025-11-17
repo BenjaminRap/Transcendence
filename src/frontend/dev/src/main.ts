@@ -1,6 +1,6 @@
 import { Terminal } from './typescript/terminal'
 import { ProfileBuilder } from './typescript/profile'
-import { TerminalUtils } from './typescript/terminal.ts'
+import { WriteOnTerminal } from './typescript/terminalUtils/writeOnTerminal'
 import { ExtProfileBuilder } from './typescript/extprofile'
 
 Terminal.buildTerminal();
@@ -12,8 +12,8 @@ const errors404 = ["You are the reason why everthing in your life is miserable",
 
 
 function Error404() {
-	TerminalUtils.displayOnTerminal(`cat error404.html`, true);
-	TerminalUtils.printErrorOnTerminal(errors404[Math.floor(Math.random() * errors404.length)]);
+	WriteOnTerminal.displayOnTerminal(`cat error404.html`, true);
+	WriteOnTerminal.printErrorOnTerminal(errors404[Math.floor(Math.random() * errors404.length)]);
 	history.pushState({}, '', `/`);
 }
 

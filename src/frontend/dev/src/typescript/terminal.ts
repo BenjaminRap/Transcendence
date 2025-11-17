@@ -5,95 +5,108 @@ import { Modal } from './modal.ts'
 import { ExtProfileBuilder } from './extprofile.ts'
 import { ExtendedView } from './extendedView.ts';
 
+import { RequestBackendModule } from './terminalUtils/requestBackend.ts';
+import { WriteOnTerminal } from './terminalUtils/writeOnTerminal.ts';
+import { TerminalUtils } from './terminalUtils/terminalUtils.ts';
+
+
 import FileSystem from './filesystem.json' with { type: "json" };
-import { log } from 'console';
 
-let maxOutputLines = 100;
-let username = 'usah';
-let currentDirectory = '/';
 
-let promptText =  username + "@terminal:" + currentDirectory +"$ ";
-let backUpPromptText = promptText;
-let env = {
-	'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
-	'HOME': '/home/' + username,
-	'TERM': 'minishell'
-};
-
-let isLoggedIn = false;
-
-class Command {
-	name: string;
-	description: string;
-	usage: string;
-	execute: (args: string[], description: string, usage: string) => string;
-
-	constructor(name: string, description: string, usage: string, execute: (args: string[], description: string, usage: string) => string) {
-		this.name = name;
-		this.description = description;
-		this.usage = usage;
-		this.execute = execute;
-	}
-
-	launchCommand(args: string[]): string {
-		return this.execute(args, this.description, this.usage);
-	}
+export namespace TerminalElements {
+	export let terminal: HTMLDivElement | null = null;
+	export let output: HTMLDivElement | null = null;
+	export let inputLine: HTMLDivElement | null = null;
+	export let currentInput: HTMLTextAreaElement | null = null;
 }
 
-let commandAvailable =
-[
-	new Command('echo', 'Display a line of text', 'echo [text]', echoCommand),
-	new Command('help', 'Display this help message', 'help', helpCommand),
-	new Command('profile', 'Display user profile', 'profile [username]', profileCommand),
-	new Command('kill', 'Terminate a process', 'kill [process_name]', killCommand),
-	new Command('clear', 'Clear the terminal screen', 'clear', clearCommand),
-	new Command('modal', 'Create a modal dialog', 'modal [text]', modalCommand),
-	new Command('register', 'Register a new user', 'register [text]', registerInput),
-	new Command('cd', 'Change the current directory', 'cd [directory]', cdCommand),
-	new Command('ls', 'List directory contents', 'ls', lsCommand),
-	new Command('pwd', 'Print working directory', 'pwd', pwdCommand),
-	new Command('cat', 'Concatenate and display file content', 'cat [file]', catCommand),
-	new Command('whoami', 'Display the current username', 'whoami', whoamiCommand),
-	new Command('login', 'Login to your account', 'login [email] [password]', loginInput),
-	new Command('logout', 'Logout from your account', 'logout', logout),
-];
+export namespace TerminalConfigVariables {
+	export let maxOutputLines = 100;
+	export let isBuilded = false;
+	export let isHidden = false;
+	export let HiddenContent = '';
+	export let isWaitingInput = false;
+	export let InputIncomming = 0;
+	export let InputArgs: string[] = [];
+	export let InputResult: string[] = [];
+	export let WaitingHidden: number[] = [];
+	export let InputFunction: Function | null = null;
+	export let isTabInProcess = false;
+	export let TabCompletionIndex = -1;
+}
 
-let commandHistory: string[] = [];
-let indexCommandHistory = -2;
+export namespace TerminalUserManagement {
+	export let username = 'usah';
+	export let isLoggedIn = false;
+}
 
-let isBuilded = false;
-let isHidden = false;
-let HiddenContent = '';
+export namespace TerminalFileSystem {
+	export let currentDirectory = '/';
+}
 
-
-let terminal: HTMLDivElement | null = null;
-let output: HTMLDivElement | null = null;
-let inputLine: HTMLDivElement | null = null;
-let currentInput: HTMLTextAreaElement | null = null;
-
-let isWaitingInput = false;
-let InputIncomming = 0;
-let InputArgs: string[] = [];
-let InputResult: string[] = [];
-let WaitingHidden: number[] = [];
-let InputFunction: Function | null = null;
-
-let isTabInProcess = false;
-let TabCompletionIndex = -1;
+export namespace TerminalPromptAndEnv {
+	export let promptText = TerminalUserManagement.username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ ";
+	export let backUpPromptText = promptText;
+	export let env = {
+		'PATH': '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin',
+		'HOME': '/home/' + TerminalUserManagement.username,
+		'TERM': 'minishell'
+	};
+}
 
 type FileNode = {
 	type: "file";
 	name: string;
 	content: string;
 };
-
 type DirNode = {
 	type: "directory";
 	name: string;
 	children: Array<FileNode | DirNode>;
 };
-
 type Node = FileNode | DirNode;
+
+export namespace TerminalCommand {
+		export class Command {
+		name: string;
+		description: string;
+		usage: string;
+		execute: (args: string[], description: string, usage: string) => string;
+
+		constructor(name: string, description: string, usage: string, execute: (args: string[], description: string, usage: string) => string) {
+			this.name = name;
+			this.description = description;
+			this.usage = usage;
+			this.execute = execute;
+		}
+
+		launchCommand(args: string[]): string {
+			return this.execute(args, this.description, this.usage);
+		}
+	}
+
+	export let commandAvailable =
+	[
+		new Command('echo', 'Display a line of text', 'echo [text]', echoCommand),
+		new Command('help', 'Display this help message', 'help', helpCommand),
+		new Command('profile', 'Display user profile', 'profile [username]', profileCommand),
+		new Command('kill', 'Terminate a process', 'kill [process_name]', killCommand),
+		new Command('clear', 'Clear the terminal screen', 'clear', clearCommand),
+		new Command('modal', 'Create a modal dialog', 'modal [text]', modalCommand),
+		new Command('register', 'Register a new user', 'register [text]', registerInput),
+		new Command('cd', 'Change the current directory', 'cd [directory]', cdCommand),
+		new Command('ls', 'List directory contents', 'ls', lsCommand),
+		new Command('pwd', 'Print working directory', 'pwd', pwdCommand),
+		new Command('cat', 'Concatenate and display file content', 'cat [file]', catCommand),
+		new Command('whoami', 'Display the current username', 'whoami', whoamiCommand),
+		new Command('login', 'Login to your account', 'login [email] [password]', loginInput),
+		new Command('logout', 'Logout from your account', 'logout', RequestBackendModule.logout),
+	];
+	export let commandHistory: string[] = [];
+	export let indexCommandHistory = -2;
+}
+
+
 
 
 // ------------------------------------------------------------------------ Command ---------------------------------------------------------------------
@@ -113,14 +126,14 @@ function echoCommand(args: string[], description: string, usage: string): string
 
 function helpCommand(): string {
 	let helpText = 'Available commands:\n';
-	for (let i = 0; i < commandAvailable.length; i++) {
-		helpText += `${commandAvailable[i].name}\n\n`;
+	for (let i = 0; i < TerminalCommand.commandAvailable.length; i++) {
+		helpText += `${TerminalCommand.commandAvailable[i].name}\n\n`;
 	}
 	return helpText;
 }
 
 function whoamiCommand(): string {
-	return username;
+	return TerminalUserManagement.username;
 }
 
 function profileCommand(args: string[]): string {
@@ -169,27 +182,27 @@ function modalCommand(args: string[]): string {
 
 function cdCommand(args: string[], description: string, usage: string): string {
 	if (args.length !== 2) {
-		currentDirectory = '/';
-		updatePromptText(username + "@terminal:" + currentDirectory +"$ ");
+		TerminalFileSystem.currentDirectory = '/';
+		TerminalUtils.updatePromptText(TerminalUserManagement.username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ ");
 		return '';
 	}
 	let targetPath = '';
-	if (currentDirectory === '/')
-		targetPath = currentDirectory + args[1];
+	if (TerminalFileSystem.currentDirectory === '/')
+		targetPath = TerminalFileSystem.currentDirectory + args[1];
 	else
-		targetPath = currentDirectory + '/' + args[1];
+		targetPath = TerminalFileSystem.currentDirectory + '/' + args[1];
 	targetPath = normalizePath(targetPath);
 	if (args[1] === '/') {
-		currentDirectory = '/';
-		updatePromptText(username + "@terminal:" + currentDirectory +"$ ");
+		TerminalFileSystem.currentDirectory = '/';
+		TerminalUtils.updatePromptText(TerminalUserManagement.username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ ");
 		return '';
 	}
 	const node = getNode(targetPath);
 	if (!node || node.type !== 'directory') {
 		return `cd: no such file or directory: ${targetPath}`;
 	}
-	currentDirectory = targetPath;
-	updatePromptText(username + "@terminal:" + currentDirectory +"$ ");
+	TerminalFileSystem.currentDirectory = targetPath;
+	TerminalUtils.updatePromptText(TerminalUserManagement.username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ ");
 	return '';
 }
 
@@ -200,11 +213,11 @@ function lsCommand(args: string[], description: string, usage: string): string {
 	console.log("ls command args:", args);
 
 	if (args.length === 1) {
-		node = getNode(currentDirectory);
-		targetPath = currentDirectory;
+		node = getNode(TerminalFileSystem.currentDirectory);
+		targetPath = TerminalFileSystem.currentDirectory;
 	}
 	else if (args.length === 2) {
-		targetPath = normalizePath(currentDirectory + '/' + args[1]);
+		targetPath = normalizePath(TerminalFileSystem.currentDirectory + '/' + args[1]);
 		node = getNode(targetPath);
 	}
 	else 
@@ -216,14 +229,14 @@ function lsCommand(args: string[], description: string, usage: string): string {
 }
 
 function pwdCommand(args: string[], description: string, usage: string): string {
-	return currentDirectory;
+	return TerminalFileSystem.currentDirectory;
 }
 
 function catCommand(args: string[], description: string, usage: string): string {
 	if (args.length !== 2) {
 		return `Usage: ${usage}`;
 	}
-	const targetPath = normalizePath(currentDirectory + '/' + args[1]);
+	const targetPath = normalizePath(TerminalFileSystem.currentDirectory + '/' + args[1]);
 	const fileNode = getNode(targetPath);
 	if (!fileNode || fileNode.type !== 'file') {
 		return `cat: ${args[1]}: No such file`;
@@ -287,19 +300,6 @@ function getNode(path: string): Node | null
 	return node;
 }
 
-function countChar(char: string): number {
-	if (!output)
-		return 0;
-	const outputText = output.textContent;
-	let count = 0;
-	for (let i = 0; i < outputText.length; i++) {
-		if (outputText[i] === char) {
-			count++;
-		}
-	}
-	return count;
-}
-
 function checkArgs(args: string): boolean {
 	let quote: string | null = null;
 	for (let i = 0; i < args.length; i++) {
@@ -316,122 +316,56 @@ function checkArgs(args: string): boolean {
 }
 
 function updateCurrentHistory(command: string) {
-	if (command == '' || isWaitingInput)
+	if (command == '' || TerminalConfigVariables.isWaitingInput)
 		return;	
-	if (commandHistory.length === 0 || commandHistory[commandHistory.length - 1] !== command) {
-		commandHistory.push(command);
+	if (TerminalCommand.commandHistory.length === 0 || TerminalCommand.commandHistory[TerminalCommand.commandHistory.length - 1] !== command) {
+		TerminalCommand.commandHistory.push(command);
 	}
-	if (commandHistory.length > 100) {
-		commandHistory.shift();
+	if (TerminalCommand.commandHistory.length > 100) {
+		TerminalCommand.commandHistory.shift();
 	}
-	indexCommandHistory = -2;
+	TerminalCommand.indexCommandHistory = -2;
 }
 
 function clearTabCompletion() {
-	if (!terminal)
+	if (!TerminalElements.terminal)
 		return;
 	const tabElement = document.getElementById('tab-completion');
 	if (tabElement) {
-		terminal.removeChild(tabElement);
+		TerminalElements.terminal.removeChild(tabElement);
 	}
-	isTabInProcess = false;
-	TabCompletionIndex = -1;
+	TerminalConfigVariables.isTabInProcess = false;
+	TerminalConfigVariables.TabCompletionIndex = -1;
 }
 function resize() {
-	if (!currentInput)
+	if (!TerminalElements.currentInput)
 		return;
-	currentInput.style.height = 'auto';
-	currentInput.style.height = currentInput.scrollHeight + 'px';
+	TerminalElements.currentInput.style.height = 'auto';
+	TerminalElements.currentInput.style.height = TerminalElements.currentInput.scrollHeight + 'px';
 }
 
 function resetInput() {
-	if (!currentInput)
+	if (!TerminalElements.currentInput)
 		return;
-	currentInput.value = promptText;
+	TerminalElements.currentInput.value = TerminalPromptAndEnv.promptText;
 	resize();
 }
 
 function updateCursorPosition(position: number) {
-	if (!currentInput)
+	if (!TerminalElements.currentInput)
 		return;
-	currentInput.selectionStart = position;
-	currentInput.selectionEnd = position;
-}
-
-function updatePromptText(newPrompt: string) {
-	promptText = newPrompt;
-	backUpPromptText = newPrompt;
-}
-
-export namespace TerminalUtils {
-	export function displayOnTerminal(text: string, showPrompt: boolean) {
-		if (!output)
-			return;
-		if (countChar('\f') > maxOutputLines) {
-			output.textContent = output.textContent.slice(output.textContent.indexOf('\f') + 1);
-		}
-		if (showPrompt)
-			output.textContent += promptText + text + '\n' + '\f';
-		else
-		output.textContent += text + '\n' + '\f';
-		if (terminal) {
-			terminal.scrollTop = terminal.scrollHeight;
-		}
-	}
-	export function printErrorOnTerminal(text: string) {
-		if (!output)
-			return;
-		if (countChar('\f') > maxOutputLines) {
-			output.textContent = output.textContent.slice(output.textContent.indexOf('\f') + 1);
-		}
-		output.textContent += '> ' + text + '\n' + '\f';
-		if (terminal) {
-			terminal.scrollTop = terminal.scrollHeight;
-		}
-	}
-
-	export function notification(args: string[]) {
-		let title: string | null = null;
-		let message: string;
-		if (args.length >= 2) {
-			title = args[0];
-			message = args.slice(1).join(' ');
-		} else {
-			message = args.slice(0).join(' ');
-		}
-		TerminalUtils.displayOnTerminal("Wall :", false);
-		
-		const lines = message.split('\n');
-		let maxLen = Math.max(...lines.map(l => l.length));
-		if (title)
-			maxLen = Math.max(maxLen, title.length);
-
-		const innerWidth = maxLen + 2;
-		if (title) {
-			const titleStr = ` ${title} `;
-			const left = Math.floor((innerWidth - titleStr.length) / 2);
-			const right = innerWidth - titleStr.length - left;
-			TerminalUtils.displayOnTerminal('╭' + '─'.repeat(left) + titleStr + '─'.repeat(right) + '╮', false);
-		} else {
-			TerminalUtils.displayOnTerminal('╭' + '─'.repeat(innerWidth) + '╮', false);
-		}
-
-		for (const line of lines) {
-			const padded = line.padEnd(maxLen, ' ');
-			TerminalUtils.displayOnTerminal('│ ' + padded + ' │', false);
-		}
-		TerminalUtils.displayOnTerminal('╰' + '─'.repeat(innerWidth) + '╯', false);
-	}
+	TerminalElements.currentInput.selectionStart = position;
+	TerminalElements.currentInput.selectionEnd = position;
 }
 
 function TabProcessInTab() {
 	const tabElement = document.querySelector('.tab-completion');
 	if (!tabElement)
 		return;
-	TabCompletionIndex = (TabCompletionIndex + 1) % tabElement.children.length;
+	TerminalConfigVariables.TabCompletionIndex = (TerminalConfigVariables.TabCompletionIndex + 1) % tabElement.children.length;
 	for (let i = 0; i < tabElement.children.length; i++) {
 		const item = tabElement.children[i] as HTMLElement;
-		if (i === TabCompletionIndex) {
+		if (i === TerminalConfigVariables.TabCompletionIndex) {
 			item.style.backgroundColor = 'rgba(34, 197, 94, 0.2)';
 		} else {
 			item.style.backgroundColor = 'transparent';
@@ -443,7 +377,7 @@ function TabProcessInTab() {
 function getListOfElementTabCompletion(command: string, cursorPosition: number): string[] {
 	let result: string[] | null = null;
 	if (isFirstWord(command, cursorPosition))
-		result = getStartWithList(command.trim(), commandAvailable.map(cmd => cmd.name));
+		result = getStartWithList(command.trim(), TerminalCommand.commandAvailable.map(cmd => cmd.name));
 	else
 	{
 		const path = command.slice(0, cursorPosition).split(' ').pop() || '';
@@ -482,9 +416,9 @@ function exec(command: string) {
 		return '';
 	}
 
-	for (let i = 0; i < commandAvailable.length; i++) {
-		if (args[0] === commandAvailable[i].name) {
-			const result = commandAvailable[i].launchCommand(args);
+	for (let i = 0; i < TerminalCommand.commandAvailable.length; i++) {
+		if (args[0] === TerminalCommand.commandAvailable[i].name) {
+			const result = TerminalCommand.commandAvailable[i].launchCommand(args);
 			if (result === undefined || result === null || result === '')
 				return '';
 			return '> ' + result;
@@ -496,221 +430,221 @@ function exec(command: string) {
 async function getInputCase(command: string)
 {
 	let result = '';
-	if (!currentInput || !output)
+	if (!TerminalElements.currentInput || !TerminalElements.output)
 		return;
-	if (isWaitingInput) {
-		if (InputIncomming >= 0) {
-			InputResult.push(command.slice(promptText.length));
-			InputIncomming--;
+	if (TerminalConfigVariables.isWaitingInput) {
+		if (TerminalConfigVariables.InputIncomming >= 0) {
+			TerminalConfigVariables.InputResult.push(command.slice(TerminalPromptAndEnv.promptText.length));
+			TerminalConfigVariables.InputIncomming--;
 		}
 	}
-	if (isHidden)
-		command = promptText + '*'.repeat(command.length - promptText.length);
-	if (isWaitingInput && InputIncomming == 0 && InputFunction) {
-		result = await InputFunction(InputResult);
-		isWaitingInput = false;
-		InputFunction = null;
+	if (TerminalConfigVariables.isHidden)
+		command = TerminalPromptAndEnv.promptText + '*'.repeat(command.length - TerminalPromptAndEnv.promptText.length);
+	if (TerminalConfigVariables.isWaitingInput && TerminalConfigVariables.InputIncomming == 0 && TerminalConfigVariables.InputFunction) {
+		result = await TerminalConfigVariables.InputFunction(TerminalConfigVariables.InputResult);
+		TerminalConfigVariables.isWaitingInput = false;
+		TerminalConfigVariables.InputFunction = null;
 	}
-	output.textContent += command + '\n';
-	if (isWaitingInput && InputIncomming >= 0)
-		promptText = InputArgs[InputArgs.length - InputIncomming] + ': ';
-	if (InputIncomming === 0 && !isWaitingInput)
-		promptText = backUpPromptText;
+	TerminalElements.output.textContent += command + '\n';
+	if (TerminalConfigVariables.isWaitingInput && TerminalConfigVariables.InputIncomming >= 0)
+		TerminalPromptAndEnv.promptText = TerminalConfigVariables.InputArgs[TerminalConfigVariables.InputArgs.length - TerminalConfigVariables.InputIncomming] + ': ';
+	if (TerminalConfigVariables.InputIncomming === 0 && !TerminalConfigVariables.isWaitingInput)
+		TerminalPromptAndEnv.promptText = TerminalPromptAndEnv.backUpPromptText;
 	if (result && result != '')
-		TerminalUtils.displayOnTerminal(result, false);
+		WriteOnTerminal.displayOnTerminal(result, false);
 	resetInput();
 }
 
 function insertIntoCurrentInput(completion: string): void {
-	if (!currentInput)
+	if (!TerminalElements.currentInput)
 		return;
-	const full = currentInput.value;
-	const cursor = currentInput.selectionStart ?? full.length;
-	const cmdAfterPrompt = full.slice(promptText.length);
-	const cursorRel = Math.max(0, cursor - promptText.length);
+	const full = TerminalElements.currentInput.value;
+	const cursor = TerminalElements.currentInput.selectionStart ?? full.length;
+	const cmdAfterPrompt = full.slice(TerminalPromptAndEnv.promptText.length);
+	const cursorRel = Math.max(0, cursor - TerminalPromptAndEnv.promptText.length);
 	const cmdBeforeCursor = cmdAfterPrompt.slice(0, cursorRel);
 	const lastSpace = cmdBeforeCursor.lastIndexOf(' ');
 	const lastSlash = cmdBeforeCursor.lastIndexOf('/');
 	const tokenStartRel = Math.max(lastSpace + 1, lastSlash + 1);
 
-	const absStart = promptText.length + tokenStartRel;
-	const absEnd = promptText.length + cursorRel;
-	currentInput.value = full.slice(0, absStart) + completion + full.slice(absEnd);
+	const absStart = TerminalPromptAndEnv.promptText.length + tokenStartRel;
+	const absEnd = TerminalPromptAndEnv.promptText.length + cursorRel;
+	TerminalElements.currentInput.value = full.slice(0, absStart) + completion + full.slice(absEnd);
 	updateCursorPosition(absStart + completion.length);
 }
 
 function TabProcessInEnter() {
 	const tabElement = document.getElementById('tab-completion');
 	if (tabElement) {
-		terminal?.removeChild(tabElement);
+		TerminalElements.terminal?.removeChild(tabElement);
 	}
-	if (tabElement && currentInput) {
-		const selectedItem = tabElement.children[TabCompletionIndex] as HTMLElement;
+	if (tabElement && TerminalElements.currentInput) {
+		const selectedItem = tabElement.children[TerminalConfigVariables.TabCompletionIndex] as HTMLElement;
 		if (selectedItem) {
 			const completionText = selectedItem.textContent?.slice(2) || '';
 			insertIntoCurrentInput(completionText);
 		}
 	}
 	resize();
-	isTabInProcess = false;
-	TabCompletionIndex = -1;
+	TerminalConfigVariables.isTabInProcess = false;
+	TerminalConfigVariables.TabCompletionIndex = -1;
 	return;
 }
 
 function enterCase() {
-	if (!currentInput || !output)
+	if (!TerminalElements.currentInput || !TerminalElements.output)
 		return;
-	if (isTabInProcess)
+	if (TerminalConfigVariables.isTabInProcess)
 		return TabProcessInEnter();
-	let command = currentInput.value;
+	let command = TerminalElements.currentInput.value;
 	let changeHidden = false;
-	if (countChar('\f') > maxOutputLines) {
-		output.textContent = output.textContent.slice(output.textContent.indexOf('\f') + 1);
+	if (TerminalUtils.countChar('\f') > TerminalConfigVariables.maxOutputLines) {
+		TerminalElements.output.textContent = TerminalElements.output.textContent.slice(TerminalElements.output.textContent.indexOf('\f') + 1);
 	}
-	if (isHidden)
+	if (TerminalConfigVariables.isHidden)
 	{
-		command = promptText + HiddenContent;
-		HiddenContent = '';
+		command = TerminalPromptAndEnv.promptText + TerminalConfigVariables.HiddenContent;
+		TerminalConfigVariables.HiddenContent = '';
 		changeHidden = true;
 	}
-	if (isWaitingInput)
+	if (TerminalConfigVariables.isWaitingInput)
 	{
 		getInputCase(command);
-		if (isWaitingInput && WaitingHidden.includes(InputArgs.length - InputIncomming + 1))
-			isHidden = true;
+		if (TerminalConfigVariables.isWaitingInput && TerminalConfigVariables.WaitingHidden.includes(TerminalConfigVariables.InputArgs.length - TerminalConfigVariables.InputIncomming + 1))
+			TerminalConfigVariables.isHidden = true;
 		if (changeHidden)
-			isHidden = false;
+			TerminalConfigVariables.isHidden = false;
 		return;
 	}
-	updateCurrentHistory(command.slice(promptText.length));
-	const result = exec(command.slice(promptText.length));
-	if (isHidden)
-		command = promptText + '*'.repeat(command.length - promptText.length);
+	updateCurrentHistory(command.slice(TerminalPromptAndEnv.promptText.length));
+	const result = exec(command.slice(TerminalPromptAndEnv.promptText.length));
+	if (TerminalConfigVariables.isHidden)
+		command = TerminalPromptAndEnv.promptText + '*'.repeat(command.length - TerminalPromptAndEnv.promptText.length);
 	if (result != '')
 	{
-		output.textContent += command + '\n';
-		output.textContent += result + '\n' + '\f';
+		TerminalElements.output.textContent += command + '\n';
+		TerminalElements.output.textContent += result + '\n' + '\f';
 	}
-	else if (result === '' && command.slice(promptText.length).trim() === 'clear')
-		output.textContent += '\f';
+	else if (result === '' && command.slice(TerminalPromptAndEnv.promptText.length).trim() === 'clear')
+		TerminalElements.output.textContent += '\f';
 	else
-		output.textContent += command + '\n' + '\f';
-	if (isWaitingInput)
-		promptText = InputArgs[InputArgs.length - InputIncomming] + ': ';
+		TerminalElements.output.textContent += command + '\n' + '\f';
+	if (TerminalConfigVariables.isWaitingInput)
+		TerminalPromptAndEnv.promptText = TerminalConfigVariables.InputArgs[TerminalConfigVariables.InputArgs.length - TerminalConfigVariables.InputIncomming] + ': ';
 	resetInput();
 	if (changeHidden)
-		isHidden = false;
+		TerminalConfigVariables.isHidden = false;
 }
 
 function clearOutput() {
-	if (!output)
+	if (!TerminalElements.output)
 		return;
 
-	output.textContent = '';
+	TerminalElements.output.textContent = '';
 }
 
 function sigintCase() {
-	if (!currentInput || !output)
+	if (!TerminalElements.currentInput || !TerminalElements.output)
 		return;
-	if (countChar('\f') > maxOutputLines) {
-		output.textContent = output.textContent.slice(output.textContent.indexOf('\f') + 1);
+	if (TerminalUtils.countChar('\f') > TerminalConfigVariables.maxOutputLines) {
+		TerminalElements.output.textContent = TerminalElements.output.textContent.slice(TerminalElements.output.textContent.indexOf('\f') + 1);
 	}
-	output.textContent += currentInput.value + '^C\n' + '\f';
-	if (isWaitingInput) {
-		isWaitingInput = false;
-		InputIncomming = 0;
-		InputArgs = [];
-		InputResult = [];
-		InputFunction = null;
-		isHidden = false;
-		promptText = backUpPromptText;
+	TerminalElements.output.textContent += TerminalElements.currentInput.value + '^C\n' + '\f';
+	if (TerminalConfigVariables.isWaitingInput) {
+		TerminalConfigVariables.isWaitingInput = false;
+		TerminalConfigVariables.InputIncomming = 0;
+		TerminalConfigVariables.InputArgs = [];
+		TerminalConfigVariables.InputResult = [];
+		TerminalConfigVariables.InputFunction = null;
+		TerminalConfigVariables.isHidden = false;
+		TerminalPromptAndEnv.promptText = TerminalPromptAndEnv.backUpPromptText;
 	}
 	resetInput();
 }
 
 function cursorLeft() {
-	if (!currentInput)
+	if (!TerminalElements.currentInput)
 		return;
 
-	const cursorPosition = currentInput.selectionStart;
-	if (cursorPosition && cursorPosition > promptText.length) {
+	const cursorPosition = TerminalElements.currentInput.selectionStart;
+	if (cursorPosition && cursorPosition > TerminalPromptAndEnv.promptText.length) {
 		updateCursorPosition(cursorPosition - 1);
 	}
 }
 
 function cursorRight() {
-	if (!currentInput)
+	if (!TerminalElements.currentInput)
 		return;
 
-	const cursorEndPosition = currentInput.selectionEnd;
-	if (cursorEndPosition && cursorEndPosition < currentInput.value.length) {
+	const cursorEndPosition = TerminalElements.currentInput.selectionEnd;
+	if (cursorEndPosition && cursorEndPosition < TerminalElements.currentInput.value.length) {
 		updateCursorPosition(cursorEndPosition + 1)
 	}
 }
 
 function backspaceCase() {
-	if (currentInput && currentInput.value !== null) {
-		if (isHidden && currentInput.selectionStart > promptText.length) {
-			const cursorPosition = currentInput.selectionStart;
-			currentInput.value = currentInput.value.slice(0, cursorPosition - 1) + currentInput.value.slice(cursorPosition);
-			HiddenContent = HiddenContent.slice(0, cursorPosition - promptText.length - 1) + HiddenContent.slice(cursorPosition - promptText.length);
-			currentInput.selectionStart = cursorPosition - 1;
-			currentInput.selectionEnd = cursorPosition - 1;
+	if (TerminalElements.currentInput && TerminalElements.currentInput.value !== null) {
+		if (TerminalConfigVariables.isHidden && TerminalElements.currentInput.selectionStart > TerminalPromptAndEnv.promptText.length) {
+			const cursorPosition = TerminalElements.currentInput.selectionStart;
+			TerminalElements.currentInput.value = TerminalElements.currentInput.value.slice(0, cursorPosition - 1) + TerminalElements.currentInput.value.slice(cursorPosition);
+			TerminalConfigVariables.HiddenContent = TerminalConfigVariables.HiddenContent.slice(0, cursorPosition - TerminalPromptAndEnv.promptText.length - 1) + TerminalConfigVariables.HiddenContent.slice(cursorPosition - TerminalPromptAndEnv.promptText.length);
+			TerminalElements.currentInput.selectionStart = cursorPosition - 1;
+			TerminalElements.currentInput.selectionEnd = cursorPosition - 1;
 			resize();
 		}
-		else if (currentInput.value.length > promptText.length && currentInput.selectionStart > promptText.length) {
-			const cursorPosition = currentInput.selectionStart;
-			currentInput.value = currentInput.value.slice(0, cursorPosition - 1) + currentInput.value.slice(cursorPosition);
-			currentInput.selectionStart = cursorPosition - 1;
-			currentInput.selectionEnd = cursorPosition - 1;
+		else if (TerminalElements.currentInput.value.length > TerminalPromptAndEnv.promptText.length && TerminalElements.currentInput.selectionStart > TerminalPromptAndEnv.promptText.length) {
+			const cursorPosition = TerminalElements.currentInput.selectionStart;
+			TerminalElements.currentInput.value = TerminalElements.currentInput.value.slice(0, cursorPosition - 1) + TerminalElements.currentInput.value.slice(cursorPosition);
+			TerminalElements.currentInput.selectionStart = cursorPosition - 1;
+			TerminalElements.currentInput.selectionEnd = cursorPosition - 1;
 			resize();
 		}
 	}
 }
 
 function defaultCase(event: KeyboardEvent) {
-	if (currentInput && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
-		const cursorPosition = currentInput.selectionStart;
-		if (!isHidden)
-			currentInput.value = currentInput.value.slice(0, cursorPosition) + event.key + currentInput.value.slice(cursorPosition);
+	if (TerminalElements.currentInput && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+		const cursorPosition = TerminalElements.currentInput.selectionStart;
+		if (!TerminalConfigVariables.isHidden)
+			TerminalElements.currentInput.value = TerminalElements.currentInput.value.slice(0, cursorPosition) + event.key + TerminalElements.currentInput.value.slice(cursorPosition);
 		else
 		{
-			currentInput.value = currentInput.value.slice(0, cursorPosition) + '*' + currentInput.value.slice(cursorPosition);
-			HiddenContent = HiddenContent.slice(0, cursorPosition - promptText.length) + event.key + HiddenContent.slice(cursorPosition - promptText.length);
+			TerminalElements.currentInput.value = TerminalElements.currentInput.value.slice(0, cursorPosition) + '*' + TerminalElements.currentInput.value.slice(cursorPosition);
+			TerminalConfigVariables.HiddenContent = TerminalConfigVariables.HiddenContent.slice(0, cursorPosition - TerminalPromptAndEnv.promptText.length) + event.key + TerminalConfigVariables.HiddenContent.slice(cursorPosition - TerminalPromptAndEnv.promptText.length);
 		}
-		currentInput.selectionStart = cursorPosition + 1;
-		currentInput.selectionEnd = cursorPosition + 1;
+		TerminalElements.currentInput.selectionStart = cursorPosition + 1;
+		TerminalElements.currentInput.selectionEnd = cursorPosition + 1;
 		resize();
 	}
 }
 
 function ArrowUpCase() {
-	if (!currentInput || commandHistory.length === 0 || indexCommandHistory === -1 || isWaitingInput)
+	if (!TerminalElements.currentInput || TerminalCommand.commandHistory.length === 0 || TerminalCommand.indexCommandHistory === -1 || TerminalConfigVariables.isWaitingInput)
 		return;
-	if (indexCommandHistory === -2)
-		indexCommandHistory = commandHistory.length - 1;
-	else if (indexCommandHistory > 0)
-		indexCommandHistory--;
-	currentInput.value = promptText + commandHistory[indexCommandHistory];
+	if (TerminalCommand.indexCommandHistory === -2)
+		TerminalCommand.indexCommandHistory = TerminalCommand.commandHistory.length - 1;
+	else if (TerminalCommand.indexCommandHistory > 0)
+		TerminalCommand.indexCommandHistory--;
+	TerminalElements.currentInput.value = TerminalPromptAndEnv.promptText + TerminalCommand.commandHistory[TerminalCommand.indexCommandHistory];
 	resize();
 }
 
 function ArrowDownCase() {
-	if (!currentInput || commandHistory.length === 0 || indexCommandHistory === -2 || isWaitingInput)
+	if (!TerminalElements.currentInput || TerminalCommand.commandHistory.length === 0 || TerminalCommand.indexCommandHistory === -2 || TerminalConfigVariables.isWaitingInput)
 		return;
-	if (indexCommandHistory < commandHistory.length - 1) {
-		indexCommandHistory++;
-		currentInput.value = promptText + commandHistory[indexCommandHistory];
+	if (TerminalCommand.indexCommandHistory < TerminalCommand.commandHistory.length - 1) {
+		TerminalCommand.indexCommandHistory++;
+		TerminalElements.currentInput.value = TerminalPromptAndEnv.promptText + TerminalCommand.commandHistory[TerminalCommand.indexCommandHistory];
 	}
 }
 
 function tabCase() {
-	if (!currentInput || !terminal)
+	if (!TerminalElements.currentInput || !TerminalElements.terminal)
 		return;
-	if (isTabInProcess)
+	if (TerminalConfigVariables.isTabInProcess)
 		return TabProcessInTab();
-	const command = currentInput.value.slice(promptText.length);
-	const cursorPosition = currentInput.selectionStart - promptText.length;
+	const command = TerminalElements.currentInput.value.slice(TerminalPromptAndEnv.promptText.length);
+	const cursorPosition = TerminalElements.currentInput.selectionStart - TerminalPromptAndEnv.promptText.length;
 	let result = getListOfElementTabCompletion(command, cursorPosition);
 	if (!result || !result[0] || result[0].startsWith('ls:'))
 		return;
@@ -721,7 +655,7 @@ function tabCase() {
 		resize();
 		return;
 	}
-	isTabInProcess = true;
+	TerminalConfigVariables.isTabInProcess = true;
 
 	const element = document.createElement('div');
 	element.id = "tab-completion";
@@ -732,32 +666,32 @@ function tabCase() {
 		item.textContent = '> ' + result[i];
 		element.appendChild(item);
 	}
-	terminal.appendChild(element);
+	TerminalElements.terminal.appendChild(element);
 }
 
 // -------------------------------------------------------------------- Event Listeners ---------------------------------------------------------------------
 
 function setEventListeners() {
-	if (!isBuilded)
+	if (!TerminalConfigVariables.isBuilded)
 		return;
 
-	if (terminal) {
-		terminal.addEventListener('click', () => {
-			if (currentInput && !Modal.isModalActive && !ExtendedView.isExtendedViewIsActive) {
-				currentInput.focus();
+	if (TerminalElements.terminal) {
+		TerminalElements.terminal.addEventListener('click', () => {
+			if (TerminalElements.currentInput && !Modal.isModalActive && !ExtendedView.isExtendedViewIsActive) {
+				TerminalElements.currentInput.focus();
 			}
 		});
 		window.addEventListener('resize', (e) => {
-			if (currentInput)
+			if (TerminalElements.currentInput)
 				resize();
 		});
-		if (currentInput) {
-			currentInput.addEventListener('mousedown', e => {
+		if (TerminalElements.currentInput) {
+			TerminalElements.currentInput.addEventListener('mousedown', e => {
 				e.preventDefault();
 			});
 		}
-		if (currentInput) {
-			currentInput.addEventListener('keydown', (event: KeyboardEvent) => {
+		if (TerminalElements.currentInput) {
+			TerminalElements.currentInput.addEventListener('keydown', (event: KeyboardEvent) => {
 				if (event.key === 'F11' || (event.ctrlKey && event.key.toLowerCase() === 'r')) {
 					return;
 				}
@@ -774,10 +708,10 @@ function setEventListeners() {
 					case (event.key === 'Backspace'): backspaceCase(); break;
 					default: defaultCase(event); break;
 				}
-				if (terminal) {
-					terminal.scrollTop = terminal.scrollHeight;
+				if (TerminalElements.terminal) {
+					TerminalElements.terminal.scrollTop = TerminalElements.terminal.scrollHeight;
 				}
-				if (event.key !== 'Tab' && isTabInProcess) {
+				if (event.key !== 'Tab' && TerminalConfigVariables.isTabInProcess) {
 					clearTabCompletion();
 				}
 			});
@@ -788,213 +722,74 @@ function setEventListeners() {
 // -------------------------------------------------------------------- Initialisation ---------------------------------------------------------------------
 export namespace Terminal {
 	export async function buildTerminal() {
-		if (isBuilded)
+		if (TerminalConfigVariables.isBuilded)
 			return;
-		const success = await loadUser();
-		terminal = document.createElement('div');
-		terminal.id = "terminal";
-		terminal.className = "terminal-font p-4 m-0 bg-black border-2 border-green-500 float-left text-green-400 text-sm overflow-y-auto focus:outline-none cursor-text relative scroll-smooth"
-		terminal.style.height = "calc(100vh)";
-		terminal.style.width = "100%";
-		terminal.tabIndex = 0;
-		terminal.setAttribute('role', 'region');
-		terminal.setAttribute('aria-label', 'Terminal interactif');
-		terminal.setAttribute('aria-readonly', 'true');
-		terminal.setAttribute('aria-hidden', 'false');
+		const success = await RequestBackendModule.loadUser();
+		TerminalElements.terminal = document.createElement('div');
+		TerminalElements.terminal.id = "terminal";
+		TerminalElements.terminal.className = "terminal-font p-4 m-0 bg-black border-2 border-green-500 float-left text-green-400 text-sm overflow-y-auto focus:outline-none cursor-text relative scroll-smooth"
+		TerminalElements.terminal.style.height = "calc(100vh)";
+		TerminalElements.terminal.style.width = "100%";
+		TerminalElements.terminal.tabIndex = 0;
+		TerminalElements.terminal.setAttribute('role', 'region');
+		TerminalElements.terminal.setAttribute('aria-label', 'Terminal interactif');
+		TerminalElements.terminal.setAttribute('aria-readonly', 'true');
+		TerminalElements.terminal.setAttribute('aria-hidden', 'false');
 
-		output = document.createElement('div');
-		output.id = "output";
-		output.className = "terminal-output";
-		terminal.appendChild(output);
+		TerminalElements.output = document.createElement('div');
+		TerminalElements.output.id = "output";
+		TerminalElements.output.className = "terminal-output";
+		TerminalElements.terminal.appendChild(TerminalElements.output);
+		
+		TerminalElements.inputLine = document.createElement('div');
+		TerminalElements.inputLine.id = "input-line";
+		TerminalElements.inputLine.className = "input-line";
 
-		inputLine = document.createElement('div');
-		inputLine.id = "input-line";
-		inputLine.className = "input-line";
+		TerminalElements.currentInput = document.createElement('textarea');
+		TerminalElements.currentInput.spellcheck = false;
+		TerminalElements.currentInput.autocomplete = "off";
+		TerminalElements.currentInput.id = "current-input";
+		TerminalElements.currentInput.className = "current-input";
+		TerminalElements.currentInput.rows = 1;
+		TerminalElements.currentInput.value = TerminalPromptAndEnv.promptText;
+		TerminalElements.inputLine.appendChild(TerminalElements.currentInput);
+		TerminalElements.terminal.appendChild(TerminalElements.inputLine);
+		document.body.appendChild(TerminalElements.terminal);
 
-		currentInput = document.createElement('textarea');
-		currentInput.spellcheck = false;
-		currentInput.autocomplete = "off";
-		currentInput.id = "current-input";
-		currentInput.className = "current-input";
-		currentInput.rows = 1;
-		currentInput.value = promptText;
-		inputLine.appendChild(currentInput);
-		terminal.appendChild(inputLine);
-		document.body.appendChild(terminal);
-
-		isBuilded = true;
+		TerminalConfigVariables.isBuilded = true;
 		setEventListeners();
-		currentInput.focus();
+		TerminalElements.currentInput.focus();
 	}
 }
 
-async function register(args: string[]): Promise<string> 
-{
-	try {
-		const response = await fetch('http://localhost:8181/auth/register', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				username: args[1],
-				password: args[2],
-				email: args[0]
-			})
-		});
-		const data = await response.json();
-		if (data.success) {
-			document.cookie = `accessToken=${data.tokens.accessToken}; path=/;`;
-			document.cookie = `refreshToken=${data.tokens.refreshToken}; path=/;`;
-			await loadUser();
-			return 'Registration successful!';
-		} else {
-			let message = data.message || "Unknown error";
-			return 'Login failed: ' + message;
-		}
-	} catch (error) {
-		console.error("Error:", error);
-		return 'Login failed due to an error.';
-	}
-}
 
-async function login(args: string[]): Promise<string> {
-	try {
-		const response = await fetch('http://localhost:8181/auth/login', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				identifier: args[0],
-				password: args[1],
-			})
-		});
-		const data = await response.json();
-		if (data.success) {
-			document.cookie = `accessToken=${data.tokens.accessToken}; path=/;`;
-			document.cookie = `refreshToken=${data.tokens.refreshToken}; path=/;`;
-			await loadUser();
-			return 'Login successful!';
-		} else {
-			let message = data.message || "Unknown error";
-			return 'Login failed: ' + message;
-		}
-	} catch (error) {
-		console.error("Error:", error);
-		return 'Login failed due to an error.';
-	}
-}
 
 function loginInput(args: string[]): string {
-	if (isLoggedIn)
+	if (TerminalUserManagement.isLoggedIn)
 		return 'You are already logged in.';
 	let argsTest = ["Identifier", "Password"];
-	AskInput(argsTest, [2], login);
+	AskInput(argsTest, [2], RequestBackendModule.login);
 	return '';
 }
 
 function registerInput(args: string[]): string {
-	if (isLoggedIn)
+	if (TerminalUserManagement.isLoggedIn)
 		return 'You are already logged in.';
 	let argsTest = ["Mail", "Username", "Password"];
-	AskInput(argsTest, [3], register);
+	AskInput(argsTest, [3], RequestBackendModule.register);
 	return '';
 }
 
 function AskInput(args: string[], hideInput: number[], fun: Function): string
 {
-	InputIncomming = args.length;
-	WaitingHidden = hideInput;
-	isWaitingInput = true;
-	InputArgs = args;
-	InputResult = [];
-	InputFunction = fun;
+	TerminalConfigVariables.InputIncomming = args.length;
+	TerminalConfigVariables.WaitingHidden = hideInput;
+	TerminalConfigVariables.isWaitingInput = true;
+	TerminalConfigVariables.InputArgs = args;
+	TerminalConfigVariables.InputResult = [];
+	TerminalConfigVariables.InputFunction = fun;
 	return '';
 }
 
-function getCookie(name: string): string | undefined {
-	const matches = document.cookie.match(
-	new RegExp(
-		"(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
-	)
-	);
-	return matches ? decodeURIComponent(matches[1]) : undefined;
-}
 
-async function tryRefreshToken() : Promise<boolean>
-{
-	console.log("Trying to refresh token...");
-	const token =  getCookie('refreshToken') || '';
-	if (token === '') {
-		return false;
-	}
-	try {
-		const response = await fetch('http://localhost:8181/auth/refresh', {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': 'Bearer ' + token
-			},
-		});
-		const data = await response.json();
-		if (data.success) {
-			document.cookie = `accessToken=${data.tokens.accessToken}; path=/;`;
-			document.cookie = `refreshToken=${data.tokens.refreshToken}; path=/;`;
-			return true;
-		}
-		else
-			return false;
-	} catch (error) {
-		console.error("Error:", error);
-		return false;
-	}
 
-}
-
-async function loadUser(): Promise<boolean> {
-	const token = getCookie('accessToken') || '';
-	if (token === '') {
-		return false;
-	}
-	try {
-		const response = await fetch('http://localhost:8181/suscriber/profile', {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': 'Bearer ' + token
-			},
-		});
-		const data = await response.json();
-		if (data.success) {
-			username = data.user.username;
-			updatePromptText( username + "@terminal:" + currentDirectory +"$ " );
-			isLoggedIn = true;
-			return true;
-		}
-		if (data.message === 'Token expired') {
-			const refreshed = await tryRefreshToken();
-			if (!refreshed) {
-				TerminalUtils.printErrorOnTerminal("Please log in.");
-				return false;
-			}
-			return await loadUser();
-		}
-		return false;
-	} catch (error) {
-		console.error("Error:", error);
-		return false;
-	}
-}
-
-function logout(): string
-{
-	if (!isLoggedIn)
-		return 'You are not logged in.';
-	document.cookie = 'accessToken=; path=/;';
-	document.cookie = 'refreshToken=; path=/;';
-	isLoggedIn = false;
-	username = 'usah';
-	updatePromptText( username + "@terminal:" + currentDirectory +"$ " );
-	return 'Logged out successfully.';
-}

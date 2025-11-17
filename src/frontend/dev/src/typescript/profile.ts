@@ -2,7 +2,7 @@ export { };
 
 import { Modal } from './modal.ts'
 import { ExtendedView } from './extendedView.ts'
-import { TerminalUtils } from './terminal.ts';
+import { WriteOnTerminal } from './terminalUtils/writeOnTerminal.ts';
 
 /*
 	Attente des donnes backend. Penser a sanitize les donnes avant de les afficher https://github.com/cure53/DOMPurify
@@ -273,6 +273,7 @@ export namespace ProfileBuilder {
 	export let isActive = false;
 }
 
+
 function ChangeName() {
 	if (Modal.isModalActive)
 		return;
@@ -280,6 +281,9 @@ function ChangeName() {
 		Modal.closeModal();
 		console.log("New name:", text);
 		// Sanitize
+
+
+
 		// Send Backend
 		// Update 2/3 variable
 		// let args: string[] = ["System Notification (Wall) - Change Name", "You've try to change your name, attempt succesfull, your new name is " + text];

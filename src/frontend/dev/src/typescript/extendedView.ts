@@ -1,4 +1,4 @@
-import { TerminalUtils } from './terminal.ts'
+import { WriteOnTerminal } from "./terminalUtils/writeOnTerminal";
 
 interface Match {
 	state: string;
@@ -362,7 +362,7 @@ export namespace ExtendedView {
 			if (event.key === 'Escape' || (event.key === 'c' && event.ctrlKey)) {
 				event.preventDefault();
 				closeExtendedView();
-				TerminalUtils.displayOnTerminal("^C", true);
+				WriteOnTerminal.displayOnTerminal("^C", true);
 			}
 		});
 		const closeButton = document.createElement('button');

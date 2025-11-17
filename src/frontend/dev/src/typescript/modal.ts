@@ -1,4 +1,4 @@
-import { TerminalUtils } from './terminal.ts'
+import { WriteOnTerminal } from './terminalUtils/writeOnTerminal'
 
 function createInputTextElement(placeholder: string, isPassword: boolean): HTMLInputElement {
 	const input = document.createElement('input');
@@ -70,7 +70,7 @@ export namespace Modal {
 			else if (event.key === 'Escape' || event.key ==='c' && event.ctrlKey) {
 				event.preventDefault();
 				closeModal();
-				TerminalUtils.displayOnTerminal("^C", true);
+				WriteOnTerminal.displayOnTerminal("^C", true);
 			}
 			else if (event.key === 'Tab') {
 				event.preventDefault();
