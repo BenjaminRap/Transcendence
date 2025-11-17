@@ -9,8 +9,8 @@ export class FriendController {
     ) {}
 
     // ----------------------------------------------------------------------------- //
-    // /friend/request/:id
-    async createFriendRequest(request: FastifyRequest, reply: FastifyReply) {
+    // POST /friend/request/:id
+    async createFriendRequest(request: FastifyRequest<{ Params: {id: string} }>, reply: FastifyReply) {
         try {
             const userId = (request as any).user.userId;
             const friendId = CommonSchema.idParam.safeParse(request.params['id']);
@@ -44,8 +44,8 @@ export class FriendController {
     }
 
     // ----------------------------------------------------------------------------- //
-    // /friend/accept/:id
-    async acceptFriendRequest(request: FastifyRequest, reply: FastifyReply) {
+    // PUT /friend/accept/:id
+    async acceptFriendRequest(request: FastifyRequest<{ Params: {id: string} }>, reply: FastifyReply) {
         try {
             const userId = (request as any).user.userId;
             const friendId = CommonSchema.idParam.safeParse(request.params['id']);
@@ -56,10 +56,7 @@ export class FriendController {
             // check users existance; their connection; update the friendship status
             await this.friendService.acceptFriendRequest(Number(friendId.data), Number(userId));
             
-            return reply.status(204).send({
-                success: true,
-                message: 'Request accepted'
-            });
+            return reply.status(204).send();
         } catch (error) {
             if (error instanceof FriendException ) {
                 switch (error.message) {
@@ -79,8 +76,8 @@ export class FriendController {
     }
 
     // ----------------------------------------------------------------------------- //
-    // /friend/delete/:id
-    async deleteFriend(request: FastifyRequest, reply: FastifyReply) {
+    // PUT /friend/delete/:id
+    async deleteFriend(request: FastifyRequest<{ Params: {id: string} }>, reply: FastifyReply) {
         try {
             const userId = (request as any).user.userId;
             const friendId = CommonSchema.idParam.safeParse(request.params['id']);
@@ -90,10 +87,7 @@ export class FriendController {
 
             await this.friendService.deleteFriend(Number(friendId.data), Number(userId));
             
-            return reply.status(204).send({
-                success: true,
-                message: 'Deleted friend'
-            });
+            return reply.status(204).send();
 
         } catch (error) {
             if (error instanceof FriendException ) {
@@ -115,7 +109,7 @@ export class FriendController {
     }
 
     // ----------------------------------------------------------------------------- //
-    // /friend/search/myfriends
+    // GET /friend/search/myfriends
     async getFriendList(request: FastifyRequest, reply: FastifyReply) {
         try {
             const userId = (request as any).user.userId;
@@ -128,8 +122,14 @@ export class FriendController {
                 friendList
             });
         } catch (error) {
-            if (error instanceof FriendException )
-                return reply.status(404).send({ success: false, message: error.message });
+            if (error instanceof FriendException ) {
+                switch (error.code) {
+                    case FriendError.USR_NOT_FOUND:
+                        return reply.status(404).send({ success: false, message: error.message });
+                    default:
+                        return reply.status(400).send({ success: false, message: error.message });
+                }
+            }
 
             request.log.error(error);
             return reply.status(500).send({
@@ -140,7 +140,7 @@ export class FriendController {
     }
 
     // ----------------------------------------------------------------------------- //
-    // /friend/search/pendinglist
+    // GET /friend/search/pendinglist
     async getPendingList(request: FastifyRequest, reply: FastifyReply) {
         try {
             const userId = (request as any).user.userId;
@@ -155,9 +155,14 @@ export class FriendController {
 
             
         } catch (error) {
-            if (error instanceof FriendException )
-                return reply.status(404).send({ success: false, message: error.message });
-
+            if (error instanceof FriendException ) {
+                switch (error.code) {
+                    case FriendError.USR_NOT_FOUND:
+                        return reply.status(404).send({ success: false, message: error.message });
+                    default:
+                        return reply.status(400).send({ success: false, message: error.message });
+                }
+            }
             request.log.error(error);
             return reply.status(500).send({
                 success: false,

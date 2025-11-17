@@ -11,7 +11,7 @@ export class AuthController {
     ) {}
 
     // --------------------------------------------------------------------------------- //
-    // auth/register
+    // POST auth/register
     async register(request: FastifyRequest<{ Body: RegisterData }>, reply: FastifyReply) {
         try {
             /*  - Check presence and the syntax of all these fields
@@ -21,7 +21,10 @@ export class AuthController {
             */
             const validation = AuthSchema.register.safeParse(request.body);
             if (!validation.success)
-                return reply.status(400).send({ success: false, message: validation.error.message });
+                return reply.status(400).send({
+                    success: false,
+                    message: validation.error?.issues?.[0]?.message || 'Invalid input'
+                });
 
             // Checks if the user already exists; if not, creates it; returns sanitized user + tokens
             const result = await this.authService.register(validation.data as RegisterData);
@@ -45,17 +48,16 @@ export class AuthController {
     }
 
     // --------------------------------------------------------------------------------- //
-    // auth/login
+    // POST auth/login
     async login(request: FastifyRequest<{ Body: LoginData }>, reply: FastifyReply) {
         try {
             // Check if the fields are not empty and verify the password format
-            const requiredData = {
-                identifier: request.body.identifier,
-                password: request.body.password,
-            };
-            const validation = AuthSchema.login.safeParse(requiredData);
+            const validation = AuthSchema.login.safeParse(request.body);
             if (!validation.success)
-                return reply.status(400).send({ success: false, message: validation.error.message });
+                return reply.status(400).send({ 
+                    success: false,
+                    message: validation.error?.issues?.[0]?.message || 'Invalid input'
+                });
 
             // Check if the username or email address is in the correct format
             if (!CommonSchema.email.safeParse(validation.data.identifier).success &&
@@ -85,7 +87,7 @@ export class AuthController {
     }
 
     // --------------------------------------------------------------------------------- //
-    // auth/refresh
+    // GET auth/refresh
     async refresh(request: FastifyRequest, reply: FastifyReply) {
         try {
             const user = (request as any).user;
@@ -112,14 +114,17 @@ export class AuthController {
     }
 
     // --------------------------------------------------------------------------------- //
-    // auth/verifypassword
+    // POST auth/verifypassword
     async verifyPassword(request: FastifyRequest<{ Body: VerifData }>, reply: FastifyReply) {
         try {
             const user = (request as any).user;
 
             const validation = AuthSchema.verifyPassword.safeParse(request.body);
             if (!validation.success)
-                return reply.status(400).send({ success: false, message: validation.error.message });
+                return reply.status(400).send({
+                    success: false,
+                    message: validation.error?.issues?.[0]?.message || 'Invalid input'
+                });
 
             // verify password
             const tokenKey = await this.authService.verifyPassword(user.userId, validation.data.password);

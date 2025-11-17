@@ -6,11 +6,14 @@ export const AuthSchema = {
     register: z.object({
         username: CommonSchema.username,
         password: CommonSchema.password,
-        email: CommonSchema.email
+        email: CommonSchema.email,
+        avatar: CommonSchema.avatar.optional(),
     }).strict(),
 
     login: z.object({
-        identifier: z.string().min(1, 'Email or username is required'),
+        identifier: z.string()
+                    .trim()
+                    .min(1, 'Email or username is required'),
         password: CommonSchema.password
     }).strict(),
 

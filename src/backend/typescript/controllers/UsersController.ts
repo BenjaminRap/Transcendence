@@ -1,4 +1,4 @@
-import { FastifyRequest, FastifyReply } from "fastify";
+import { FastifyRequest, FastifyReply, FastifyBodyParser } from "fastify";
 import { UsersService} from "../services/UsersService.js";
 import { CommonSchema } from "../schemas/common.schema.js";
 import { UsersSchema } from "../schemas/users.schema.js";
@@ -10,16 +10,20 @@ export class UsersController {
     ) {}
     
     // ----------------------------------------------------------------------------- //
-    // /users/search/id/:id
-    async getById(request: FastifyRequest, reply: FastifyReply) {
+    // GET /users/search/id/:id
+    async getById(request: FastifyRequest<{ Params: {id: string} }>, reply: FastifyReply) {
         try {
+            const userId = Number((request as any).user.userId);
             // params validation
             const idData = CommonSchema.idParam.safeParse(request.params['id']);
             if (!idData.success) {
-                throw new UsersException(UsersError.INVALID_ID, UsersError.INVALID_ID);
+                return reply.status(400).send({
+                    success: false,
+                    message: idData.error?.issues?.[0]?.message || 'Invalid input'
+                });
             }
             // fetch user throw exception if not found
-            const user = await this.usersService.getById(idData.data);
+            const user = await this.usersService.getById(idData.data, userId);
 
             return reply.status(200).send({
                 success: true,
@@ -45,9 +49,10 @@ export class UsersController {
     }
 
     // ----------------------------------------------------------------------------- //
-    // /users/search/username/:username
-    async getByName(request: FastifyRequest, reply: FastifyReply) {
+    // GET /users/search/username/:username
+    async getByName(request: FastifyRequest<{ Params: {username: string} }>, reply: FastifyReply) {
         try {
+            const userId = Number((request as any).user.userId);
             // params validation
             const searchedUser = UsersSchema.fetchedName.safeParse(request.params['username']);
             if (!searchedUser.success) {
@@ -55,7 +60,7 @@ export class UsersController {
             }
 
             // fetch user list or empty list if nothing match
-            const user = await this.usersService.getByName(searchedUser.data);
+            const user = await this.usersService.getByName(searchedUser.data, userId);
 
             return reply.status(200).send({
                 success: true,

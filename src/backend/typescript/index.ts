@@ -28,8 +28,7 @@ fastify.after(async (err) => {
     if (err)
         throw err;
 
-    const container = Container.getInstance();
-    container.initialize(fastify.prisma);
+    const container = Container.getInstance(fastify.prisma);
     
     // auth /register /login - /refresh
     fastify.register((instance, opts, done) => {
@@ -56,7 +55,7 @@ fastify.after(async (err) => {
         suscriberRoute(
             instance,
             Container.getInstance().getService('SuscriberController'),
-            Container.getInstance().getService('AuthMiddleware')
+            Container.getInstance().getService('AuthMiddleware'),
         );
         done();
     }, { prefix: '/suscriber' });

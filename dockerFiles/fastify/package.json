@@ -6,6 +6,7 @@
 		"fastify-sqlite-typed": "^5.0.2",
 		"@fastify/cors": "11.1.0",
 		"jsonwebtoken": "9.0.2",
+		"@types/jsonwebtoken": "9.0.10",
 		"bcrypt": "6.0.0",
 		"fastify-bcrypt": "1.0.1",
 		"@prisma/client": "^6.19.0",

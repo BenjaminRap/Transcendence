@@ -1,5 +1,5 @@
 import { PrismaClient, User } from "@prisma/client";
-import { UpdateData } from "../types/suscriber.types.js";
+import { UpdateData, SuscriberStats } from "../types/suscriber.types.js";
 import { PasswordHasher } from "../utils/PasswordHasher.js";
 import { sanitizeUser, SanitizedUser } from '../types/auth.types.js'
 import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
@@ -25,6 +25,10 @@ export class SuscriberService {
         const user = await this.getById(Number(id));
         if (!user) {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
+        }
+
+        if (user.password === newPassword) {
+            throw new SuscriberException(SuscriberError.PASSWD_ERROR, SuscriberError.PASSWD_ERROR);
         }
 
         const hashedPassword = await this.passwordHasher.hash(newPassword);
@@ -64,23 +68,63 @@ export class SuscriberService {
                 username: data.username ?? user.username,
                 avatar: data.avatar ?? user.avatar
             },
-            select: {
-                id: true,
-                username: true,
-                avatar: true
+        });
+
+        return sanitizeUser(updatedUser);
+    }
+
+    // ----------------------------------------------------------------------------- //
+    async deleteAccount(id: number): Promise<void> {
+        const user = await this.getById(Number(id));
+        if (!user) {
+            throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
+        }
+
+        await this.prisma.user.delete({
+            where: { id: Number(id) }
+        });
+    }
+
+    // ----------------------------------------------------------------------------- //
+    async getStats(id: number): Promise<SuscriberStats>{
+        if (!this.isExist(id)) {
+            throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
+        }
+
+        const gamesPlayed = await this.prisma.match.count({
+            where: {
+                OR: [
+                    { winnerId: id },
+                    { loserId: id }
+                ]
             }
         });
 
-        return updatedUser;
+        const gamesWon = await this.prisma.match.count({
+            where: { winnerId: id }
+        });
+
+        const winRate = gamesPlayed > 0 ? (gamesWon / gamesPlayed) * 100 : 0;
+
+        return {
+            gamesPlayed,
+            gamesWon,
+            winRate: parseFloat(winRate.toFixed(2))
+        } as SuscriberStats;
     }
 
     // ================================== PRIVATE ================================== //
 
     // ----------------------------------------------------------------------------- //
-    private async getById(id: number) {
+    private async getById(id: number): Promise<User | null> {
         return await this.prisma.user.findFirst({ where: { id } });
     }
 
+    // ----------------------------------------------------------------------------- //
+    private async isExist(id: number): Promise<boolean> {
+        const user = await this.prisma.user.findFirst({ where: { id: Number(id) }, select: { id: true } });
+        return user ? true : false;
+    }
     // ----------------------------------------------------------------------------- //
     private async hasChanged(user: User, data: UpdateData) {
         if (data.username && user.username === data.username)

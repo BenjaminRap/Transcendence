@@ -7,10 +7,10 @@ _Mandatory headers :_
 
 _Body :_ JSON
     {
-        "username": "string(20 char max), **Mandatory field**",
-        "password": "string(8 char, 1 lower, 1 upper and 1 number minimum), **Mandatory field**",
-        "email":    "string format email **Mandatory field**"
-        "avatar":   "string link to image, **non-obligatory field**"
+        "username": string -> "doit respecter usernameSchema"
+        "password": string -> "doit respecter passwordSchema"
+        "email":    string -> "doit respecter email format"
+        "avatar":   string
     }
 
 _Possibles responses :_
@@ -18,8 +18,15 @@ _Possibles responses :_
     {
         success: true,
         message: 'User registered successfully',
-        user: SanitizedUser (**voir dans types/auth.types.ts**)
-        tokens: TokenPair (**voir dans types/tokenManager.types.ts**)
+        user: {
+          id,       string
+          username, string
+          avatar,   string
+        }
+        tokens:{
+          accessToken:  string,
+          refreshToken: string,
+        }
     }
 
 ❌ 400 Bad Request :
@@ -62,8 +69,15 @@ _Possibles responses:_
     {
         success: true,
         message: 'User registered successfully',
-        user: SanitizedUser (**voir dans types/auth.types.ts**)
-        tokens: TokenPair (**voir dans types/tokenManager.types.ts**)
+        user: {
+          id,       string
+          username, string
+          avatar,   string
+        }
+        tokens:{
+          accessToken:  string,
+          refreshToken: string,
+        }
     }
 
 ❌ 400 Bad Request :
@@ -81,7 +95,7 @@ _Possibles responses:_
 ❌ 500 Internal Server Error :  _uniquement si la requete DB a echouee_
     {
         success: false,
-        message: Internal Server Error (NON PAS CA !!!!)
+        message: Internal Server Error
     }
 
 -------------------------------------------------------------------------------------------------------------------------
@@ -98,8 +112,12 @@ _Possibles responses:_
 
 ✅ 200 Ok
   {
-    tokens: TokenPair (**voir dans types/tokenManager.types.ts**),
-    message: "Authentification token renewal successful"
+    success:  true
+    message:  "Authentification token renewal successful"
+    tokens:   {
+      accessToken:  string,
+      refreshToken: string,
+    }
   }
 
 ❌ 401 Unauthorized :
@@ -113,6 +131,12 @@ _Possibles responses:_
     "success": false,
     "message": "User Not Found"
   }
+
+❌ 500 Internal Server Error :  _uniquement si jwt crash_
+    {
+        success: false,
+        message: Internal Server Error
+    }
 
 -------------------------------------------------------------------------------------------------------------------------
 
@@ -133,21 +157,21 @@ _Possibles responses:_
 
 ✅ 200 Ok
   {
-    success: true,
-    tokens: TokenKey (**voir dans types/tokenManager.types.ts**, token jwt valable 5 minutes),
+    success:  true,
     message: "Password verification successful"
+    tokenKey: TokenKey -> string
   }
 
 ❌ 401 Unauthorized :
   {
     "success": false,
-    "message": "Invalid or missing token"
+    "message": "Invalid or missing token auth"
   }
 
 ❌ 400 Bad Request :
   {
     "success": false,
-    "message": "invalid password format"
+    "message": "invalid password format in the body"
   }
 
 ❌ 404 User Not Found :

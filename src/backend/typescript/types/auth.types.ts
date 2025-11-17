@@ -16,7 +16,7 @@ export interface LoginData
 
 export interface SanitizedUser
 {
-    id:         number,
+    id:         string,
     username:   string,
     avatar:     string
 }
@@ -28,7 +28,7 @@ export interface VerifData
 
 export function sanitizeUser(user: User): SanitizedUser {
     return {
-        id: user.id,
+        id: String(user.id),
         username: user.username,
         avatar: user.avatar
     } as SanitizedUser;

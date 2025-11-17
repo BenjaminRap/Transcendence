@@ -1,6 +1,7 @@
 import { PrismaClient, Friendship, User } from "@prisma/client"
 import { FriendException, FriendError } from "../error_handlers/Friend.error.js";
 import { ListFormat } from '../types/friend.types.js'
+import { th } from "zod/v4/locales";
 
 export class FriendService {
     constructor(
@@ -31,7 +32,7 @@ export class FriendService {
     // ----------------------------------------------------------------------------- //
     async acceptFriendRequest(friendId: number, userId: number) {
         if (friendId == userId)
-            throw new FriendException(FriendError.INVALID_ID, FriendError.INVALID_ID);
+            throw new FriendException(FriendError.INVALID_ID, "the user can't accept its own friend request");
 
         // check users account validity
         if ( !this.checkId(friendId) || !this.checkId(userId) )
@@ -91,6 +92,9 @@ export class FriendService {
             },
         });
 
+        if (friendList.length === 0)
+            throw new FriendException(FriendError.USR_NOT_FOUND, "No friends found");
+
         // returns the formated friend list
         return (await this.formatList(friendList, userId) as ListFormat[]);
     }
@@ -114,6 +118,9 @@ export class FriendService {
                 receiver: true,
             },
         });
+
+        if (pendingList.length === 0)
+            throw new FriendException(FriendError.USR_NOT_FOUND, "No pending friends found");
 
         return (await this.formatList(pendingList, userId) as ListFormat[]);
     }
