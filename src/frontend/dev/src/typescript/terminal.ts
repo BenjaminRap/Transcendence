@@ -508,12 +508,10 @@ async function getInputCase(command: string)
 		command = promptText + '*'.repeat(command.length - promptText.length);
 	if (isWaitingInput && InputIncomming == 0 && InputFunction) {
 		result = await InputFunction(InputResult);
-		console.log("Fonction terminer")
 		isWaitingInput = false;
 		InputFunction = null;
 	}
 	output.textContent += command + '\n';
-	console.log("Creation du prompt suivant", promptText, backUpPromptText);
 	if (isWaitingInput && InputIncomming >= 0)
 		promptText = InputArgs[InputArgs.length - InputIncomming] + ': ';
 	if (InputIncomming === 0 && !isWaitingInput)
@@ -584,7 +582,7 @@ function enterCase() {
 			isHidden = false;
 		return;
 	}
-	
+	updateCurrentHistory(command.slice(promptText.length));
 	const result = exec(command.slice(promptText.length));
 	if (isHidden)
 		command = promptText + '*'.repeat(command.length - promptText.length);
@@ -602,7 +600,6 @@ function enterCase() {
 	resetInput();
 	if (changeHidden)
 		isHidden = false;
-	updateCurrentHistory(command.slice(promptText.length));
 }
 
 function clearOutput() {
@@ -831,35 +828,34 @@ export namespace Terminal {
 	}
 }
 
-function register(args: string[]): string {
-	fetch('http://localhost:8181/auth/register', {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json'
-		},
-		body: JSON.stringify({
-			username: args[1],
-			password: args[2],
-			email: args[0]
-		})
-	})
-	.then(response => response.json())
-	.then(data => {
+async function register(args: string[]): Promise<string> 
+{
+	try {
+		const response = await fetch('http://localhost:8181/auth/register', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				username: args[1],
+				password: args[2],
+				email: args[0]
+			})
+		});
+		const data = await response.json();
 		if (data.success) {
-			TerminalUtils.displayOnTerminal("Registration successful!", false);
 			document.cookie = `accessToken=${data.tokens.accessToken}; path=/;`;
 			document.cookie = `refreshToken=${data.tokens.refreshToken}; path=/;`;
-			loadUser();
+			await loadUser();
+			return 'Registration successful!';
 		} else {
 			let message = data.message || "Unknown error";
-			TerminalUtils.printErrorOnTerminal("Registration failed: " + message);
+			return 'Login failed: ' + message;
 		}
-	})
-	.catch(error => {
+	} catch (error) {
 		console.error("Error:", error);
-	});
-
-	return 'Test command executed with args: ' + args.join(' ');
+		return 'Login failed due to an error.';
+	}
 }
 
 async function login(args: string[]): Promise<string> {
@@ -924,7 +920,6 @@ function getCookie(name: string): string | undefined {
 
 function tryRefreshToken() : boolean
 {
-	console.log("Trying to refresh token...");
 	let token = getCookie('refreshToken') || '';
 		fetch('http://localhost:8181/auth/refresh', {
 		method: 'GET',
