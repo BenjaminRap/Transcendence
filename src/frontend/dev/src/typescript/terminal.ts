@@ -887,12 +887,16 @@ async function login(args: string[]): Promise<string> {
 }
 
 function loginInput(args: string[]): string {
+	if (isLoggedIn)
+		return 'You are already logged in.';
 	let argsTest = ["Identifier", "Password"];
 	AskInput(argsTest, [2], login);
 	return '';
 }
 
 function registerInput(args: string[]): string {
+	if (isLoggedIn)
+		return 'You are already logged in.';
 	let argsTest = ["Mail", "Username", "Password"];
 	AskInput(argsTest, [3], register);
 	return '';
