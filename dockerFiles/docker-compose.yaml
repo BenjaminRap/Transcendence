@@ -26,7 +26,6 @@ services:
     volumes:
       - backend:/app/backend/
       - databases:/app/databases/
-      - uploads:/app/uploads/
     environment:
       - PROFILE=${PROFILE:-prod} 
     profiles: [
@@ -52,8 +51,6 @@ volumes:
       device: ../src/backend/
       o: bind
   databases:
-    driver: local
-  uploads: 
     driver: local
 
 secrets:

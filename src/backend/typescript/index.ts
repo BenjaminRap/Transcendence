@@ -1,8 +1,6 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import prismaPlugin from './plugins/prisma.js';
-import multipartPlugin from './plugins/multipart.js';
-import staticPlugin from './plugins/static.js';
 import { fpSqlitePlugin } from 'fastify-sqlite-typed';
 
 import { Container } from './container/Container.js';
@@ -24,9 +22,6 @@ fastify.register(fpSqlitePlugin, {
 
 fastify.register(prismaPlugin);
 
-fastify.register(multipartPlugin);
-
-fastify.register(staticPlugin);
 
 // Instanciation and intialiasation of the dependency injection container
 fastify.after(async (err) => {

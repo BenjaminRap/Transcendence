@@ -10,8 +10,6 @@ export default fp(async (fastify) => {
   fastify.addHook('onClose', async () => {
     await prisma.$disconnect()
   })
-
-  fastify.log.info("Prisma plugin loaded.");
 })
 
 declare module 'fastify' {

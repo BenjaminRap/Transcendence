@@ -27,14 +27,6 @@ export class AuthService {
 
         const hashedPassword = await this.passwordHasher.hash(data.password);
 
-        if (data.avatar) {
-            /**
-             * appeler le controller et lui laisser assurer la securite vis a vis
-             * gerer la mise a jour de l'avatar suivant le retour du controller
-             * 
-            */
-        }
-
         // create user in the DB
         const user = await this.prisma.user.create({
             data: {
@@ -58,13 +50,13 @@ export class AuthService {
         // Find the user
         const user = await this.findByEmailOrUsername(identifier, identifier);
         if (!user) {
-            throw new AuthException(AuthError.INVALID_CREDENTIALS, AuthError.INVALID_CREDENTIALS);
+            throw new AuthException(AuthError.INVALID_CREDENTIALS, 'Invalid email or username');
         }
 
         // verify password
         const isValid = await this.passwordHasher.verify(password, user.password);
         if (!isValid) {
-            throw new AuthException(AuthError.INVALID_CREDENTIALS, AuthError.INVALID_CREDENTIALS);
+            throw new AuthException(AuthError.INVALID_CREDENTIALS, 'Invalid password');
         }
 
         // generate JWT tokens for the session

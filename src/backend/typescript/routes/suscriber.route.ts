@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { SuscriberController } from '../controllers/SuscriberController.js';
 import { AuthMiddleware } from '../middleware/AuthMiddleware.js';
-import { UpdatePassword, DeleteAccount } from '../types/suscriber.types.js';
+import { UpdateData, UpdatePassword, DeleteAccount } from '../types/suscriber.types.js';
 
 export async function suscriberRoute(
     fastify: FastifyInstance, 
@@ -12,20 +12,16 @@ export async function suscriberRoute(
         preHandler: middleware.authenticate,
     }, controller.getProfile.bind(controller));
     
-    fastify.put<{ Body: { username: string } }>('/update/username', {
+    fastify.put<{ Body: UpdateData }>('/updateprofile', {
         preHandler: middleware.authenticate,
-    }, controller.updateUsername.bind(controller));
+    }, controller.updateProfile.bind(controller));
 
-    fastify.put<{ Body: UpdatePassword }>('/update/password', {
+    fastify.put<{ Body: UpdatePassword }>('/updatepassword', {
         preHandler: [
             middleware.authenticate,
             middleware.keyAuthenticate
         ]
     }, controller.updatePassword.bind(controller));
-
-    fastify.put<{ Body: { avatar: any } }>('/update/avatar', {
-        // preHandler: middleware.authenticate,
-    }, controller.updateAvatar.bind(controller));
 
     fastify.delete<{ Body: DeleteAccount }>('/deleteaccount', {
         preHandler: [
