@@ -2,7 +2,7 @@ import { Scene } from "@babylonjs/core/scene";
 import { GroundMesh, Mesh, TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { int } from "@babylonjs/core/types";
-import { Matrix, Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Range } from "../Range";
 import { randomFromRange } from "../utilities";
 
@@ -64,6 +64,8 @@ export class RandomEnvironmentGenerator extends ScriptComponent {
 
 		position.x = randomFromRange(posRange);
 		position.z = randomFromRange(posRange);
+		position.addInPlace(ground.absolutePosition);
+
 		position.y = ground.getHeightAtCoordinates(position.x, position.z);
 
 		return position;
