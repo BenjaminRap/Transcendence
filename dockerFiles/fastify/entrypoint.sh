@@ -3,9 +3,9 @@ set -e
 
 if [ "${PROFILE:-prod}" = "dev" ]; then
   echo "Running Prisma migrations (dev)..."
-  npx prisma migrate dev --name init
+  npx prisma migrate dev --name init --shema=./prisma/schema.prisma
 
-  echo "Starting in DEV mode with nodemon..."
+  # echo "Starting in DEV mode with nodemon..."
   npm install -g nodemon
   exec nodemon --watch /app/backend/javascript -e js /app/backend/javascript/index.js
 

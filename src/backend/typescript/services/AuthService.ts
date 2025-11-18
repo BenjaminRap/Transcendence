@@ -33,6 +33,7 @@ export class AuthService {
              * gerer la mise a jour de l'avatar suivant le retour du controller
              * 
             */
+           
         }
 
         // create user in the DB

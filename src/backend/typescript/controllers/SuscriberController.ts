@@ -130,79 +130,92 @@ export class SuscriberController {
 
     // --------------------------------------------------------------------------------- //
     // PUT /suscriber/update/avatar
-    /**
-     * cette fonction est la porte d'entree api pour update
-     * gerer les header pour obliger les bon types mimes et le bon content ?
-     * 
-     * par ou passe l'image ?
-     *  par body ?
-     *  autre ?
-     * quel est le type que je vais recevoir de la requete pour le fichier ?
-     * 
-     */
     async updateAvatar(request: FastifyRequest, reply: FastifyReply) {
-        try {
-            const id = 0;//(request as any).user.userId;
-            // console.log("REQUEST: ", request);
-            
+        try {            
             // Récupérer le fichier via multipart
-            const data = await request.file() ;
-
-            console.log('FILE DATA: ', data);
-            
-            if (!data) {
-                return reply.status(400).send({
-                    success: false,
-                    message: 'Empty File',
-                    redirectTo: '/suscriber/update/avatar'
-                });
+            // IMPORTANT: le client doit envoyer Content-Type: multipart/form-data
+            let data;
+            try {
+                data = await request.file();
+                if (!data) {
+                    return reply.status(400).send({
+                        success: false,
+                        message: 'No file provided',
+                        redirectTo: '/suscriber/update/avatar'
+                    });
+                }
+            } catch (multipartError: any) {
+                request.log.error(multipartError);
+                switch (multipartError.code) {
+                    
+                    case 'FST_INVALID_MULTIPART_CONTENT_TYPE': {
+                        return reply.status(400).send({
+                            success: false,
+                            message: 'Invalid Content-Type. Must be: multipart/form-data',
+                            redirectTo: '/suscriber/update/avatar'
+                        });
+                    }
+                    case 'FST_PARTS_LIMIT': {
+                        return reply.status(413).send({
+                            success: false,
+                            message: 'File too large. Maximum size: 2 MB',
+                            redirectTo: '/suscriber/update/avatar'
+                        });
+                    }
+                    default: {
+                        return reply.status(400).send({
+                            success: false,
+                            message: 'Error processing file upload',
+                            redirectTo: '/suscriber/update/avatar'
+                        });
+                    }
+                }                
             }
+
 
             // Vérifier le MIME type avant traitement
             const allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
             if (!allowedMimes.includes(data.mimetype)) {
-                return reply.code(400).send({ 
+                return reply.status(400).send({ 
                     success: false,
-                    message: 'File format not allowed. Accept types : JPEG, PNG, WEBP',
-                    redirectYo: '/suscriber/update/avatar'
+                    message: 'File format not allowed. Accepted: JPEG, PNG, WEBP',
+                    redirectTo: '/suscriber/update/avatar'
                 });
             }
 
-            //  size double check after multipart
+            // Vérifier la taille du fichier
             const buffer = await data.toBuffer();
             if (buffer.length > 2 * 1024 * 1024) {
-                return reply.code(400).send({ 
+                return reply.status(413).send({ 
                     success: false,
-                    message: 'File too big. Size max : 2 MB'
+                    message: 'File too large. Maximum size: 2 MB',
+                    redirectTo: '/suscriber/update/avatar'
                 });
             }
 
+            const id = 10;//(request as any).user.userId; -> comme ca pour tests
             // Appeler le service pour traiter l'upload
             const updatedUser = await this.suscriberService.updateAvatar(
                 id,
                 buffer,
                 data.filename
             );
+            
 
-
-
+            return reply.status(200).send({
+                success: true,
+                message: 'Avatar successfully updated',
+                redirectTo: '/suscriber/profile',
+                user: updatedUser
+            });
 
         } catch (error) {
+            request.log.error(error);
             return reply.status(500).send({
                 success: false,
-                message: 'Internal Server Error',
-                error: error
+                message: 'Internal server error'
             });
-            
         }
-        // appel zodSchema
-
-        
-        // recuperer le fichier avec le plugin necessaire (multipart)
-        
-        // appel du service updateAvatar pour verif plus pousses et mis a jour avatar db + volume
-
-        // reponse avec reply 
     }
 
     // ----------------------------------------------------------------------------- //
@@ -274,4 +287,6 @@ export class SuscriberController {
             });
         }
     }
+
+    // ================================== PRIVATE ================================== //
 }

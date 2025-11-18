@@ -23,7 +23,7 @@ export async function suscriberRoute(
         ]
     }, controller.updatePassword.bind(controller));
 
-    fastify.put<{ Body: { avatar: any } }>('/update/avatar', {
+    fastify.put('/update/avatar', {
         // preHandler: middleware.authenticate,
     }, controller.updateAvatar.bind(controller));
 
