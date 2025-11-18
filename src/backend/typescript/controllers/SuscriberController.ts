@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { SuscriberService } from "../services/SuscriberService.js";
-import { UpdateData, UpdatePassword, DeleteAccount } from "../types/suscriber.types.js";
+import { UpdatePassword, DeleteAccount } from "../types/suscriber.types.js";
 import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
 import { SuscriberSchema } from "../schemas/suscriber.schema.js";
 
@@ -38,7 +38,7 @@ export class SuscriberController {
     }
 
     // ----------------------------------------------------------------------------- //
-    // PUT /suscriber/updatepassword
+    // PUT /suscriber/update/password
     async updatePassword(request: FastifyRequest<{ Body: UpdatePassword }>, reply: FastifyReply) {
         try {
             // the accessToken and tokenKey are already validated in the middleware
@@ -49,7 +49,7 @@ export class SuscriberController {
                 return reply.status(400).send({
                     success: false,
                     message: validation.error?.issues?.[0]?.message || 'Invalid input',
-                    redirectTo: '/suscriber/updatepassword'
+                    redirectTo: '/suscriber/update/password'
                 });
             }
             
@@ -70,7 +70,7 @@ export class SuscriberController {
                         return reply.status(409).send({
                             success: false,
                             message: error.message,
-                            redirectTo: '/suscriber/updatepassword'
+                            redirectTo: '/suscriber/update/password'
                         });
                 }
             }
@@ -84,21 +84,21 @@ export class SuscriberController {
     }
 
     // ----------------------------------------------------------------------------- //
-    // PUT /suscriber/updateprofile
-    async updateProfile(request: FastifyRequest<{ Body: UpdateData }>, reply: FastifyReply) {
+    // PUT /suscriber/update/username
+    async updateUsername(request: FastifyRequest<{ Body: { username: string } }>, reply: FastifyReply) {
         try {          
             const id = (request as any).user.userId;
-            const validation = SuscriberSchema.update.safeParse(request.body);
+            const validation = SuscriberSchema.updateUsername.safeParse(request.body);
             if (!validation.success) {
                 return reply.status(400).send({
                     success: false,
                     message: validation.error?.issues?.[0]?.message || 'Invalid input',
-                    redirectTo: '/suscriber/updateprofile'
+                    redirectTo: '/suscriber/update/username'
                 });
             }
 
             // check data, user existence, mail and username availability then update and returns user or throw exception
-            const user = await this.suscriberService.updateProfile(id, validation.data);
+            const user = await this.suscriberService.updateUsername(id, validation.data.username);
     
             return reply.status(200).send({
                 success: true,
@@ -115,7 +115,7 @@ export class SuscriberController {
                         return reply.status(409).send({
                             success: false,
                             message: error.message,
-                            redirectTo: '/suscriber/updateprofile'
+                            redirectTo: '/suscriber/update/username'
                         });
                 }
             }
@@ -126,6 +126,83 @@ export class SuscriberController {
                 message: 'Internal server error'
             });            
         }
+    }
+
+    // --------------------------------------------------------------------------------- //
+    // PUT /suscriber/update/avatar
+    /**
+     * cette fonction est la porte d'entree api pour update
+     * gerer les header pour obliger les bon types mimes et le bon content ?
+     * 
+     * par ou passe l'image ?
+     *  par body ?
+     *  autre ?
+     * quel est le type que je vais recevoir de la requete pour le fichier ?
+     * 
+     */
+    async updateAvatar(request: FastifyRequest, reply: FastifyReply) {
+        try {
+            const id = 0;//(request as any).user.userId;
+            // console.log("REQUEST: ", request);
+            
+            // Récupérer le fichier via multipart
+            const data = await request.file() ;
+
+            console.log('FILE DATA: ', data);
+            
+            if (!data) {
+                return reply.status(400).send({
+                    success: false,
+                    message: 'Empty File',
+                    redirectTo: '/suscriber/update/avatar'
+                });
+            }
+
+            // Vérifier le MIME type avant traitement
+            const allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+            if (!allowedMimes.includes(data.mimetype)) {
+                return reply.code(400).send({ 
+                    success: false,
+                    message: 'File format not allowed. Accept types : JPEG, PNG, WEBP',
+                    redirectYo: '/suscriber/update/avatar'
+                });
+            }
+
+            //  size double check after multipart
+            const buffer = await data.toBuffer();
+            if (buffer.length > 2 * 1024 * 1024) {
+                return reply.code(400).send({ 
+                    success: false,
+                    message: 'File too big. Size max : 2 MB'
+                });
+            }
+
+            // Appeler le service pour traiter l'upload
+            const updatedUser = await this.suscriberService.updateAvatar(
+                id,
+                buffer,
+                data.filename
+            );
+
+
+
+
+        } catch (error) {
+            return reply.status(500).send({
+                success: false,
+                message: 'Internal Server Error',
+                error: error
+            });
+            
+        }
+        // appel zodSchema
+
+        
+        // recuperer le fichier avec le plugin necessaire (multipart)
+        
+        // appel du service updateAvatar pour verif plus pousses et mis a jour avatar db + volume
+
+        // reponse avec reply 
     }
 
     // ----------------------------------------------------------------------------- //

@@ -1,5 +1,5 @@
 import { PrismaClient, User } from "@prisma/client";
-import { UpdateData, SuscriberStats } from "../types/suscriber.types.js";
+import { SuscriberStats } from "../types/suscriber.types.js";
 import { PasswordHasher } from "../utils/PasswordHasher.js";
 import { sanitizeUser, SanitizedUser } from '../types/auth.types.js'
 import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
@@ -42,19 +42,20 @@ export class SuscriberService {
     }
 
     // ----------------------------------------------------------------------------- //
-    async updateProfile(id: number, data: UpdateData): Promise<SanitizedUser> {
+    async updateUsername(id: number, newName: string): Promise<SanitizedUser> {
         const user = await this.getById(Number(id));
         if (!user) {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
         }
 
         // throw SuscriberException if data match
-        await this.hasChanged(user, data);
+        if (this.hasChanged(user.username, newName))
+            throw new SuscriberException(SuscriberError.USRNAME_ERROR, 'SuscriberError.USRNAME_ERROR');
 
         // check username availability
-        if (data.username) {
+        if (newName) {
             const existingUser = await this.prisma.user.findFirst({
-                where: { username: data.username }
+                where: { username: newName }
             });
             if (existingUser) {
                 throw new SuscriberException(SuscriberError.USRNAME_ALREADY_USED,SuscriberError.USRNAME_ALREADY_USED);
@@ -64,13 +65,26 @@ export class SuscriberService {
         // update user in DB
         const updatedUser = await this.prisma.user.update({
             where: { id: Number(id) },
-            data: {
-                username: data.username ?? user.username,
-                avatar: data.avatar ?? user.avatar
-            },
+            data: { username: newName },
         });
 
         return sanitizeUser(updatedUser);
+    }
+
+    // ----------------------------------------------------------------------------- //
+    async updateAvatar(userId: number, buffer: Buffer, origineFilename: string): Promise<SanitizedUser> {
+        const user = await this.getById(Number(userId));
+        if (!user)
+            throw new SuscriberException(SuscriberError.USER_NOT_FOUND, 'User not found');
+
+        /**
+         * a ce niveau j'ai verifie la limite du nombre de fichier
+         * limite de taille
+         * type mime
+         * je dois verifier que le format du fichier correspond a celui indiquer dans le type
+         * analyse du magic number (je ne sais pas e que c'est)
+        */
+       return sanitizeUser(user);
     }
 
     // ----------------------------------------------------------------------------- //
@@ -126,11 +140,7 @@ export class SuscriberService {
         return user ? true : false;
     }
     // ----------------------------------------------------------------------------- //
-    private async hasChanged(user: User, data: UpdateData) {
-        if (data.username && user.username === data.username)
-            throw new SuscriberException(SuscriberError.USRNAME_ERROR, SuscriberError.USRNAME_ERROR);
-
-        if (data.avatar && user.avatar === data.avatar)
-            throw new SuscriberException(SuscriberError.AVATAR_ERROR, SuscriberError.AVATAR_ERROR);
+    private hasChanged(userData: any, comparedData: any): boolean {
+        return userData === comparedData;
     }
 }

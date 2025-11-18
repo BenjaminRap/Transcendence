@@ -27,7 +27,7 @@ export class AuthController {
                 });
 
             // Checks if the user already exists; if not, creates it; returns sanitized user + tokens
-            const result = await this.authService.register(validation.data as RegisterData);
+            const result = await this.authService.register((validation.data as any) as RegisterData);
 
             return reply.status(201).send({
                 success: true,
@@ -56,13 +56,13 @@ export class AuthController {
             if (!validation.success)
                 return reply.status(400).send({ 
                     success: false,
-                    message: validation.error?.issues?.[0]?.message || 'Invalid input'
+                    message: AuthError.INVALID_CREDENTIALS
                 });
 
             // Check if the username or email address is in the correct format
             if (!CommonSchema.email.safeParse(validation.data.identifier).success &&
                 !CommonSchema.username.safeParse(validation.data.identifier).success) {
-                throw new AuthException(AuthError.INVALID_CREDENTIALS, 'Bad email or username format');
+                throw new AuthException(AuthError.INVALID_CREDENTIALS, AuthError.INVALID_CREDENTIALS);
             }
 
             // Finds the user and generates the tokens, returns the sanitized user + tokens

@@ -12,6 +12,10 @@ RUN [ "npm", "install" ]
 RUN [ "npm", "cache", "clean", "--force" ]
 
 RUN [ "mkdir", "/app/backend" ]
+RUN [ "mkdir", "-p", "/app/uploads/avatars" ]
+
+RUN ["chmod", "-R", "755", "/app/uploads"]
+
 
 COPY ./prisma ./prisma
 
