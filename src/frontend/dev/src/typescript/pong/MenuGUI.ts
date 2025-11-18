@@ -1,65 +1,66 @@
-type MenuGUIButtons = {
-	sceneChangeLeft : HTMLInputElement;
-	sceneChangeRight : HTMLInputElement;
+export type	OnItemChange = (currentIndex : number, newIndex : number) => boolean;
+export interface SwitchButton {
+	items : string[],
+	currentItemIndex : number,
+	onItemChange : OnItemChange | null
 }
-
-export type	OnSceneChange = (currentIndex : number, newIndex : number) => void;
 
 export class	MenuGUI extends HTMLElement
 {
 	private _buttonImageUrl? : string;
-	private _buttons? : MenuGUIButtons;
-	private _mapsContainer? : HTMLDivElement;
-	private _maps : string[];
-	private _currentMapIndex = 0;
-	private _onSceneChange? : OnSceneChange;
+	private _sceneSwitch : SwitchButton;
+	private _enemyTypeSwitch : SwitchButton;
 
-	constructor(buttonImageUrl? : string, maps? : string[], onSceneChange? : OnSceneChange)
+	constructor(buttonImageUrl? : string, sceneSwitch? : SwitchButton, enemyTypeSwitch? : SwitchButton)
 	{
 		super();
 		this._buttonImageUrl = buttonImageUrl;
-		this._maps = maps ?? [];
-		this._onSceneChange = onSceneChange;
-	}
-
-	public static get observedAttributes() {
-		return ['button-image-url'];
-	}
-
-	public attributeChangedCallback(name : string, _oldValue : string | null, newValue : string) {
-		if (name === 'button-image-url')
-		{
-			this._buttonImageUrl = newValue;
-			if (!this._buttons)
-				return ;
-			this._buttons.sceneChangeLeft.src = newValue;
-			this._buttons.sceneChangeRight.src = newValue;
-		}
+		this._sceneSwitch = sceneSwitch ?? {items : [], currentItemIndex: 0, onItemChange: null};
+		this._enemyTypeSwitch = enemyTypeSwitch ?? {items : [], currentItemIndex: 0, onItemChange: null};
 	}
 
 	public connectedCallback()
 	{
 		this.classList.add("absolute", "inset-0", "size-full", "z-10", "cursor-default", "select-none", "pointer-events-none");
 		this.innerHTML = `
+				<p class="absolute text-[15vw] top-0 left-1/3 -translate-x-1/3 font-[pixel]" style="text-shadow: 8px 8px 4px rgba(75, 80, 90, 1)">PONG</p>
 				<div class="bottom-0 left-1/2 absolute -translate-1/2 flex flex-row h-1/12 items-center w-1/4">
-					${this.getButtonHTML("menuGUIButtonLeft", this._buttonImageUrl, "left")}
-					<div class="relative h-2/3 grow-2 text-center line-he text-white bg-blue-500 font-semibold placeholder-yellow-100 rounded-full border-solid border-blue-300 border-[0.2vw] text-[2vw] leading-[normal] mx-[5%] bg-gradient-to-b from-cyan-500 to-blue-500 overflow-hidden" >
-						<div id="menuGUIMapsNameContainer" class="size-full absolute transition-all ease-in-out"></div>
-					</div>
-					${this.getButtonHTML("menuGUIButtonRight", this._buttonImageUrl, "right")}
-				</div>`;
-		const	mapsNameContainer = this.querySelector<HTMLDivElement>("div#menuGUIMapsNameContainer")!;
-		this._maps.forEach((map : string, index : number) => {
+					${this.getItemSwitchElement("menuGUISceneChange", this._sceneSwitch.items)}
+				</div>
+				<div class="bottom-1/5 left-4/5 absolute -translate-1/2 flex flex-row h-1/12 items-center w-1/4">
+					${this.getItemSwitchElement("menuGUIEnemyChange", this._enemyTypeSwitch.items)}
+				</div>
+		`;
+		this.addSwitchButtonListener("menuGUISceneChange", this._sceneSwitch);
+		this.addSwitchButtonListener("menuGUIEnemyChange", this._enemyTypeSwitch);
+	}
+
+	private addSwitchButtonListener(baseId : string, switchButton : SwitchButton)
+	{
+		const	buttonLeft = this.querySelector(`input#${baseId}ButtonLeft`)!;
+		const	buttonRight = this.querySelector(`input#${baseId}ButtonRight`)!;
+		const	container = this.querySelector<HTMLDivElement>(`div#${baseId}ItemsContainer`)!;
+
+		buttonLeft.addEventListener("click", () => this.switchItems("left", container, switchButton));
+		buttonRight.addEventListener("click", () => this.switchItems("right", container, switchButton));
+	}
+
+	private	getItemSwitchElement(idBase : string, items : string[])
+	{
+		const	itemsHTML = items.reduce((accumulator : string, item : string, index : number) => {
 			const	left = 50 + index * 100;
-			mapsNameContainer.innerHTML += `<p class="absolute -translate-x-1/2" style="left:${left}%">${map}</p>`
-		});
-		this._buttons = {
-			sceneChangeLeft: this.querySelector("input#menuGUIButtonLeft")!,
-			sceneChangeRight: this.querySelector("input#menuGUIButtonRight")!
-		};
-		this._mapsContainer = this.querySelector("div#menuGUIMapsNameContainer")!;
-		this._buttons.sceneChangeLeft.addEventListener("click", () => this.switchMap("left"));
-		this._buttons.sceneChangeRight.addEventListener("click", () => this.switchMap("right"));
+
+			return accumulator + `<p class="absolute -translate-x-1/2" style="left:${left}%">${item}</p>`
+		}, "");
+		return `
+			${this.getButtonHTML(`${idBase}ButtonLeft`, this._buttonImageUrl, "left")}
+			<div class="relative h-2/3 grow-2 text-center line-he text-white bg-blue-500 font-semibold placeholder-yellow-100 rounded-full border-solid border-blue-300 border-[0.2vw] text-[2vw] leading-[normal] mx-[5%] bg-gradient-to-b from-cyan-500 to-blue-500 overflow-hidden" >
+				<div id="${idBase}ItemsContainer" class="size-full absolute transition-all ease-in-out">
+					${itemsHTML}
+				</div>
+			</div>
+			${this.getButtonHTML(`${idBase}ButtonRight`, this._buttonImageUrl, "right")}
+		`;
 	}
 
 	private	getButtonHTML(id : string, imageUrl : string | undefined, side : "left" | "right") : string
@@ -70,20 +71,23 @@ export class	MenuGUI extends HTMLElement
 		return  `<input type="image" id="${id}" alt="" ${src} class="h-full hover:scale-115 hover:brightness-90 ${rotate} active:scale-90 active:brightness-75 pointer-events-auto"></input>`;
 	}
 
-	private switchMap(side : "left" | "right")
+	private	switchItems(side : "left" | "right", container : HTMLDivElement, switchButton : SwitchButton)
 	{
-		const	newIndex = this._currentMapIndex + ((side === "left") ? -1 : 1);
-		if (newIndex < 0 || newIndex >= this._maps.length)
+		const	newIndex = switchButton.currentItemIndex + ((side === "left") ? -1 : 1);
+		if (newIndex < 0 || newIndex >= switchButton.items.length)
 			return ;
-		const	leftString = this._mapsContainer!.style.left;
+		if (switchButton.onItemChange
+			&& !switchButton.onItemChange(switchButton.currentItemIndex, newIndex))
+		{
+			return ;
+		}
+		switchButton.currentItemIndex = newIndex;
+
+		const	leftString = container.style.left;
 		const	left = (leftString === "") ? 0 : parseInt(leftString);
 		const	newLeft = left + ((side === "left") ? 100 : -100);
 		
-
-		this._mapsContainer!.style.left = newLeft + "%";
-		if (this._onSceneChange)
-			this._onSceneChange(this._currentMapIndex, newIndex);
-		this._currentMapIndex = newIndex;
+		container.style.left = newLeft + "%";
 	}
 }
 
