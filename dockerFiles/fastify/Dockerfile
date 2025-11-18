@@ -5,28 +5,31 @@ RUN [ "apt-get", "update", "-y" ]
 RUN [ "apt-get", "clean" ]
 RUN [ "rm", "-rf", "/var/lib/apt/lists*" ]
 
-# Copier les fichiers package avant d'installer les dépendances
+# copy package files
 COPY ./package.json ./package.json
-COPY ./prisma ./prisma
 
-# Installer Fastify d'abord
+# install Fastify first
 RUN [ "npm", "install", "fastify@5.4.0" ]
 
-# Installer toutes les dépendances incluant prisma
+# install dependencies including prisma
 RUN [ "npm", "install" ]
 
-# Générer Prisma AVANT de nettoyer le cache
-RUN ["PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1"]
-RUN ["npx", "prisma", "generate", "--schema=./prisma/schema.prisma"]
-
-# Nettoyer le cache après
-RUN [ "npm", "cache", "clean", "--force" ]
-
+# create necessary directories
 RUN [ "mkdir", "/app/backend" ]
 RUN [ "mkdir", "-p", "/app/uploads/avatars" ]
-
 RUN ["chmod", "-R", "755", "/app/uploads"]
 
+# generate prisma before cleaning cache
+ENV PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
+
+COPY ./prisma ./prisma
+RUN ["npx", "prisma", "generate"]
+
+
+# clean cache
+RUN [ "npm", "cache", "clean", "--force" ]
+
+# copy entrypoint script
 COPY    ./entrypoint.sh /entrypoint.sh
 RUN     chmod +x /entrypoint.sh
 

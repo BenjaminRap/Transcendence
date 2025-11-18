@@ -9,6 +9,7 @@
 		"@types/jsonwebtoken": "9.0.10",
 		"bcrypt": "6.0.0",
 		"fastify-bcrypt": "1.0.1",
+		"prisma": "6.19.0",
 		"@prisma/client": "^6.19.0",
 		"zod": "^4.1.12",
   		"fastify-type-provider-zod": "^5.1.0",
