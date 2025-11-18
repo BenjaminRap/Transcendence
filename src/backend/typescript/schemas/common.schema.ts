@@ -25,20 +25,19 @@ export const CommonSchema = {
 	    	.max(2147483647),
 
     Ids: z.array(z.number('must be a number')
-                .int()
-                .min(1, 'must be in the right range')
-                .max(2147483647, 'must be in the right range')
+                  .int()
+                  .min(1, 'must be in the right range')
+                  .max(2147483647, 'must be in the right range')
         	),
 
     idParam: z.string()
-			.trim()
+                .trim()
 	    	.regex(/^\d+$/)
 	    	.transform(Number)
 	    	.pipe(z.number().int().min(1).max(2147483647)),
 	
-    avatar: z.string()
-            .trim(),
+    avatar: z.file().min(1).max(2 * 1024 * 1024).mime(["image/jpeg", "image/png", "image/webp"]),
 
-	jwt: z.jwt({ alg: "HS256", message: "Invalid jwt format" }),
+    jwt: z.jwt({ alg: "HS256", message: "Invalid jwt format" }),
 
 }
