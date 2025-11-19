@@ -16,7 +16,7 @@ import.meta.glob("@shared/attachedScripts/*", { eager: true});
 export class PongGame extends HTMLElement {
 	private _canvas : HTMLCanvasElement;
 	private _engine! : Engine;
-	private _scene! : Scene;
+	private _scene : Scene | undefined;
 
     public constructor() {
 		super();
@@ -29,7 +29,9 @@ export class PongGame extends HTMLElement {
 	public async connectedCallback() : Promise<void> {
 		try {
 			this._engine = this.createEngine();
-			this._scene = await this.loadScene();
+			globalThis.HK = await HavokPhysics();
+			await SceneManager.InitializeRuntime(this._engine, { showDefaultLoadingScreen: true, hideLoadingUIWithEngine: false });
+			this._scene = await this.getNewScene("Menu.gltf");
 			this._engine.runRenderLoop(this.renderScene.bind(this));
 		} catch (error) {
 			console.error(`Could not initialize the scene : ${error}`)
@@ -39,7 +41,8 @@ export class PongGame extends HTMLElement {
 	private renderScene() : void
 	{
 		try {
-			this._scene.render();
+			if (this._scene)
+				this._scene.render();
 
 
 
@@ -62,9 +65,15 @@ export class PongGame extends HTMLElement {
 		});
 	}
 
-	private async loadScene() : Promise<Scene> {
-		this.joinMultiplayer();
+	public async changeScene(newSceneName : string) : Promise<void>
+	{
+		if (this._scene)
+			this._scene.dispose();
+		this._scene = await this.getNewScene(newSceneName);
+	}
 
+	private	async getNewScene(sceneName : string) : Promise<Scene>
+	{
 		const	scene = new Scene(this._engine);
 
 		if (!scene.metadata)
@@ -73,21 +82,16 @@ export class PongGame extends HTMLElement {
 		const	cam = new FreeCamera("camera1", Vector3.Zero(), scene);
 		const	assetsManager = new AssetsManager(scene);
 
-		await SceneManager.InitializeRuntime(this._engine, { showDefaultLoadingScreen: true, hideLoadingUIWithEngine: false });
-
-		globalThis.HK = await HavokPhysics();
 		globalThis.HKP = new HavokPlugin(false);
-
 		if (!scene.enablePhysics(Vector3.Zero(), globalThis.HKP))
 			throw new Error("The physics engine hasn't been initialized !");
-
-		const	sceneName = "Menu.gltf";
 
 		assetsManager.addMeshTask("scene", null, "/scenes/", sceneName)
 
 		await SceneManager.LoadRuntimeAssets(assetsManager, [ sceneName ], () => {
 			cam.dispose(); // removing the unecessary camera
-			this.onSceneLoaded();
+			this.onSceneLoaded(scene);
+			globalThis.HKP = undefined;
 		});
 
 		return scene;
@@ -118,11 +122,11 @@ export class PongGame extends HTMLElement {
 		});
 	}
 
-	private onSceneLoaded() : void {
+	private onSceneLoaded(scene : Scene) : void {
 		SceneManager.HideLoadingScreen(this._engine);
-		SceneManager.FocusRenderCanvas(this._scene);
-		this._scene.activeCameras = this._scene.cameras;
-		this._scene.activeCameras[0].attachControl();
+		SceneManager.FocusRenderCanvas(scene);
+		scene.activeCameras = scene.cameras;
+		scene.activeCameras[0].attachControl();
 	}
 
 	public disconnectedCallback() : void {

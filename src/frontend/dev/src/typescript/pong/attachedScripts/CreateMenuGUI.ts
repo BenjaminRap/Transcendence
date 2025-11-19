@@ -13,10 +13,17 @@ export class CreateMenuGUI extends ScriptComponent {
 	private _scenes! : TransformNode[];
 	private _animation : Nullable<Animatable> = null;
 	private _easeFunction = new SineEase();
+	private _sceneData : FrontendSceneData;
+	private _menuGUI : MenuGUI | undefined;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "CreateMenuGUI") {
         super(transform, scene, properties, alias);
 		this._easeFunction.setEasingMode(EasingFunction.EASINGMODE_EASEINOUT);
+
+		const	sceneData = this.scene.metadata.sceneData;
+		if (!(sceneData instanceof FrontendSceneData))
+			throw new Error("The SceneData hasn't been attached to the scene !");
+		this._sceneData = sceneData;
     }
 
 	protected	awake()
@@ -42,11 +49,11 @@ export class CreateMenuGUI extends ScriptComponent {
 		const	skinsButtonSwitch : SwitchButton = {
 			items: [ "knight", "magician" ],
 			currentItemIndex: 0,
-			onItemChange: this.onEnemyTypeChange.bind(this)
+			onItemChange: this.onSkinChange.bind(this)
 		};
-		const	menuGUI = new MenuGUI(this._upImagePath, sceneButtonSwitch, enemyTypesButtonSwitch, skinsButtonSwitch);
+		this._menuGUI = new MenuGUI(this._upImagePath, sceneButtonSwitch, enemyTypesButtonSwitch, skinsButtonSwitch, this.onPlay.bind(this));
 
-		pongHTMLElement.appendChild(menuGUI);
+		pongHTMLElement.appendChild(this._menuGUI);
 	}
 
 	private	onSceneChange(currentIndex : number, newIndex : number) : boolean
@@ -66,10 +73,21 @@ export class CreateMenuGUI extends ScriptComponent {
 		return true;
 	}
 
-	private	onSkinTypeChange(currentIndex : number, newIndex : number) : boolean
+	private	onSkinChange(currentIndex : number, newIndex : number) : boolean
 	{
 		console.log("skin change");
 		return true;
+	}
+
+	private onPlay()
+	{
+		this._sceneData.pongHTMLElement.changeScene("Magic.gltf");
+	}
+
+	protected destroy()
+	{
+		if (this._menuGUI)
+			this._sceneData.pongHTMLElement.removeChild(this._menuGUI);
 	}
 }
 

@@ -1,4 +1,5 @@
 export type	OnItemChange = (currentIndex : number, newIndex : number) => boolean;
+export type OnPlay = () => void;
 export interface SwitchButton {
 	items : string[],
 	currentItemIndex : number,
@@ -11,14 +12,16 @@ export class	MenuGUI extends HTMLElement
 	private _sceneSwitch : SwitchButton;
 	private _enemyTypeSwitch : SwitchButton;
 	private _skinsSwitch : SwitchButton;
+	private _onPlay : OnPlay | null;
 
-	constructor(buttonImageUrl? : string, sceneSwitch? : SwitchButton, enemyTypeSwitch? : SwitchButton, skinsSwitch? : SwitchButton)
+	constructor(buttonImageUrl? : string, sceneSwitch? : SwitchButton, enemyTypeSwitch? : SwitchButton, skinsSwitch? : SwitchButton, onPlay? : OnPlay)
 	{
 		super();
 		this._buttonImageUrl = buttonImageUrl;
 		this._sceneSwitch = sceneSwitch ?? {items : [], currentItemIndex: 0, onItemChange: null};
 		this._enemyTypeSwitch = enemyTypeSwitch ?? {items : [], currentItemIndex: 0, onItemChange: null};
 		this._skinsSwitch = skinsSwitch ?? {items : [], currentItemIndex: 0, onItemChange: null};
+		this._onPlay = onPlay ?? null;
 	}
 
 	public connectedCallback()
@@ -42,6 +45,8 @@ export class	MenuGUI extends HTMLElement
 		this.addSwitchButtonListener("menuGUISkinChange", this._skinsSwitch);
 		this.addSwitchButtonListener("menuGUISceneChange", this._sceneSwitch);
 		this.addSwitchButtonListener("menuGUIEnemyChange", this._enemyTypeSwitch);
+		if (this._onPlay)
+			this.querySelector("button#menuGUIPlayButton")!.addEventListener("click", () => this._onPlay!());
 	}
 
 	private addSwitchButtonListener(baseId : string, switchButton : SwitchButton)
