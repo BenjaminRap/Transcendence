@@ -8,6 +8,8 @@ import { SceneData } from "@shared/SceneData";
 import { Vector3 } from "@babylonjs/core";
 
 export class GameManager extends ScriptComponent {
+	private static readonly _pointsToWin = 10;
+
 	private	_goalLeft! : TransformNode;
 	private	_goalRight! : TransformNode;
 	private	_ball! : TransformNode & { script : Ball};
@@ -37,11 +39,15 @@ export class GameManager extends ScriptComponent {
 		{
 			this._scoreRight++;
 			this._messageBus.PostMessage("updateRightScore", this._scoreRight);
+			if (this._scoreRight === GameManager._pointsToWin)
+				this._messageBus.PostMessage("end");
 		}
 		else if (collidedNode === this._goalRight)
 		{
 			this._scoreLeft++;
 			this._messageBus.PostMessage("updateLeftScore", this._scoreLeft);
+			if (this._scoreLeft === GameManager._pointsToWin)
+				this._messageBus.PostMessage("end");
 		}
 		else
 			return ;
