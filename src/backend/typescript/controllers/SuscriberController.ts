@@ -142,10 +142,10 @@ export class SuscriberController {
                         redirectTo: '/suscriber/update/avatar'
                     });
                 }
+                console.log('File received:', data.filename, data.mimetype);
             } catch (multipartError: any) {
                 request.log.error(multipartError);
                 switch (multipartError.code) {
-                    
                     case 'FST_INVALID_MULTIPART_CONTENT_TYPE': {
                         return reply.status(400).send({
                             success: false,
@@ -169,7 +169,6 @@ export class SuscriberController {
                     }
                 }                
             }
-
 
             // Vérifier le MIME type avant traitement
             const allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];

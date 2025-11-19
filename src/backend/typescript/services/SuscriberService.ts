@@ -86,7 +86,7 @@ export class SuscriberService {
          * limite de taille
          * type mime
          * je dois verifier que le format du fichier correspond a celui indiquer dans le type
-         * analyse du magic number (je ne sais pas e que c'est)
+         * analyse du magic number
         */
        return sanitizeUser(user);
     }
