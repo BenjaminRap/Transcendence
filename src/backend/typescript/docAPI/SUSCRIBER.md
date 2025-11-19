@@ -49,10 +49,9 @@ _Mandatory headers :_
 
 _Body :_ JSON
   {
-    "tokenKey":           string  -> "token recupere via API /auth/verifypassword"
+    "currentPassword":    string
     "newPassword":        string  -> "doit respecter les regles du mot de passe valide"
     "confirmNewPassword": string  -> "doit etre similaire a newPassword"
-    "confirmChoice":      boolean -> true si l'utilisateur confirme son choix de changer mot de passe 
   }
 
 _Possibles responses:_
@@ -86,7 +85,7 @@ _Possibles responses:_
 ❌ 409 Conflict :
   {
     "success": false,
-    "message": "password similar to the current one"
+    "message": "password similar to the current one or invalid_credential (mauvais current password)"
     "redirectTo": '/suscriber/updatepassword'
   }
 

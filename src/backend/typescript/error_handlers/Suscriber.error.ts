@@ -4,6 +4,7 @@ export enum SuscriberError
     USER_NOT_FOUND = 'User not found',
     USRNAME_ERROR = 'Username must change',
     PASSWD_ERROR = 'Password must change',
+    INVALID_CREDENTIALS = 'Invalid credentials',
     AVATAR_ERROR = 'Avatar must change',
     USRNAME_ALREADY_USED = 'This username is already used',
 }

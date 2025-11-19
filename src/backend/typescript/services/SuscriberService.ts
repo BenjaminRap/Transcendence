@@ -21,10 +21,14 @@ export class SuscriberService {
     }
 
     // ----------------------------------------------------------------------------- //
-    async updatePassword(id: number, newPassword: string): Promise<void> {
+    async updatePassword(id: number, currentPassword: string, newPassword: string): Promise<void> {
         const user = await this.getById(Number(id));
         if (!user) {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
+        }
+
+        if (!await this.passwordHasher.verify(currentPassword, user.password)) {
+            throw new SuscriberException(SuscriberError.INVALID_CREDENTIALS, SuscriberError.INVALID_CREDENTIALS);
         }
 
         if (user.password === newPassword) {

@@ -17,10 +17,7 @@ export async function suscriberRoute(
     }, controller.updateUsername.bind(controller));
 
     fastify.put<{ Body: UpdatePassword }>('/update/password', {
-        preHandler: [
-            middleware.authenticate,
-            middleware.keyAuthenticate
-        ]
+        preHandler: middleware.authenticate,
     }, controller.updatePassword.bind(controller));
 
     fastify.put('/update/avatar', {

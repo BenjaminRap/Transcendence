@@ -1,9 +1,8 @@
 export interface UpdatePassword
 {
-    tokenKey:           string,
+    currentPassword:    string,
     newPassword:        string,
-    confirmNewPassword: string,
-    confirmChoice:      boolean,
+    confirmNewPassword: string
 }
 
 export interface DeleteAccount

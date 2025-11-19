@@ -41,9 +41,7 @@ export class SuscriberController {
     // PUT /suscriber/update/password
     async updatePassword(request: FastifyRequest<{ Body: UpdatePassword }>, reply: FastifyReply) {
         try {
-            // the accessToken and tokenKey are already validated in the middleware
-
-            // check if the newPassword and the confirmNewPassword are the same and the confirmChoice is true in the body
+            // check if the newPassword and the confirmNewPassword are the same
             const validation = SuscriberSchema.updatePassword.safeParse(request.body);
             if (!validation.success) {
                 return reply.status(400).send({
@@ -54,10 +52,10 @@ export class SuscriberController {
             }
             
             const userId = (request as any).user.userId;
-            const password = request.body.newPassword;
+            const { newPassword, currentPassword } = request.body;
 
-            // check if user exists, if password is different then update or throw exception
-            await this.suscriberService.updatePassword(userId, password);
+            // check if user exists, if password is different then hash and update or throw exception
+            await this.suscriberService.updatePassword(userId, currentPassword, newPassword);
 
             return reply.status(204).send();
 
