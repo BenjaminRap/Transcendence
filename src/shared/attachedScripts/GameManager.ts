@@ -5,43 +5,43 @@ import { IBasePhysicsCollisionEvent, PhysicsEventType } from "@babylonjs/core/Ph
 import { int } from "@babylonjs/core/types";
 import { Ball } from "@shared/attachedScripts/Ball";
 import { SceneData } from "@shared/SceneData";
+import { Vector3 } from "@babylonjs/core";
 
 export class GameManager extends ScriptComponent {
-
-	public readonly messageBus  = new LocalMessageBus();
-
 	private	_goalLeft! : TransformNode;
 	private	_goalRight! : TransformNode;
 	private	_ball! : TransformNode & { script : Ball};
 
 	private _scoreRight : int = 0;
 	private _scoreLeft : int = 0;
+	private _messageBus : LocalMessageBus;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "GameManager") {
         super(transform, scene, properties, alias);
 
-		const	sceneData = this.scene.metadata.sceneData;
-		if (!(sceneData instanceof SceneData))
-			throw new Error("The SceneData hasn't been attached to the scene !");
+		const	sceneData : SceneData = this.scene.metadata.sceneData;
+
+		this._messageBus = sceneData.messageBus;
 		sceneData.havokPlugin.onTriggerCollisionObservable.add(this.onTriggerEvent.bind(this));
     }
 
 	private onTriggerEvent(eventData : IBasePhysicsCollisionEvent)
 	{
 		if (eventData.type === PhysicsEventType.TRIGGER_ENTERED
-			|| eventData.collider.transformNode !== this._ball.script.transform)
+			|| eventData.collider.transformNode !== this._ball
+			|| eventData.collider.getLinearVelocity().equals(Vector3.ZeroReadOnly))
 			return ;
 		const	collidedNode = eventData.collidedAgainst.transformNode;
 
 		if (collidedNode === this._goalLeft)
 		{
 			this._scoreRight++;
-			this.messageBus.PostMessage("updateRightScore", this._scoreRight);
+			this._messageBus.PostMessage("updateRightScore", this._scoreRight);
 		}
 		else if (collidedNode === this._goalRight)
 		{
 			this._scoreLeft++;
-			this.messageBus.PostMessage("updateLeftScore", this._scoreLeft);
+			this._messageBus.PostMessage("updateLeftScore", this._scoreLeft);
 		}
 		else
 			return ;
@@ -53,18 +53,11 @@ export class GameManager extends ScriptComponent {
 		this._ball.script = SceneManager.GetComponent<Ball>(this._ball, "Ball", false);
 	}
 
-	protected destroy()
-	{
-		this.messageBus.Dispose();
-	}
-
 	public	restart()
 	{
-		this.messageBus.PostMessage("updateLeftScore", 0);
-		this.messageBus.PostMessage("updateRightScore", 0);
+		this._messageBus.PostMessage("reset");
 		this._scoreLeft = 0;
 		this._scoreRight = 0;
-		this._ball.script.reset();
 	}
 }
 

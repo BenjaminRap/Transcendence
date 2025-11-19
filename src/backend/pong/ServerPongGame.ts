@@ -89,5 +89,6 @@ export class ServerPongGame {
 			delete globalThis.HKP;
 		this._engine?.dispose();
 		this._scene?.dispose();
+		this._scene?.metadata.sceneData.dispose();
 	}
 }

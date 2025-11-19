@@ -7,7 +7,6 @@ import { InputManager, PlayerInput } from "./InputManager";
 import { IBasePhysicsCollisionEvent, PhysicsEventType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { Scalar } from "@babylonjs/core/Maths/math.scalar";
 import { Epsilon, int } from "@babylonjs/core";
-import { SceneData } from "@shared/SceneData";
 
 export class Paddle extends ScriptComponent {
 	private static _range : number = 9.4 + Epsilon;
@@ -20,15 +19,22 @@ export class Paddle extends ScriptComponent {
 
 	private	_physicsBody! : PhysicsBody;
 	private _playerInput! : PlayerInput;
+	private _initialPosition : Vector3;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "Paddle") {
         super(transform, scene, properties, alias);
 
+		this._initialPosition = this.transform.position.clone();
 		const	sceneData = this.scene.metadata.sceneData;
-		if (!(sceneData instanceof SceneData))
-			throw new Error("The SceneData hasn't been attached to the scene !");
 		sceneData.havokPlugin.onTriggerCollisionObservable.add(this.onTriggerEnter.bind(this));
     }
+
+	protected	awake()
+	{
+		this.scene.metadata.sceneData.messageBus.OnMessage("reset", () => {
+			this.reset();
+		});
+	}
 
 	private onTriggerEnter(collision : IBasePhysicsCollisionEvent)
 	{
@@ -78,7 +84,7 @@ export class Paddle extends ScriptComponent {
 		if (!physicsBody)
 			throw new Error("The Paddle script should be attached to a mesh with a physic body !");
 		this._physicsBody = physicsBody;
-
+		this._physicsBody.disablePreStep = false;
 	}
 
 	protected update()
@@ -95,6 +101,11 @@ export class Paddle extends ScriptComponent {
 			yVelocity = -1;
 
 		this._physicsBody.setLinearVelocity(Vector3.Up().scale(yVelocity * this._speed));
+	}
+
+	private	reset()
+	{
+		this.transform.position.copyFrom(this._initialPosition);
 	}
 }
 

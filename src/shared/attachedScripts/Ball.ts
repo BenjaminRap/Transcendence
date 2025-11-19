@@ -17,6 +17,13 @@ export class Ball extends ScriptComponent {
 		this._initialPosition = transform.position.clone();
     }
 
+	protected	awake()
+	{
+		this.scene.metadata.sceneData.messageBus.OnMessage("reset", () => {
+			this.reset();
+		});
+	}
+
 	protected start()
 	{
 		const	physicsBody = this.transform.getPhysicsBody();
