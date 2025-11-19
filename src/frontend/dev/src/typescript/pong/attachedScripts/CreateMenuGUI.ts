@@ -39,7 +39,12 @@ export class CreateMenuGUI extends ScriptComponent {
 			currentItemIndex: 0,
 			onItemChange: this.onEnemyTypeChange.bind(this)
 		};
-		const	menuGUI = new MenuGUI(this._upImagePath, sceneButtonSwitch, enemyTypesButtonSwitch);
+		const	skinsButtonSwitch : SwitchButton = {
+			items: [ "knight", "magician" ],
+			currentItemIndex: 0,
+			onItemChange: this.onEnemyTypeChange.bind(this)
+		};
+		const	menuGUI = new MenuGUI(this._upImagePath, sceneButtonSwitch, enemyTypesButtonSwitch, skinsButtonSwitch);
 
 		pongHTMLElement.appendChild(menuGUI);
 	}
@@ -57,7 +62,13 @@ export class CreateMenuGUI extends ScriptComponent {
 
 	private	onEnemyTypeChange(currentIndex : number, newIndex : number) : boolean
 	{
-		console.log("test");
+		console.log("enemy type change");
+		return true;
+	}
+
+	private	onSkinTypeChange(currentIndex : number, newIndex : number) : boolean
+	{
+		console.log("skin change");
 		return true;
 	}
 }
