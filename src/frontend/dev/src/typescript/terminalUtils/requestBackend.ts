@@ -1,12 +1,12 @@
 import { TerminalUtils } from "./terminalUtils";
 import { WriteOnTerminal } from "./writeOnTerminal";
-import { TerminalFileSystem } from "../terminal";
+import { TerminalFileSystem, TerminalUserManagement } from "../terminal";
 
 
 
 export namespace RequestBackendModule {
 	export var isLoggedIn = false;
-	export var username = 'usah';
+	// export var username = 'usah';
 	
 	export async function register(args: string[]): Promise<string> 
 	{
@@ -81,8 +81,8 @@ export namespace RequestBackendModule {
 			});
 			const data = await response.json();
 			if (data.success) {
-				username = data.user.username;
-				TerminalUtils.updatePromptText( username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ " );
+				TerminalUserManagement.username = data.user.username;
+				TerminalUtils.updatePromptText( TerminalUserManagement.username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ " );
 				isLoggedIn = true;
 				return true;
 			}
@@ -137,8 +137,8 @@ export namespace RequestBackendModule {
 		document.cookie = 'accessToken=; path=/;';
 		document.cookie = 'refreshToken=; path=/;';
 		isLoggedIn = false;
-		username = 'usah';
-		TerminalUtils.updatePromptText( username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ " );
+		TerminalUserManagement.username = 'usah';
+		TerminalUtils.updatePromptText( TerminalUserManagement.username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ " );
 		return 'Logged out successfully.';
 	}
 }
