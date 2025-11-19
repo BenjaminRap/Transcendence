@@ -9,6 +9,7 @@ import { io } from 'socket.io-client'
 
 import HavokPhysics from "@babylonjs/havok";
 import { FrontendSceneData } from "./FrontendSceneData";
+import { Color4 } from "@babylonjs/core";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
@@ -92,6 +93,7 @@ export class PongGame extends HTMLElement {
 			cam.dispose(); // removing the unecessary camera
 			this.onSceneLoaded(scene);
 			globalThis.HKP = undefined;
+			scene.clearColor = new Color4(0, 0, 0, 1);
 		});
 
 		return scene;

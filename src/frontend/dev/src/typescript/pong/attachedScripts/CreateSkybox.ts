@@ -1,10 +1,12 @@
 import { Scene } from "@babylonjs/core/scene";
-import { MeshBuilder, TransformNode } from "@babylonjs/core/Meshes";
+import { Mesh, MeshBuilder, TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { CubeTexture, StandardMaterial, Texture } from "@babylonjs/core";
 
 export class CreateSkybox extends ScriptComponent {
 	private _skyboxPath! : string;
+
+	private _skybox : Mesh | undefined = undefined;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "CreateSkybox") {
         super(transform, scene, properties, alias);
@@ -26,6 +28,13 @@ export class CreateSkybox extends ScriptComponent {
 		skybox.material = skyboxMaterial;
 		skybox.infiniteDistance = true;
 		skybox.layerMask = 2;
+
+		this._skybox = skybox;
+	}
+
+	public getSkybox() : Mesh | undefined
+	{
+		return this._skybox;
 	}
 }
 

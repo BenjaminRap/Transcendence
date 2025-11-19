@@ -5,12 +5,13 @@ import { FrontendSceneData } from "../FrontendSceneData";
 import { MenuGUI, SwitchButton } from "../MenuGUI";
 import { Animation, EasingFunction, Nullable, SineEase } from "@babylonjs/core";
 import { Animatable } from "@babylonjs/core/Animations/animatable";
+import { SceneMenuData } from "./SceneMenuData";
 
 export class CreateMenuGUI extends ScriptComponent {
 	private _upImagePath! : string;
 	private _scenesParent! : TransformNode;
 
-	private _scenes! : TransformNode[];
+	private _scenes! : SceneMenuData[];
 	private _animation : Nullable<Animatable> = null;
 	private _easeFunction = new SineEase();
 	private _sceneData : FrontendSceneData;
@@ -28,7 +29,14 @@ export class CreateMenuGUI extends ScriptComponent {
 
 	protected	awake()
 	{
-		this._scenes = this._scenesParent.getChildren<TransformNode>(undefined, true);
+		const	childs = this._scenesParent.getChildren<TransformNode>(undefined, true);
+		this._scenes = childs.reduce((accumulator : SceneMenuData[], currentValue : TransformNode) => {
+			const	sceneMenuData = SceneManager.GetComponent<SceneMenuData>(currentValue, "SceneMenuData", false);
+
+			if (sceneMenuData != null)
+				accumulator.push(sceneMenuData);
+			return accumulator;
+		}, []);
 
 		const	sceneData = this.scene.metadata.sceneData;
 
@@ -37,7 +45,7 @@ export class CreateMenuGUI extends ScriptComponent {
 		const	pongHTMLElement = sceneData.pongHTMLElement;
 
 		const	sceneButtonSwitch : SwitchButton = {
-			items: this._scenes.map((map) => map.name),
+			items: this._scenes.map((scene) => scene.sceneName),
 			currentItemIndex: 0,
 			onItemChange: this.onSceneChange.bind(this)
 		};
@@ -60,11 +68,13 @@ export class CreateMenuGUI extends ScriptComponent {
 	{
 		if (this._animation)
 			return false;
-		const	distance = this._scenes[newIndex].position.subtract(this._scenes[currentIndex].position);
+		this._scenes[newIndex].onSceneSwitch("added", 0.5, this._easeFunction);
+		this._scenes[currentIndex].onSceneSwitch("removed", 0.5, this._easeFunction);
+		const	distance = this._scenes[newIndex].transform.position.subtract(this._scenes[currentIndex].transform.position);
 		const	startPosition = this._scenesParent.position;
 		const	endPosition = this._scenesParent.position.subtract(distance);
 		this._animation = Animation.CreateAndStartAnimation("menuMapAnim", this._scenesParent, "position", 60, 30, startPosition, endPosition, Animation.ANIMATIONLOOPMODE_CONSTANT, this._easeFunction, () => { this._animation = null });
-		return true
+		return true;
 	}
 
 	private	onEnemyTypeChange(currentIndex : number, newIndex : number) : boolean
@@ -79,9 +89,9 @@ export class CreateMenuGUI extends ScriptComponent {
 		return true;
 	}
 
-	private onPlay()
+	private onPlay(sceneIndex : number, enemyTypeIndex : number, skinIndex : number)
 	{
-		this._sceneData.pongHTMLElement.changeScene("Magic.gltf");
+		this._sceneData.pongHTMLElement.changeScene(this._scenes[sceneIndex].sceneFileName);
 	}
 
 	protected destroy()

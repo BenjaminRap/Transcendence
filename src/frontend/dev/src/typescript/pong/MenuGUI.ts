@@ -1,5 +1,5 @@
 export type	OnItemChange = (currentIndex : number, newIndex : number) => boolean;
-export type OnPlay = () => void;
+export type OnPlay = (sceneIndex : number, enemyTypeIndex : number, skinIndex : number) => void;
 export interface SwitchButton {
 	items : string[],
 	currentItemIndex : number,
@@ -46,7 +46,7 @@ export class	MenuGUI extends HTMLElement
 		this.addSwitchButtonListener("menuGUISceneChange", this._sceneSwitch);
 		this.addSwitchButtonListener("menuGUIEnemyChange", this._enemyTypeSwitch);
 		if (this._onPlay)
-			this.querySelector("button#menuGUIPlayButton")!.addEventListener("click", () => this._onPlay!());
+			this.querySelector("button#menuGUIPlayButton")!.addEventListener("click", () => this._onPlay!(this._sceneSwitch.currentItemIndex, this._enemyTypeSwitch.currentItemIndex, this._skinsSwitch.currentItemIndex));
 	}
 
 	private addSwitchButtonListener(baseId : string, switchButton : SwitchButton)
