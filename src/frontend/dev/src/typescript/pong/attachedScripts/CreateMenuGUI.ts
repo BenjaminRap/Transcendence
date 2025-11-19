@@ -97,7 +97,7 @@ export class CreateMenuGUI extends ScriptComponent {
 	protected destroy()
 	{
 		if (this._menuGUI)
-			this._sceneData.pongHTMLElement.removeChild(this._menuGUI);
+			this._menuGUI.remove();
 	}
 }
 

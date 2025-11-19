@@ -39,7 +39,6 @@ export class ClientInputs extends ScriptComponent {
 
 	private onKeyboardInput(info : KeyboardInfo)
 	{
-		console.log(info.event.key);
 		const	keyPressed : InputKey | undefined = this._inputsMap.get(info.event.key);
 
 		if (keyPressed == undefined)

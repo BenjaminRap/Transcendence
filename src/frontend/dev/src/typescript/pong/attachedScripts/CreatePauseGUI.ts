@@ -9,8 +9,16 @@ export class CreatePauseGUI extends ScriptComponent {
 	private _type : "basic" | "colorful" = "basic";
 	private _inputManager! : TransformNode;
 
+	private _pauseGUI! : PauseGUI;
+	private _sceneData : FrontendSceneData;
+
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "CreatePauseGUI") {
         super(transform, scene, properties, alias);
+
+		const	sceneData = this.scene.metadata.sceneData;
+		if (!(sceneData instanceof FrontendSceneData))
+			throw new Error("The SceneData hasn't been attached to the scene !");
+		this._sceneData = sceneData;
     }
 
 	protected	awake()
@@ -20,18 +28,48 @@ export class CreatePauseGUI extends ScriptComponent {
 		if (!(sceneData instanceof FrontendSceneData))
 			throw new Error("The scene.metadata should have a sceneData variable of type FrontendSceneData !");
 		const	pongHTMLElement = sceneData.pongHTMLElement;
-		const	pauseGUI = new PauseGUI(this._type);
+		this._pauseGUI = new PauseGUI(this._type);
 
-		pongHTMLElement.appendChild(pauseGUI);
-		pauseGUI.classList.add("hidden");
+		pongHTMLElement.appendChild(this._pauseGUI);
 
 		const	inputManager = SceneManager.GetComponent<InputManager>(this._inputManager, "InputManager", false);
 
-		inputManager.getEscapeInput().addOnKeyDownObserver(() => {
-			pauseGUI.classList.toggle("hidden");
-		});
+		this.togglePauseMenu();
+		inputManager.getEscapeInput().addOnKeyDownObserver(() => this.togglePauseMenu());
+
+		const	buttons = this._pauseGUI.getButtons()!;
+
+		buttons.continue.addEventListener("click", () => { this.togglePauseMenu() });
+		buttons.restart.addEventListener("click", () => { this.onRestart() });
+		buttons.goToMenu.addEventListener("click", () => { this.onGoToMenu() });
+		buttons.quit.addEventListener("click", () => { this.onQuit() });
 	}
 
+	private	togglePauseMenu() : void
+	{
+		this._pauseGUI.classList.toggle("hidden");
+	}
+
+	private	onRestart() : void
+	{
+		console.log("restart");
+	}
+
+	private	onGoToMenu() : void
+	{
+		this._sceneData.pongHTMLElement.changeScene("Menu.gltf");
+	}
+
+	private	onQuit() : void
+	{
+		this._sceneData.pongHTMLElement.quit();
+	}
+
+	protected	destroy()
+	{
+		if (this._pauseGUI)
+			this._pauseGUI.remove();
+	}
 }
 
 SceneManager.RegisterClass("CreatePauseGUI", CreatePauseGUI);

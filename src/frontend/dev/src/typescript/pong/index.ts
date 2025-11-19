@@ -34,6 +34,7 @@ export class PongGame extends HTMLElement {
 			await SceneManager.InitializeRuntime(this._engine, { showDefaultLoadingScreen: true, hideLoadingUIWithEngine: false });
 			this._scene = await this.getNewScene("Basic.gltf");
 			this._engine.runRenderLoop(this.renderScene.bind(this));
+			this.addEventListener("click", () => { this._canvas.focus() });
 		} catch (error) {
 			console.error(`Could not initialize the scene : ${error}`)
 		}
@@ -71,6 +72,11 @@ export class PongGame extends HTMLElement {
 		if (this._scene)
 			this._scene.dispose();
 		this._scene = await this.getNewScene(newSceneName);
+	}
+
+	public quit() : void
+	{
+		this.remove();
 	}
 
 	private	async getNewScene(sceneName : string) : Promise<Scene>
