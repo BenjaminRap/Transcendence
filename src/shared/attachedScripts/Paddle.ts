@@ -50,6 +50,8 @@ export class Paddle extends ScriptComponent {
 		const	collidedPosInWorld = collidedAgainst.transformNode.absolutePosition;
 		const	collidedPosInPaddleLocal = Vector3.TransformCoordinates(collidedPosInWorld, this.transform.getWorldMatrix().invert());
 		const	maxAngle = Math.PI / 4;
+		if (collidedPosInPaddleLocal.y < 0.04)
+			collidedPosInPaddleLocal.y = 0;
 		const	prct = collidedPosInPaddleLocal.y * 2;
 		const	angle = maxAngle * prct;
 		const	rotation = Quaternion.RotationAxis(Vector3.LeftHandedForwardReadOnly, angle);
