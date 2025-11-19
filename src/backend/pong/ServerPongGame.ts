@@ -5,11 +5,8 @@ import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
 import { HavokPlugin } from "@babylonjs/core/Physics";
-import path from 'path';
-import fs from 'fs';
 import { XMLHttpRequest } from 'w3c-xmlhttprequest';
 
-import HavokPhysics from "@babylonjs/havok";
 import { NullEngine } from "@babylonjs/core";
 import { importGlob } from "./importUtils";
 import { ServerSceneData } from "./ServerSceneData";
@@ -71,12 +68,6 @@ export class ServerPongGame {
 
 	private async loadPhysics(scene : Scene) : Promise<void>
 	{
-
-		const wasmPath = path.resolve('./node_modules/@babylonjs/havok/lib/esm/HavokPhysics.wasm');
-		const wasmBinary = fs.readFileSync(wasmPath).buffer; // ArrayBuffer
-		globalThis.HK = await HavokPhysics({
-			wasmBinary: wasmBinary
-		});
 		globalThis.HKP = new HavokPlugin(false);
 
 		if (!scene.enablePhysics(Vector3.Zero(), globalThis.HKP))
@@ -95,6 +86,7 @@ export class ServerPongGame {
 		SceneManager.ForceHideLoadingScreen = () => {};
 		InputController.ConfigureUserInput = () => {};
 		await SceneManager.LoadRuntimeAssets(assetsManager, [ sceneName ], () => {
+			globalThis.HKP = undefined;
 		});
 	}
 

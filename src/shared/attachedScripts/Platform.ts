@@ -4,6 +4,7 @@ import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { IBasePhysicsCollisionEvent, PhysicsEventType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { SceneData } from "@shared/SceneData";
 
 export class Platform extends ScriptComponent {
 
@@ -11,7 +12,11 @@ export class Platform extends ScriptComponent {
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "Platform") {
         super(transform, scene, properties, alias);
-		globalThis.HKP!.onTriggerCollisionObservable.add(this.onTriggerEnter.bind(this));
+
+		const	sceneData = this.scene.metadata.sceneData;
+		if (!(sceneData instanceof SceneData))
+			throw new Error("The SceneData hasn't been attached to the scene !");
+		sceneData.havokPlugin.onTriggerCollisionObservable.add(this.onTriggerEnter.bind(this));
     }
 
 	private onTriggerEnter(collision : IBasePhysicsCollisionEvent)

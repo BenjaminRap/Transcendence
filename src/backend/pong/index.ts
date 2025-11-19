@@ -5,6 +5,8 @@ import path from 'path';
 import { DefaultEventsMap, Server, Socket } from 'socket.io';
 import { MatchMaker } from './MatchMaker';
 import { SocketData } from './SocketData';
+import fs from 'fs';
+import HavokPhysics from "@babylonjs/havok";
 
 export type DefaultSocket = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>;
 
@@ -37,6 +39,7 @@ async function	init() : Promise<void>
 			email TEXT UNIQUE NOT NULL
 		);
 	`);
+	loadHavokPhysics();
 }
 const	io = new Server(fastify.server);
 
@@ -60,6 +63,15 @@ async function	start() : Promise<void>
 	{
 		fastify.log.error(`Could not launch the server, error : ${error}`);	
 	}
+}
+
+async function	loadHavokPhysics()
+{
+	const wasmPath = path.resolve('./node_modules/@babylonjs/havok/lib/esm/HavokPhysics.wasm');
+	const wasmBinary = fs.readFileSync(wasmPath).buffer; // ArrayBuffer
+	globalThis.HK = await HavokPhysics({
+		wasmBinary: wasmBinary
+	});
 }
 
 

@@ -7,6 +7,7 @@ import { InputManager, PlayerInput } from "./InputManager";
 import { IBasePhysicsCollisionEvent, PhysicsEventType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { Scalar } from "@babylonjs/core/Maths/math.scalar";
 import { Epsilon, int } from "@babylonjs/core";
+import { SceneData } from "@shared/SceneData";
 
 export class Paddle extends ScriptComponent {
 	private static _range : number = 9.4 + Epsilon;
@@ -22,7 +23,11 @@ export class Paddle extends ScriptComponent {
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "Paddle") {
         super(transform, scene, properties, alias);
-		globalThis.HKP!.onTriggerCollisionObservable.add(this.onTriggerEnter.bind(this));
+
+		const	sceneData = this.scene.metadata.sceneData;
+		if (!(sceneData instanceof SceneData))
+			throw new Error("The SceneData hasn't been attached to the scene !");
+		sceneData.havokPlugin.onTriggerCollisionObservable.add(this.onTriggerEnter.bind(this));
     }
 
 	private onTriggerEnter(collision : IBasePhysicsCollisionEvent)

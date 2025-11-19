@@ -4,6 +4,7 @@ import { LocalMessageBus, SceneManager, ScriptComponent } from "@babylonjs-toolk
 import { IBasePhysicsCollisionEvent, PhysicsEventType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { int } from "@babylonjs/core/types";
 import { Ball } from "@shared/attachedScripts/Ball";
+import { SceneData } from "@shared/SceneData";
 
 export class GameManager extends ScriptComponent {
 
@@ -18,10 +19,14 @@ export class GameManager extends ScriptComponent {
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "GameManager") {
         super(transform, scene, properties, alias);
-		globalThis.HKP!.onTriggerCollisionObservable.add(this.OnTriggerEvent.bind(this));
+
+		const	sceneData = this.scene.metadata.sceneData;
+		if (!(sceneData instanceof SceneData))
+			throw new Error("The SceneData hasn't been attached to the scene !");
+		sceneData.havokPlugin.onTriggerCollisionObservable.add(this.onTriggerEvent.bind(this));
     }
 
-	private OnTriggerEvent(eventData : IBasePhysicsCollisionEvent)
+	private onTriggerEvent(eventData : IBasePhysicsCollisionEvent)
 	{
 		if (eventData.type === PhysicsEventType.TRIGGER_ENTERED
 			|| eventData.collider.transformNode !== this._ball.script.transform)
