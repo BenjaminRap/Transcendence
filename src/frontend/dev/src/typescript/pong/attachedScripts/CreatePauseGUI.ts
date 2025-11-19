@@ -4,13 +4,16 @@ import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { PauseGUI } from "../pauseGUI";
 import { FrontendSceneData } from "../FrontendSceneData";
 import { InputManager } from "@shared/attachedScripts/InputManager";
+import { GameManager } from "@shared/attachedScripts/GameManager";
 
 export class CreatePauseGUI extends ScriptComponent {
 	private _type : "basic" | "colorful" = "basic";
 	private _inputManager! : TransformNode;
+	private _gameManager! : TransformNode & { script : GameManager };
 
 	private _pauseGUI! : PauseGUI;
 	private _sceneData : FrontendSceneData;
+	private _defaultTimeStep : number;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "CreatePauseGUI") {
         super(transform, scene, properties, alias);
@@ -19,6 +22,7 @@ export class CreatePauseGUI extends ScriptComponent {
 		if (!(sceneData instanceof FrontendSceneData))
 			throw new Error("The SceneData hasn't been attached to the scene !");
 		this._sceneData = sceneData;
+		this._defaultTimeStep = this._sceneData.havokPlugin.getTimeStep();
     }
 
 	protected	awake()
@@ -32,6 +36,7 @@ export class CreatePauseGUI extends ScriptComponent {
 
 		pongHTMLElement.appendChild(this._pauseGUI);
 
+		this._gameManager.script = SceneManager.GetComponent(this._gameManager, "GameManager", false);
 		const	inputManager = SceneManager.GetComponent<InputManager>(this._inputManager, "InputManager", false);
 
 		this.togglePauseMenu();
@@ -47,12 +52,16 @@ export class CreatePauseGUI extends ScriptComponent {
 
 	private	togglePauseMenu() : void
 	{
-		this._pauseGUI.classList.toggle("hidden");
+		if (this._pauseGUI.classList.toggle("hidden"))
+			this._sceneData.havokPlugin.setTimeStep(this._defaultTimeStep);
+		else
+			this._sceneData.havokPlugin.setTimeStep(0);
 	}
 
 	private	onRestart() : void
 	{
-		console.log("restart");
+		this.togglePauseMenu();
+		this._gameManager.script.restart();
 	}
 
 	private	onGoToMenu() : void

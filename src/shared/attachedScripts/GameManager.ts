@@ -36,12 +36,12 @@ export class GameManager extends ScriptComponent {
 		if (collidedNode === this._goalLeft)
 		{
 			this._scoreRight++;
-			this.messageBus.PostMessage("scoreFromRight", this._scoreRight);
+			this.messageBus.PostMessage("updateRightScore", this._scoreRight);
 		}
 		else if (collidedNode === this._goalRight)
 		{
 			this._scoreLeft++;
-			this.messageBus.PostMessage("scoreFromLeft", this._scoreLeft);
+			this.messageBus.PostMessage("updateLeftScore", this._scoreLeft);
 		}
 		else
 			return ;
@@ -56,6 +56,15 @@ export class GameManager extends ScriptComponent {
 	protected destroy()
 	{
 		this.messageBus.Dispose();
+	}
+
+	public	restart()
+	{
+		this.messageBus.PostMessage("updateLeftScore", 0);
+		this.messageBus.PostMessage("updateRightScore", 0);
+		this._scoreLeft = 0;
+		this._scoreRight = 0;
+		this._ball.script.reset();
 	}
 }
 
