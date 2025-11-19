@@ -79,11 +79,11 @@ export class PongGame extends HTMLElement {
 
 		if (!scene.metadata)
 			scene.metadata = {};
-		scene.metadata.sceneData = new FrontendSceneData(this);
+		globalThis.HKP = new HavokPlugin(false);
+		scene.metadata.sceneData = new FrontendSceneData(globalThis.HKP, this);
 		const	cam = new FreeCamera("camera1", Vector3.Zero(), scene);
 		const	assetsManager = new AssetsManager(scene);
 
-		globalThis.HKP = new HavokPlugin(false);
 		if (!scene.enablePhysics(Vector3.Zero(), globalThis.HKP))
 			throw new Error("The physics engine hasn't been initialized !");
 

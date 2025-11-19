@@ -1,6 +1,7 @@
 import { DefaultSocket } from ".";
 import { ServerSceneData } from "./ServerSceneData";
 import { ServerPongGame } from "./ServerPongGame";
+import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
 
 export class	Room
 {
@@ -16,7 +17,7 @@ export class	Room
 		this.addSocketToRoom(firstSocket);
 		this.addSocketToRoom(secondSocket);;
 
-		const	sceneData = new ServerSceneData(firstSocket, secondSocket);
+		const	sceneData = new ServerSceneData(new HavokPlugin(false), firstSocket, secondSocket);
 		this._serverPongGame = new ServerPongGame(sceneData);
 	}
 

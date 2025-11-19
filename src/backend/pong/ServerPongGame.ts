@@ -4,7 +4,6 @@ import { InputController, SceneManager } from "@babylonjs-toolkit/next"
 import { AssetsManager } from "@babylonjs/core/Misc/assetsManager";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
-import { HavokPlugin } from "@babylonjs/core/Physics";
 import { XMLHttpRequest } from 'w3c-xmlhttprequest';
 
 import { NullEngine } from "@babylonjs/core";
@@ -60,18 +59,11 @@ export class ServerPongGame {
 		await SceneManager.InitializeRuntime(this._engine, {
 			hardwareScalingLevel: 0
 		});
-		await this.loadPhysics(scene);
+		if (!scene.enablePhysics(Vector3.Zero(), sceneData.havokPlugin))
+			throw new Error("The physics engine hasn't been initialized !");
 		await this.loadAssets(scene);
 
 		return scene;
-	}
-
-	private async loadPhysics(scene : Scene) : Promise<void>
-	{
-		globalThis.HKP = new HavokPlugin(false);
-
-		if (!scene.enablePhysics(Vector3.Zero(), globalThis.HKP))
-			throw new Error("The physics engine hasn't been initialized !");
 	}
 
 	private async loadAssets(scene : Scene) : Promise<void>
