@@ -21,7 +21,7 @@ export async function suscriberRoute(
     }, controller.updatePassword.bind(controller));
 
     fastify.put('/update/avatar', {
-        // preHandler: middleware.authenticate,
+        preHandler: middleware.authenticate,
     }, controller.updateAvatar.bind(controller));
 
     fastify.delete<{ Body: DeleteAccount }>('/deleteaccount', {
