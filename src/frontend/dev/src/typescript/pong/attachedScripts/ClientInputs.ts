@@ -33,11 +33,13 @@ export class ClientInputs extends ScriptComponent {
 			this._inputsMap.set(clientInput.upKey, playerInput.up);
 			this._inputsMap.set(clientInput.downKey, playerInput.down);
 		});
+		this._inputsMap.set("Escape", inputManager.getEscapeInput());
 		this.scene.onKeyboardObservable.add(this.onKeyboardInput.bind(this));
 	}
 
 	private onKeyboardInput(info : KeyboardInfo)
 	{
+		console.log(info.event.key);
 		const	keyPressed : InputKey | undefined = this._inputsMap.get(info.event.key);
 
 		if (keyPressed == undefined)

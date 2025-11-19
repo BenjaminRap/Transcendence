@@ -3,9 +3,11 @@ import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { PauseGUI } from "../pauseGUI";
 import { FrontendSceneData } from "../FrontendSceneData";
+import { InputManager } from "@shared/attachedScripts/InputManager";
 
 export class CreatePauseGUI extends ScriptComponent {
 	private _type : "basic" | "colorful" = "basic";
+	private _inputManager! : TransformNode;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "CreatePauseGUI") {
         super(transform, scene, properties, alias);
@@ -21,7 +23,15 @@ export class CreatePauseGUI extends ScriptComponent {
 		const	pauseGUI = new PauseGUI(this._type);
 
 		pongHTMLElement.appendChild(pauseGUI);
+		pauseGUI.classList.add("hidden");
+
+		const	inputManager = SceneManager.GetComponent<InputManager>(this._inputManager, "InputManager", false);
+
+		inputManager.getEscapeInput().addOnKeyDownObserver(() => {
+			pauseGUI.classList.toggle("hidden");
+		});
 	}
+
 }
 
 SceneManager.RegisterClass("CreatePauseGUI", CreatePauseGUI);

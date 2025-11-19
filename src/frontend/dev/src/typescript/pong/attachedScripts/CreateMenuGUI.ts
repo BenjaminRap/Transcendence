@@ -8,7 +8,7 @@ import { Animatable } from "@babylonjs/core/Animations/animatable";
 import { SceneMenuData } from "./SceneMenuData";
 
 export class CreateMenuGUI extends ScriptComponent {
-	private _upImagePath! : string;
+	private _arrowImagePath! : string;
 	private _scenesParent! : TransformNode;
 
 	private _scenes! : SceneMenuData[];
@@ -59,7 +59,7 @@ export class CreateMenuGUI extends ScriptComponent {
 			currentItemIndex: 0,
 			onItemChange: this.onSkinChange.bind(this)
 		};
-		this._menuGUI = new MenuGUI(this._upImagePath, sceneButtonSwitch, enemyTypesButtonSwitch, skinsButtonSwitch, this.onPlay.bind(this));
+		this._menuGUI = new MenuGUI(this._arrowImagePath, sceneButtonSwitch, enemyTypesButtonSwitch, skinsButtonSwitch, this.onPlay.bind(this));
 
 		pongHTMLElement.appendChild(this._menuGUI);
 	}
