@@ -54,7 +54,7 @@ export class AuthMiddleware {
     };
 
     // --------------------------------------------------------------------------------- //
-    keyAuthenticate = async (request: FastifyRequest<{ Body: UpdatePassword | DeleteAccount }>, reply: FastifyReply) => {
+    keyAuthenticate = async (request: FastifyRequest<{ Body: DeleteAccount }>, reply: FastifyReply) => {
         try {
             const token = request.body?.tokenKey;
             const decoded = await this.tokenManager.verify(token, false);

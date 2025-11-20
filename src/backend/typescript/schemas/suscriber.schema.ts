@@ -12,12 +12,9 @@ export const SuscriberSchema = {
         }),
 
     updatePassword: z.object({
-            tokenKey: CommonSchema.jwt,
-            newPassword: CommonSchema.password,
-            confirmNewPassword: string().min(1, "You must confirm your new password"),
-            confirmChoice: z.boolean().refine((val) => val === true, {
-                            message: "You must confirm this action"
-                        })
+          currentPassword: CommonSchema.password,
+          newPassword: CommonSchema.password,
+          confirmNewPassword: string().min(1, "You must confirm your new password"),
         }).strict()
           .refine((data) => data.newPassword === data.confirmNewPassword, {
             message: "New password and confirmation do not match",

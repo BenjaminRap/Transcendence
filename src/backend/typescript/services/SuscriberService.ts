@@ -21,10 +21,14 @@ export class SuscriberService {
     }
 
     // ----------------------------------------------------------------------------- //
-    async updatePassword(id: number, newPassword: string): Promise<void> {
+    async updatePassword(id: number, currentPassword: string, newPassword: string): Promise<void> {
         const user = await this.getById(Number(id));
         if (!user) {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
+        }
+
+        if (!await this.passwordHasher.verify(currentPassword, user.password)) {
+            throw new SuscriberException(SuscriberError.INVALID_CREDENTIALS, SuscriberError.INVALID_CREDENTIALS);
         }
 
         if (user.password === newPassword) {
@@ -71,6 +75,22 @@ export class SuscriberService {
         });
 
         return sanitizeUser(updatedUser);
+    }
+
+    // ----------------------------------------------------------------------------- //
+    async updateAvatar(userId: number, buffer: Buffer, origineFilename: string): Promise<SanitizedUser> {
+        const user = await this.getById(Number(userId));
+        if (!user)
+            throw new SuscriberException(SuscriberError.USER_NOT_FOUND, 'User not found');
+
+        /**
+         * a ce niveau j'ai verifie la limite du nombre de fichier
+         * limite de taille
+         * type mime
+         * je dois verifier que le format du fichier correspond a celui indiquer dans le type
+         * analyse du magic number
+        */
+       return sanitizeUser(user);
     }
 
     // ----------------------------------------------------------------------------- //

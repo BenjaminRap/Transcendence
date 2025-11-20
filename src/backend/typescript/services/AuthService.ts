@@ -27,6 +27,15 @@ export class AuthService {
 
         const hashedPassword = await this.passwordHasher.hash(data.password);
 
+        if (data.avatar) {
+            /**
+             * appeler le controller et lui laisser assurer la securite vis a vis
+             * gerer la mise a jour de l'avatar suivant le retour du controller
+             * 
+            */
+           
+        }
+
         // create user in the DB
         const user = await this.prisma.user.create({
             data: {
