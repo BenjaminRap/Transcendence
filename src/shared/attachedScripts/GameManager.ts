@@ -8,7 +8,7 @@ import { SceneData } from "@shared/SceneData";
 import { Vector3 } from "@babylonjs/core";
 
 export class GameManager extends ScriptComponent {
-	private static readonly _pointsToWin = 10;
+	private static readonly _pointsToWin = 1;
 
 	private	_goalLeft! : TransformNode;
 	private	_goalRight! : TransformNode;
@@ -17,6 +17,7 @@ export class GameManager extends ScriptComponent {
 	private _scoreRight : int = 0;
 	private _scoreLeft : int = 0;
 	private _messageBus : LocalMessageBus;
+	private _ended : boolean = false;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "GameManager") {
         super(transform, scene, properties, alias);
@@ -29,7 +30,8 @@ export class GameManager extends ScriptComponent {
 
 	private onTriggerEvent(eventData : IBasePhysicsCollisionEvent)
 	{
-		if (eventData.type === PhysicsEventType.TRIGGER_ENTERED
+		if (this._ended
+			|| eventData.type === PhysicsEventType.TRIGGER_ENTERED
 			|| eventData.collider.transformNode !== this._ball
 			|| eventData.collider.getLinearVelocity().equals(Vector3.ZeroReadOnly))
 			return ;
@@ -40,18 +42,21 @@ export class GameManager extends ScriptComponent {
 			this._scoreRight++;
 			this._messageBus.PostMessage("updateRightScore", this._scoreRight);
 			if (this._scoreRight === GameManager._pointsToWin)
-				this._messageBus.PostMessage("end");
+				this._ended = true;
 		}
 		else if (collidedNode === this._goalRight)
 		{
 			this._scoreLeft++;
 			this._messageBus.PostMessage("updateLeftScore", this._scoreLeft);
 			if (this._scoreLeft === GameManager._pointsToWin)
-				this._messageBus.PostMessage("end");
+				this._ended = true;
 		}
 		else
 			return ;
-		this._ball.script.reset();
+		if (this._ended)
+			this._messageBus.PostMessage("end");
+		else
+			this._ball.script.reset();
 	}
 
 	protected awake()
@@ -61,9 +66,15 @@ export class GameManager extends ScriptComponent {
 
 	public	restart()
 	{
+		this._ended = false;
 		this._messageBus.PostMessage("reset");
 		this._scoreLeft = 0;
 		this._scoreRight = 0;
+	}
+
+	public hasEnded()
+	{
+		return (this._ended);
 	}
 }
 

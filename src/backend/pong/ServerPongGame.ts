@@ -88,7 +88,7 @@ export class ServerPongGame {
 		if (globalThis.HKP)
 			delete globalThis.HKP;
 		this._engine?.dispose();
-		this._scene?.dispose();
 		this._scene?.metadata.sceneData.dispose();
+		this._scene?.dispose();
 	}
 }

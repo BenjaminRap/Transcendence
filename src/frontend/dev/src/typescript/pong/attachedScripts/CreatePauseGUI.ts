@@ -2,9 +2,10 @@ import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { PauseGUI } from "../pauseGUI";
-import { FrontendSceneData } from "../FrontendSceneData";
 import { InputManager } from "@shared/attachedScripts/InputManager";
 import { GameManager } from "@shared/attachedScripts/GameManager";
+import { FrontendSceneData } from "../FrontendSceneData";
+import { SceneData } from "@shared/SceneData";
 
 export class CreatePauseGUI extends ScriptComponent {
 	private _type : "basic" | "colorful" = "basic";
@@ -12,66 +13,70 @@ export class CreatePauseGUI extends ScriptComponent {
 	private _gameManager! : TransformNode & { script : GameManager };
 
 	private _pauseGUI! : PauseGUI;
-	private _sceneData : FrontendSceneData;
 	private _defaultTimeStep : number;
+	private _active : boolean = false;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "CreatePauseGUI") {
         super(transform, scene, properties, alias);
-
+		
 		const	sceneData = this.scene.metadata.sceneData;
-		if (!(sceneData instanceof FrontendSceneData))
-			throw new Error("The SceneData hasn't been attached to the scene !");
-		this._sceneData = sceneData;
-		this._defaultTimeStep = this._sceneData.havokPlugin.getTimeStep();
+
+		this._defaultTimeStep = sceneData.havokPlugin.getTimeStep();
     }
 
 	protected	awake()
 	{
-		const	sceneData = this.scene.metadata.sceneData;
-
-		if (!(sceneData instanceof FrontendSceneData))
-			throw new Error("The scene.metadata should have a sceneData variable of type FrontendSceneData !");
-		const	pongHTMLElement = sceneData.pongHTMLElement;
 		this._pauseGUI = new PauseGUI(this._type);
 
-		pongHTMLElement.appendChild(this._pauseGUI);
+		const	sceneData = this.scene.metadata.sceneData;
+
+		sceneData.pongHTMLElement.appendChild(this._pauseGUI);
 
 		this._gameManager.script = SceneManager.GetComponent(this._gameManager, "GameManager", false);
 		const	inputManager = SceneManager.GetComponent<InputManager>(this._inputManager, "InputManager", false);
 
-		this.togglePauseMenu();
-		inputManager.getEscapeInput().addOnKeyDownObserver(() => this.togglePauseMenu());
+		this.toggleMenu(sceneData);
+		inputManager.getEscapeInput().addOnKeyDownObserver(() => {
+			if (!this._gameManager.script.hasEnded())
+				this.toggleMenu(sceneData)
+		});
 
 		const	buttons = this._pauseGUI.getButtons()!;
 
-		buttons.continue.addEventListener("click", () => { this.togglePauseMenu() });
-		buttons.restart.addEventListener("click", () => { this.onRestart() });
-		buttons.goToMenu.addEventListener("click", () => { this.onGoToMenu() });
-		buttons.quit.addEventListener("click", () => { this.onQuit() });
+		buttons.continue.addEventListener("click", () => { this.toggleMenu(sceneData) });
+		buttons.restart.addEventListener("click", () => { this.onRestart(sceneData) });
+		buttons.goToMenu.addEventListener("click", () => { this.onGoToMenu(sceneData) });
+		buttons.quit.addEventListener("click", () => { this.onQuit(sceneData) });
+
+		sceneData.messageBus.OnMessage("end", () => {
+			if (this._active)
+				this.toggleMenu(sceneData);
+		});
 	}
 
-	private	togglePauseMenu() : void
+	private	toggleMenu(sceneData : SceneData) : void
 	{
-		if (this._pauseGUI.classList.toggle("hidden"))
-			this._sceneData.havokPlugin.setTimeStep(this._defaultTimeStep);
+		this._active = !this._pauseGUI.classList.toggle("hidden");
+		if (this._active)
+			sceneData.havokPlugin.setTimeStep(0);
 		else
-			this._sceneData.havokPlugin.setTimeStep(0);
+			sceneData.havokPlugin.setTimeStep(this._defaultTimeStep);
 	}
 
-	private	onRestart() : void
+	private	onRestart(sceneData : SceneData) : void
 	{
-		this.togglePauseMenu();
+		this.toggleMenu(sceneData);
 		this._gameManager.script.restart();
 	}
 
-	private	onGoToMenu() : void
+	private	onGoToMenu(sceneData : FrontendSceneData) : void
 	{
-		this._sceneData.pongHTMLElement.changeScene("Menu.gltf");
+		sceneData.pongHTMLElement.changeScene("Menu.gltf");
 	}
 
-	private	onQuit() : void
+	private	onQuit(sceneData : FrontendSceneData) : void
 	{
-		this._sceneData.pongHTMLElement.quit();
+		sceneData.pongHTMLElement.quit();
 	}
 
 	protected	destroy()
