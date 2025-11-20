@@ -11,6 +11,7 @@ import { TerminalUtils } from './terminalUtils/terminalUtils.ts';
 
 
 import FileSystem from './filesystem.json' with { type: "json" };
+import { promises } from 'dns';
 
 
 export namespace TerminalElements {
@@ -71,17 +72,17 @@ export namespace TerminalCommand {
 		name: string;
 		description: string;
 		usage: string;
-		execute: (args: string[], description: string, usage: string) => string;
+		execute: (args: string[], description: string, usage: string) => Promise<string> | string;
 
-		constructor(name: string, description: string, usage: string, execute: (args: string[], description: string, usage: string) => string) {
+		constructor(name: string, description: string, usage: string, execute: (args: string[], description: string, usage: string) => Promise<string> | string) {
 			this.name = name;
 			this.description = description;
 			this.usage = usage;
 			this.execute = execute;
 		}
 
-		launchCommand(args: string[]): string {
-			return this.execute(args, this.description, this.usage);
+		async launchCommand(args: string[]): Promise<string> {
+			return await this.execute(args, this.description, this.usage);
 		}
 	}
 
@@ -136,17 +137,22 @@ function whoamiCommand(): string {
 	return TerminalUserManagement.username;
 }
 
-function profileCommand(args: string[]): string {
+async function profileCommand(args: string[]): Promise<string> {
+	let result: string = '';
 	if (args.length > 2) {
 		return 'Usage: profile to see your profile or profile [username] to see another user\'s profile.';
 	}
 	if (ProfileBuilder.isActive || ExtProfileBuilder.isActive)
 		return 'Profile is already open. Type "kill profile" to close it.';
 	if (args.length === 1)
-		ProfileBuilder.buildProfile('');
+		result = await ProfileBuilder.buildProfile('');
 	else
+	{
+		// result = await ExtProfileBuilder.buildExtProfile(args[1]);
 		ExtProfileBuilder.buildExtProfile(args[1]);
-	return 'Profile is now open.';
+		result = "Profile is now open.";
+	}
+	return result;
 }
 
 function killCommand(args: string[]): string {
@@ -403,7 +409,7 @@ function getListOfElementTabCompletion(command: string, cursorPosition: number):
 
 //---------------------------------------------------------------------------------- CASE ---------------------------------------------------------------------
 
-function exec(command: string) {
+async function exec(command: string) {
 	const args = command.match(/"[^"]*"|'[^']*'|\S+/g) || [];
 	for (let i = 0; i < args.length; i++) {
 		if (!checkArgs(args[i])) {
@@ -418,7 +424,7 @@ function exec(command: string) {
 
 	for (let i = 0; i < TerminalCommand.commandAvailable.length; i++) {
 		if (args[0] === TerminalCommand.commandAvailable[i].name) {
-			const result = TerminalCommand.commandAvailable[i].launchCommand(args);
+			const result = await TerminalCommand.commandAvailable[i].launchCommand(args);
 			if (result === undefined || result === null || result === '')
 				return '';
 			return '> ' + result;
@@ -491,7 +497,7 @@ function TabProcessInEnter() {
 	return;
 }
 
-function enterCase() {
+async function enterCase() {
 	if (!TerminalElements.currentInput || !TerminalElements.output)
 		return;
 	if (TerminalConfigVariables.isTabInProcess)
@@ -517,7 +523,7 @@ function enterCase() {
 		return;
 	}
 	updateCurrentHistory(command.slice(TerminalPromptAndEnv.promptText.length));
-	const result = exec(command.slice(TerminalPromptAndEnv.promptText.length));
+	const result = await exec(command.slice(TerminalPromptAndEnv.promptText.length));
 	if (TerminalConfigVariables.isHidden)
 		command = TerminalPromptAndEnv.promptText + '*'.repeat(command.length - TerminalPromptAndEnv.promptText.length);
 	if (result != '')

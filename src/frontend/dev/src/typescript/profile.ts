@@ -3,7 +3,8 @@ export { };
 import { Modal } from './modal.ts'
 import { ExtendedView } from './extendedView.ts'
 import { WriteOnTerminal } from './terminalUtils/writeOnTerminal.ts';
-
+import { TerminalUtils } from './terminalUtils/terminalUtils.ts';
+import { RequestBackendModule } from './terminalUtils/requestBackend.ts';
 /*
 	Attente des donnes backend. Penser a sanitize les donnes avant de les afficher https://github.com/cure53/DOMPurify
 */
@@ -246,8 +247,46 @@ function createFriendList(profileElement: HTMLElement | null) {
 	profileElement.appendChild(friendList);
 }
 
+async function fetchProfileData(user: string): Promise<string> {
+	const token = TerminalUtils.getCookie('accessToken') || '';
+	if (token === '') {
+		return 'You are not logged in.';
+	}
+	try {
+		const response = await fetch('http://localhost:8181/suscriber/profile', {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': 'Bearer ' + token
+			},
+		});
+		const data = await response.json();
+		if (data.success) {
+			profile.username = data.user.username;
+			profile.linkofavatar = data.user.avatar;
+			console.log("Profile data: FJBEJHFBE", data);
+			return "OK";
+		}
+		if (data.message === 'Token expired') {
+			const refreshed = await RequestBackendModule.tryRefreshToken();
+			if (!refreshed) {
+				return 'You are not logged in.';
+			}
+			console.log("Profile data:", data);
+			return "OK";
+		}
+		return 'Error fetching profile data.';
+	} catch (error) {
+		console.error("Error:", error);
+		return 'Error fetching profile data.';
+	}
+}
+
 export namespace ProfileBuilder {
-	export function buildProfile(user: string) {
+	export async function buildProfile(user: string): Promise<string> {
+		const result = await fetchProfileData(user);
+		if (!result || result !== "OK")
+			return result;
 		const profileElement = document.createElement('div');
 		profileElement.id = "profile";
 		profileElement.className = "p-4 m-0 terminal-font bg-black border-2 border-collapse border-green-500 flex flex-col gap-y-4"
@@ -261,6 +300,7 @@ export namespace ProfileBuilder {
 		document.body.appendChild(profileElement);
 		history.pushState({}, '', `/profile/${user}`);
 		isActive = true;
+		return "Profile is now open.";
 	}
 	export function removeProfile() {
 		const profileElement = document.getElementById('profile');
