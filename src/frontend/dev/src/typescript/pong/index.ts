@@ -10,6 +10,7 @@ import { io } from 'socket.io-client'
 import HavokPhysics from "@babylonjs/havok";
 import { FrontendSceneData } from "./FrontendSceneData";
 import { Color4 } from "@babylonjs/core";
+import { SceneData } from "@shared/SceneData";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
@@ -70,7 +71,7 @@ export class PongGame extends HTMLElement {
 	public async changeScene(newSceneName : string) : Promise<void>
 	{
 		if (this._scene)
-			this._scene.dispose();
+			this.disposeScene();
 		this._scene = await this.getNewScene(newSceneName);
 	}
 
@@ -137,14 +138,22 @@ export class PongGame extends HTMLElement {
 		scene.activeCameras[0].attachControl();
 	}
 
+	private	disposeScene()
+	{
+		if (!this._scene)
+			return ;
+		if (this._scene.metadata && this._scene.metadata.sceneData instanceof SceneData)
+			this._scene.metadata.sceneData.dispose();
+		this._scene.dispose();
+	}
+
 	public disconnectedCallback() : void {
 		if (globalThis.HKP)
 			delete globalThis.HKP;
 		if (globalThis.HKP)
 			delete globalThis.HKP;
+		this.disposeScene();
 		this._engine?.dispose();
-		this._scene?.metadata.sceneData.dispose();
-		this._scene?.dispose();
 	}
 }
 

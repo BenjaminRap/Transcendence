@@ -11,7 +11,7 @@ export class	SceneData
 
 	}
 
-	public dipose()
+	public dispose()
 	{
 		this.messageBus.Dispose();
 	}
