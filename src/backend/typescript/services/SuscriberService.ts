@@ -76,18 +76,36 @@ export class SuscriberService {
     }
 
     // ----------------------------------------------------------------------------- //
-    async updateAvatar(userId: number): Promise<SanitizedUser> {
+    async updateAvatar(buffer: Buffer, userId: number): Promise<SanitizedUser> {
         const user = await this.getById(Number(userId));
         if (!user)
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, 'User not found');
 
         /**
-         * a ce niveau j'ai verifie la limite du nombre de fichier
-         * limite de taille
-         * type mime
-         * je dois verifier que le format du fichier correspond a celui indiquer dans le type
-         * analyse du magic number
+         * le fichier est sous forme de buffer
+         * et a ce stade il est deja valide
+         * il est pret a etre enregistre sur le disque
+         * il faut mettre la db a jour avec le nouveau lien
+         * 
         */
+            // creer un nouveau non de fichier
+            // const filename = `avatar_${userId}_${Date.now()}.webp`;
+            // const filepath = path.join(this.uploadDir, filename);
+
+            // // 6. SUPPRESSION DE L'ANCIEN AVATAR (si existe)
+            // const user = await this.userRepository.findById(userId);
+            // if (user.avatar) {
+            //     const oldAvatarPath = path.join(this.uploadDir, path.basename(user.avatar));
+            //     try {
+            //         await fs.unlink(oldAvatarPath);
+            //     } catch (error) {
+            //         console.warn('Ancien avatar non trouvé ou déjà supprimé');
+            //     }
+            // }
+
+            // // 7. SAUVEGARDE DU NOUVEAU FICHIER
+            // await fs.writeFile(filepath, processedBuffer);
+
        return sanitizeUser(user);
     }
 

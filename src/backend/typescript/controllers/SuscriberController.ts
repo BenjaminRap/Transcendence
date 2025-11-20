@@ -128,31 +128,25 @@ export class SuscriberController {
         }
     }
 
-    // verifier si le format du fichier correspond a son extension (.png, .jpg, .webp)
-    // verifier si ce n'est pas deja un fichier compressé
-    // verifier si le fichier n'est pas corrompu par rapport a son format
-    // verifier qu'il ne contient pas de script malveillant
-
-    /**
-     * FileService necessaire
-     * fonctions utilitaires qui peut prendre la requete fastify en parametre 
-     */
     // --------------------------------------------------------------------------------- //
     // PUT /suscriber/update/avatar
     async updateAvatar(request: FastifyRequest, reply: FastifyReply) {
         // IMPORTANT: le client doit envoyer Content-Type: multipart/form-data new preHandler checkHeader
         try {
             const id = (request as any).user.userId;
+
             // Appeler le service pour traiter l'upload
-            const data = await this.fileService.uploadAvatar(request);
-            if (!data.success) {
+            const data = await this.fileService.uploadAvatar(request, id);
+            if (!data.success || !data.buffer) {
                 return reply.status(400).send({
                     success: false,
                     message: data.message,
                     redirectTo: '/suscriber/profile'
                 });
             }
-            const updatedUser = await this.suscriberService.updateAvatar( id );
+
+
+            const updatedUser = await this.suscriberService.updateAvatar( data.buffer, id );
             return reply.status(200).send({
                 success: true,
                 message: 'Avatar successfully updated',

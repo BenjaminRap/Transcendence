@@ -1,62 +1,37 @@
 import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs/promises';
-import { FileException, FileError } from '../error_handlers/FileHandler.error.js';
-import { SanitizedUser } from '../types/auth.types.js';
-import fastify from 'fastify';
-import { success } from 'zod';
 
 export class FileService {
     constructor(){}
 
+    private MAX_COMPRESSED_SIZE = 300 * 1024;
+
     // --------------------------------------------------------------------------------- //
     async uploadAvatar(buffer: Buffer, mimetype: string) {
 
-//         // 4. TRAITEMENT DE L'IMAGE AVEC SHARP
-//         // Redimensionnement + conversion en WebP pour optimisation
-//         const processedBuffer = await sharp(fileBuffer)
-//             .resize(400, 400, { 
-//                 fit: 'cover', 
-//                 position: 'center' 
-//             })
-//             .webp({ quality: 85 })
-//             .toBuffer();
-
-//         // 5. GÉNÉRATION D'UN NOM DE FICHIER UNIQUE
-//         const filename = `avatar_${userId}_${Date.now()}.webp`;
-//         const filepath = path.join(this.uploadDir, filename);
-
-//         // 6. SUPPRESSION DE L'ANCIEN AVATAR (si existe)
-//         const user = await this.userRepository.findById(userId);
-//         if (user.avatar) {
-//             const oldAvatarPath = path.join(this.uploadDir, path.basename(user.avatar));
-//             try {
-//                 await fs.unlink(oldAvatarPath);
-//             } catch (error) {
-//                 console.warn('Ancien avatar non trouvé ou déjà supprimé');
-//             }
-//         }
-
-//         // 7. SAUVEGARDE DU NOUVEAU FICHIER
-//         await fs.writeFile(filepath, processedBuffer);
     }
-
     // --------------------------------------------------------------------------------- //
-    async updateAvatar(buffer: Buffer, ): Promise<{ success: boolean, message: string}> {
+    async updateAvatar(buffer: Buffer): Promise<{ success: boolean, message?: string, buffer?: Buffer }> {
         try {
+            // check if the file is not corrupt (sharp)
+            const metadata = await sharp(buffer).metadata();
+
+            // resize, convert to webp (compress lossless), return buffer
             const cleanBuffer = await sharp(buffer)
-                .webp({ quality: 90 })
+                .resize( 512, 512, { fit: 'cover', position: 'center', withoutEnlargement: true } )
+                .webp({ quality: 90, lossless: true })
                 .toBuffer();
-            return {
-                success: false,
-                message: ''
-            };
 
+            if (cleanBuffer.length > this.MAX_COMPRESSED_SIZE)
+                console.warn('avatar too large detected, buffer size: ', (cleanBuffer.length / 1024).toFixed(2));
 
+            // retourner buffer traité
             return {
                 success: true,
-                message: ''
-            }
+                buffer: cleanBuffer
+            };
+
         } catch (error) {
             console.log(error);
             return {
@@ -71,7 +46,6 @@ export class FileService {
     // ==================================== PRIVATE ==================================== //
 
     // --------------------------------------------------------------------------------- //
-
 }
 
 
