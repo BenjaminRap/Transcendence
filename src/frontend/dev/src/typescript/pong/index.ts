@@ -97,7 +97,12 @@ export class PongGame extends HTMLElement {
 		this.changeScene(sceneName, "Local");
 	}
 
-	public async startOnlineGame(sceneName : "Basic.gltf" | "Magic.gltf") : Promise<void>
+	public startOnlineGame(sceneName : "Basic.gltf" | "Magic.gltf")
+	{
+		this.startOnlineGameAsync(sceneName);
+	}
+
+	private async startOnlineGameAsync(sceneName : "Basic.gltf" | "Magic.gltf") : Promise<void>
 	{
 		try {
 			await this._multiplayerHandler.connect();
@@ -113,7 +118,8 @@ export class PongGame extends HTMLElement {
 					console.log(gameInfos);
 			});
 		} catch (error) {
-			console.error(error);
+			if (error !== "io client disconnect") // meaning we disconnected ourselves
+				console.error(error);
 			this.goToMenuScene();
 		}
 	}
