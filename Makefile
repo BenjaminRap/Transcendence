@@ -9,6 +9,7 @@ DOCKER_EXEC	=	docker compose -f $(DOCKER_DIR)$(DOCKER_FILE) --profile $(PROFILE)
 
 compile:
 	npx tsc -p ./src/backend/tsconfig.json
+	npx tsc-alias -p ./src/backend/tsconfig.json --resolve-full-paths --resolve-full-extension .js
 	npx tsc --noEmit -p ./src/frontend/tsconfig.json
 	npx @tailwindcss/cli -i ./input.css -o ./src/frontend/dev/public/css/tailwind.css
 
@@ -29,6 +30,7 @@ endif
 compile-watch:
 	npx concurrently \
 		"tsc -p ./src/backend/tsconfig.json --watch" \
+		"npx tsc-alias -p ./src/backend/tsconfig.json --resolve-full-paths --resolve-full-extension .js --watch" \
 		"tsc --noEmit -p ./src/frontend/tsconfig.json --watch" \
 		"tailwindcss -i ./input.css -o ./src/frontend/dev/public/css/tailwind.css --watch"
 
