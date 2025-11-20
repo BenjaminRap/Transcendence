@@ -8,4 +8,3 @@ secrets/
 *.crt
 .env
 dockerFiles/nginx/website/
-.test*

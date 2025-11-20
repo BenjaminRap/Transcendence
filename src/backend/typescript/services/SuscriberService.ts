@@ -76,7 +76,7 @@ export class SuscriberService {
     }
 
     // ----------------------------------------------------------------------------- //
-    async updateAvatar(userId: number, buffer: Buffer, origineFilename: string): Promise<SanitizedUser> {
+    async updateAvatar(userId: number): Promise<SanitizedUser> {
         const user = await this.getById(Number(userId));
         if (!user)
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, 'User not found');
