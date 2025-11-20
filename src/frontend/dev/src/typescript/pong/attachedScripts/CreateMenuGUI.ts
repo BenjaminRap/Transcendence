@@ -6,6 +6,7 @@ import { MenuGUI, SwitchButton } from "../MenuGUI";
 import { Animation, EasingFunction, Nullable, SineEase } from "@babylonjs/core";
 import { Animatable } from "@babylonjs/core/Animations/animatable";
 import { SceneMenuData } from "./SceneMenuData";
+import { InMatchmakingGUI } from "../InMatchmakingGUI";
 
 export class CreateMenuGUI extends ScriptComponent {
 	private _arrowImagePath! : string;
@@ -15,20 +16,26 @@ export class CreateMenuGUI extends ScriptComponent {
 	private _animation : Nullable<Animatable> = null;
 	private _easeFunction = new SineEase();
 	private _sceneData : FrontendSceneData;
-	private _menuGUI : MenuGUI | undefined;
+	private _menuGUI! : MenuGUI;
+	private _inMatchmakingGUI! : InMatchmakingGUI;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "CreateMenuGUI") {
         super(transform, scene, properties, alias);
 		this._easeFunction.setEasingMode(EasingFunction.EASINGMODE_EASEINOUT);
-
-		const	sceneData = this.scene.metadata.sceneData;
-		if (!(sceneData instanceof FrontendSceneData))
-			throw new Error("The SceneData hasn't been attached to the scene !");
-		this._sceneData = sceneData;
+		this._sceneData = this.scene.metadata.sceneData;
     }
 
 	protected	awake()
 	{
+		this.setScenes();
+		this.createMenuGUI();
+		this.createInMatchmakingGUI();
+		this._menuGUI.classList.add("hidden");
+	}
+
+	private	setScenes()
+	{
+
 		const	childs = this._scenesParent.getChildren<TransformNode>(undefined, true);
 		this._scenes = childs.reduce((accumulator : SceneMenuData[], currentValue : TransformNode) => {
 			const	sceneMenuData = SceneManager.GetComponent<SceneMenuData>(currentValue, "SceneMenuData", false);
@@ -38,12 +45,10 @@ export class CreateMenuGUI extends ScriptComponent {
 			return accumulator;
 		}, []);
 
-		const	sceneData = this.scene.metadata.sceneData;
+	}
 
-		if (!(sceneData instanceof FrontendSceneData))
-			throw new Error("The scene.metadata should have a sceneData variable of type FrontendSceneData !");
-		const	pongHTMLElement = sceneData.pongHTMLElement;
-
+	private	createMenuGUI()
+	{
 		const	sceneButtonSwitch : SwitchButton = {
 			items: this._scenes.map((scene) => scene.sceneName),
 			currentItemIndex: 0,
@@ -60,8 +65,17 @@ export class CreateMenuGUI extends ScriptComponent {
 			onItemChange: this.onSkinChange.bind(this)
 		};
 		this._menuGUI = new MenuGUI(this._arrowImagePath, sceneButtonSwitch, enemyTypesButtonSwitch, skinsButtonSwitch, this.onPlay.bind(this));
+		this._sceneData.pongHTMLElement.appendChild(this._menuGUI);
+	}
 
-		pongHTMLElement.appendChild(this._menuGUI);
+	private	createInMatchmakingGUI()
+	{
+		this._inMatchmakingGUI = new InMatchmakingGUI();
+		this._sceneData.pongHTMLElement.appendChild(this._inMatchmakingGUI);
+		
+		const	cancelButton = this._inMatchmakingGUI.getCancelButton()!;
+
+		cancelButton.addEventListener("click", () => { this.quitMatchmaking() });
 	}
 
 	private	onSceneChange(currentIndex : number, newIndex : number) : boolean
@@ -75,6 +89,12 @@ export class CreateMenuGUI extends ScriptComponent {
 		const	endPosition = this._scenesParent.position.subtract(distance);
 		this._animation = Animation.CreateAndStartAnimation("menuMapAnim", this._scenesParent, "position", 60, 30, startPosition, endPosition, Animation.ANIMATIONLOOPMODE_CONSTANT, this._easeFunction, () => { this._animation = null });
 		return true;
+	}
+
+	private	quitMatchmaking()
+	{
+		this._inMatchmakingGUI.classList.add("hidden");
+		this._menuGUI.classList.remove("hidden");
 	}
 
 	private	onEnemyTypeChange(currentIndex : number, newIndex : number) : boolean
