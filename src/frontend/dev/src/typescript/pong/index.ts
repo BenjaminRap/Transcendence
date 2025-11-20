@@ -11,20 +11,25 @@ import HavokPhysics from "@babylonjs/havok";
 import { FrontendSceneData } from "./FrontendSceneData";
 import { Color4 } from "@babylonjs/core";
 import { SceneData } from "@shared/SceneData";
+import { MultiplayerHandler } from "./MultiplayerHandler";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
+
+export type GameType = "Local" | "Multiplayer" | "Bot" | "Menu";
 
 export class PongGame extends HTMLElement {
 	private _canvas : HTMLCanvasElement;
 	private _engine! : Engine;
 	private _scene : Scene | undefined;
+	private _multiplayerHandler : MultiplayerHandler;
 
     public constructor() {
 		super();
 		this.classList.add("relative", "block");
 		this._canvas = document.createElement("canvas");
 		this._canvas.className = "w-full aspect-video relative"
+		this._multiplayerHandler = new MultiplayerHandler();
 		this.appendChild(this._canvas);
 	}
 
@@ -33,7 +38,7 @@ export class PongGame extends HTMLElement {
 			this._engine = this.createEngine();
 			globalThis.HK = await HavokPhysics();
 			await SceneManager.InitializeRuntime(this._engine, { showDefaultLoadingScreen: true, hideLoadingUIWithEngine: false });
-			this._scene = await this.getNewScene("Menu.gltf");
+			this._scene = await this.getNewScene("Menu.gltf", "Menu");
 			this._engine.runRenderLoop(this.renderScene.bind(this));
 			this.addEventListener("click", () => { this._canvas.focus() });
 		} catch (error) {
@@ -68,11 +73,11 @@ export class PongGame extends HTMLElement {
 		});
 	}
 
-	public async changeScene(newSceneName : string) : Promise<void>
+	private async changeScene(newSceneName : string, gameType : GameType) : Promise<void>
 	{
 		if (this._scene)
 			this.disposeScene();
-		this._scene = await this.getNewScene(newSceneName);
+		this._scene = await this.getNewScene(newSceneName, gameType);
 	}
 
 	public quit() : void
@@ -80,14 +85,52 @@ export class PongGame extends HTMLElement {
 		this.remove();
 	}
 
-	private	async getNewScene(sceneName : string) : Promise<Scene>
+	public goToMenuScene()
+	{
+		this._multiplayerHandler.disconnect();
+		this.changeScene("Menu.gltf", "Menu");
+	}
+
+	public startLocalGame(sceneName : "Basic.gltf" | "Magic.gltf")
+	{
+		this._multiplayerHandler.disconnect();
+		this.changeScene(sceneName, "Local");
+	}
+
+	public async startOnlineGame(sceneName : "Basic.gltf" | "Magic.gltf") : Promise<void>
+	{
+		try {
+			await this._multiplayerHandler.connect();
+			await this._multiplayerHandler.joinGame();
+			this.changeScene(sceneName, "Multiplayer");
+			this._multiplayerHandler.onServerMessage()!.add((gameInfos : any | "room-closed") => {
+				if (gameInfos === "room-closed")
+				{
+					console.log("The room has been closed !");
+					this.goToMenuScene();
+				}
+				else
+					console.log(gameInfos);
+			});
+		} catch (error) {
+			console.error(error);
+			this.goToMenuScene();
+		}
+	}
+
+	public	cancelMatchmaking()
+	{
+		this._multiplayerHandler.disconnect();
+	}
+
+	private	async getNewScene(sceneName : string, gameType : GameType) : Promise<Scene>
 	{
 		const	scene = new Scene(this._engine);
 
 		if (!scene.metadata)
 			scene.metadata = {};
 		globalThis.HKP = new HavokPlugin(false);
-		scene.metadata.sceneData = new FrontendSceneData(globalThis.HKP, this);
+		scene.metadata.sceneData = new FrontendSceneData(globalThis.HKP, this, gameType);
 		const	cam = new FreeCamera("camera1", Vector3.Zero(), scene);
 		const	assetsManager = new AssetsManager(scene);
 
@@ -104,31 +147,6 @@ export class PongGame extends HTMLElement {
 		});
 
 		return scene;
-	}
-
-	private	joinMultiplayer()
-	{
-		const	socket = io("/", {
-			path: "/api/socket.io/"
-		});
-
-		socket.on("connect_error", (error : Error) => {
-			console.log(`Socket error : ${error}`);
-			socket.disconnect();
-		});
-		socket.emit("join-matchmaking");
-
-		socket.on("room-closed", () => {
-			console.log("room-closed !");
-			socket.off("game-infos");
-			socket.emit("join-matchmaking");
-		});
-
-		socket.on("joined-game", () => {
-			console.log("joined a room !");
-			socket.on("game-infos", (gameInfos : any) => {
-			})
-		});
 	}
 
 	private onSceneLoaded(scene : Scene) : void {
@@ -148,6 +166,7 @@ export class PongGame extends HTMLElement {
 	}
 
 	public disconnectedCallback() : void {
+		this._multiplayerHandler.disconnect();
 		if (globalThis.HKP)
 			delete globalThis.HKP;
 		if (globalThis.HKP)

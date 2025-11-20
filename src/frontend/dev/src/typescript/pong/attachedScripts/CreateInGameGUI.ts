@@ -72,10 +72,14 @@ export class CreateInGameGUI extends ScriptComponent {
 
 	private	toggleMenu(menu : HTMLElement) : void
 	{
-		if (menu.classList.toggle("hidden"))
-			this._sceneData.havokPlugin.setTimeStep(this._defaultTimeStep);
-		else
+		const	isMenuVisible = !menu.classList.toggle("hidden");
+		const	isMultiplayerGame = this._sceneData.gameType === "Multiplayer"
+		const	gamePaused = isMenuVisible && !isMultiplayerGame;
+
+		if (gamePaused)
 			this._sceneData.havokPlugin.setTimeStep(0);
+		else
+			this._sceneData.havokPlugin.setTimeStep(this._defaultTimeStep);
 	}
 
 	private	setMenuVisibility(menu : HTMLElement, visible : boolean)
@@ -95,7 +99,7 @@ export class CreateInGameGUI extends ScriptComponent {
 
 	private	onGoToMenu() : void
 	{
-		this._sceneData.pongHTMLElement.changeScene("Menu.gltf");
+		this._sceneData.pongHTMLElement.goToMenuScene();
 	}
 
 	private	onQuit() : void

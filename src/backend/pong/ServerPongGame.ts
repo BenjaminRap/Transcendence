@@ -9,6 +9,7 @@ import { XMLHttpRequest } from 'w3c-xmlhttprequest';
 import { NullEngine } from "@babylonjs/core";
 import { importGlob } from "./importUtils";
 import { ServerSceneData } from "./ServerSceneData";
+import { SceneData } from "@shared/SceneData";
 
 importGlob("dev/backend/pong/attachedScripts/*.js");
 importGlob("dev/shared/attachedScripts/*.js");
@@ -82,13 +83,21 @@ export class ServerPongGame {
 		});
 	}
 
+	private	disposeScene()
+	{
+		if (!this._scene)
+			return ;
+		if (this._scene.metadata && this._scene.metadata.sceneData instanceof SceneData)
+			this._scene.metadata.sceneData.dispose();
+		this._scene.dispose();
+	}
+
 	public dispose() : void {
 		if (globalThis.HKP)
 			delete globalThis.HKP;
 		if (globalThis.HKP)
 			delete globalThis.HKP;
+		this.disposeScene();
 		this._engine?.dispose();
-		this._scene?.metadata.sceneData.dispose();
-		this._scene?.dispose();
 	}
 }

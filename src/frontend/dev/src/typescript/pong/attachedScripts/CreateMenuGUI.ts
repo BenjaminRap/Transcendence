@@ -9,6 +9,8 @@ import { SceneMenuData } from "./SceneMenuData";
 import { InMatchmakingGUI } from "../InMatchmakingGUI";
 
 export class CreateMenuGUI extends ScriptComponent {
+	private static readonly _enemyTypes = [ "Local", "Multiplayer", "Bot" ];
+
 	private _arrowImagePath! : string;
 	private _scenesParent! : TransformNode;
 
@@ -30,7 +32,6 @@ export class CreateMenuGUI extends ScriptComponent {
 		this.setScenes();
 		this.createMenuGUI();
 		this.createInMatchmakingGUI();
-		this._menuGUI.classList.add("hidden");
 	}
 
 	private	setScenes()
@@ -55,7 +56,7 @@ export class CreateMenuGUI extends ScriptComponent {
 			onItemChange: this.onSceneChange.bind(this)
 		};
 		const	enemyTypesButtonSwitch : SwitchButton = {
-			items: [ "Local", "Multiplayer", "Bot" ],
+			items: CreateMenuGUI._enemyTypes,
 			currentItemIndex: 0,
 			onItemChange: this.onEnemyTypeChange.bind(this)
 		};
@@ -72,6 +73,7 @@ export class CreateMenuGUI extends ScriptComponent {
 	{
 		this._inMatchmakingGUI = new InMatchmakingGUI();
 		this._sceneData.pongHTMLElement.appendChild(this._inMatchmakingGUI);
+		this._inMatchmakingGUI.classList.add("hidden");
 		
 		const	cancelButton = this._inMatchmakingGUI.getCancelButton()!;
 
@@ -95,6 +97,7 @@ export class CreateMenuGUI extends ScriptComponent {
 	{
 		this._inMatchmakingGUI.classList.add("hidden");
 		this._menuGUI.classList.remove("hidden");
+		this._sceneData.pongHTMLElement.cancelMatchmaking();
 	}
 
 	private	onEnemyTypeChange(currentIndex : number, newIndex : number) : boolean
@@ -111,13 +114,34 @@ export class CreateMenuGUI extends ScriptComponent {
 
 	private onPlay(sceneIndex : number, enemyTypeIndex : number, skinIndex : number)
 	{
-		this._sceneData.pongHTMLElement.changeScene(this._scenes[sceneIndex].sceneFileName);
+		const	sceneName = this._scenes[sceneIndex].sceneFileName;
+
+		if (sceneName !== "Basic.gltf" && sceneName !== "Magic.gltf")
+		{
+			console.error(`Wrong scene file name : ${sceneName}`);
+			return ;
+		}
+
+		const	enemyType = CreateMenuGUI._enemyTypes[enemyTypeIndex];
+
+		if (enemyType === "Local")
+			this._sceneData.pongHTMLElement.startLocalGame(sceneName);
+		else if (enemyType === "Multiplayer")
+		{
+			this._inMatchmakingGUI.classList.remove("hidden");
+			this._menuGUI.classList.add("hidden");
+			this._sceneData.pongHTMLElement.startOnlineGame(sceneName);
+		}
+		else
+			console.error("Not implemented yet !!");
 	}
 
 	protected destroy()
 	{
 		if (this._menuGUI)
 			this._menuGUI.remove();
+		if (this._inMatchmakingGUI)
+			this._inMatchmakingGUI.remove();
 	}
 }
 
