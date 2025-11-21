@@ -1,5 +1,9 @@
 import { Vector3 } from "@babylonjs/core";
 
+export type GameInit = {
+	playerIndex : number
+}
+
 export type GameInfos = {
 	type : "itemsUpdate";
 	infos : ItemsUpdate;

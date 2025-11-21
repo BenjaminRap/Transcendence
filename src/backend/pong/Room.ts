@@ -2,6 +2,7 @@ import { DefaultSocket } from ".";
 import { ServerSceneData } from "./ServerSceneData";
 import { ServerPongGame } from "./ServerPongGame";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
+import { GameInit } from "@shared/ServerMessage"
 
 export class	Room
 {
@@ -14,8 +15,8 @@ export class	Room
 	{
 		this._firstSocket = firstSocket;
 		this._secondSocket = secondSocket;
-		this.addSocketToRoom(firstSocket);
-		this.addSocketToRoom(secondSocket);;
+		this.addSocketToRoom(firstSocket, 0);
+		this.addSocketToRoom(secondSocket, 1);;
 
 		const	sceneData = new ServerSceneData(new HavokPlugin(false), firstSocket, secondSocket);
 		this._serverPongGame = new ServerPongGame(sceneData);
@@ -40,11 +41,14 @@ export class	Room
 		socket.data.leaveGame("unactive");
 	}
 
-	private addSocketToRoom(socket : DefaultSocket)
+	private addSocketToRoom(socket : DefaultSocket, playeIndex : number)
 	{
 		if (socket.data.isInRoom(this))
 			return ;
-		socket.emit("joined-game");
+		const	gameInit : GameInit = {
+			playerIndex: playeIndex
+		}
+		socket.emit("joined-game", gameInit);
 		socket.data.joinGame(this);
 	}
 }

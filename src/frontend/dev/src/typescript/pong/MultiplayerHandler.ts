@@ -1,4 +1,5 @@
 import { Observable } from "@babylonjs/core";
+import { GameInit } from "@shared/ServerMessage";
 import { io, Socket } from "socket.io-client";
 
 export class	MultiplayerHandler
@@ -40,14 +41,14 @@ export class	MultiplayerHandler
 		this._onServerMessageObservable = null;
 	}
 
-	public async joinGame() : Promise<void>
+	public async joinGame() : Promise<GameInit>
 	{
 		if (this._socket === null)
 			await this.connect();
 		this._socket!.emit("join-matchmaking");
 		return new Promise((resolve, reject) => {
-			this._socket!.once("joined-game", () => {
-				resolve();
+			this._socket!.once("joined-game", (gameInit : GameInit) => {
+				resolve(gameInit);
 			});
 			this._socket!.once("disconnect", (reason) => {
 				reject(reason);

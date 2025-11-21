@@ -107,8 +107,9 @@ export class PongGame extends HTMLElement {
 	{
 		try {
 			await this._multiplayerHandler.connect();
-			await this._multiplayerHandler.joinGame();
-			this.changeScene(sceneName, "Multiplayer", this._settings._playerInputs);
+			const gameInit = await this._multiplayerHandler.joinGame();
+			const	inputs = this._settings._playerInputs.filter((value : ClientInput) => value.index === gameInit.playerIndex);
+			this.changeScene(sceneName, "Multiplayer", inputs);
 			this._multiplayerHandler.onServerMessage()!.add((gameInfos : any | "room-closed") => {
 				if (gameInfos === "room-closed")
 				{
