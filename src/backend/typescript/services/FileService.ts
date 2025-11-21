@@ -1,6 +1,4 @@
 import sharp from 'sharp';
-import path from 'path';
-import fs from 'fs/promises';
 
 export class FileService {
     constructor(){}
@@ -8,30 +6,25 @@ export class FileService {
     private MAX_COMPRESSED_SIZE = 300 * 1024;
 
     // --------------------------------------------------------------------------------- //
-    async uploadAvatar(buffer: Buffer, mimetype: string) {
-
-    }
-    // --------------------------------------------------------------------------------- //
-    async updateAvatar(buffer: Buffer): Promise<{ success: boolean, message?: string, buffer?: Buffer }> {
+    async uploadAvatar(buffer: Buffer) {
         try {
             // check if the file is not corrupt (sharp)
             const metadata = await sharp(buffer).metadata();
-
+    
             // resize, convert to webp (compress lossless), return buffer
             const cleanBuffer = await sharp(buffer)
                 .resize( 512, 512, { fit: 'cover', position: 'center', withoutEnlargement: true } )
                 .webp({ quality: 90, lossless: true })
                 .toBuffer();
-
+    
             if (cleanBuffer.length > this.MAX_COMPRESSED_SIZE)
-                console.warn('avatar too large detected, buffer size: ', (cleanBuffer.length / 1024).toFixed(2));
-
-            // retourner buffer traité
+                console.warn('avatar too large detected, buffer size: ', (cleanBuffer.length / 1024).toFixed(2), " KB");
+    
             return {
                 success: true,
                 buffer: cleanBuffer
             };
-
+    
         } catch (error) {
             console.log(error);
             return {
@@ -39,6 +32,9 @@ export class FileService {
                 message: 'Error: corrupt file',
             }
         }
+    }
+    // --------------------------------------------------------------------------------- //
+    async updateAvatar(buffer: Buffer) {
         
     }
 

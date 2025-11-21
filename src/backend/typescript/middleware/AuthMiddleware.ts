@@ -9,7 +9,6 @@ export class AuthMiddleware {
     authenticate = async (request: FastifyRequest, reply: FastifyReply) => {
         try {
             const authHeader = request.headers?.authorization;
-            console.log("Auth Header:", authHeader);
             if (!authHeader?.startsWith('Bearer ')) {
                 return reply.status(401).send({
                     success: false,

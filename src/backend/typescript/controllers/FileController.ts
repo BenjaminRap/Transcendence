@@ -11,7 +11,7 @@ export class FileController {
     private allowedMimes = ALLOWED_FILE_MIMES;
 
     // --------------------------------------------------------------------------------- //
-    async uploadAvatar(request: FastifyRequest, userId: number): Promise<{ success: boolean, message?: string, buffer?: Buffer }> {
+    async uploadAvatar(request: FastifyRequest): Promise<{ success: boolean, message?: string, buffer?: Buffer }> {
         try {
             // get file from request
             const data = await request.file({ limits: { fileSize: MAX_FILE_SIZE } });
@@ -27,8 +27,8 @@ export class FileController {
                 throw new FileException(FileError.BAD_FORMAT, 'the file content does not match the file extension');
             }
 
-            // check is the file is not corrupt (sharp), resize and convert to webp, return buffer
-            const result = await this.fileService.updateAvatar(buffer);
+            // check is the file is not corrupt (sharp), resize and convert to webp, return clean buffer
+            const result = await this.fileService.uploadAvatar(buffer);
             if (!result.success) {
                 return {
                     success: false,

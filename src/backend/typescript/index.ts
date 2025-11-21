@@ -3,6 +3,7 @@ import cors from '@fastify/cors';
 import prismaPlugin from './plugins/prisma.js';
 import multipartPlugin from './plugins/multipart.js';
 import staticPlugin from './plugins/static.js';
+import dotenv from 'dotenv';
 import { fpSqlitePlugin } from 'fastify-sqlite-typed';
 
 import { Container } from './container/Container.js';
@@ -10,6 +11,8 @@ import { authRoutes } from './routes/auth.routes.js';
 import { usersRoutes } from './routes/users.routes.js';
 import { suscriberRoute } from './routes/suscriber.route.js';
 import { friendRoute } from './routes/friend.routes.js';
+
+dotenv.config();
 
 const fastify = Fastify({ logger: true });
 
@@ -80,6 +83,7 @@ fastify.after(async (err) => {
         );
         done();
     }, { prefix: '/friend' });
+
 });
 
 async function start(): Promise<void> {

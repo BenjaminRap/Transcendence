@@ -133,10 +133,8 @@ export class SuscriberController {
     async updateAvatar(request: FastifyRequest, reply: FastifyReply) {
         // IMPORTANT: le client doit envoyer Content-Type: multipart/form-data new preHandler checkHeader
         try {
-            const id = (request as any).user.userId;
-
             // Appeler le service pour traiter l'upload
-            const data = await this.fileService.uploadAvatar(request, id);
+            const data = await this.fileService.uploadAvatar(request);
             if (!data.success || !data.buffer) {
                 return reply.status(400).send({
                     success: false,
@@ -145,8 +143,15 @@ export class SuscriberController {
                 });
             }
 
-
-            const updatedUser = await this.suscriberService.updateAvatar( data.buffer, id );
+            const id = (request as any).user.userId;
+            const updatedUser = await this.suscriberService.updateAvatar(data.buffer, Number(id));
+            if (!updatedUser) {
+                return reply.status(400).send({
+                    success: false,
+                    message: 'Could not update avatar',
+                    redirectTo: '/suscriber/profile'
+                });
+            }
             return reply.status(200).send({
                 success: true,
                 message: 'Avatar successfully updated',
@@ -155,6 +160,18 @@ export class SuscriberController {
             });
 
         } catch (error) {
+            if (error instanceof SuscriberException) {
+                switch (error.code) {
+                    case SuscriberError.USER_NOT_FOUND:
+                        return reply.status(404).send({ success: false, message: error.code });
+                    default:
+                        return reply.status(400).send({
+                            success: false,
+                            message: error.message || 'Unknow error',
+                            redirectTo: '/suscriber/profile'
+                        });
+                }
+            }
             request.log.error(error);
             return reply.status(500).send({
                 success: false,

@@ -1,5 +1,7 @@
 #! /bin/bash
 
-cd ./src/backend/typescript/test || exit 1
+cd ./src/backend/test || exit 1 ;
 
-./test.sh && cd - || exit 1
+./test.sh ;
+
+cd - || exit 1 ;
