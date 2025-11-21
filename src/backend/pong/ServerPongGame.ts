@@ -6,7 +6,7 @@ import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
 import { XMLHttpRequest } from 'w3c-xmlhttprequest';
 
-import { NullEngine } from "@babylonjs/core";
+import { NullEngine, NullEngineOptions } from "@babylonjs/core";
 import { importGlob } from "./importUtils";
 import { ServerSceneData } from "./ServerSceneData";
 import { SceneData } from "@shared/SceneData";
@@ -47,7 +47,12 @@ export class ServerPongGame {
 
 	private createEngine() : Engine
 	{
-		return new NullEngine();
+		const	options = new NullEngineOptions()
+
+		options.deterministicLockstep = true,
+		options.lockstepMaxSteps = 4;
+
+		return new NullEngine(options);
 	}
 
 	private async loadScene(sceneData : ServerSceneData) : Promise<Scene> {

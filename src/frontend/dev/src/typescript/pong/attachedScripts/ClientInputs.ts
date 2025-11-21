@@ -1,20 +1,12 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
-import { int } from "@babylonjs/core/types";
 import { InputKey } from "@shared/InputKey";
 import { InputManager } from "@shared/attachedScripts/InputManager";
 import { KeyboardEventTypes, KeyboardInfo } from "@babylonjs/core";
-
-class	ClientInput
-{
-	public index : int = 0;
-	public upKey : string = "z";
-	public downKey : string = "s";
-}
+import { ClientInput, FrontendSceneData } from "../FrontendSceneData";
 
 export class ClientInputs extends ScriptComponent {
-	private _inputs : ClientInput[] = [];
 	private _inputManager! : TransformNode;
 	
 	private _inputsMap : Map<string, InputKey> = new Map<string, InputKey>;
@@ -26,8 +18,10 @@ export class ClientInputs extends ScriptComponent {
 	protected start()
 	{
 		const	inputManager = SceneManager.GetComponent<InputManager>(this._inputManager, "InputManager", false);
+		const	sceneData : FrontendSceneData = this.scene.metadata.sceneData;
+		const	inputs = sceneData.inputs;
 
-		this._inputs.forEach((clientInput : ClientInput) => {
+		inputs.forEach((clientInput : ClientInput) => {
 			const	playerInput = inputManager.getPlayerInput(clientInput.index);
 
 			this._inputsMap.set(clientInput.upKey, playerInput.up);

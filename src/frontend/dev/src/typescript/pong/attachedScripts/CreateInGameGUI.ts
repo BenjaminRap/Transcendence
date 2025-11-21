@@ -92,6 +92,7 @@ export class CreateInGameGUI extends ScriptComponent {
 
 	private	onRestart() : void
 	{
+		this._sceneData.havokPlugin.setTimeStep(this._defaultTimeStep);
 		this._pauseGUI.classList.add("hidden");
 		this._endGUI.classList.add("hidden");
 		this._gameManager.script.restart();
@@ -99,6 +100,7 @@ export class CreateInGameGUI extends ScriptComponent {
 
 	private	onGoToMenu() : void
 	{
+		this._sceneData.havokPlugin.setTimeStep(this._defaultTimeStep);
 		this._sceneData.pongHTMLElement.goToMenuScene();
 	}
 
