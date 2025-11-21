@@ -1,5 +1,5 @@
 import { Observable } from "@babylonjs/core";
-import { GameInit } from "@shared/ServerMessage";
+import { GameInfos, GameInit, KeysUpdate } from "@shared/ServerMessage";
 import { io, Socket } from "socket.io-client";
 
 export class	MultiplayerHandler
@@ -7,7 +7,7 @@ export class	MultiplayerHandler
 	private static readonly _apiUrl = "/api/socket.io/";
 
 	private _socket  : Socket | null = null;
-	private _onServerMessageObservable : Observable<any | "room-closed"> | null = null;
+	private _onServerMessageObservable : Observable<GameInfos | "room-closed"> | null = null;
 
 	public async connect() : Promise<void>
 	{
@@ -56,15 +56,15 @@ export class	MultiplayerHandler
 		});
 	}
 
-	public onServerMessage() : Observable<any | "room-closed"> | null
+	public onServerMessage() : Observable<GameInfos | "room-closed"> | null
 	{
 		if (this._onServerMessageObservable !== null)
 			return (this._onServerMessageObservable);
 		if (this._socket === null)
 			return null;
-		const	observable = new Observable<any | "room-closed">();
+		const	observable = new Observable<GameInfos | "room-closed">();
 
-		this._socket.on("game-infos", (gameInfos : any) => {
+		this._socket.on("game-infos", (gameInfos : GameInfos) => {
 			observable.notifyObservers(gameInfos);
 		});
 		this._socket.once("room-closed", () => {
@@ -76,5 +76,12 @@ export class	MultiplayerHandler
 		});
 		this._onServerMessageObservable = observable;
 		return observable;
+	}
+
+	public sendServerInputs(keysUpdate : KeysUpdate)
+	{
+		if (this._socket === null)
+			return ;
+		this._socket.emit("input-infos", keysUpdate);
 	}
 }

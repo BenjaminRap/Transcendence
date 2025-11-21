@@ -2,19 +2,22 @@ export class	InputKey
 {
 	private _isDown: boolean = false;
 
-	private _onKeyDownObservers : (() => void)[] = [];
+	private _keyObserver : ((event : "keyDown" | "keyUp") => void)[] = [];
 
 	public setKeyDown() : void
 	{
 		if (this._isDown)
 			return ;
 		this._isDown = true;
-		this._onKeyDownObservers.forEach((callback) => { callback() });
+		this._keyObserver.forEach((callback) => { callback("keyDown") });
 	}
 
 	public setKeyUp() : void
 	{
+		if (!this._isDown)
+			return ;
 		this._isDown = false;
+		this._keyObserver.forEach((callback) => { callback("keyUp") });
 	}
 
 	public isKeyDown() : boolean
@@ -22,19 +25,10 @@ export class	InputKey
 		return (this._isDown);
 	}
 
-	public addOnKeyDownObserver(callback : () => void)
+	public addKeyObserver(callback : (event : "keyDown" | "keyUp") => void)
 	{
-		if (this._onKeyDownObservers.indexOf(callback) !== -1)
+		if (this._keyObserver.indexOf(callback) !== -1)
 			throw new Error("onKeyDownObserver already added to the list !");
-		this._onKeyDownObservers.push(callback);
-	}
-
-	public removeOnKeyDownObserver(callback : () => void)
-	{
-		const	index = this._onKeyDownObservers.indexOf(callback);
-
-		if (index === -1)
-			throw new Error("onKeyDownObserver not added to the list !");
-		this._onKeyDownObservers.splice(index, 1);
+		this._keyObserver.push(callback);
 	}
 }

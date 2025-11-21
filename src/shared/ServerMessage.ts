@@ -1,5 +1,14 @@
 import { Vector3 } from "@babylonjs/core";
 
+export type KeysUpdate = {
+	up? : {
+		event: "keyDown" | "keyUp"
+	},
+	down? : {
+		event: "keyDown" | "keyUp"
+	}
+}
+
 export type GameInit = {
 	playerIndex : number
 }
@@ -10,8 +19,10 @@ export type GameInfos = {
 } | {
 	type : "goal";
 	infos : Goal;
+} | {
+	type: "input";
+	infos: KeysUpdate;
 }
-
 
 interface	Goal {
 	side : "Right" | "Left";

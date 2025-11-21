@@ -6,7 +6,6 @@ export class	SceneData
 	public readonly messageBus = new LocalMessageBus();
 	constructor(
 		public readonly havokPlugin : HavokPlugin
-
 	) {
 
 	}

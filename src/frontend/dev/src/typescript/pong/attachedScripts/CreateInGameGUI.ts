@@ -40,8 +40,8 @@ export class CreateInGameGUI extends ScriptComponent {
 
 		const	inputManager = SceneManager.GetComponent<InputManager>(this._inputManager, "InputManager", false);
 
-		inputManager.getEscapeInput().addOnKeyDownObserver(() => {
-			if (!this._gameManager.script.hasEnded())
+		inputManager.getEscapeInput().addKeyObserver((event : "keyDown" | "keyUp") => {
+			if (event == "keyDown" && !this._gameManager.script.hasEnded())
 				this.toggleMenu(this._pauseGUI)
 		});
 

@@ -2,7 +2,7 @@ import { DefaultSocket } from ".";
 import { ServerSceneData } from "./ServerSceneData";
 import { ServerPongGame } from "./ServerPongGame";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
-import { GameInit } from "@shared/ServerMessage"
+import { GameInit, KeysUpdate } from "@shared/ServerMessage"
 
 export class	Room
 {

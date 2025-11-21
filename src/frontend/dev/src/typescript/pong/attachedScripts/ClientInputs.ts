@@ -26,6 +26,16 @@ export class ClientInputs extends ScriptComponent {
 
 			this._inputsMap.set(clientInput.upKey, playerInput.up);
 			this._inputsMap.set(clientInput.downKey, playerInput.down);
+
+			if (sceneData.gameType === "Multiplayer")
+			{
+				playerInput.up.addKeyObserver((event : "keyDown" | "keyUp") => {
+					sceneData.serverCommunicationHandler!.keyUpdate("up", event);
+				});
+				playerInput.down.addKeyObserver((event : "keyDown" | "keyUp") => {
+					sceneData.serverCommunicationHandler!.keyUpdate("down", event);
+				});
+			}
 		});
 		this._inputsMap.set("Escape", inputManager.getEscapeInput());
 		this.scene.onKeyboardObservable.add(this.onKeyboardInput.bind(this));

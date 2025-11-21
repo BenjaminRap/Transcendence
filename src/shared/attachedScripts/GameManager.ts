@@ -8,7 +8,7 @@ import { SceneData } from "@shared/SceneData";
 import { Vector3 } from "@babylonjs/core";
 
 export class GameManager extends ScriptComponent {
-	private static readonly _pointsToWin = 1;
+	private static readonly _pointsToWin = 20;
 
 	private	_goalLeft! : TransformNode;
 	private	_goalRight! : TransformNode;
@@ -25,7 +25,9 @@ export class GameManager extends ScriptComponent {
 		const	sceneData : SceneData = this.scene.metadata.sceneData;
 
 		this._messageBus = sceneData.messageBus;
-		sceneData.havokPlugin.onTriggerCollisionObservable.add(this.onTriggerEvent.bind(this));
+
+		if ((sceneData as any).gameType !== "Multiplayer")
+			sceneData.havokPlugin.onTriggerCollisionObservable.add(this.onTriggerEvent.bind(this));
     }
 
 	private onTriggerEvent(eventData : IBasePhysicsCollisionEvent)
@@ -38,21 +40,27 @@ export class GameManager extends ScriptComponent {
 		const	collidedNode = eventData.collidedAgainst.transformNode;
 
 		if (collidedNode === this._goalLeft)
+			this.onGoal("Right");
+		else if (collidedNode === this._goalRight)
+			this.onGoal("Left");
+	}
+
+	public	onGoal(side : "Right" | "Left")
+	{
+		if (side === "Left")
 		{
 			this._scoreRight++;
 			this._messageBus.PostMessage("updateRightScore", this._scoreRight);
 			if (this._scoreRight === GameManager._pointsToWin)
 				this._ended = true;
 		}
-		else if (collidedNode === this._goalRight)
+		else
 		{
 			this._scoreLeft++;
 			this._messageBus.PostMessage("updateLeftScore", this._scoreLeft);
 			if (this._scoreLeft === GameManager._pointsToWin)
 				this._ended = true;
 		}
-		else
-			return ;
 		if (this._ended)
 			this._messageBus.PostMessage("end");
 		else

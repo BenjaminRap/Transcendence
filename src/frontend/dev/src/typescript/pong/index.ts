@@ -12,6 +12,7 @@ import { Color4 } from "@babylonjs/core";
 import { SceneData } from "@shared/SceneData";
 import { MultiplayerHandler } from "./MultiplayerHandler";
 import { Settings } from "./Settings";
+import { ServerCommunicationHandler } from "./ServerCommunicationHandler";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
@@ -74,11 +75,11 @@ export class PongGame extends HTMLElement {
 		});
 	}
 
-	private async changeScene(newSceneName : string, gameType : GameType, clientInputs : readonly ClientInput[]) : Promise<void>
+	private async changeScene(newSceneName : string, gameType : GameType, clientInputs : readonly ClientInput[], serverCommunicationHandler? : ServerCommunicationHandler) : Promise<void>
 	{
 		if (this._scene)
 			this.disposeScene();
-		this._scene = await this.getNewScene(newSceneName, gameType, clientInputs);
+		this._scene = await this.getNewScene(newSceneName, gameType, clientInputs, serverCommunicationHandler);
 	}
 
 	public quit() : void
@@ -109,15 +110,13 @@ export class PongGame extends HTMLElement {
 			await this._multiplayerHandler.connect();
 			const gameInit = await this._multiplayerHandler.joinGame();
 			const	inputs = this._settings._playerInputs.filter((value : ClientInput) => value.index === gameInit.playerIndex);
-			this.changeScene(sceneName, "Multiplayer", inputs);
+			const	serverCommunicationHandler = new ServerCommunicationHandler(this._multiplayerHandler, gameInit.playerIndex);
+			this.changeScene(sceneName, "Multiplayer", inputs, serverCommunicationHandler);
 			this._multiplayerHandler.onServerMessage()!.add((gameInfos : any | "room-closed") => {
-				if (gameInfos === "room-closed")
-				{
-					console.log("The room has been closed !");
-					this.goToMenuScene();
-				}
-				else
-					console.log(gameInfos);
+				if (gameInfos !== "room-closed")
+					return ;
+				console.log("The room has been closed !");
+				this.goToMenuScene();
 			});
 		} catch (error) {
 			if (error !== "io client disconnect") // meaning we disconnected ourselves
@@ -131,14 +130,14 @@ export class PongGame extends HTMLElement {
 		this._multiplayerHandler.disconnect();
 	}
 
-	private	async getNewScene(sceneName : string, gameType : GameType, clientInputs : readonly ClientInput[]) : Promise<Scene>
+	private	async getNewScene(sceneName : string, gameType : GameType, clientInputs : readonly ClientInput[], serverCommunicationHandler? : ServerCommunicationHandler) : Promise<Scene>
 	{
 		const	scene = new Scene(this._engine);
 
 		if (!scene.metadata)
 			scene.metadata = {};
 		globalThis.HKP = new HavokPlugin(false);
-		scene.metadata.sceneData = new FrontendSceneData(globalThis.HKP, this, gameType, clientInputs);
+		scene.metadata.sceneData = new FrontendSceneData(globalThis.HKP, this, gameType, clientInputs, serverCommunicationHandler);
 		const	cam = new FreeCamera("camera1", Vector3.Zero(), scene);
 		const	assetsManager = new AssetsManager(scene);
 
@@ -161,7 +160,6 @@ export class PongGame extends HTMLElement {
 		SceneManager.HideLoadingScreen(this._engine);
 		SceneManager.FocusRenderCanvas(scene);
 		scene.activeCameras = scene.cameras;
-		scene.activeCameras[0].attachControl();
 	}
 
 	private	disposeScene()
