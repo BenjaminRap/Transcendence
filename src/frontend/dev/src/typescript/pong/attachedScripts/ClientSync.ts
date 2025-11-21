@@ -6,6 +6,7 @@ import { GameInfos } from "@shared/ServerMessage";
 import { GameManager } from "@shared/attachedScripts/GameManager";
 import { InputKey } from "@shared/InputKey";
 import { InputManager } from "@shared/attachedScripts/InputManager";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 
 export class ClientSync extends ScriptComponent {
 	private	_inputManager! : TransformNode;
@@ -44,10 +45,10 @@ export class ClientSync extends ScriptComponent {
 			}
 			else if (gameInfos.type === "itemsUpdate")
 			{
-				this._ball.position.copyFrom(gameInfos.infos.ball.pos);
-				this._ball.getPhysicsBody()!.setLinearVelocity(gameInfos.infos.ball.linearVelocity);
-				this._paddleLeft.position.copyFrom(gameInfos.infos.paddleLeftPos);
-				this._paddleRight.position.copyFrom(gameInfos.infos.paddleRightPos);
+				this._ball.position.copyFrom(gameInfos.infos.ball.pos as Vector3);
+				this._ball.getPhysicsBody()!.setLinearVelocity(gameInfos.infos.ball.linearVelocity as Vector3);
+				this._paddleLeft.position.copyFrom(gameInfos.infos.paddleLeftPos as Vector3);
+				this._paddleRight.position.copyFrom(gameInfos.infos.paddleRightPos as Vector3);
 			}
 			else
 				gameManager.onGoal(gameInfos.infos.side);

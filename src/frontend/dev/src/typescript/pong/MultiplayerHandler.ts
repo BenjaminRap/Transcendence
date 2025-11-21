@@ -1,5 +1,5 @@
 import { Observable } from "@babylonjs/core";
-import { GameInfos, GameInit, KeysUpdate } from "@shared/ServerMessage";
+import { GameInfos, GameInit, KeysUpdate, ZodGameInfos, ZodGameInit } from "@shared/ServerMessage";
 import { io, Socket } from "socket.io-client";
 
 export class	MultiplayerHandler
@@ -47,8 +47,12 @@ export class	MultiplayerHandler
 			await this.connect();
 		this._socket!.emit("join-matchmaking");
 		return new Promise((resolve, reject) => {
-			this._socket!.once("joined-game", (gameInit : GameInit) => {
-				resolve(gameInit);
+			this._socket!.once("joined-game", (data : any) => {
+				const	gameInit = ZodGameInit.safeParse(data);
+
+				if (!gameInit.success)
+					return ;
+				resolve(gameInit.data);
 			});
 			this._socket!.once("disconnect", (reason) => {
 				reject(reason);
@@ -64,8 +68,12 @@ export class	MultiplayerHandler
 			return null;
 		const	observable = new Observable<GameInfos | "room-closed">();
 
-		this._socket.on("game-infos", (gameInfos : GameInfos) => {
-			observable.notifyObservers(gameInfos);
+		this._socket.on("game-infos", (data : any) => {
+			const	gameInfos = ZodGameInfos.safeParse(data);
+
+			if (!gameInfos.success)
+				return ;
+			observable.notifyObservers(gameInfos.data);
 		});
 		this._socket.once("room-closed", () => {
 			observable.notifyObservers("room-closed");

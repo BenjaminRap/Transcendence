@@ -75,5 +75,4 @@ async function	loadHavokPhysics()
 	});
 }
 
-
 start();

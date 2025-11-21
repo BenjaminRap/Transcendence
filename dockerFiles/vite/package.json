@@ -9,7 +9,8 @@
 		"@babylonjs/gui": "~8.33.4",
 		"@babylonjs/havok": "~1.3.10",
 		"@babylonjs-toolkit/next": "~8.33.4",
-		"socket.io-client": "~4.8.1"
+		"socket.io-client": "~4.8.1",
+		"zod": "~4.1.12"
 	},
 	"scripts": {
 		"start": "npx vite dev"

@@ -2,14 +2,20 @@ import { DefaultSocket } from ".";
 import { ServerSceneData } from "./ServerSceneData";
 import { ServerPongGame } from "./ServerPongGame";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
-import { GameInit } from "@shared/ServerMessage"
+import { GameInfos, GameInit, KeysUpdate, ZodKeysUpdate } from "@shared/ServerMessage"
 import { ClientProxy } from "./ClientProxy";
 import { Observable } from "@babylonjs/core";
 
 export type ClientMessage = {
 	socket : "first" | "second",
-	data : any
+	data : KeysUpdate
 }
+
+export type ServerEvents = "game-infos" | "joined-game" | "room-closed";
+export type ServerEventsData<T extends ServerEvents> =
+	T extends "game-infos" ? GameInfos :
+	T extends "joined-game" ? GameInit :
+	undefined
 
 export class	Room
 {
@@ -45,7 +51,7 @@ export class	Room
 	{
 		if (!socket.data.isInRoom(this))
 			return ;
-		this.sendMessageToSocketInternal(socket, "room-closed");
+		this.sendMessageToSocketInternal(socket, "room-closed", undefined);
 		socket.data.leaveGame("unactive");
 	}
 
@@ -60,18 +66,18 @@ export class	Room
 		socket.data.joinGame(this);
 	}
 
-	private sendMessageToSocketInternal(socket : DefaultSocket, event : string, data? : any)
+	private sendMessageToSocketInternal<T extends ServerEvents>(socket : DefaultSocket, event : T, data : ServerEventsData<T>)
 	{
 		socket.emit(event, data);
 	}
 
-	public sendMessageToRoom(event : string, data? : any)
+	public sendMessageToRoom<T extends ServerEvents>(event : T, data : ServerEventsData<T>)
 	{
 		this.sendMessageToSocketInternal(this._firstSocket, event, data);
 		this.sendMessageToSocketInternal(this._secondSocket, event, data);
 	}
 
-	public sendMessageToSocket(socket : "first" | "second", event : string, data? : any)
+	public sendMessageToSocket<T extends ServerEvents>(socket : "first" | "second", event : T, data : ServerEventsData<T>)
 	{
 		if (socket === "first")
 			this.sendMessageToSocketInternal(this._firstSocket, event, data);
@@ -79,12 +85,30 @@ export class	Room
 			this.sendMessageToSocketInternal(this._secondSocket, event, data);
 	}
 
-	public onSocketMessage(event : string) : Observable<ClientMessage>
+	public onSocketMessage(event : "input-infos") : Observable<ClientMessage>
 	{
 		const	observable = new Observable<ClientMessage>();
 
-		this._firstSocket.on(event, (data : any) => { observable.notifyObservers({ socket : "first", data : data }) });
-		this._secondSocket.on(event, (data : any) => { observable.notifyObservers({ socket : "second", data : data }) });
+		this._firstSocket.on(event, (data : any) => {
+			const	keysUpdate = ZodKeysUpdate.safeParse(data);
+			if (!keysUpdate.success)
+				return ;
+			const	clientMessage : ClientMessage = {
+				socket : "first",
+				data : keysUpdate.data
+			};
+			observable.notifyObservers(clientMessage);
+		});
+		this._secondSocket.on(event, (data : any) => {
+			const	keysUpdate = ZodKeysUpdate.safeParse(data);
+			if (!keysUpdate.success)
+				return ;
+			const	clientMessage : ClientMessage = {
+				socket : "second",
+				data : keysUpdate.data
+			};
+			observable.notifyObservers(clientMessage);
+		});
 		
 		return observable;
 	}

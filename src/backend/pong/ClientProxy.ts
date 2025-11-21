@@ -1,5 +1,5 @@
 import { Observable } from "@babylonjs/core/Misc/observable";
-import { ClientMessage, Room } from "./Room";
+import { ClientMessage, Room, ServerEvents, ServerEventsData } from "./Room";
 
 export class	ClientProxy
 {
@@ -9,17 +9,17 @@ export class	ClientProxy
 
 	}
 
-	public sendMessageToSocket(socket : "first" | "second", event : string, data? : any)
+	public sendMessageToSocket<T extends ServerEvents>(socket : "first" | "second", event : T, data : ServerEventsData<T>)
 	{
 		this._room.sendMessageToSocket(socket, event, data);
 	}
 
-	public sendMessageToRoom(event : string, data? : any)
+	public sendMessageToRoom<T extends ServerEvents>(event : T, data : ServerEventsData<T>)
 	{
 		this._room.sendMessageToRoom(event, data);
 	}
 
-	public onSocketMessage(event : string) : Observable<ClientMessage>
+	public onSocketMessage(event : "input-infos") : Observable<ClientMessage>
 	{
 		return this._room.onSocketMessage(event);
 	}

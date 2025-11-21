@@ -40,14 +40,14 @@ export class GameManager extends ScriptComponent {
 		const	collidedNode = eventData.collidedAgainst.transformNode;
 
 		if (collidedNode === this._goalLeft)
-			this.onGoal("Right");
+			this.onGoal("right");
 		else if (collidedNode === this._goalRight)
-			this.onGoal("Left");
+			this.onGoal("left");
 	}
 
-	public	onGoal(side : "Right" | "Left")
+	public	onGoal(side : "right" | "left")
 	{
-		if (side === "Left")
+		if (side === "left")
 		{
 			this._scoreRight++;
 			this._messageBus.PostMessage("updateRightScore", this._scoreRight);
