@@ -54,9 +54,10 @@ async function	start() : Promise<void>
 		io.on('connection', (socket) => {
 			console.log("user connected !");
 			socket.data = new SocketData();
-			socket.on("join-matchmaking", () => matchMaker.addUserToMatchMaking(socket));
-			socket.on("disconnect", () => matchMaker.removeUserToMatchMaking(socket));
-			socket.on("leave-matchmaking", () => matchMaker.removeUserToMatchMaking(socket));
+			socket.once("join-matchmaking", () => {
+				matchMaker.addUserToMatchMaking(socket)
+			});
+			socket.once("disconnect", () => matchMaker.removeUserToMatchMaking(socket));
 		});
 	}
 	catch (error)

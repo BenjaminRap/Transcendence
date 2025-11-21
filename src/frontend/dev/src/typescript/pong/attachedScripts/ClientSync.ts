@@ -33,7 +33,6 @@ export class ClientSync extends ScriptComponent {
 	private	listenToGameInfos(sceneData : FrontendSceneData, gameManager : GameManager, inputManager : InputManager)
 	{
 		const	opponentsIndex = (sceneData.serverCommunicationHandler!.playerIndex === 0) ? 1 : 0;
-		console.log(opponentsIndex);
 		const	opponentInputs = inputManager.getPlayerInput(opponentsIndex);
 		sceneData.serverCommunicationHandler!.onServerMessage()!.add((gameInfos : GameInfos | "room-closed") => {
 			if (gameInfos === "room-closed")

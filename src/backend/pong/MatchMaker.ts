@@ -9,17 +9,19 @@ export class	MatchMaker
 	{
 		if (socket.data.getState() !== "unactive")
 			return ;
+		console.log("user added to matchmaking !");
+		socket.once("leave-matchmaking", () => { this.removeUserToMatchMaking(socket) });
 		this._waitingSockets.push(socket);
 		socket.data.setInWaitingQueue();
-		console.log("user added to matchmaking !");
 		this.createParty();
 	}
 
 	public	removeUserToMatchMaking(socket : DefaultSocket)
 	{
-		console.log("removing user from matchmaking !");
 		if (socket.data.getState() === "unactive")
 			return ;
+		console.log("removing user from matchmaking !");
+		socket.once("join-matchamking", () => { this.addUserToMatchMaking(socket) });
 		socket.data.leaveGame("unactive");
 		const	index = this._waitingSockets.indexOf(socket);
 

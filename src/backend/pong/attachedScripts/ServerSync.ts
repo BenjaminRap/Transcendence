@@ -4,8 +4,9 @@ import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
 import { ServerSceneData } from "../ServerSceneData";
 import { GameInfos, KeysUpdate } from "@shared/ServerMessage"
-import { InputManager } from "@shared/attachedScripts/InputManager";
+import { InputManager, PlayerInput } from "@shared/attachedScripts/InputManager";
 import { InputKey } from "@shared/InputKey";
+import { ClientMessage } from "../Room";
 
 export class ServerSync extends ScriptComponent {
 	private static readonly	_sendInfoDelay = 100;
@@ -41,26 +42,19 @@ export class ServerSync extends ScriptComponent {
 
 		const	inputManager = SceneManager.GetComponent<InputManager>(this._inputManager, "InputManager", false);
 		this.listenToClients(inputManager);
-		this._sceneData.messageBus.OnMessage("updateLeftScore", () => {
-			const	message : GameInfos = {
-				type: "goal",
-				infos: {
-					side: "Right"
-				}
+		this._sceneData.messageBus.OnMessage("updateLeftScore", () => { this.notifyGoal("Right") });
+		this._sceneData.messageBus.OnMessage("updateRightScore", () => { this.notifyGoal("Left") });
+	}
+
+	private	notifyGoal(side : "Left" | "Right")
+	{
+		const	message : GameInfos = {
+			type: "goal",
+			infos: {
+				side: side
 			}
-			this._sceneData.firstSocket.emit("game-infos", message);
-			this._sceneData.secondSocket.emit("game-infos", message);
-		});
-		this._sceneData.messageBus.OnMessage("updateRightScore", () => {
-			const	message : GameInfos = {
-				type: "goal",
-				infos: {
-					side: "Left"
-				}
-			}
-			this._sceneData.firstSocket.emit("game-infos", message);
-			this._sceneData.secondSocket.emit("game-infos", message);
-		});
+		}
+		this._sceneData.clientProxy.sendMessageToRoom("game-infos", message);
 	}
 
     private sendInfos(): void {
@@ -75,8 +69,7 @@ export class ServerSync extends ScriptComponent {
 				}
 			}
 		}
-		this._sceneData.firstSocket.emit("game-infos", message);
-		this._sceneData.secondSocket.emit("game-infos", message);
+		this._sceneData.clientProxy.sendMessageToRoom("game-infos", message);
     }
 
 	private	listenToClients(inputManager : InputManager)
@@ -84,24 +77,23 @@ export class ServerSync extends ScriptComponent {
 		const	firstSocketInputs = inputManager.getPlayerInput(0);
 		const	secondSocketInputs = inputManager.getPlayerInput(1);
 
-		this._sceneData.firstSocket.on("input-infos", (keysUpdate : KeysUpdate) => {
-			const	gameInfos : GameInfos = {
-				type: "input",
-				infos: keysUpdate
-			};
-			this._sceneData.secondSocket.emit("game-infos", gameInfos);
-			this.updateKey(keysUpdate.up, firstSocketInputs.up);
-			this.updateKey(keysUpdate.down, firstSocketInputs.down);
+		this._sceneData.clientProxy.onSocketMessage("input-infos").add((message : ClientMessage) => {
+			if (message.socket === "first")
+				this.onKeyUpdate(message.data, firstSocketInputs, "second");
+			else
+				this.onKeyUpdate(message.data, secondSocketInputs, "first");
 		});
-		this._sceneData.secondSocket.on("input-infos", (keysUpdate : KeysUpdate) => {
-			const	gameInfos : GameInfos = {
-				type: "input",
-				infos: keysUpdate
-			};
-			this._sceneData.firstSocket.emit("game-infos", gameInfos);
-			this.updateKey(keysUpdate.up, secondSocketInputs.up);
-			this.updateKey(keysUpdate.down, secondSocketInputs.down);
-		});
+	}
+
+	private	onKeyUpdate(keysUpdate : KeysUpdate, playerInputs : PlayerInput, opponentSocket : "first" | "second")
+	{
+		const	gameInfos : GameInfos = {
+			type: "input",
+			infos: keysUpdate
+		};
+		this._sceneData.clientProxy.sendMessageToSocket(opponentSocket, "game-infos", gameInfos);
+		this.updateKey(keysUpdate.up, playerInputs.up);
+		this.updateKey(keysUpdate.down, playerInputs.down);
 	}
 
 	private	updateKey(keyUpdate : { event: "keyDown" | "keyUp" } | undefined, inputKey : InputKey)

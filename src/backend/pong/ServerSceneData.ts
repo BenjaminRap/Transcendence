@@ -1,13 +1,12 @@
 import { HavokPlugin } from "@babylonjs/core";
-import { DefaultSocket } from ".";
 import { SceneData } from "@shared/SceneData";
+import { ClientProxy } from "./ClientProxy";
 
 export class	ServerSceneData extends SceneData
 {
 	constructor(
 		havokPlugin : HavokPlugin,
-		public readonly firstSocket : DefaultSocket,
-		public readonly secondSocket : DefaultSocket
+		public readonly clientProxy : ClientProxy
 
 	) {
 		super(havokPlugin);

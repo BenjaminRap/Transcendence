@@ -2,7 +2,14 @@ import { DefaultSocket } from ".";
 import { ServerSceneData } from "./ServerSceneData";
 import { ServerPongGame } from "./ServerPongGame";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
-import { GameInit, KeysUpdate } from "@shared/ServerMessage"
+import { GameInit } from "@shared/ServerMessage"
+import { ClientProxy } from "./ClientProxy";
+import { Observable } from "@babylonjs/core";
+
+export type ClientMessage = {
+	socket : "first" | "second",
+	data : any
+}
 
 export class	Room
 {
@@ -18,7 +25,8 @@ export class	Room
 		this.addSocketToRoom(firstSocket, 0);
 		this.addSocketToRoom(secondSocket, 1);;
 
-		const	sceneData = new ServerSceneData(new HavokPlugin(false), firstSocket, secondSocket);
+		const	clientProxy = new ClientProxy(this);
+		const	sceneData = new ServerSceneData(new HavokPlugin(false), clientProxy);
 		this._serverPongGame = new ServerPongGame(sceneData);
 	}
 
@@ -37,7 +45,7 @@ export class	Room
 	{
 		if (!socket.data.isInRoom(this))
 			return ;
-		socket.emit("room-closed");
+		this.sendMessageToSocketInternal(socket, "room-closed");
 		socket.data.leaveGame("unactive");
 	}
 
@@ -48,7 +56,36 @@ export class	Room
 		const	gameInit : GameInit = {
 			playerIndex: playeIndex
 		}
-		socket.emit("joined-game", gameInit);
+		this.sendMessageToSocketInternal(socket, "joined-game", gameInit);
 		socket.data.joinGame(this);
+	}
+
+	private sendMessageToSocketInternal(socket : DefaultSocket, event : string, data? : any)
+	{
+		socket.emit(event, data);
+	}
+
+	public sendMessageToRoom(event : string, data? : any)
+	{
+		this.sendMessageToSocketInternal(this._firstSocket, event, data);
+		this.sendMessageToSocketInternal(this._secondSocket, event, data);
+	}
+
+	public sendMessageToSocket(socket : "first" | "second", event : string, data? : any)
+	{
+		if (socket === "first")
+			this.sendMessageToSocketInternal(this._firstSocket, event, data);
+		else
+			this.sendMessageToSocketInternal(this._secondSocket, event, data);
+	}
+
+	public onSocketMessage(event : string) : Observable<ClientMessage>
+	{
+		const	observable = new Observable<ClientMessage>();
+
+		this._firstSocket.on(event, (data : any) => { observable.notifyObservers({ socket : "first", data : data }) });
+		this._secondSocket.on(event, (data : any) => { observable.notifyObservers({ socket : "second", data : data }) });
+		
+		return observable;
 	}
 }
