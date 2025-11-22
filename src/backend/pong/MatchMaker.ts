@@ -1,9 +1,16 @@
+import { DefaultEventsMap, Server } from "socket.io";
 import { DefaultSocket } from "./index";
 import { Room } from "./Room";
 
 export class	MatchMaker
 {
 	private _waitingSockets : DefaultSocket[] = [];
+
+
+	constructor(
+		private readonly _io : Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>
+	) {
+	}
 
 	public	addUserToMatchMaking(socket : DefaultSocket)
 	{
@@ -37,6 +44,6 @@ export class	MatchMaker
 		console.log("creating party");
 		const	firstSocket = this._waitingSockets.pop()!;
 		const	secondSocket = this._waitingSockets.pop()!;
-		new Room(firstSocket, secondSocket); // referenced in the sockets data so it isn't garbaged collected
+		new Room(this._io, firstSocket, secondSocket); // referenced in the sockets data so it isn't garbaged collected
 	}
 }

@@ -6,7 +6,9 @@ import { ServerSceneData } from "../ServerSceneData";
 import { GameInfos, KeysUpdate } from "@shared/ServerMessage"
 import { InputManager, PlayerInput } from "@shared/attachedScripts/InputManager";
 import { InputKey } from "@shared/InputKey";
-import { ClientMessage } from "../Room";
+import { SocketMessage } from "../Room";
+import { int } from "@babylonjs/core/types";
+import { Vector3 } from "@babylonjs/core";
 
 export class ServerSync extends ScriptComponent {
 	private static readonly	_sendInfoDelay = 100;
@@ -61,37 +63,39 @@ export class ServerSync extends ScriptComponent {
 		const	message : GameInfos = {
 			type : "itemsUpdate",
 			infos: {
-				paddleRightPos: this._paddleRight.position,
-				paddleLeftPos: this._paddleLeft.position,
+				paddleRightPos: this.getXYZ(this._paddleRight.position),
+				paddleLeftPos: this.getXYZ(this._paddleLeft.position),
 				ball: {
-					pos: this._ball.position,
-					linearVelocity: this._ball.physicsBody.getLinearVelocity()
+					pos: this.getXYZ(this._ball.position),
+					linearVelocity: this.getXYZ(this._ball.physicsBody.getLinearVelocity())
 				}
 			}
 		}
 		this._sceneData.clientProxy.sendMessageToRoom("game-infos", message);
     }
 
+	private	getXYZ(v : Vector3)
+	{
+		return { x: v.x, y: v.y, z: v.z };
+	}
+
 	private	listenToClients(inputManager : InputManager)
 	{
-		const	firstSocketInputs = inputManager.getPlayerInput(0);
-		const	secondSocketInputs = inputManager.getPlayerInput(1);
+		this._sceneData.clientProxy.onSocketMessage("input-infos").add((message : SocketMessage) => {
+			const	inputs = inputManager.getPlayerInput(message.socketIndex);
 
-		this._sceneData.clientProxy.onSocketMessage("input-infos").add((message : ClientMessage) => {
-			if (message.socket === "first")
-				this.onKeyUpdate(message.data, firstSocketInputs, "second");
-			else
-				this.onKeyUpdate(message.data, secondSocketInputs, "first");
+			this.onKeyUpdate(message.data, inputs, message.socketIndex);
 		});
 	}
 
-	private	onKeyUpdate(keysUpdate : KeysUpdate, playerInputs : PlayerInput, opponentSocket : "first" | "second")
+	private	onKeyUpdate(keysUpdate : KeysUpdate, playerInputs : PlayerInput, socketIndex : int)
 	{
 		const	gameInfos : GameInfos = {
 			type: "input",
 			infos: keysUpdate
 		};
-		this._sceneData.clientProxy.sendMessageToSocket(opponentSocket, "game-infos", gameInfos);
+
+		this._sceneData.clientProxy.broadcastMessageFromSocket(socketIndex, "game-infos", gameInfos);
 		this.updateKey(keysUpdate.up, playerInputs.up);
 		this.updateKey(keysUpdate.down, playerInputs.down);
 	}

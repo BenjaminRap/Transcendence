@@ -50,7 +50,7 @@ async function	start() : Promise<void>
 		await init();
 		await fastify.listen({ port: 8181, host: '0.0.0.0' });
 
-		const	matchMaker = new MatchMaker();
+		const	matchMaker = new MatchMaker(io);
 		io.on('connection', (socket) => {
 			console.log("user connected !");
 			socket.data = new SocketData();

@@ -35,8 +35,8 @@ export class ClientSync extends ScriptComponent {
 	{
 		const	opponentsIndex = (sceneData.serverCommunicationHandler!.playerIndex === 0) ? 1 : 0;
 		const	opponentInputs = inputManager.getPlayerInput(opponentsIndex);
-		sceneData.serverCommunicationHandler!.onServerMessage()!.add((gameInfos : GameInfos | "room-closed") => {
-			if (gameInfos === "room-closed")
+		sceneData.serverCommunicationHandler!.onServerMessage()!.add((gameInfos : GameInfos | "room-closed" | "server-error") => {
+			if (gameInfos === "room-closed" || gameInfos === "server-error")
 				return ;
 			if (gameInfos.type === "input")
 			{
@@ -45,14 +45,19 @@ export class ClientSync extends ScriptComponent {
 			}
 			else if (gameInfos.type === "itemsUpdate")
 			{
-				this._ball.position.copyFrom(gameInfos.infos.ball.pos as Vector3);
-				this._ball.getPhysicsBody()!.setLinearVelocity(gameInfos.infos.ball.linearVelocity as Vector3);
-				this._paddleLeft.position.copyFrom(gameInfos.infos.paddleLeftPos as Vector3);
-				this._paddleRight.position.copyFrom(gameInfos.infos.paddleRightPos as Vector3);
+				this._ball.position.copyFrom(this.xyzToVector3(gameInfos.infos.ball.pos));
+				this._ball.getPhysicsBody()!.setLinearVelocity(this.xyzToVector3(gameInfos.infos.ball.linearVelocity));
+				this._paddleLeft.position.copyFrom(this.xyzToVector3(gameInfos.infos.paddleLeftPos));
+				this._paddleRight.position.copyFrom(this.xyzToVector3(gameInfos.infos.paddleRightPos));
 			}
 			else
 				gameManager.onGoal(gameInfos.infos.side);
 		});
+	}
+	
+	private	xyzToVector3(xyz : {x : number, y : number, z : number})
+	{
+		return new Vector3(xyz.x, xyz.y, xyz.z);
 	}
 
 	private	updateKey(keyUpdate : { event: "keyDown" | "keyUp" } | undefined, inputKey : InputKey)

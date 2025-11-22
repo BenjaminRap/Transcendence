@@ -21,7 +21,7 @@ export class	ServerCommunicationHandler
 		this.multiplayerHandler.sendServerInputs(keysUpdate);
 	}
 
-	public onServerMessage() : Observable<GameInfos | "room-closed"> | null
+	public onServerMessage() : Observable<GameInfos | "room-closed" | "server-error"> | null
 	{
 		return this.multiplayerHandler.onServerMessage();
 	}
