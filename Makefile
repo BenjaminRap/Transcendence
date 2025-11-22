@@ -1,6 +1,6 @@
 .IGNORE: clean, fclean
 .SILENT: clean, fclean
-.PHONY: compile, build, compile-watch, up, all, stop, clean, fclean, re, fre
+.PHONY: compile, build, compile-watch, up, all, stop, clean, fclean, clean-dep, re, fre
 
 PROFILE = prod
 DOCKER_DIR	=	./dockerFiles/
@@ -43,6 +43,7 @@ endif
 
 install:
 	npm install
+	npx prisma generate --schema=./dockerFiles/fastify/prisma/schema.prisma
 
 all: install certificates build up
 
@@ -65,6 +66,10 @@ fclean: clean
 	-rm -rf ./dockerFiles/nginx/website/
 	-rm -rf ./src/backend/javascript/*
 	-rm -r ./dockerFiles/secrets/ssl/*
+
+clean-dep: fclean
+	rm -rf node_modules
+	rm package-lock.json
 
 
 re: clean all
