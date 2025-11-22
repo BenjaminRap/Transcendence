@@ -34,6 +34,11 @@ export class CreateMenuGUI extends ScriptComponent {
 		this.createInMatchmakingGUI();
 	}
 
+	protected	ready()
+	{
+		this._menuGUI.classList.remove("hidden");
+	}
+
 	private	setScenes()
 	{
 
@@ -67,7 +72,9 @@ export class CreateMenuGUI extends ScriptComponent {
 		};
 		this._menuGUI = new MenuGUI(this._arrowImagePath, sceneButtonSwitch, enemyTypesButtonSwitch, skinsButtonSwitch, this.onPlay.bind(this));
 		this._sceneData.pongHTMLElement.appendChild(this._menuGUI);
+		this._menuGUI.classList.add("hidden");
 	}
+
 
 	private	createInMatchmakingGUI()
 	{
