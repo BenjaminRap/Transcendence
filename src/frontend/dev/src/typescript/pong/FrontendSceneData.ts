@@ -1,7 +1,7 @@
 import { HavokPlugin, int } from "@babylonjs/core";
 import { PongGame } from "./PongGame";
 import { FrontendGameType, SceneData } from "@shared/SceneData";
-import { ServerCommunicationHandler } from "./ServerCommunicationHandler";
+import { ServerProxy } from "./ServerProxy";
 
 export interface	ClientInput
 {
@@ -17,7 +17,7 @@ export class FrontendSceneData extends SceneData
 		public readonly pongHTMLElement : PongGame,
 		public readonly gameType : FrontendGameType,
 		public readonly inputs : readonly ClientInput[],
-		public readonly serverCommunicationHandler? : ServerCommunicationHandler
+		public readonly serverProxy? : ServerProxy
 	) {
 		super(havokPlugin, gameType);
 	}

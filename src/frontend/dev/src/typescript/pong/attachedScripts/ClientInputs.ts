@@ -31,10 +31,10 @@ export class ClientInputs extends ScriptComponent {
 			if (sceneData.gameType === "Multiplayer")
 			{
 				playerInput.up.addKeyObserver((event : "keyDown" | "keyUp") => {
-					sceneData.serverCommunicationHandler!.keyUpdate("up", event);
+					sceneData.serverProxy!.keyUpdate("up", event);
 				});
 				playerInput.down.addKeyObserver((event : "keyDown" | "keyUp") => {
-					sceneData.serverCommunicationHandler!.keyUpdate("down", event);
+					sceneData.serverProxy!.keyUpdate("down", event);
 				});
 			}
 		});

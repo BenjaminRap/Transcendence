@@ -12,7 +12,7 @@ import { Color4 } from "@babylonjs/core";
 import { FrontendGameType, SceneData } from "@shared/SceneData";
 import { MultiplayerHandler } from "./MultiplayerHandler";
 import { Settings } from "./Settings";
-import { ServerCommunicationHandler } from "./ServerCommunicationHandler";
+import { ServerProxy } from "./ServerProxy";
 import { GameInfos } from "@shared/ServerMessage";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
@@ -74,7 +74,7 @@ export class PongGame extends HTMLElement {
 		});
 	}
 
-	private async changeScene(newSceneName : string, gameType : FrontendGameType, clientInputs : readonly ClientInput[], serverCommunicationHandler? : ServerCommunicationHandler) : Promise<void>
+	private async changeScene(newSceneName : string, gameType : FrontendGameType, clientInputs : readonly ClientInput[], serverCommunicationHandler? : ServerProxy) : Promise<void>
 	{
 		if (this._scene)
 			this.disposeScene();
@@ -109,8 +109,8 @@ export class PongGame extends HTMLElement {
 			await this._multiplayerHandler.connect();
 			const	gameInit = await this._multiplayerHandler.joinGame();
 			const	inputs = this._settings._playerInputs.filter((value : ClientInput) => value.index === gameInit.playerIndex);
-			const	serverCommunicationHandler = new ServerCommunicationHandler(this._multiplayerHandler, gameInit.playerIndex);
-			this.changeScene(sceneName, "Multiplayer", inputs, serverCommunicationHandler);
+			const	serverProxy = new ServerProxy(this._multiplayerHandler, gameInit.playerIndex);
+			this.changeScene(sceneName, "Multiplayer", inputs, serverProxy);
 			await this._multiplayerHandler.onGameReady();
 			getFrontendSceneData(this._scene!).messageBus.PostMessage("gameStart");
 			this._multiplayerHandler.onServerMessage()!.add((gameInfos : GameInfos | "room-closed" | "server-error") => {
@@ -137,7 +137,7 @@ export class PongGame extends HTMLElement {
 		this._multiplayerHandler.disconnect();
 	}
 
-	private	async getNewScene(sceneName : string, gameType : FrontendGameType, clientInputs : readonly ClientInput[], serverCommunicationHandler? : ServerCommunicationHandler) : Promise<Scene>
+	private	async getNewScene(sceneName : string, gameType : FrontendGameType, clientInputs : readonly ClientInput[], serverCommunicationHandler? : ServerProxy) : Promise<Scene>
 	{
 		const	scene = new Scene(this._engine);
 

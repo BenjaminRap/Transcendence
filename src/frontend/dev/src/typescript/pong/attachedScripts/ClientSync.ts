@@ -36,14 +36,14 @@ export class ClientSync extends ScriptComponent {
 
 	protected	ready()
 	{
-		this._sceneData.serverCommunicationHandler?.setReady();
+		this._sceneData.serverProxy?.setReady();
 	}
 	
 	private	listenToGameInfos(gameManager : GameManager, inputManager : InputManager)
 	{
-		const	opponentsIndex = (this._sceneData.serverCommunicationHandler!.playerIndex === 0) ? 1 : 0;
+		const	opponentsIndex = (this._sceneData.serverProxy!.playerIndex === 0) ? 1 : 0;
 		const	opponentInputs = inputManager.getPlayerInput(opponentsIndex);
-		this._sceneData.serverCommunicationHandler!.onServerMessage()!.add((gameInfos : GameInfos | "room-closed" | "server-error") => {
+		this._sceneData.serverProxy!.onServerMessage()!.add((gameInfos : GameInfos | "room-closed" | "server-error") => {
 			if (gameInfos === "room-closed" || gameInfos === "server-error")
 				return ;
 			if (gameInfos.type === "input")
