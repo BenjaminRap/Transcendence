@@ -29,13 +29,15 @@ export class CreateInGameGUI extends ScriptComponent {
 	{
 		this._gameManager.script = SceneManager.GetComponent(this._gameManager, "GameManager", false);
 
-		this.createPauseGUI();
-		this.createEndGUI();
+		const	rematchButtonEnabled : boolean = this._sceneData.gameType === "Multiplayer";
+
+		this.createPauseGUI(rematchButtonEnabled);
+		this.createEndGUI(rematchButtonEnabled);
 	}
 
-	private	createPauseGUI()
+	private	createPauseGUI(rematchButtonEnabled : boolean)
 	{
-		this._pauseGUI = new PauseGUI(this._type);
+		this._pauseGUI = new PauseGUI(this._type, rematchButtonEnabled);
 		this._sceneData.pongHTMLElement.appendChild(this._pauseGUI);
 		this.toggleMenu(this._pauseGUI);
 
@@ -50,21 +52,23 @@ export class CreateInGameGUI extends ScriptComponent {
 
 		buttons.continue.addEventListener("click", () => { this.toggleMenu(this._pauseGUI) });
 		buttons.restart.addEventListener("click", () => { this.onRestart() });
+		buttons.rematch?.addEventListener("click", () => { this.onRematch() });
 		buttons.goToMenu.addEventListener("click", () => { this.onGoToMenu() });
 		buttons.quit.addEventListener("click", () => { this.onQuit() });
 
 		this._sceneData.messageBus.OnMessage("end", () => { this.setMenuVisibility(this._pauseGUI, false) });
 	}
 
-	private	createEndGUI()
+	private	createEndGUI(rematchButtonEnabled : boolean)
 	{
-		this._endGUI = new EndGUI(this._type);
+		this._endGUI = new EndGUI(this._type, rematchButtonEnabled);
 		this._sceneData.pongHTMLElement.appendChild(this._endGUI);
 		this.toggleMenu(this._endGUI);
 
 		const	buttons = this._endGUI.getButtons()!;
 
 		buttons.restart.addEventListener("click", () => { this.onRestart() });
+		buttons.rematch?.addEventListener("click", () => { this.onRematch() });
 		buttons.goToMenu.addEventListener("click", () => { this.onGoToMenu() });
 		buttons.quit.addEventListener("click", () => { this.onQuit() });
 
@@ -89,6 +93,11 @@ export class CreateInGameGUI extends ScriptComponent {
 
 		if (visible !== isCurrentlyVisible)
 			this.toggleMenu(menu);
+	}
+
+	private	onRematch() : void
+	{
+		console.log("rematch !");
 	}
 
 	private	onRestart() : void
