@@ -2,7 +2,7 @@ import { Room } from "./Room";
 
 export class	SocketData
 {
-	private _state : "unactive" | "waiting" | "inGame" = "unactive";
+	private _state : "unactive" | "waiting" | "inRoom" | "ready" = "unactive";
 	private _room : Room | null = null;
 
 	public getState = () => this._state;
@@ -12,9 +12,16 @@ export class	SocketData
 		this._state = "waiting";
 	}
 
-	public joinGame(room : Room) {
+	public joinRoom(room : Room) {
 		this._room = room;
-		this._state = "inGame";
+		this._state = "inRoom";
+	}
+
+	public	setReady()
+	{
+		if (this._state !== "inRoom")
+			throw new Error("A socket has been set ready while not being in a room !");
+		this._state = "ready";
 	}
 
 	public leaveGame(newState : "unactive" | "waiting") {

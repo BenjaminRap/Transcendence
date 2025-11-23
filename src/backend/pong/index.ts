@@ -7,6 +7,8 @@ import { MatchMaker } from './MatchMaker';
 import { SocketData } from './SocketData';
 import fs from 'fs';
 import HavokPhysics from "@babylonjs/havok";
+import { ServerSceneData } from './ServerSceneData';
+import { Scene } from '@babylonjs/core/scene';
 
 export type DefaultSocket = Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, SocketData>;
 

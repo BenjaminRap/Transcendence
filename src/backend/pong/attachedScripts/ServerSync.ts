@@ -9,6 +9,7 @@ import { InputKey } from "@shared/InputKey";
 import { SocketMessage } from "../Room";
 import { int } from "@babylonjs/core/types";
 import { Vector3 } from "@babylonjs/core";
+import { getSceneData } from "../ServerPongGame";
 
 export class ServerSync extends ScriptComponent {
 	private static readonly	_sendInfoDelay = 100;
@@ -24,10 +25,7 @@ export class ServerSync extends ScriptComponent {
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "ServerSync") {
         super(transform, scene, properties, alias);
 
-		const	sceneData = this.scene.metadata.sceneData;
-		if (!(sceneData instanceof ServerSceneData))
-			throw new Error("The SceneData hasn't been attached to the scene !");
-		this._sceneData = sceneData;
+		this._sceneData = getSceneData(this.scene);
     }
 
 	protected	awake()

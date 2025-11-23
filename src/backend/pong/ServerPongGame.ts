@@ -15,6 +15,7 @@ importGlob("dev/backend/pong/attachedScripts/*.js");
 importGlob("dev/shared/attachedScripts/*.js");
 
 export class ServerPongGame {
+	private static readonly _onSceneReadyTimeoutMs : number = 3000;
 	private _engine! : Engine;
 	private _scene! : Scene;
 
@@ -29,8 +30,6 @@ export class ServerPongGame {
 			this._engine.runRenderLoop(this.renderScene.bind(this));
 		} catch (error : any) {
 			console.error(`Could not initialize the scene : ${error}`)
-			if (error.stack)
-				console.error(error.stack);
 		}
     }
 
@@ -40,8 +39,6 @@ export class ServerPongGame {
 			this._scene.render();
 		} catch (error : any) {
 			console.error(`Could not render the scene : ${error}`)
-			if (error.stack)
-				console.error((error as any).stack);
 		}
 	}
 
@@ -83,9 +80,8 @@ export class ServerPongGame {
 		(globalThis as any).XMLHttpRequest = XMLHttpRequest;
 		SceneManager.ForceHideLoadingScreen = () => {};
 		InputController.ConfigureUserInput = () => {};
-		await SceneManager.LoadRuntimeAssets(assetsManager, [ sceneName ], () => {
-			globalThis.HKP = undefined;
-		});
+		await assetsManager.loadAsync();
+		globalThis.HKP = undefined;
 	}
 
 	private	disposeScene()
@@ -105,4 +101,24 @@ export class ServerPongGame {
 		this.disposeScene();
 		this._engine?.dispose();
 	}
+
+	public gameStart()
+	{
+		if (!this._engine || !this._scene)
+			return ;
+		const	sceneData = getSceneData(this._scene);
+
+		sceneData.messageBus.PostMessage("gameStart")
+	}
+}
+
+export function	getSceneData(scene : Scene) : ServerSceneData
+{
+	if (!scene.metadata)
+		throw new Error("Scene metadata is undefined !");
+
+	const	sceneData = scene.metadata.sceneData;
+	if (!(sceneData instanceof ServerSceneData))
+		throw new Error("Scene is not of the type BackendSceneData !");
+	return sceneData;
 }

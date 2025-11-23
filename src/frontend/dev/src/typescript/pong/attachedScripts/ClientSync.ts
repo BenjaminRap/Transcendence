@@ -7,6 +7,7 @@ import { GameManager } from "@shared/attachedScripts/GameManager";
 import { InputKey } from "@shared/InputKey";
 import { InputManager } from "@shared/attachedScripts/InputManager";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { getFrontendSceneData } from "../PongGame";
 
 export class ClientSync extends ScriptComponent {
 	private	_inputManager! : TransformNode;
@@ -15,27 +16,34 @@ export class ClientSync extends ScriptComponent {
 	private _paddleRight! : TransformNode;
 	private _paddleLeft! : TransformNode;
 
+	private _sceneData : FrontendSceneData;
+
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "ClientSync") {
         super(transform, scene, properties, alias);
+
+		this._sceneData = getFrontendSceneData(this.scene);
     }
 
 	protected	awake()
 	{
-		const	sceneData : FrontendSceneData = this.scene.metadata.sceneData;
-
-		if (sceneData.gameType !== "Multiplayer")
+		if (this._sceneData.gameType !== "Multiplayer")
 			return ;
 		const	gameManager = SceneManager.GetComponent<GameManager>(this._gameManager, "GameManager", false);
 		const	inputManager = SceneManager.GetComponent<InputManager>(this._inputManager, "InputManager", false);
 
-		this.listenToGameInfos(sceneData, gameManager, inputManager);
+		this.listenToGameInfos(gameManager, inputManager);
+	}
+
+	protected	ready()
+	{
+		this._sceneData.serverCommunicationHandler?.setReady();
 	}
 	
-	private	listenToGameInfos(sceneData : FrontendSceneData, gameManager : GameManager, inputManager : InputManager)
+	private	listenToGameInfos(gameManager : GameManager, inputManager : InputManager)
 	{
-		const	opponentsIndex = (sceneData.serverCommunicationHandler!.playerIndex === 0) ? 1 : 0;
+		const	opponentsIndex = (this._sceneData.serverCommunicationHandler!.playerIndex === 0) ? 1 : 0;
 		const	opponentInputs = inputManager.getPlayerInput(opponentsIndex);
-		sceneData.serverCommunicationHandler!.onServerMessage()!.add((gameInfos : GameInfos | "room-closed" | "server-error") => {
+		this._sceneData.serverCommunicationHandler!.onServerMessage()!.add((gameInfos : GameInfos | "room-closed" | "server-error") => {
 			if (gameInfos === "room-closed" || gameInfos === "server-error")
 				return ;
 			if (gameInfos.type === "input")

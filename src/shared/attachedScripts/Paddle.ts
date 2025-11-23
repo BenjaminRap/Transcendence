@@ -7,6 +7,7 @@ import { InputManager, PlayerInput } from "./InputManager";
 import { IBasePhysicsCollisionEvent, PhysicsEventType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { Scalar } from "@babylonjs/core/Maths/math.scalar";
 import { Epsilon, int } from "@babylonjs/core";
+import { getSceneData } from "@shared/SceneData";
 
 export class Paddle extends ScriptComponent {
 	private static _range : number = 9.4 + Epsilon;
@@ -20,25 +21,30 @@ export class Paddle extends ScriptComponent {
 	private	_physicsBody! : PhysicsBody;
 	private _playerInput! : PlayerInput;
 	private _initialPosition : Vector3;
+	private _canMove : boolean = false;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "Paddle") {
         super(transform, scene, properties, alias);
 
 		this._initialPosition = this.transform.position.clone();
-		const	sceneData = this.scene.metadata.sceneData;
-		sceneData.havokPlugin.onTriggerCollisionObservable.add(this.onTriggerEnter.bind(this));
-    }
+		const	sceneData = getSceneData(this.scene);
 
-	protected	awake()
-	{
-		this.scene.metadata.sceneData.messageBus.OnMessage("reset", () => {
+		sceneData.havokPlugin.onTriggerCollisionObservable.add(this.onTriggerEnter.bind(this));
+		sceneData.messageBus.OnMessage("gameStart", () => {
+			this._canMove = true;
+		})
+		sceneData.messageBus.OnMessage("end", () => {
+			this._physicsBody.setLinearVelocity(Vector3.ZeroReadOnly);
+			this._canMove = false;
 			this.reset();
 		});
-	}
+		sceneData.messageBus.OnMessage("reset", () => {
+			this.reset();
+		});
+    }
 
 	private onTriggerEnter(collision : IBasePhysicsCollisionEvent)
 	{
-
 		if (collision.type !== PhysicsEventType.TRIGGER_ENTERED
 			|| collision.collider !== this._physicsBody)
 			return ;
@@ -89,6 +95,8 @@ export class Paddle extends ScriptComponent {
 
 	protected update()
 	{
+		if (!this._canMove)
+			return ;
 		const	isUpPressed : boolean = this._playerInput.up.isKeyDown();
 		const	isDownPressed : boolean = this._playerInput.down.isKeyDown();
 		const	canMoveUp : boolean = this.transform.position.y + this.transform.scaling.y / 2 < Paddle._range / 2;

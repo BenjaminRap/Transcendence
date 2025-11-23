@@ -9,7 +9,7 @@ import { HavokPlugin } from "@babylonjs/core/Physics";
 import HavokPhysics from "@babylonjs/havok";
 import { ClientInput, FrontendSceneData } from "./FrontendSceneData";
 import { Color4 } from "@babylonjs/core";
-import { SceneData } from "@shared/SceneData";
+import { FrontendGameType, SceneData } from "@shared/SceneData";
 import { MultiplayerHandler } from "./MultiplayerHandler";
 import { Settings } from "./Settings";
 import { ServerCommunicationHandler } from "./ServerCommunicationHandler";
@@ -17,8 +17,6 @@ import { GameInfos } from "@shared/ServerMessage";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
-
-export type GameType = "Local" | "Multiplayer" | "Bot" | "Menu";
 
 export class PongGame extends HTMLElement {
 	private _canvas : HTMLCanvasElement;
@@ -76,7 +74,7 @@ export class PongGame extends HTMLElement {
 		});
 	}
 
-	private async changeScene(newSceneName : string, gameType : GameType, clientInputs : readonly ClientInput[], serverCommunicationHandler? : ServerCommunicationHandler) : Promise<void>
+	private async changeScene(newSceneName : string, gameType : FrontendGameType, clientInputs : readonly ClientInput[], serverCommunicationHandler? : ServerCommunicationHandler) : Promise<void>
 	{
 		if (this._scene)
 			this.disposeScene();
@@ -109,10 +107,12 @@ export class PongGame extends HTMLElement {
 	{
 		try {
 			await this._multiplayerHandler.connect();
-			const gameInit = await this._multiplayerHandler.joinGame();
+			const	gameInit = await this._multiplayerHandler.joinGame();
 			const	inputs = this._settings._playerInputs.filter((value : ClientInput) => value.index === gameInit.playerIndex);
 			const	serverCommunicationHandler = new ServerCommunicationHandler(this._multiplayerHandler, gameInit.playerIndex);
 			this.changeScene(sceneName, "Multiplayer", inputs, serverCommunicationHandler);
+			await this._multiplayerHandler.onGameReady();
+			getFrontendSceneData(this._scene!).messageBus.PostMessage("gameStart");
 			this._multiplayerHandler.onServerMessage()!.add((gameInfos : GameInfos | "room-closed" | "server-error") => {
 				if (gameInfos === "room-closed")
 				{
@@ -137,7 +137,7 @@ export class PongGame extends HTMLElement {
 		this._multiplayerHandler.disconnect();
 	}
 
-	private	async getNewScene(sceneName : string, gameType : GameType, clientInputs : readonly ClientInput[], serverCommunicationHandler? : ServerCommunicationHandler) : Promise<Scene>
+	private	async getNewScene(sceneName : string, gameType : FrontendGameType, clientInputs : readonly ClientInput[], serverCommunicationHandler? : ServerCommunicationHandler) : Promise<Scene>
 	{
 		const	scene = new Scene(this._engine);
 
@@ -187,6 +187,17 @@ export class PongGame extends HTMLElement {
 		this.disposeScene();
 		this._engine?.dispose();
 	}
+}
+
+export function	getFrontendSceneData(scene : Scene) : FrontendSceneData
+{
+	if (!scene.metadata)
+		throw new Error("Scene metadata is undefined !");
+
+	const	sceneData = scene.metadata.sceneData;
+	if (!(sceneData instanceof FrontendSceneData))
+		throw new Error("Scene is not of the type FrontendSceneData !");
+	return sceneData;
 }
 
 customElements.define("pong-game", PongGame);

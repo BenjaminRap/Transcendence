@@ -9,6 +9,6 @@ export class	ServerSceneData extends SceneData
 		public readonly clientProxy : ClientProxy
 
 	) {
-		super(havokPlugin);
+		super(havokPlugin, "Server");
 	}
 }

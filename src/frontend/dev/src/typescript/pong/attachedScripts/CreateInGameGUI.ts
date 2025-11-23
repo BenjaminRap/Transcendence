@@ -6,6 +6,7 @@ import { InputManager } from "@shared/attachedScripts/InputManager";
 import { GameManager } from "@shared/attachedScripts/GameManager";
 import { FrontendSceneData } from "../FrontendSceneData";
 import { EndGUI } from "../endGUI";
+import { getFrontendSceneData } from "../PongGame";
 
 export class CreateInGameGUI extends ScriptComponent {
 	private _type : "basic" | "colorful" = "basic";
@@ -20,7 +21,7 @@ export class CreateInGameGUI extends ScriptComponent {
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "CreatePauseGUI") {
         super(transform, scene, properties, alias);
 		
-		this._sceneData = this.scene.metadata.sceneData;
+		this._sceneData = getFrontendSceneData(this.scene);
 		this._defaultTimeStep = this._sceneData.havokPlugin.getTimeStep();
     }
 

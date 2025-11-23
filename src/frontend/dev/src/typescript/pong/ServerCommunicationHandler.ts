@@ -5,7 +5,7 @@ import { Observable } from "@babylonjs/core/Misc/observable";
 export class	ServerCommunicationHandler
 {
 	constructor(
-		private multiplayerHandler : MultiplayerHandler,
+		private _multiplayerHandler : MultiplayerHandler,
 		public readonly playerIndex : number
 	) {
 	}
@@ -18,11 +18,16 @@ export class	ServerCommunicationHandler
 			keysUpdate.up = { event : event };
 		else
 			keysUpdate.down = { event : event };
-		this.multiplayerHandler.sendServerInputs(keysUpdate);
+		this._multiplayerHandler.sendServerInputs(keysUpdate);
 	}
 
 	public onServerMessage() : Observable<GameInfos | "room-closed" | "server-error"> | null
 	{
-		return this.multiplayerHandler.onServerMessage();
+		return this._multiplayerHandler.onServerMessage();
+	}
+
+	public setReady()
+	{
+		this._multiplayerHandler.setReady();
 	}
 }

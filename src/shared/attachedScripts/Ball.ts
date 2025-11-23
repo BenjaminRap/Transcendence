@@ -3,6 +3,7 @@ import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
+import { getSceneData } from "@shared/SceneData";
 
 export class Ball extends ScriptComponent {
 	private _initialSpeed : number = 6;
@@ -16,16 +17,18 @@ export class Ball extends ScriptComponent {
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "Ball") {
         super(transform, scene, properties, alias);
 		this._initialPosition = transform.position.clone();
-    }
 
-	protected	awake()
-	{
-		this.scene.metadata.sceneData.messageBus.OnMessage("reset", () => {
+		const	sceneData = getSceneData(this.scene);
+
+		sceneData.messageBus.OnMessage("gameStart", () => {
+			this.reset()
+		});
+		sceneData.messageBus.OnMessage("reset", () => {
 			this.reset();
 		});
-	}
+    }
 
-	protected start()
+	protected	start()
 	{
 		const	physicsBody = this.transform.getPhysicsBody();
 
@@ -33,7 +36,6 @@ export class Ball extends ScriptComponent {
 			throw new Error("The Ball script should be attached to a mesh with a physic body !");
 		this._physicsBody = physicsBody;
 		this._physicsBody.disablePreStep = false;
-		this.reset();
 	}
 
 	public reset() : void

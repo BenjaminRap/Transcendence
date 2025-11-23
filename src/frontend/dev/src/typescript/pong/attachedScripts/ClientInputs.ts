@@ -4,7 +4,8 @@ import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { InputKey } from "@shared/InputKey";
 import { InputManager } from "@shared/attachedScripts/InputManager";
 import { KeyboardEventTypes, KeyboardInfo } from "@babylonjs/core";
-import { ClientInput, FrontendSceneData } from "../FrontendSceneData";
+import { ClientInput } from "../FrontendSceneData";
+import { getFrontendSceneData } from "../PongGame";
 
 export class ClientInputs extends ScriptComponent {
 	private _inputManager! : TransformNode;
@@ -18,7 +19,7 @@ export class ClientInputs extends ScriptComponent {
 	protected start()
 	{
 		const	inputManager = SceneManager.GetComponent<InputManager>(this._inputManager, "InputManager", false);
-		const	sceneData : FrontendSceneData = this.scene.metadata.sceneData;
+		const	sceneData = getFrontendSceneData(this.scene);
 		const	inputs = sceneData.inputs;
 
 		inputs.forEach((clientInput : ClientInput) => {

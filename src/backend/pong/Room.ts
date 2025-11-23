@@ -12,7 +12,7 @@ export type SocketMessage = {
 	data : KeysUpdate
 }
 
-export type ServerEvents = "game-infos" | "joined-game" | "room-closed";
+export type ServerEvents = "game-infos" | "joined-game" | "room-closed" | "ready";
 export type ServerEventsData<T extends ServerEvents> =
 	T extends "game-infos" ? GameInfos :
 	T extends "joined-game" ? GameInit :
@@ -25,6 +25,7 @@ export class	Room
 	private _disposed : boolean = false;
 	private _roomId : string;
 	private _observers : Map<string, Observable<SocketMessage>>;
+	private _socketsReadyCount : int = 0;
 	
 	constructor(
 		private readonly _io : Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>,
@@ -32,7 +33,7 @@ export class	Room
 		secondSocket : DefaultSocket
 	) {
 		this._observers = new Map<string, Observable<SocketMessage>>();
-		// this._roomId = crypto.randomUUID();
+		this._roomId = crypto.randomUUID();
 		this._sockets.push(firstSocket, secondSocket);
 
 		this.init();
@@ -69,6 +70,8 @@ export class	Room
 		socket.data.leaveGame("unactive");
 		socket.leave(this._roomId);
 		this.sendMessageToSocket(socket, "room-closed", undefined);
+		if (socket.data.getState() === "ready")
+			this._socketsReadyCount--;
 	}
 
 	private async addSocketToRoom(socket : DefaultSocket, playerIndex : number)
@@ -78,9 +81,26 @@ export class	Room
 		const	gameInit : GameInit = {
 			playerIndex: playerIndex
 		}
-		socket.data.joinGame(this);
+		socket.data.joinRoom(this);
 		await socket.join(this._roomId);
 		this.sendMessageToSocket(socket, "joined-game", gameInit);
+		socket.once("ready", () => { this.setSocketReady(socket) } );
+	}
+
+	private	setSocketReady(socket : DefaultSocket)
+	{
+		if (socket.data.getState() === "ready")
+			return ;
+		this._socketsReadyCount++;
+		socket.data.setReady();
+		if (this._socketsReadyCount === 2)
+			this.startGame();
+	}
+
+	private	startGame()
+	{
+		this._serverPongGame!.gameStart();
+		this.sendMessageToRoom("ready", undefined);
 	}
 
 	private sendMessageToSocket<T extends ServerEvents>(socket : DefaultSocket, event : T, data : ServerEventsData<T>)

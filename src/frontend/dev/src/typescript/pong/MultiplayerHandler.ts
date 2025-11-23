@@ -43,8 +43,6 @@ export class	MultiplayerHandler
 
 	public async joinGame() : Promise<GameInit>
 	{
-		if (this._socket === null)
-			await this.connect();
 		this._socket!.emit("join-matchmaking");
 		return new Promise((resolve, reject) => {
 			this._socket!.once("joined-game", (data : any) => {
@@ -54,6 +52,18 @@ export class	MultiplayerHandler
 					reject("Server sent wrong data !");
 				else
 					resolve(gameInit.data);
+			});
+			this._socket!.once("disconnect", (reason) => {
+				reject(reason);
+			});
+		});
+	}
+
+	public async	onGameReady() : Promise<void>
+	{
+		return new Promise((resolve, reject) => {
+			this._socket!.once("ready", () => {
+				resolve();
 			});
 			this._socket!.once("disconnect", (reason) => {
 				reject(reason);
@@ -98,5 +108,10 @@ export class	MultiplayerHandler
 		if (this._socket === null)
 			return ;
 		this._socket.emit("input-infos", keysUpdate);
+	}
+
+	public	setReady()
+	{
+		this._socket?.emit("ready");
 	}
 }

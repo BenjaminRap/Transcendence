@@ -7,6 +7,7 @@ import { Animation, EasingFunction, Nullable, SineEase } from "@babylonjs/core";
 import { Animatable } from "@babylonjs/core/Animations/animatable";
 import { SceneMenuData } from "./SceneMenuData";
 import { InMatchmakingGUI } from "../InMatchmakingGUI";
+import { getFrontendSceneData } from "../PongGame";
 
 export class CreateMenuGUI extends ScriptComponent {
 	private static readonly _enemyTypes = [ "Local", "Multiplayer", "Bot" ];
@@ -24,7 +25,7 @@ export class CreateMenuGUI extends ScriptComponent {
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "CreateMenuGUI") {
         super(transform, scene, properties, alias);
 		this._easeFunction.setEasingMode(EasingFunction.EASINGMODE_EASEINOUT);
-		this._sceneData = this.scene.metadata.sceneData;
+		this._sceneData = getFrontendSceneData(this.scene);
     }
 
 	protected	awake()

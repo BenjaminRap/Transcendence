@@ -4,7 +4,7 @@ import { LocalMessageBus, SceneManager, ScriptComponent } from "@babylonjs-toolk
 import { IBasePhysicsCollisionEvent, PhysicsEventType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { int } from "@babylonjs/core/types";
 import { Ball } from "@shared/attachedScripts/Ball";
-import { SceneData } from "@shared/SceneData";
+import { getSceneData, SceneData } from "@shared/SceneData";
 import { Vector3 } from "@babylonjs/core";
 
 export class GameManager extends ScriptComponent {
@@ -18,17 +18,24 @@ export class GameManager extends ScriptComponent {
 	private _scoreLeft : int = 0;
 	private _messageBus : LocalMessageBus;
 	private _ended : boolean = false;
+	private _sceneData : SceneData;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "GameManager") {
         super(transform, scene, properties, alias);
 
-		const	sceneData : SceneData = this.scene.metadata.sceneData;
+		this._sceneData = getSceneData(this.scene);
 
-		this._messageBus = sceneData.messageBus;
+		this._messageBus = this._sceneData.messageBus;
 
-		if ((sceneData as any).gameType !== "Multiplayer")
-			sceneData.havokPlugin.onTriggerCollisionObservable.add(this.onTriggerEvent.bind(this));
+		if (this._sceneData.gameType !== "Multiplayer")
+			this._sceneData.havokPlugin.onTriggerCollisionObservable.add(this.onTriggerEvent.bind(this));
     }
+
+	protected	ready()
+	{
+		if (this._sceneData.gameType !== "Multiplayer" && this._sceneData.gameType !== "Server")
+			this._messageBus.PostMessage("gameStart");
+	}
 
 	private onTriggerEvent(eventData : IBasePhysicsCollisionEvent)
 	{
