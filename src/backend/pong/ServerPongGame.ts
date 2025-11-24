@@ -15,7 +15,6 @@ importGlob("dev/backend/pong/attachedScripts/*.js");
 importGlob("dev/shared/attachedScripts/*.js");
 
 export class ServerPongGame {
-	private static readonly _onSceneReadyTimeoutMs : number = 3000;
 	private _engine! : Engine;
 	private _scene! : Scene;
 

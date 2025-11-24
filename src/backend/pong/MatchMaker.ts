@@ -1,6 +1,6 @@
 import { DefaultEventsMap, Server } from "socket.io";
-import { DefaultSocket } from "./index";
 import { Room } from "./Room";
+import { DefaultSocket } from ".";
 
 export class	MatchMaker
 {
@@ -28,8 +28,8 @@ export class	MatchMaker
 		if (socket.data.getState() === "unactive")
 			return ;
 		console.log("removing user from matchmaking !");
-		socket.once("join-matchamking", () => { this.addUserToMatchMaking(socket) });
-		socket.data.leaveGame("unactive");
+		socket.once("join-matchmaking", () => { this.addUserToMatchMaking(socket) });
+		socket.data.leaveGame();
 		const	index = this._waitingSockets.indexOf(socket);
 
 		if (index < 0)

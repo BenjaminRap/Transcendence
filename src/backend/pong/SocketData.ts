@@ -24,11 +24,11 @@ export class	SocketData
 		this._state = "ready";
 	}
 
-	public leaveGame(newState : "unactive" | "waiting") {
+	public leaveGame() {
 		const	previousRoom = this._room;
 
 		this._room = null;
 		previousRoom?.dispose();
-		this._state = newState;
+		this._state = "unactive";
 	}
 }

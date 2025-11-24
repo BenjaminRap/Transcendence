@@ -1,22 +1,17 @@
-import { DefaultSocket } from ".";
 import { ServerSceneData } from "./ServerSceneData";
 import { ServerPongGame } from "./ServerPongGame";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
-import { GameInfos, GameInit, KeysUpdate, ZodKeysUpdate } from "@shared/ServerMessage"
+import { GameInit, KeysUpdate, ZodKeysUpdate } from "@shared/ServerMessage"
 import { ClientProxy } from "./ClientProxy";
 import { int, Observable } from "@babylonjs/core";
 import { DefaultEventsMap, Server } from "socket.io";
+import { ServerEvents, ServerToClientEvents } from "@shared/MessageType";
+import { DefaultSocket } from ".";
 
 export type SocketMessage = {
 	socketIndex : int,
 	data : KeysUpdate
 }
-
-export type ServerEvents = "game-infos" | "joined-game" | "room-closed" | "ready";
-export type ServerEventsData<T extends ServerEvents> =
-	T extends "game-infos" ? GameInfos :
-	T extends "joined-game" ? GameInit :
-	undefined
 
 export class	Room
 {
@@ -65,11 +60,11 @@ export class	Room
 
 	private removeSocketFromRoom(socket : DefaultSocket)
 	{
-		if (socket.data.isInRoom(this))
+		if (!socket.data.isInRoom(this))
 			return ;
-		socket.data.leaveGame("unactive");
+		socket.data.leaveGame();
 		socket.leave(this._roomId);
-		this.sendMessageToSocket(socket, "room-closed", undefined);
+		socket.emit("room-closed");
 		if (socket.data.getState() === "ready")
 			this._socketsReadyCount--;
 	}
@@ -83,8 +78,9 @@ export class	Room
 		}
 		socket.data.joinRoom(this);
 		await socket.join(this._roomId);
-		this.sendMessageToSocket(socket, "joined-game", gameInit);
+		socket.emit("joined-game", gameInit);
 		socket.once("ready", () => { this.setSocketReady(socket) } );
+		socket.once("restart", () => { this.removeSocketFromRoom(socket) });
 	}
 
 	private	setSocketReady(socket : DefaultSocket)
@@ -100,36 +96,43 @@ export class	Room
 	private	startGame()
 	{
 		this._serverPongGame!.gameStart();
-		this.sendMessageToRoom("ready", undefined);
+		this.sendMessageToRoom("ready");
 	}
 
-	private sendMessageToSocket<T extends ServerEvents>(socket : DefaultSocket, event : T, data : ServerEventsData<T>)
-	{
-		socket.emit(event, data);
+	public sendMessageToRoom<T extends keyof ServerToClientEvents>
+	(
+		event: T,
+		...args: Parameters<ServerToClientEvents[T]>
+	) {
+		this._io.to(this._roomId).emit(event, ...args);
 	}
 
-	public sendMessageToRoom<T extends ServerEvents>(event : T, data : ServerEventsData<T>)
-	{
-		this._io.to(this._roomId).emit(event, data);
-	}
-
-	public sendMessageToSocketByIndex<T extends ServerEvents>(socketIndex : int, event : T, data : ServerEventsData<T>)
-	{
+	public sendMessageToSocketByIndex<T extends ServerEvents>
+	(
+		socketIndex : int,
+		event: T,
+		...args: Parameters<ServerToClientEvents[T]>
+	) {
 		if (socketIndex < 0 || socketIndex >= this._sockets.length)
 			throw new Error("sendMessageToSocketByIndex called with an invalid index !");
 
 		const	socket = this._sockets[socketIndex];
-		this.sendMessageToSocket(socket, event, data);
+
+		socket.emit(event, ...args);
 	}
 	
-	public broadcastMessageFromSocket<T extends ServerEvents>(socketIndex : int, event : T, data : ServerEventsData<T>)
-	{
+	public broadcastMessageFromSocket<T extends ServerEvents>
+	(
+		socketIndex : int,
+		event: T,
+		...args: Parameters<ServerToClientEvents[T]>
+	) {
 		if (socketIndex < 0 || socketIndex >= this._sockets.length)
 			throw new Error("broadcastMessageFromSocket called with an invalid index !");
 
 		const	socket = this._sockets[socketIndex];
 		
-		socket.broadcast.to(this._roomId).emit(event, data);
+		socket.broadcast.to(this._roomId).emit(event, ...args);
 	}
 
 	public onSocketMessage(event : "input-infos") : Observable<SocketMessage>
@@ -144,7 +147,7 @@ export class	Room
 		return newObserver;
 	}
 
-	private	createNewObservable(event : string) : Observable<SocketMessage>
+	private	createNewObservable(event : "input-infos") : Observable<SocketMessage>
 	{
 		const	observable = new Observable<SocketMessage>();
 

@@ -1,15 +1,13 @@
 import { Observable } from "@babylonjs/core";
-import { GameInfos, GameInit, KeysUpdate, ZodGameInfos, ZodGameInit } from "@shared/ServerMessage";
+import { ClientToServerEvents, ServerToClientEvents } from "@shared/MessageType";
+import { GameInfos, GameInit, ZodGameInfos, ZodGameInit } from "@shared/ServerMessage";
 import { io, Socket } from "socket.io-client";
-
-export type ClientMessage = "join-matchmaking" | "ready" | "input-infos" | "restart" | "rematch"
-export type ClientMessageData<T extends ClientMessage> = T extends "input-infos" ? KeysUpdate : undefined;
 
 export class	MultiplayerHandler
 {
 	private static readonly _apiUrl = "/api/socket.io/";
 
-	private _socket  : Socket | null = null;
+	private _socket  : Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
 	private _onServerMessageObservable : Observable<GameInfos | "room-closed" | "server-error"> | null = null;
 
 	public async connect() : Promise<void>
@@ -46,7 +44,7 @@ export class	MultiplayerHandler
 
 	public async joinGame() : Promise<GameInit>
 	{
-		this.sendServerMessage("join-matchmaking", undefined);
+		this._socket?.emit("join-matchmaking");
 		return new Promise((resolve, reject) => {
 			this._socket!.once("joined-game", (data : any) => {
 				const	gameInit = ZodGameInit.safeParse(data);
@@ -106,15 +104,13 @@ export class	MultiplayerHandler
 		this._onServerMessageObservable = null;
 	}
 
-	public sendServerMessage<T extends ClientMessage>(event : T, data : ClientMessageData<T>)
-	{
-		if (this._socket === null)
-			return ;
-		this._socket.emit(event, data);
-	}
-
 	public	setReady()
 	{
-		this.sendServerMessage("ready", undefined);
+		this._socket?.emit("ready");
+	}
+
+	public sendServerMessage<T extends keyof ClientToServerEvents>(event : T, ...args: Parameters<ClientToServerEvents[T]>)
+	{
+		this._socket?.emit(event, ...args);
 	}
 }

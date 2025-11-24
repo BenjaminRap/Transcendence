@@ -1,6 +1,7 @@
 import { Observable } from "@babylonjs/core/Misc/observable";
-import { SocketMessage, Room, ServerEvents, ServerEventsData } from "./Room";
+import { SocketMessage, Room } from "./Room";
 import { int } from "@babylonjs/core/types";
+import { ServerToClientEvents } from "@shared/MessageType";
 
 export class	ClientProxy
 {
@@ -10,19 +11,19 @@ export class	ClientProxy
 
 	}
 
-	public sendMessageToSocket<T extends ServerEvents>(socketIndex : int, event : T, data : ServerEventsData<T>)
+	public sendMessageToSocket<T extends keyof ServerToClientEvents>(socketIndex : int, event : T, ...args : Parameters<ServerToClientEvents[T]>)
 	{
-		this._room.sendMessageToSocketByIndex(socketIndex, event, data);
+		this._room.sendMessageToSocketByIndex(socketIndex, event, ...args);
 	}
 
-	public broadcastMessageFromSocket<T extends ServerEvents>(socketIndex : int, event : T, data : ServerEventsData<T>)
+	public broadcastMessageFromSocket<T extends keyof ServerToClientEvents>(socketIndex : int, event : T, ...args : Parameters<ServerToClientEvents[T]>)
 	{
-		this._room.broadcastMessageFromSocket(socketIndex, event, data);
+		this._room.broadcastMessageFromSocket(socketIndex, event, ...args);
 	}
 
-	public sendMessageToRoom<T extends ServerEvents>(event : T, data : ServerEventsData<T>)
+	public sendMessageToRoom<T extends keyof ServerToClientEvents>(event : T, ...args : Parameters<ServerToClientEvents[T]>)
 	{
-		this._room.sendMessageToRoom(event, data);
+		this._room.sendMessageToRoom(event, ...args);
 	}
 
 	public onSocketMessage(event : "input-infos") : Observable<SocketMessage>

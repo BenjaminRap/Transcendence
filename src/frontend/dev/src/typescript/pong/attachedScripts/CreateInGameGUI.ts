@@ -100,7 +100,7 @@ export class CreateInGameGUI extends ScriptComponent {
 
 	private	onRematch() : void
 	{
-		this._sceneData.serverProxy?.sendServerMessage("rematch", undefined);
+		this._sceneData.serverProxy?.sendServerMessage("rematch");
 	}
 
 	private	onRestart() : void
@@ -108,7 +108,7 @@ export class CreateInGameGUI extends ScriptComponent {
 		this._sceneData.havokPlugin.setTimeStep(this._defaultTimeStep);
 		this._pauseGUI.classList.add("hidden");
 		this._endGUI.classList.add("hidden");
-		this._sceneData.serverProxy?.sendServerMessage("restart", undefined);
+		this._sceneData.serverProxy?.sendServerMessage("restart");
 		this._gameManager.script.restart();
 	}
 

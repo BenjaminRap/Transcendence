@@ -36,7 +36,7 @@ export class ClientSync extends ScriptComponent {
 
 	protected	ready()
 	{
-		this._sceneData.serverProxy?.sendServerMessage("ready", undefined);
+		this._sceneData.serverProxy?.sendServerMessage("ready");
 	}
 	
 	private	listenToGameInfos(gameManager : GameManager, inputManager : InputManager)
