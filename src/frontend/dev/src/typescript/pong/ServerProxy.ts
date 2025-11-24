@@ -1,5 +1,5 @@
 import { GameInfos, KeysUpdate } from "@shared/ServerMessage";
-import { MultiplayerHandler } from "./MultiplayerHandler";
+import { ClientMessage, ClientMessageData, MultiplayerHandler } from "./MultiplayerHandler";
 import { Observable } from "@babylonjs/core/Misc/observable";
 
 export class	ServerProxy
@@ -26,8 +26,8 @@ export class	ServerProxy
 		return this._multiplayerHandler.onServerMessage();
 	}
 
-	public setReady()
+	public sendServerMessage<T extends ClientMessage>(event : T, data : ClientMessageData<T>)
 	{
-		this._multiplayerHandler.setReady();
+		return this._multiplayerHandler.sendServerMessage(event, data);
 	}
 }

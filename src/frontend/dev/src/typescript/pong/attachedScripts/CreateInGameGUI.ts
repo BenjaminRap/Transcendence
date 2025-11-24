@@ -35,18 +35,21 @@ export class CreateInGameGUI extends ScriptComponent {
 		this.createEndGUI(rematchButtonEnabled);
 	}
 
-	private	createPauseGUI(rematchButtonEnabled : boolean)
+	protected	ready()
 	{
-		this._pauseGUI = new PauseGUI(this._type, rematchButtonEnabled);
-		this._sceneData.pongHTMLElement.appendChild(this._pauseGUI);
-		this.toggleMenu(this._pauseGUI);
-
 		const	inputManager = SceneManager.GetComponent<InputManager>(this._inputManager, "InputManager", false);
 
 		inputManager.getEscapeInput().addKeyObserver((event : "keyDown" | "keyUp") => {
 			if (event == "keyDown" && !this._gameManager.script.hasEnded())
 				this.toggleMenu(this._pauseGUI)
 		});
+	}
+
+	private	createPauseGUI(rematchButtonEnabled : boolean)
+	{
+		this._pauseGUI = new PauseGUI(this._type, rematchButtonEnabled);
+		this._sceneData.pongHTMLElement.appendChild(this._pauseGUI);
+		this.toggleMenu(this._pauseGUI);
 
 		const	buttons = this._pauseGUI.getButtons()!;
 
@@ -97,7 +100,7 @@ export class CreateInGameGUI extends ScriptComponent {
 
 	private	onRematch() : void
 	{
-		console.log("rematch !");
+		this._sceneData.serverProxy?.sendServerMessage("rematch", undefined);
 	}
 
 	private	onRestart() : void
@@ -105,6 +108,7 @@ export class CreateInGameGUI extends ScriptComponent {
 		this._sceneData.havokPlugin.setTimeStep(this._defaultTimeStep);
 		this._pauseGUI.classList.add("hidden");
 		this._endGUI.classList.add("hidden");
+		this._sceneData.serverProxy?.sendServerMessage("restart", undefined);
 		this._gameManager.script.restart();
 	}
 
