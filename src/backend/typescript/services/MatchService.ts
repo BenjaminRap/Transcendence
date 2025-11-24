@@ -28,7 +28,6 @@ export class MatchService {
 			const lost = losses.find(l => l.loserId === id)?._count ?? 0;
 
 			return {
-				playerId: id,
 				wins: won,
 				losses: lost,
 				total: won + lost,

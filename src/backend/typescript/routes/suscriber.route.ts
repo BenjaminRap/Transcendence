@@ -31,12 +31,19 @@ export async function suscriberRoute(
         ] 
     }, controller.updateAvatar.bind(controller));
 
-    fastify.delete<{ Body: DeleteAccount }>('/deleteaccount', {
+    fastify.delete('/delete/avatar', {
         preHandler: [
             middleware.auth.authenticate,
             // middleware.auth.keyAuthenticate
         ]
-    }, controller.deleteAccount.bind(controller));
+    }, controller.deleteAvatar.bind(controller));
+
+    // fastify.delete<{ Body: DeleteAccount }>('/delete/account', {
+    //     preHandler: [
+    //         middleware.auth.authenticate,
+    //         // middleware.auth.keyAuthenticate
+    //     ]
+    // }, controller.deleteAccount.bind(controller));
 
     fastify.get('getstats', {
         preHandler: middleware.auth.authenticate,

@@ -131,11 +131,7 @@ export class SuscriberController {
     // --------------------------------------------------------------------------------- //
     // PUT /suscriber/update/avatar
     async updateAvatar(request: FastifyRequest, reply: FastifyReply) {
-        // IMPORTANT: le client doit envoyer Content-Type: multipart/form-data new preHandler checkHeader
         try {
-            // Appeler fileService pour traiter l'upload
-            // retourne le fichier sous forme buffer normalise pour l'avatar
-            // le buffer n'est pas encore enregiste sur le disque
             const data = await this.fileService.normalizeAvatar(request);
             if (!data.success || !data.buffer) {
                 return reply.status(400).send({
@@ -174,6 +170,36 @@ export class SuscriberController {
                         });
                 }
             }
+            request.log.error(error);
+            return reply.status(500).send({
+                success: false,
+                message: 'Internal server error'
+            });
+        }
+    }
+
+    // ----------------------------------------------------------------------------- //
+    // DELETE /suscriber/delete/avatar
+    async deleteAvatar(request: FastifyRequest, reply: FastifyReply) {
+        try {
+            const id = (request as any).user.userId;
+
+            // delete avatar or throw exception USER NOT FOUND
+            await this.suscriberService.deleteAvatar(Number(id));
+
+            return reply.status(204).send();
+
+        } catch (error) {
+            if (error instanceof SuscriberException) {
+                if (error.code === SuscriberError.USER_NOT_FOUND)
+                    return reply.status(404).send({ success: false, message: error.code });
+                else
+                    return reply.status(400).send({
+                        success: false,
+                        message: error.message || 'Unknow error',
+                    });
+            }
+
             request.log.error(error);
             return reply.status(500).send({
                 success: false,

@@ -75,13 +75,18 @@ export class FileService {
     // --------------------------------------------------------------------------------- //
     async deleteAvatar(fileUrl: string) {
         const filename = path.basename(fileUrl);
-        if (filename != DEFAULT_AVATAR) {
+        if (filename && filename != DEFAULT_AVATAR) {
             const filePath = path.join(this.avatarDir, filename);
-
+            
             try {
+                await fs.access(filePath);
                 await fs.unlink(filePath);
-            } catch (err) {
-                console.warn(`Failed to delete file : \"${filePath}\", err: `, err);
+            } catch (err : any) {
+                if (err.code === 'ENOENT') {
+                    console.warn(`File not found: \"${filePath}\"`);
+                } else {
+                    console.warn(`Failed to delete file: \"${filePath}\", err: `, err);
+                }
             }
         }
     }

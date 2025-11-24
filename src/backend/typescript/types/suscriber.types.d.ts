@@ -1,3 +1,6 @@
+import { GameStats } from "./match.types.d.js"
+import { Match, Friendship } from "@prisma/client";
+
 export interface UpdatePassword
 {
     currentPassword:    string,
@@ -16,4 +19,14 @@ export interface SuscriberStats
     gamesPlayed: number,
     gamesWon:    number,
     winRate:     number,
+}
+
+export interface SuscriberProfile
+{
+    id:         string,
+    avatar:     string,
+    username:   string,
+    gameStats:  GameStats,
+    lastMatchs: Match[],
+    friends:    Friendship[],
 }

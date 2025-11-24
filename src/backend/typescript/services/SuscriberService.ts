@@ -3,6 +3,8 @@ import { SuscriberStats } from "../types/suscriber.types.js";
 import { PasswordHasher } from "../utils/PasswordHasher.js";
 import { FileService } from "./FileService.js";
 import { sanitizeUser, SanitizedUser } from '../types/auth.types.js'
+import { SuscriberProfile } from "../types/suscriber.types.js";
+import { GameStats } from "../types/match.types.js";
 import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
 import path from "path";
 
@@ -13,17 +15,67 @@ export class SuscriberService {
         private fileService: FileService
     ) {}
     private api_url = process.env.API_URL || 'http://localhost:8181';
+    private default_avatar_url = process.env.DEFAULT_AVATAR_URL || this.api_url + '/static/public/avatarDefault.png';
 
     // ----------------------------------------------------------------------------- //
-    async getProfile(id: number): Promise<SanitizedUser> {
-        const user = await this.getById(Number(id));
+    async getProfile(id: number): Promise<SuscriberProfile> {
+        const user = await this.prisma.user.findUnique({
+            where: { id: Number(id) },
+            include: {
+                matchesWons: true,
+                matchesLoses: true,
+                sentRequests: true,
+                receivedRequests: true,
+            },
+        });
+
         if (!user) {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
         }
-        
-        return sanitizeUser(user);
-    }
 
+        const matchesWon = user.matchesWons?.length || 0;
+        const matchesLost = user.matchesLoses?.length || 0;
+        const totalMatches = matchesWon + matchesLost;
+        const ratio = totalMatches > 0 ? (matchesWon / totalMatches * 100).toFixed(2) : "0.00";
+
+        const gameStats: GameStats = {
+            wins: matchesWon,
+            losses: matchesLost,
+            total: totalMatches,
+            winRate: parseFloat(ratio),
+        };
+
+        // Récupérer les 4 derniers matchs
+        const allMatches = [
+            ...(user.matchesWons || []),
+            ...(user.matchesLoses || []),
+        ]
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 4);
+
+        // Récupérer les 4 amis avec PENDING en priorité
+        const allFriendships = [
+            ...(user.sentRequests || []),
+            ...(user.receivedRequests || []),
+        ];
+
+        const sortedFriendships = allFriendships
+            .sort((a, b) => {
+                if (a.status === "PENDING" && b.status !== "PENDING") return -1;
+                if (a.status !== "PENDING" && b.status === "PENDING") return 1;
+                return 0;
+            })
+            .slice(0, 4);
+
+        return {
+            id: user.id.toString(),
+            avatar: user.avatar,
+            username: user.username,
+            gameStats,
+            lastMatchs: allMatches,
+            friends: sortedFriendships,
+        };
+    }
     // ----------------------------------------------------------------------------- //
     async updatePassword(id: number, currentPassword: string, newPassword: string): Promise<void> {
         const user = await this.getById(Number(id));
@@ -112,6 +164,24 @@ export class SuscriberService {
 
             throw new SuscriberException(SuscriberError.UPLOAD_ERROR, 'Error updating avatar');
         }
+    }
+
+    // ----------------------------------------------------------------------------- //
+    async deleteAvatar(userId: number): Promise<SanitizedUser> {
+        const user = await this.getById(userId);
+        if (!user)
+            throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
+
+        const oldAvatarUrl = user.avatar;
+
+        const updatedUser = await this.prisma.user.update({
+            where: { id: userId },
+            data: { avatar: this.default_avatar_url },
+        });
+
+        await this.fileService.deleteAvatar(oldAvatarUrl);
+
+        return sanitizeUser(updatedUser);
     }
 
     // ----------------------------------------------------------------------------- //
