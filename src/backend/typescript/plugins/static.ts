@@ -3,11 +3,17 @@ import fastifyStatic from "@fastify/static";
 import { join } from "path";
 
 export default fp(async function staticPlugin(fastify) {
-    const uploadDir = join(process.cwd(), "uploads");
+    const avatarDir = process.env.AVATAR_DIR_PATH || join(process.cwd(), "uploads/avatars");
 
     fastify.register(fastifyStatic, {
-        root: uploadDir,
-        prefix: "/uploads/",
+        root: avatarDir,
+        prefix: "/static/avatars/",
+        decorateReply: false,
+    });
+
+    fastify.register(fastifyStatic, {
+        root: "/app/backend/public/",
+        prefix: "/static/public/",
         decorateReply: false,
     });
 

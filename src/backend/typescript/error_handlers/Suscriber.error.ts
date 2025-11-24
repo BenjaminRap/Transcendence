@@ -7,6 +7,7 @@ export enum SuscriberError
     INVALID_CREDENTIALS = 'Invalid credentials',
     AVATAR_ERROR = 'Avatar must change',
     USRNAME_ALREADY_USED = 'This username is already used',
+    UPLOAD_ERROR = 'Error uploading avatar',
 }
 
 export class SuscriberException extends Error {

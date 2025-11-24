@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { TokenManager } from '../utils/TokenManager.js';
-import { DeleteAccount, UpdatePassword } from '../types/suscriber.types.js';
+import { DeleteAccount } from '../types/suscriber.types.js';
 
 export class AuthMiddleware {
     constructor(private tokenManager: TokenManager) {}

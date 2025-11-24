@@ -12,45 +12,53 @@
 
 # if [ $result -ne 0 ];
 # then
-#     echo ; echo
-#     echo "------------------------------------------------"
-#     echo
-#     curl -X POST 'http://localhost:8181/auth/login' \
-#         -H "Content-Type: application/json" \
-#         -d '{
-#                 "password": "ComplexPassw0rd!",
-#                 "identifier": "bbizarre"
-#             }';
+    # echo ; echo
+    # echo "------------------------------------------------"
+    # echo
+    # curl -X POST 'http://localhost:8181/auth/login' \
+    #     -H "Content-Type: application/json" \
+    #     -d '{
+    #             "password": "ComplexPassw0rd!",
+    #             "identifier": "rcool"
+    #         }';
 # fi
 
-curl -X PUT 'http://localhost:8181/suscriber/update/avatar' \
-        -H "Authorization \
-        -F "avatar=@./test_image.jpg" ;
+# curl -X PUT 'http://localhost:8181/suscriber/update/avatar' \
+#         -H "Content-Type: multipart/form-data" \
+#         -H "Authorization:" \
+#         -F "avatar=@./profile.png";
 
-echo ; echo
-echo "------------------------------------------------"
-echo
+# echo ; echo
+# echo "------------------------------------------------"
+# echo
 
-curl -X PUT 'http://localhost:8181/suscriber/update/avatar' \
-        -H "Authorization \
-        -F "avatar=@./test_bad_magic_number.png" ;
+# curl -X GET 'http://localhost:8181/static/public/avatarDefault.webp' 
 
-echo ; echo
-echo "------------------------------------------------"
-echo
+# echo ; echo
+# echo "------------------------------------------------"
+# echo
 
-curl -X PUT 'http://localhost:8181/suscriber/update/avatar' \
-        -H "Authorization \
-        -F "avatar=@./test_mutant.jpg" ;
 
-echo ; echo
-echo "------------------------------------------------"
-echo
+# curl -X PUT 'http://localhost:8181/suscriber/update/avatar' \
+#         -H "Authorization:" \
+#         -F "avatar=@./test_bad_magic_number.png" ;
 
-curl -X PUT 'http://localhost:8181/suscriber/update/avatar' \
-        -H "Authorization \
-        -F "avatar=@./test_xss.jpg" ;
+# echo ; echo
+# echo "------------------------------------------------"
+# echo
 
-echo ; echo
-echo "------------------------------------------------"
-echo
+# curl -X PUT 'http://localhost:8181/suscriber/update/avatar' \
+#         -H "Authorization:" \
+#         -F "avatar=@./test_mutant.jpg" ;
+
+# echo ; echo
+# echo "------------------------------------------------"
+# echo
+
+# curl -X PUT 'http://localhost:8181/suscriber/update/avatar' \
+#         -H "Authorization:" \
+#         -F "avatar=@./test_xss.jpg" ;
+
+# echo ; echo
+# echo "------------------------------------------------"
+# echo

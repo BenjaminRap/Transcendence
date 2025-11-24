@@ -1,12 +1,19 @@
 import sharp from 'sharp';
+import { v4 as uuidv4 } from 'uuid';
+import fs from 'fs/promises';
+import path from 'path';
+
+const DEFAULT_AVATAR = "avatarDefault.webp"
 
 export class FileService {
     constructor(){}
 
     private MAX_COMPRESSED_SIZE = 300 * 1024;
+    private uploadDir = process.env.UPLOADS_DIR || path.join(__dirname, '/app/uploads/');
+    private avatarDir = process.env.AVATAR_DIR_PATH || path.join(this.uploadDir, 'avatars/');
 
     // --------------------------------------------------------------------------------- //
-    async uploadAvatar(buffer: Buffer) {
+    async normalizeAvatar(buffer: Buffer) {
         try {
             // check if the file is not corrupt (sharp)
             const metadata = await sharp(buffer).metadata();
@@ -33,50 +40,52 @@ export class FileService {
             }
         }
     }
+
     // --------------------------------------------------------------------------------- //
-    async updateAvatar(buffer: Buffer) {
-        
+    async uploadAvatarSafe(buffer: Buffer, userId: string): Promise<string> {
+        const filename = `avatar_${userId}_${Date.now()}_${uuidv4()}.webp`;
+        const finalPath = path.join(this.avatarDir, filename);
+        const tmpFile = `${filename}.tmp`;
+        const tmpPath = path.join(this.avatarDir, tmpFile);
+
+        try {
+            await fs.mkdir(this.avatarDir, { recursive: true });
+            await fs.writeFile(tmpPath, buffer, { mode: 0o600 }); // rw------- (user only)
+            await fs.rename(tmpPath, finalPath);
+            
+            return filename;
+        } catch (error) {
+            console.error('Error uploading avatar: ', error);
+
+            try {
+                await fs.unlink(tmpPath);
+            } catch (error) {
+                console.warn(`Cannot delete ${tmpPath} : ${error}`);
+            }
+
+            try {
+                await fs.unlink(finalPath);
+            } catch (error) {
+                console.warn(`Cannot delete ${finalPath} : ${error}`);
+            }
+            return '';
+        }
     }
 
+    // --------------------------------------------------------------------------------- //
+    async deleteAvatar(fileUrl: string) {
+        const filename = path.basename(fileUrl);
+        if (filename != DEFAULT_AVATAR) {
+            const filePath = path.join(this.avatarDir, filename);
 
+            try {
+                await fs.unlink(filePath);
+            } catch (err) {
+                console.warn(`Failed to delete file : \"${filePath}\", err: `, err);
+            }
+        }
+    }
     // ==================================== PRIVATE ==================================== //
 
     // --------------------------------------------------------------------------------- //
 }
-
-
-// export class FileService {
-//     private uploadDir: string;
-//     private userRepository: any; // Remplace par ton repository
-
-//     constructor(uploadDir: string, userRepository: any) {
-//         this.uploadDir = uploadDir;
-//         this.userRepository = userRepository;
-//     }
-
-//     async updateAvatar(
-//         userId: number, 
-//         fileBuffer: Buffer, 
-//         declaredMimetype: string,
-//         originalFilename: string
-//     ): Promise<SanitizedUser> {
-        
-
-
-//         // 8. MISE À JOUR DE LA BASE DE DONNÉES
-//         const avatarUrl = `/uploads/${filename}`;
-//         const updatedUser = await this.userRepository.update(userId, {
-//             avatar: avatarUrl
-//         });
-
-//         // 9. RETOUR DE L'UTILISATEUR SANITISÉ
-//         return this.sanitizeUser(updatedUser);
-//     }
-
-//     private sanitizeUser(user: any): SanitizedUser {
-//         // Retire les données sensibles avant de retourner
-//         const { password, ...sanitized } = user;
-//         return sanitized as SanitizedUser;
-//     }
-// }
-

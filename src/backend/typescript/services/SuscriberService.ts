@@ -1,18 +1,18 @@
 import { PrismaClient, User } from "@prisma/client";
 import { SuscriberStats } from "../types/suscriber.types.js";
 import { PasswordHasher } from "../utils/PasswordHasher.js";
+import { FileService } from "./FileService.js";
 import { sanitizeUser, SanitizedUser } from '../types/auth.types.js'
 import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
-import path from 'path';
-import fs from 'fs/promises';
+import path from "path";
 
 export class SuscriberService {
     constructor(
         private prisma: PrismaClient,
         private passwordHasher: PasswordHasher,
+        private fileService: FileService
     ) {}
-    private uploadDir = process.env.UPLOADS_DIR || path.join(__dirname, '/app/uploads');
-    private defaultAvatarFile = process.env.DEFAULT_AVATAR_FILE || 'default.webp';
+    private api_url = process.env.API_URL || 'http://localhost:8181';
 
     // ----------------------------------------------------------------------------- //
     async getProfile(id: number): Promise<SanitizedUser> {
@@ -80,48 +80,38 @@ export class SuscriberService {
     }
 
     // ----------------------------------------------------------------------------- //
-    async updateAvatar(buffer: Buffer, userId: number): Promise<SanitizedUser | null> {
-        /**
-         * le fichier est sous forme de buffer
-         * et a ce stade il est deja valide
-         * il est pret a etre enregistre sur le disque
-         * il faut mettre la db a jour avec le nouveau lien
-         * 
-        */
-       
-            const user = await this.getById(userId);
-            if (!user) {
-                throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
-            }
+    async updateAvatar(buffer: Buffer, userId: number): Promise<SanitizedUser> {
+        const user = await this.getById(userId);
+        if (!user)
+            throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
+        if (!user.avatar)
+            console.warn("User avatar empty, user id: ", user.id);
 
-            // create new avatar file name
-            const filename = `avatar_${userId}_${Date.now()}.webp`;
-            const filepath = path.join(this.uploadDir, filename);
-
-            console.log('Saving avatar to: ', filepath);
-            console.log('Current avatar: ', user.avatar);
-            console.log('Current user: ', user.username);
-
-            if (user.avatar && user.avatar !== this.defaultAvatarFile)
-            {
-                const oldAvatarPath = path.join(this.uploadDir, path.basename(user.avatar));
-                try {
-                    await fs.unlink(oldAvatarPath);
-                } catch (error) {
-                    console.warn('Old avatar file could not be deleted: ', error);
-                }
-            }
-
-            // 7. SAUVEGARDE DU NOUVEAU FICHIER
-            await fs.writeFile(filepath, buffer);
-
-            // 8. MISE A JOUR DE LA DB
+       // upload avatar, never throw but return empty string if an error occured
+        const avatarFileName = await this.fileService.uploadAvatarSafe(buffer, String(userId));
+        if (!avatarFileName)
+            throw new SuscriberException(SuscriberError.UPLOAD_ERROR, SuscriberError.UPLOAD_ERROR);
+        
+        const oldAvatarUrl = user.avatar;
+        const newAvatarPath = path.join('/static/avatars/', path.basename(avatarFileName));
+        const newAvatarUrl = this.api_url + newAvatarPath;
+        try {
             const updatedUser = await this.prisma.user.update({
                 where: { id: userId },
-                data: { avatar: filename },
+                data: { avatar: newAvatarUrl },
             });
+            
+            await this.fileService.deleteAvatar(oldAvatarUrl);
 
-       return sanitizeUser(updatedUser);
+            return sanitizeUser(updatedUser);
+
+        } catch (error) {
+            console.error('Error updating avatar: ', error);
+            
+            await this.fileService.deleteAvatar(newAvatarUrl);
+
+            throw new SuscriberException(SuscriberError.UPLOAD_ERROR, 'Error updating avatar');
+        }
     }
 
     // ----------------------------------------------------------------------------- //
@@ -181,3 +171,4 @@ export class SuscriberService {
         return userData === comparedData;
     }
 }
+

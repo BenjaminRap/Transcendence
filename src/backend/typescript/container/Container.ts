@@ -18,6 +18,7 @@ import { PasswordHasher } from '../utils/PasswordHasher.js';
 import { TokenManager } from '../utils/TokenManager.js';
 
 import { AuthMiddleware } from '../middleware/AuthMiddleware.js';
+import { HeaderMiddleware } from '../middleware/HeaderMiddleware.js';
 
 import { GameInterface } from '../interfaces/GameInterface.js';
 
@@ -89,7 +90,8 @@ export class Container {
 
         this.registerService('SuscriberService', () => new SuscriberService(
             prisma,
-            this.getService('PasswordHasher')
+            this.getService('PasswordHasher'),
+            this.getService('FileService')
         ));
 
         this.registerService('FriendService', () => new FriendService(
@@ -125,6 +127,9 @@ export class Container {
         // Middleware
         this.registerService('AuthMiddleware', () => new AuthMiddleware(
             this.getService('TokenManager')
+        ));
+
+        this.registerService('HeaderMiddleware', () => new HeaderMiddleware(
         ));
 
         // Interfaces

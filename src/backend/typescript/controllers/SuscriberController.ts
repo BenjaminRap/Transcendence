@@ -133,12 +133,14 @@ export class SuscriberController {
     async updateAvatar(request: FastifyRequest, reply: FastifyReply) {
         // IMPORTANT: le client doit envoyer Content-Type: multipart/form-data new preHandler checkHeader
         try {
-            // Appeler le service pour traiter l'upload
-            const data = await this.fileService.uploadAvatar(request);
+            // Appeler fileService pour traiter l'upload
+            // retourne le fichier sous forme buffer normalise pour l'avatar
+            // le buffer n'est pas encore enregiste sur le disque
+            const data = await this.fileService.normalizeAvatar(request);
             if (!data.success || !data.buffer) {
                 return reply.status(400).send({
                     success: false,
-                    message: data.message,
+                    message: data?.message || 'Error during avatar normalization',
                     redirectTo: '/suscriber/profile'
                 });
             }

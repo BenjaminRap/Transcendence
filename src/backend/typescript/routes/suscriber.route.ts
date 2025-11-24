@@ -1,37 +1,44 @@
 import { FastifyInstance } from 'fastify';
 import { SuscriberController } from '../controllers/SuscriberController.js';
 import { AuthMiddleware } from '../middleware/AuthMiddleware.js';
+import { HeaderMiddleware } from '../middleware/HeaderMiddleware.js';
 import { UpdatePassword, DeleteAccount } from '../types/suscriber.types.js';
 
 export async function suscriberRoute(
     fastify: FastifyInstance, 
     controller: SuscriberController, 
-    middleware: AuthMiddleware,
+    middleware: {
+        auth: AuthMiddleware,
+        header: HeaderMiddleware,
+    }
 ) {
     fastify.get('/profile', {
-        preHandler: middleware.authenticate,
+        preHandler: middleware.auth.authenticate,
     }, controller.getProfile.bind(controller));
     
     fastify.put<{ Body: { username: string } }>('/update/username', {
-        preHandler: middleware.authenticate,
+        preHandler: middleware.auth.authenticate,
     }, controller.updateUsername.bind(controller));
 
     fastify.put<{ Body: UpdatePassword }>('/update/password', {
-        preHandler: middleware.authenticate,
+        preHandler: middleware.auth.authenticate,
     }, controller.updatePassword.bind(controller));
 
     fastify.put('/update/avatar', {
-        preHandler: middleware.authenticate,
+        preHandler: [
+            middleware.header.checkFormData,
+            middleware.auth.authenticate,
+        ] 
     }, controller.updateAvatar.bind(controller));
 
     fastify.delete<{ Body: DeleteAccount }>('/deleteaccount', {
         preHandler: [
-            middleware.authenticate,
-            middleware.keyAuthenticate
+            middleware.auth.authenticate,
+            // middleware.auth.keyAuthenticate
         ]
     }, controller.deleteAccount.bind(controller));
 
     fastify.get('getstats', {
-        preHandler: middleware.authenticate,
+        preHandler: middleware.auth.authenticate,
     }, controller.getStats.bind(controller));
 }
