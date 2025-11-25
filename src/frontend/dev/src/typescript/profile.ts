@@ -264,15 +264,13 @@ async function fetchProfileData(user: string): Promise<string> {
 		if (data.success) {
 			profile.username = data.user.username;
 			profile.linkofavatar = data.user.avatar;
-			console.log("Profile data: FJBEJHFBE", data);
 			return "OK";
 		}
-		if (data.message === 'Token expired') {
+		if (data.message === 'Invalid or expired token') {
 			const refreshed = await RequestBackendModule.tryRefreshToken();
 			if (!refreshed) {
 				return 'You are not logged in.';
 			}
-			console.log("Profile data:", data);
 			return "OK";
 		}
 		return 'Error fetching profile data.';
