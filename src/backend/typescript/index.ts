@@ -11,6 +11,7 @@ import { authRoutes } from './routes/auth.routes.js';
 import { usersRoutes } from './routes/users.routes.js';
 import { suscriberRoute } from './routes/suscriber.route.js';
 import { friendRoute } from './routes/friend.routes.js';
+import { matchRoutes } from './routes/match.routes.js';
 
 dotenv.config();
 
@@ -30,6 +31,8 @@ fastify.register(prismaPlugin);
 fastify.register(multipartPlugin);
 
 fastify.register(staticPlugin);
+
+fastify.register(require('@fastify/websocket'));
 
 // Instanciation and intialiasation of the dependency injection container
 fastify.after(async (err) => {
@@ -86,6 +89,15 @@ fastify.after(async (err) => {
         );
         done();
     }, { prefix: '/friend' });
+
+	fastify.register((instance, opts, done) => {
+		matchRoutes(
+			instance,
+			Container.getInstance().getService('MatchController'),
+			Container.getInstance().getService('AuthMiddleware')
+		);
+		done();
+	}, { prefix: '/match' });
 
 });
 
