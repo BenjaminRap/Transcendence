@@ -28,7 +28,6 @@ export class	MatchMaker
 		if (socket.data.getState() === "unactive")
 			return ;
 		console.log("removing user from matchmaking !");
-		socket.once("join-matchmaking", () => { this.addUserToMatchMaking(socket) });
 		socket.data.leaveGame();
 		const	index = this._waitingSockets.indexOf(socket);
 

@@ -21,6 +21,7 @@ export class	Room
 	private _roomId : string;
 	private _observers : Map<string, Observable<SocketMessage>>;
 	private _socketsReadyCount : int = 0;
+	private _sceneData : ServerSceneData | undefined;
 	
 	constructor(
 		private readonly _io : Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>,
@@ -43,8 +44,8 @@ export class	Room
 		}
 
 		const	clientProxy = new ClientProxy(this);
-		const	sceneData = new ServerSceneData(new HavokPlugin(false), clientProxy);
-		this._serverPongGame = new ServerPongGame(sceneData);
+		this._sceneData = new ServerSceneData(new HavokPlugin(false), clientProxy);
+		this._serverPongGame = new ServerPongGame(this._sceneData);
 	}
 
 	public dispose()
@@ -65,6 +66,10 @@ export class	Room
 		socket.data.leaveGame();
 		socket.leave(this._roomId);
 		socket.emit("room-closed");
+		socket.removeAllListeners("ready");
+		socket.removeAllListeners("leave-game");
+		socket.removeAllListeners("input-infos");
+		socket.removeAllListeners("forfeit");
 		if (socket.data.getState() === "ready")
 			this._socketsReadyCount--;
 	}
@@ -80,7 +85,7 @@ export class	Room
 		await socket.join(this._roomId);
 		socket.emit("joined-game", gameInit);
 		socket.once("ready", () => { this.setSocketReady(socket) } );
-		socket.once("restart", () => { this.removeSocketFromRoom(socket) });
+		socket.once("leave-game", () => { this.removeSocketFromRoom(socket) });
 	}
 
 	private	setSocketReady(socket : DefaultSocket)
@@ -95,8 +100,16 @@ export class	Room
 
 	private	startGame()
 	{
-		this._serverPongGame!.gameStart();
+		this._sceneData?.messageBus.PostMessage("game-start");
 		this.sendMessageToRoom("ready");
+		this._sockets.forEach((socket : DefaultSocket, index : int) => {
+			socket.once("forfeit", () => {
+				socket.broadcast.to(this._roomId).emit("forfeit");
+				const	winningSide = (index === 0) ? "left" : "right";
+
+				this._sceneData?.messageBus.PostMessage("forfeit", winningSide);
+			});
+		});
 	}
 
 	public sendMessageToRoom<T extends keyof ServerToClientEvents>

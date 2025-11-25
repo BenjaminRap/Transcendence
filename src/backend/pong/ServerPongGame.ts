@@ -100,15 +100,6 @@ export class ServerPongGame {
 		this.disposeScene();
 		this._engine?.dispose();
 	}
-
-	public gameStart()
-	{
-		if (!this._engine || !this._scene)
-			return ;
-		const	sceneData = getSceneData(this._scene);
-
-		sceneData.messageBus.PostMessage("gameStart")
-	}
 }
 
 export function	getSceneData(scene : Scene) : ServerSceneData

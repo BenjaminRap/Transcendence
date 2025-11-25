@@ -42,8 +42,8 @@ export class ServerSync extends ScriptComponent {
 
 		const	inputManager = SceneManager.GetComponent<InputManager>(this._inputManager, "InputManager", false);
 		this.listenToClients(inputManager);
-		this._sceneData.messageBus.OnMessage("updateLeftScore", () => { this.notifyGoal("right") });
-		this._sceneData.messageBus.OnMessage("updateRightScore", () => { this.notifyGoal("left") });
+		this._sceneData.messageBus.OnMessage("updateLeftScore", () => { this.notifyGoal("left") });
+		this._sceneData.messageBus.OnMessage("updateRightScore", () => { this.notifyGoal("right") });
 	}
 
 	private	notifyGoal(side : "left" | "right")

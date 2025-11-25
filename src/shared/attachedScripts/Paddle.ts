@@ -30,7 +30,7 @@ export class Paddle extends ScriptComponent {
 		const	sceneData = getSceneData(this.scene);
 
 		sceneData.havokPlugin.onTriggerCollisionObservable.add(this.onTriggerEnter.bind(this));
-		sceneData.messageBus.OnMessage("gameStart", () => {
+		sceneData.messageBus.OnMessage("game-start", () => {
 			this._canMove = true;
 		})
 		sceneData.messageBus.OnMessage("end", () => {

@@ -9,7 +9,7 @@ import { HavokPlugin } from "@babylonjs/core/Physics";
 import HavokPhysics from "@babylonjs/havok";
 import { ClientInput, FrontendSceneData } from "./FrontendSceneData";
 import { Color4 } from "@babylonjs/core";
-import { FrontendGameType, SceneData } from "@shared/SceneData";
+import { FrontendGameType, getSceneData, SceneData } from "@shared/SceneData";
 import { MultiplayerHandler } from "./MultiplayerHandler";
 import { Settings } from "./Settings";
 import { ServerProxy } from "./ServerProxy";
@@ -86,10 +86,11 @@ export class PongGame extends HTMLElement {
 		this.remove();
 	}
 
-	public goToMenuScene()
+	public async goToMenuScene()
 	{
 		this._multiplayerHandler.disconnect();
-		this.changeScene("Menu.gltf", "Menu", []);
+		if (!this._scene || getSceneData(this._scene).gameType !== "Menu")
+			await this.changeScene("Menu.gltf", "Menu", []);
 	}
 
 	public startLocalGame(sceneName : "Basic.gltf" | "Magic.gltf")
@@ -112,7 +113,7 @@ export class PongGame extends HTMLElement {
 			const	serverProxy = new ServerProxy(this._multiplayerHandler, gameInit.playerIndex);
 			this.changeScene(sceneName, "Multiplayer", inputs, serverProxy);
 			await this._multiplayerHandler.onGameReady();
-			getFrontendSceneData(this._scene!).messageBus.PostMessage("gameStart");
+			getFrontendSceneData(this._scene!).messageBus.PostMessage("game-start");
 			this._multiplayerHandler.onServerMessage()!.add((gameInfos : GameInfos | "room-closed" | "server-error") => {
 				if (gameInfos === "room-closed")
 				{

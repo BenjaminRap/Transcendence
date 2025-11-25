@@ -8,7 +8,7 @@ export class	MultiplayerHandler
 	private static readonly _apiUrl = "/api/socket.io/";
 
 	private _socket  : Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
-	private _onServerMessageObservable : Observable<GameInfos | "room-closed" | "server-error"> | null = null;
+	private _onServerMessageObservable : Observable<GameInfos | "room-closed" | "server-error" | "forfeit"> | null = null;
 
 	public async connect() : Promise<void>
 	{
@@ -72,13 +72,13 @@ export class	MultiplayerHandler
 		});
 	}
 
-	public onServerMessage() : Observable<GameInfos | "room-closed" | "server-error"> | null
+	public onServerMessage() : Observable<GameInfos | "room-closed" | "server-error" | "forfeit"> | null
 	{
 		if (this._onServerMessageObservable !== null)
 			return (this._onServerMessageObservable);
 		if (this._socket === null)
 			return null;
-		const	observable = new Observable<GameInfos | "room-closed" | "server-error">();
+		const	observable = new Observable<GameInfos | "room-closed" | "server-error" | "forfeit">();
 
 		this._socket.on("game-infos", (data : any) => {
 			const	gameInfos = ZodGameInfos.safeParse(data);
@@ -88,6 +88,7 @@ export class	MultiplayerHandler
 			else
 				observable.notifyObservers(gameInfos.data);
 		});
+		this._socket.on("forfeit", () => { observable.notifyObservers("forfeit") });
 		this._socket.once("room-closed", () => { this.stopListeningToGameInfos("room-closed") });
 		this._onServerMessageObservable = observable;
 		return observable;
@@ -97,10 +98,8 @@ export class	MultiplayerHandler
 	{
 		if (this._socket !== null)
 			this._socket.off("game-infos");
-		if (!this._onServerMessageObservable)
-			return ;
-		this._onServerMessageObservable.notifyObservers(reason);
-		this._onServerMessageObservable.clear();
+		this._onServerMessageObservable?.notifyObservers(reason);
+		this._onServerMessageObservable?.clear();
 		this._onServerMessageObservable = null;
 	}
 

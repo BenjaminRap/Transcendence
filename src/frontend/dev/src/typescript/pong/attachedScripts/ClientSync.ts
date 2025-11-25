@@ -41,13 +41,22 @@ export class ClientSync extends ScriptComponent {
 	
 	private	listenToGameInfos(gameManager : GameManager, inputManager : InputManager)
 	{
-		this._sceneData.serverProxy!.onServerMessage()!.add((gameInfos : GameInfos | "room-closed" | "server-error") => {
+		const	serverProxy = this._sceneData.serverProxy;
+	
+		if (!serverProxy)
+			return ;
+		serverProxy.onServerMessage()!.add((gameInfos : GameInfos | "room-closed" | "server-error" | "forfeit") => {
 			if (gameInfos === "room-closed" || gameInfos === "server-error")
 				return ;
-			if (gameInfos.type === "input")
+			if (gameInfos === "forfeit")
 			{
-				const	opponentsIndex = (this._sceneData.serverProxy!.playerIndex === 0) ? 1 : 0;
-				const	opponentInputs = inputManager.getPlayerInput(opponentsIndex);
+				const	winningSide = (serverProxy.opponentIndex === 0) ? "left" : "right";
+
+				this._sceneData.messageBus.PostMessage("forfeit", winningSide);
+			}
+			else if (gameInfos.type === "input")
+			{
+				const	opponentInputs = inputManager.getPlayerInput(serverProxy.opponentIndex);
 
 				this.updateKey(gameInfos.infos.up, opponentInputs.up);
 				this.updateKey(gameInfos.infos.down, opponentInputs.down);
@@ -59,7 +68,7 @@ export class ClientSync extends ScriptComponent {
 				this._paddleLeft.position.copyFrom(this.xyzToVector3(gameInfos.infos.paddleLeftPos));
 				this._paddleRight.position.copyFrom(this.xyzToVector3(gameInfos.infos.paddleRightPos));
 			}
-			else
+			else if (gameInfos.type === "goal")
 				gameManager.onGoal(gameInfos.infos.side);
 		});
 	}

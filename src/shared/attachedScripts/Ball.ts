@@ -12,7 +12,7 @@ export class Ball extends ScriptComponent {
 	private _physicsBody! : PhysicsBody;
 	private _initialPosition : Vector3;
 	private _startsRight : boolean = true;
-	private	_ballStartTimeout : NodeJS.Timeout | null = null;
+	private	_ballStartTimeout : ReturnType<typeof setTimeout> | null = null;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "Ball") {
         super(transform, scene, properties, alias);
@@ -20,7 +20,7 @@ export class Ball extends ScriptComponent {
 
 		const	sceneData = getSceneData(this.scene);
 
-		sceneData.messageBus.OnMessage("gameStart", () => {
+		sceneData.messageBus.OnMessage("game-start", () => {
 			this.reset()
 		});
 		sceneData.messageBus.OnMessage("reset", () => {
@@ -41,7 +41,7 @@ export class Ball extends ScriptComponent {
 	public reset() : void
 	{
 		if (this._ballStartTimeout !== null)
-			this._ballStartTimeout.close();
+			clearTimeout(this._ballStartTimeout);
 		this.transform.position.copyFrom(this._initialPosition);
 		this._physicsBody.setLinearVelocity(Vector3.Zero());
 
@@ -66,7 +66,7 @@ export class Ball extends ScriptComponent {
 	protected	destroy()
 	{
 		if (this._ballStartTimeout !== null)
-			this._ballStartTimeout.close();
+			clearTimeout(this._ballStartTimeout);
 	}
 }
 

@@ -7,8 +7,13 @@ import { Ball } from "@shared/attachedScripts/Ball";
 import { getSceneData, SceneData } from "@shared/SceneData";
 import { Vector3 } from "@babylonjs/core";
 
+export type EndData = {
+	winner : "left" | "right" | "draw",
+	forfeit : boolean
+}
+
 export class GameManager extends ScriptComponent {
-	private static readonly _pointsToWin = 20;
+	private static readonly _pointsToWin = 1;
 
 	private	_goalLeft! : TransformNode;
 	private	_goalRight! : TransformNode;
@@ -34,7 +39,8 @@ export class GameManager extends ScriptComponent {
 	protected	ready()
 	{
 		if (this._sceneData.gameType !== "Multiplayer" && this._sceneData.gameType !== "Server")
-			this._messageBus.PostMessage("gameStart");
+			this._messageBus.PostMessage("game-start");
+		this._messageBus.OnMessage("forfeit", (winner : "left" | "right" | "highestScore") => { this.endMatch(winner, true) });
 	}
 
 	private onTriggerEvent(eventData : IBasePhysicsCollisionEvent)
@@ -54,24 +60,43 @@ export class GameManager extends ScriptComponent {
 
 	public	onGoal(side : "right" | "left")
 	{
-		if (side === "left")
+		if (side === "right")
 		{
 			this._scoreRight++;
 			this._messageBus.PostMessage("updateRightScore", this._scoreRight);
 			if (this._scoreRight === GameManager._pointsToWin)
-				this._ended = true;
+				this.endMatch("right", false);
 		}
 		else
 		{
 			this._scoreLeft++;
 			this._messageBus.PostMessage("updateLeftScore", this._scoreLeft);
 			if (this._scoreLeft === GameManager._pointsToWin)
-				this._ended = true;
+				this.endMatch("left", false);
 		}
-		if (this._ended)
-			this._messageBus.PostMessage("end");
-		else
+		if (!this._ended)
 			this._ball.script.reset();
+	}
+
+	private	endMatch(winner : "left" | "right" | "highestScore", forfeit: boolean)
+	{
+		if (this._ended)
+			return ;
+		this._ended = true;
+		const	endData : EndData = {
+			winner: (winner === "highestScore") ? this.getHighestScoreSide() : winner,
+			forfeit: forfeit
+		}
+		this._messageBus.PostMessage("end", endData);
+	}
+
+	private	getHighestScoreSide()
+	{
+		if (this._scoreLeft > this._scoreRight)
+			return "left";
+		if (this._scoreRight > this._scoreLeft)
+			return "right";
+		return "draw";
 	}
 
 	protected awake()
@@ -83,6 +108,7 @@ export class GameManager extends ScriptComponent {
 	{
 		this._ended = false;
 		this._messageBus.PostMessage("reset");
+		this._messageBus.PostMessage("game-start");
 		this._scoreLeft = 0;
 		this._scoreRight = 0;
 	}

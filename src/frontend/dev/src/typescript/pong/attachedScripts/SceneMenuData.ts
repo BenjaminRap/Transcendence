@@ -4,10 +4,12 @@ import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { CreateSkybox } from "./CreateSkybox";
 import { Animation, EasingFunction, Material, Nullable } from "@babylonjs/core";
 import { Animatable } from "@babylonjs/core/Animations/animatable";
+import { ThemeName } from "../menuStyles";
 
 export class SceneMenuData extends ScriptComponent {
 	public readonly sceneName! : string;
 	public readonly sceneFileName! : string;
+	public readonly style! : ThemeName;
 
 	private _skyboxCreator : (TransformNode & { script : CreateSkybox }) | null = null;
 	public _defaultSkybox : boolean = false;

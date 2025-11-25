@@ -3,16 +3,17 @@ import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { FrontendSceneData } from "../FrontendSceneData";
 import { MenuGUI, SwitchButton } from "../MenuGUI";
-import { Animation, EasingFunction, Nullable, SineEase } from "@babylonjs/core";
+import { Animation, EasingFunction, MotionBlurPostProcess, Nullable, SineEase } from "@babylonjs/core";
 import { Animatable } from "@babylonjs/core/Animations/animatable";
 import { SceneMenuData } from "./SceneMenuData";
 import { InMatchmakingGUI } from "../InMatchmakingGUI";
 import { getFrontendSceneData } from "../PongGame";
+import { applyTheme, ThemeName } from "../menuStyles";
+import { TitleGUI } from "../TitleGUI";
 
 export class CreateMenuGUI extends ScriptComponent {
 	private static readonly _enemyTypes = [ "Local", "Multiplayer", "Bot" ];
 
-	private _arrowImagePath! : string;
 	private _scenesParent! : TransformNode;
 
 	private _scenes! : SceneMenuData[];
@@ -21,6 +22,7 @@ export class CreateMenuGUI extends ScriptComponent {
 	private _sceneData : FrontendSceneData;
 	private _menuGUI! : MenuGUI;
 	private _inMatchmakingGUI! : InMatchmakingGUI;
+	private _titleGUI! : TitleGUI;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "CreateMenuGUI") {
         super(transform, scene, properties, alias);
@@ -31,13 +33,17 @@ export class CreateMenuGUI extends ScriptComponent {
 	protected	awake()
 	{
 		this.setScenes();
-		this.createMenuGUI();
-		this.createInMatchmakingGUI();
+		const	style : ThemeName = (this._scenes.length === 0) ? "basic" : this._scenes[0].style;
+
+		this.createTitleGUI(style);
+		this.createMenuGUI(style);
+		this.createInMatchmakingGUI(style);
 	}
 
 	protected	ready()
 	{
 		this._menuGUI.classList.remove("hidden");
+		this._titleGUI.classList.remove("hidden");
 	}
 
 	private	setScenes()
@@ -54,7 +60,14 @@ export class CreateMenuGUI extends ScriptComponent {
 
 	}
 
-	private	createMenuGUI()
+	private	createTitleGUI(theme : ThemeName)
+	{
+		this._titleGUI = new TitleGUI(theme);
+		this._sceneData.pongHTMLElement.appendChild(this._titleGUI);
+		this._titleGUI.classList.add("hidden");
+	}
+
+	private	createMenuGUI(theme : ThemeName)
 	{
 		const	sceneButtonSwitch : SwitchButton = {
 			items: this._scenes.map((scene) => scene.sceneName),
@@ -71,15 +84,15 @@ export class CreateMenuGUI extends ScriptComponent {
 			currentItemIndex: 0,
 			onItemChange: this.onSkinChange.bind(this)
 		};
-		this._menuGUI = new MenuGUI(this._arrowImagePath, sceneButtonSwitch, enemyTypesButtonSwitch, skinsButtonSwitch, this.onPlay.bind(this));
+		this._menuGUI = new MenuGUI(sceneButtonSwitch, enemyTypesButtonSwitch, skinsButtonSwitch, this.onPlay.bind(this), theme);
 		this._sceneData.pongHTMLElement.appendChild(this._menuGUI);
 		this._menuGUI.classList.add("hidden");
 	}
 
 
-	private	createInMatchmakingGUI()
+	private	createInMatchmakingGUI(theme : ThemeName)
 	{
-		this._inMatchmakingGUI = new InMatchmakingGUI();
+		this._inMatchmakingGUI = new InMatchmakingGUI(theme);
 		this._sceneData.pongHTMLElement.appendChild(this._inMatchmakingGUI);
 		this._inMatchmakingGUI.classList.add("hidden");
 		
@@ -92,11 +105,19 @@ export class CreateMenuGUI extends ScriptComponent {
 	{
 		if (this._animation)
 			return false;
-		this._scenes[newIndex].onSceneSwitch("added", 0.5, this._easeFunction);
-		this._scenes[currentIndex].onSceneSwitch("removed", 0.5, this._easeFunction);
+		const	newScene = this._scenes[newIndex];
+		const	currentScene = this._scenes[currentIndex];
+
+		newScene.onSceneSwitch("added", 0.5, this._easeFunction);
+		currentScene.onSceneSwitch("removed", 0.5, this._easeFunction);
+
+		applyTheme(this._menuGUI, newScene.style);
+		applyTheme(this._inMatchmakingGUI, newScene.style);
+		applyTheme(this._titleGUI, newScene.style);
 		const	distance = this._scenes[newIndex].transform.position.subtract(this._scenes[currentIndex].transform.position);
 		const	startPosition = this._scenesParent.position;
 		const	endPosition = this._scenesParent.position.subtract(distance);
+
 		this._animation = Animation.CreateAndStartAnimation("menuMapAnim", this._scenesParent, "position", 60, 30, startPosition, endPosition, Animation.ANIMATIONLOOPMODE_CONSTANT, this._easeFunction, () => { this._animation = null });
 		return true;
 	}
@@ -108,19 +129,17 @@ export class CreateMenuGUI extends ScriptComponent {
 		this._sceneData.pongHTMLElement.cancelMatchmaking();
 	}
 
-	private	onEnemyTypeChange(currentIndex : number, newIndex : number) : boolean
+	private	onEnemyTypeChange(_currentIndex : number, _newIndex : number) : boolean
 	{
-		console.log("enemy type change");
 		return true;
 	}
 
-	private	onSkinChange(currentIndex : number, newIndex : number) : boolean
+	private	onSkinChange(_currentIndex : number, _newIndex : number) : boolean
 	{
-		console.log("skin change");
 		return true;
 	}
 
-	private onPlay(sceneIndex : number, enemyTypeIndex : number, skinIndex : number)
+	private onPlay(sceneIndex : number, enemyTypeIndex : number, _skinIndex : number)
 	{
 		const	sceneName = this._scenes[sceneIndex].sceneFileName;
 
@@ -150,6 +169,8 @@ export class CreateMenuGUI extends ScriptComponent {
 			this._menuGUI.remove();
 		if (this._inMatchmakingGUI)
 			this._inMatchmakingGUI.remove();
+		if (this._titleGUI)
+			this._titleGUI.remove();
 	}
 }
 

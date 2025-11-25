@@ -5,10 +5,13 @@ import { ClientToServerEvents } from "@shared/MessageType";
 
 export class	ServerProxy
 {
+	public readonly opponentIndex : number;
+
 	constructor(
 		private _multiplayerHandler : MultiplayerHandler,
 		public readonly playerIndex : number
 	) {
+		this.opponentIndex = (playerIndex === 0) ? 1 : 0;
 	}
 
 	public keyUpdate(key : "up" | "down", event : "keyUp" | "keyDown")
@@ -22,7 +25,7 @@ export class	ServerProxy
 		this._multiplayerHandler.sendServerMessage("input-infos", keysUpdate);
 	}
 
-	public onServerMessage() : Observable<GameInfos | "room-closed" | "server-error"> | null
+	public onServerMessage() : Observable<GameInfos | "room-closed" | "server-error" | "forfeit"> | null
 	{
 		return this._multiplayerHandler.onServerMessage();
 	}

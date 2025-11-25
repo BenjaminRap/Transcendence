@@ -1,0 +1,83 @@
+type Theme = {
+	"--text-color": string,
+	"--font-weight": string,
+	"--rounded": string,
+	"--border-color": string,
+	"--border-width": string,
+	"--background-image": string,
+	"--background-color": string,
+	"--hover-scale": string,
+	"--hover-brightness": string,
+	"--hover-background-color": string,
+	"--hover-text-color": string,
+	"--active-scale": string,
+	"--active-brightness": string,
+	"--backdrop-blur": string,
+	"--switch-button-image": string,
+	"--switch-button-image-hover": string,
+	"--title-left": string,
+	"--title-color": string,
+	"--title-font": string,
+	"--title-shadow": string
+}
+
+type Themes = {
+	"colorful": Theme,
+	"basic": Theme
+}
+
+const	themes : Themes = {
+	"colorful": {
+		"--text-color": "var(--color-white)",
+		"--font-weight": "var(--font-weight-semibold)",
+		"--rounded": "calc(infinity * 1px)",
+		"--border-color": "var(--color-blue-300)",
+		"--border-width": "0.3vw",
+		"--background-image": "linear-gradient(to bottom, var(--color-cyan-500), var(--color-blue-500))",
+		"--background-color": "unset",
+		"--hover-scale": "115%",
+		"--hover-brightness": "90%",
+		"--hover-background-color": "unset",
+		"--hover-text-color": "var(--color-white)",
+		"--active-scale": "90%",
+		"--active-brightness": "75%",
+		"--backdrop-blur": "0",
+		"--switch-button-image": "url(/scenes/assets/project/textures/arrowColorful.png)",
+		"--switch-button-image-hover": "url(/scenes/assets/project/textures/arrowColorful.png)",
+		"--title-left": "calc(1/3 * 100%)",
+		"--title-color": "var(--color-black)",
+		"--title-font": "pixel",
+		"--title-shadow": "8px 8px 4px rgba(75, 80, 90, 1)"
+	},
+	"basic": {
+		"--text-color": "var(--color-white)",
+		"--font-weight": "var(--font-weight-bold)",
+		"--rounded": "var(--radius-lg)",
+		"--border-color": "var(--color-white)",
+		"--border-width": "0.3vw",
+		"--background-image": "unset",
+		"--background-color": "transparent",
+		"--hover-scale": "110%",
+		"--hover-brightness": "100%",
+		"--hover-background-color": "var(--color-white)",
+		"--hover-text-color": "var(--color-black)",
+		"--active-scale": "95%",
+		"--active-brightness": "100%",
+		"--backdrop-blur": "var(--blur-md)",
+		"--switch-button-image": "url(/scenes/assets/project/textures/arrowBasic.png)",
+		"--switch-button-image-hover": "url(/scenes/assets/project/textures/arrowBasicHover.png)",
+		"--title-left": "calc(1/2 * 100%)",
+		"--title-color": "var(--color-white)",
+		"--title-font": "pixel",
+		"--title-shadow": "none"
+	}
+};
+
+export type ThemeName = keyof Themes;
+
+export function	applyTheme(element : HTMLElement, theme : ThemeName)
+{
+	Object.entries(themes[theme]).forEach(([key, value]) => {
+		element.style.setProperty(key, value);
+	})
+}

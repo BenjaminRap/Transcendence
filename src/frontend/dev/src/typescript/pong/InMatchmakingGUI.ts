@@ -1,10 +1,13 @@
+import { applyTheme, ThemeName } from "./menuStyles";
+
 export class	InMatchmakingGUI extends HTMLElement
 {
 	private	_cancelButton? : HTMLButtonElement;
 
-	constructor()
+	constructor(type? : ThemeName)
 	{
 		super();
+		applyTheme(this, type ?? "basic");
 	}
 
 	public	connectedCallback()
@@ -18,7 +21,7 @@ export class	InMatchmakingGUI extends HTMLElement
 					</svg>
 					<p class="font-bold text-center leading-[normal] text-[3vw] text-black">Waiting For A Match</p>
 				</div>
-				<button id="inMatchmakingGUICancel"class="text-center line-he text-white bg-blue-500 font-semibold rounded-full border-solid border-red-300 border-[0.3vw] text-[3vw] leading-[normal] mt-[20%] bg-gradient-to-b from-amber-600 to-red-500 hover:scale-115 hover:brightness-90 active:scale-90 active:brightness-75 pointer-events-auto transition-all">Cancel</button>
+				<button id="inMatchmakingGUICancel"class="text-center text-[3vw] mt-[20%] pointer-events-auto menu-button">Cancel</button>
 			</div>
 		`;
 		this._cancelButton = this.querySelector("button#inMatchmakingGUICancel")!;

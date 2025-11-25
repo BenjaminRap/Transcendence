@@ -1,22 +1,25 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
-import { PauseGUI } from "../pauseGUI";
+import { PauseGUI } from "../PauseGUI";
 import { InputManager } from "@shared/attachedScripts/InputManager";
-import { GameManager } from "@shared/attachedScripts/GameManager";
+import { EndData, GameManager } from "@shared/attachedScripts/GameManager";
 import { FrontendSceneData } from "../FrontendSceneData";
-import { EndGUI } from "../endGUI";
+import { EndGUI } from "../EndGUI";
 import { getFrontendSceneData } from "../PongGame";
+import { InMatchmakingGUI } from "../InMatchmakingGUI";
+import { ThemeName } from "../menuStyles";
 
 export class CreateInGameGUI extends ScriptComponent {
-	private _type : "basic" | "colorful" = "basic";
 	private _inputManager! : TransformNode;
 	private _gameManager! : TransformNode & { script : GameManager };
+	private _style! : ThemeName;
 
 	private _pauseGUI! : PauseGUI;
 	private _endGUI! : EndGUI;
 	private _defaultTimeStep : number;
 	private _sceneData : FrontendSceneData;
+	private _inMatchmakingGUI! : InMatchmakingGUI;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "CreatePauseGUI") {
         super(transform, scene, properties, alias);
@@ -31,8 +34,9 @@ export class CreateInGameGUI extends ScriptComponent {
 
 		const	rematchButtonEnabled : boolean = this._sceneData.gameType === "Multiplayer";
 
-		this.createPauseGUI(rematchButtonEnabled);
-		this.createEndGUI(rematchButtonEnabled);
+		this.createPauseGUI(this._style);
+		this.createEndGUI(rematchButtonEnabled, this._style);
+		this.createInMatchmakingGUI(this._style);
 	}
 
 	protected	ready()
@@ -41,30 +45,29 @@ export class CreateInGameGUI extends ScriptComponent {
 
 		inputManager.getEscapeInput().addKeyObserver((event : "keyDown" | "keyUp") => {
 			if (event == "keyDown" && !this._gameManager.script.hasEnded())
-				this.toggleMenu(this._pauseGUI)
+				this.toggleMenu(this._pauseGUI);
 		});
+
+		this._sceneData.messageBus.OnMessage("end", (endData : EndData) => { this.onGameEnd(endData) });
 	}
 
-	private	createPauseGUI(rematchButtonEnabled : boolean)
+	private	createPauseGUI(theme : ThemeName)
 	{
-		this._pauseGUI = new PauseGUI(this._type, rematchButtonEnabled);
+		this._pauseGUI = new PauseGUI(theme);
 		this._sceneData.pongHTMLElement.appendChild(this._pauseGUI);
 		this.toggleMenu(this._pauseGUI);
 
 		const	buttons = this._pauseGUI.getButtons()!;
 
 		buttons.continue.addEventListener("click", () => { this.toggleMenu(this._pauseGUI) });
-		buttons.restart.addEventListener("click", () => { this.onRestart() });
-		buttons.rematch?.addEventListener("click", () => { this.onRematch() });
+		buttons.forfeit.addEventListener("click", () => { this.onForfeit() });
 		buttons.goToMenu.addEventListener("click", () => { this.onGoToMenu() });
 		buttons.quit.addEventListener("click", () => { this.onQuit() });
-
-		this._sceneData.messageBus.OnMessage("end", () => { this.setMenuVisibility(this._pauseGUI, false) });
 	}
 
-	private	createEndGUI(rematchButtonEnabled : boolean)
+	private	createEndGUI(rematchButtonEnabled : boolean, theme : ThemeName)
 	{
-		this._endGUI = new EndGUI(this._type, rematchButtonEnabled);
+		this._endGUI = new EndGUI(theme, rematchButtonEnabled);
 		this._sceneData.pongHTMLElement.appendChild(this._endGUI);
 		this.toggleMenu(this._endGUI);
 
@@ -74,8 +77,26 @@ export class CreateInGameGUI extends ScriptComponent {
 		buttons.rematch?.addEventListener("click", () => { this.onRematch() });
 		buttons.goToMenu.addEventListener("click", () => { this.onGoToMenu() });
 		buttons.quit.addEventListener("click", () => { this.onQuit() });
+	}
 
-		this._sceneData.messageBus.OnMessage("end", () => { this.setMenuVisibility(this._endGUI, true) });
+	private	createInMatchmakingGUI(theme : ThemeName)
+	{
+		this._inMatchmakingGUI = new InMatchmakingGUI(theme);
+		this._sceneData.pongHTMLElement.appendChild(this._inMatchmakingGUI);
+		this._inMatchmakingGUI.classList.add("hidden");
+		
+		const	cancelButton = this._inMatchmakingGUI.getCancelButton()!;
+
+		cancelButton.addEventListener("click", () => { this.quitMatchmaking() });
+	}
+
+	private	onGameEnd(endData : EndData)
+	{
+		this.setMenuVisibility(this._pauseGUI, false);
+		this.setMenuVisibility(this._endGUI, true);
+
+		const	winText = `${(endData.winner === "draw") ? "Draw" : "Win"} ${endData.forfeit ? "By Forfeit" : ""}`;
+		this._endGUI.setWinner(endData.winner, winText);
 	}
 
 	private	toggleMenu(menu : HTMLElement) : void
@@ -98,9 +119,28 @@ export class CreateInGameGUI extends ScriptComponent {
 			this.toggleMenu(menu);
 	}
 
+	private	quitMatchmaking()
+	{
+
+	}
+
 	private	onRematch() : void
 	{
 		this._sceneData.serverProxy?.sendServerMessage("rematch");
+	}
+
+	private	onForfeit()
+	{
+		if (this._sceneData.gameType === "Multiplayer" && this._sceneData.serverProxy)
+		{
+			const	opponentIndex = this._sceneData.serverProxy.opponentIndex;
+			const	winningSide = (opponentIndex === 0) ? "left" : "right";
+
+			this._sceneData.messageBus.PostMessage("forfeit", winningSide);
+			this._sceneData.serverProxy.sendServerMessage("forfeit");
+		}
+		else if (this._sceneData.serverProxy)
+			this._sceneData.messageBus.PostMessage("forfeit", "highestScore");
 	}
 
 	private	onRestart() : void
@@ -108,7 +148,7 @@ export class CreateInGameGUI extends ScriptComponent {
 		this._sceneData.havokPlugin.setTimeStep(this._defaultTimeStep);
 		this._pauseGUI.classList.add("hidden");
 		this._endGUI.classList.add("hidden");
-		this._sceneData.serverProxy?.sendServerMessage("restart");
+		this._sceneData.serverProxy?.sendServerMessage("leave-game");
 		this._gameManager.script.restart();
 	}
 

@@ -31,7 +31,7 @@ export type KeysUpdate = zod.infer<typeof ZodKeysUpdate>;
 
 export const ZodGameInfos = zod.discriminatedUnion("type", [
 	zod.object({
-		type: zod.literal("itemsUpdate"),
+type: zod.literal("itemsUpdate"),
 		infos: ZodItemsUpdate,
 	}),
 	zod.object({
@@ -45,8 +45,9 @@ export const ZodGameInfos = zod.discriminatedUnion("type", [
 ]);
 export type GameInfos = zod.infer<typeof ZodGameInfos>;
 
+const	ZodPlayerIndex = zod.int().min(0).max(1);
+
 export const ZodGameInit = zod.object({
-	playerIndex: zod.int().min(0).max(1)
+	playerIndex: ZodPlayerIndex
 })
 export type GameInit = zod.infer<typeof ZodGameInit>;
-
