@@ -35,10 +35,10 @@ model Friendship {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  requester   User    @relation("requesterFriendships", fields: [requesterId], references: [id])
+  requester   User    @relation("requesterFriendships", fields: [requesterId], references: [id], onDelete: Cascade)
   requesterId Int
 
-  receiver    User      @relation("receiverFriendships", fields: [receiverId], references: [id])
+  receiver    User      @relation("receiverFriendships", fields: [receiverId], references: [id], onDelete: Cascade)
   receiverId  Int
 
   @@unique([requesterId, receiverId])
@@ -51,10 +51,10 @@ model Match {
 
   createdAt   DateTime      @default(now())
 
-  winner      User    @relation("matchWinner", fields: [winnerId], references: [id])
+  winner      User    @relation("matchWinner", fields: [winnerId], references: [id], onDelete: Cascade)
   winnerId    Int
 
-  loser       User    @relation("matchLoser", fields: [loserId], references: [id])
+  loser       User    @relation("matchLoser", fields: [loserId], references: [id], onDelete: Cascade)
   loserId     Int
 
   scoreWinner Int     @default(0)

@@ -76,7 +76,8 @@ export class SuscriberService {
             friends: sortedFriendships,
         };
     }
-    // ----------------------------------------------------------------------------- //
+    
+	// ----------------------------------------------------------------------------- //
     async updatePassword(id: number, currentPassword: string, newPassword: string): Promise<void> {
         const user = await this.getById(Number(id));
         if (!user) {

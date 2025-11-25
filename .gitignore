@@ -8,3 +8,4 @@ secrets/
 *.crt
 .env
 dockerFiles/nginx/website/
+src/backend/test/.test_tokens

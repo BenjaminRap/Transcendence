@@ -210,19 +210,11 @@ export class SuscriberController {
 
     // ----------------------------------------------------------------------------- //
     // DELETE /suscriber/deleteaccount
-    async deleteAccount(request: FastifyRequest<{ Body: DeleteAccount }>, reply: FastifyReply) {
+    async deleteAccount(request: FastifyRequest, reply: FastifyReply) {
         try {
             // the accessToken and tokenKey are already validated in the middleware
             const id = (request as any).user.userId;
             
-            if (!request.body.confirmChoice) {
-                return reply.status(400).send({
-                    success: false,
-                    message: 'Account deletion not confirmed',
-                    redirectTo: '/suscriber/profile'
-                });
-            }
-
             // delete user or throw exception USER NOT FOUND
             await this.suscriberService.deleteAccount(Number(id));
 
