@@ -13,161 +13,195 @@ interface Friend {
 	username: string;
 	linkofavatar: string;
 	status: string;
+	pending: boolean;
 }
 
 const friends: Friend[] = [
 	{
 		username: "Friend1",
 		linkofavatar: "https://i.pravatar.cc/150?img=5",
-		status: "Online"
+		status: "Online",
+		pending: true
 	},
 	{
 		username: "Friend2",
 		linkofavatar: "https://i.pravatar.cc/150?img=6",
-		status: "Last seen : 2h ago"
+		status: "Online: 2 hours ago",
+		pending: true
 	},
 	{
 		username: "Friend3",
 		linkofavatar: "https://i.pravatar.cc/150?img=7",
-		status: "In Game"
+		status: "In Game",
+		pending: true
 	},
 	{
 		username: "Friend4",
 		linkofavatar: "https://i.pravatar.cc/150?img=8",
-		status: "Online"
+		status: "Online",
+		pending: true
 	},{
 		username: "Friend1",
 		linkofavatar: "https://i.pravatar.cc/150?img=5",
-		status: "Online"
+		status: "Online",
+		pending: false
+
 	},
 	{
-		username: "Friend2",
+		username: "Frieqqqqqqqqqqqqqqq",
 		linkofavatar: "https://i.pravatar.cc/150?img=6",
-		status: "Last seen : 2h ago"
+		status: "Online: 2 hours ago",
+		pending: false
 	},
 	{
 		username: "Friend3",
 		linkofavatar: "https://i.pravatar.cc/150?img=7",
-		status: "In Game"
+		status: "In Game",
+		pending: false
 	},
 	{
 		username: "Friend4",
 		linkofavatar: "https://i.pravatar.cc/150?img=8",
-		status: "Online"
+		status: "Online",
+		pending: false
 	},{
 		username: "Friend1",
 		linkofavatar: "https://i.pravatar.cc/150?img=5",
-		status: "Online"
+		status: "Online",
+		pending: false
 	},
 	{
 		username: "Friend2",
 		linkofavatar: "https://i.pravatar.cc/150?img=6",
-		status: "Last seen : 2h ago"
+		status: "Online: 2 hours ago",
+		pending: false
 	},
 	{
 		username: "Friend3",
 		linkofavatar: "https://i.pravatar.cc/150?img=7",
-		status: "In Game"
+		status: "In Game",
+		pending: false
 	},
 	{
 		username: "Friend4",
 		linkofavatar: "https://i.pravatar.cc/150?img=8",
-		status: "Online"
+		status: "Online",
+		pending: false
 	},{
 		username: "Friend1",
 		linkofavatar: "https://i.pravatar.cc/150?img=5",
-		status: "Online"
+		status: "Online",
+		pending: false
 	},
 	{
 		username: "Friend2",
 		linkofavatar: "https://i.pravatar.cc/150?img=6",
-		status: "Last seen : 2h ago"
+		status: "Online: 2 hours ago",
+		pending: false
 	},
 	{
 		username: "Friend3",
 		linkofavatar: "https://i.pravatar.cc/150?img=7",
-		status: "In Game"
+		status: "In Game",
+		pending: false
 	},
 	{
 		username: "Friend4",
 		linkofavatar: "https://i.pravatar.cc/150?img=8",
-		status: "Online"
+		status: "Online",
+		pending: false
 	},{
 		username: "Friend1",
 		linkofavatar: "https://i.pravatar.cc/150?img=5",
-		status: "Online"
+		status: "Online",
+		pending: false
 	},
 	{
 		username: "Friend2",
 		linkofavatar: "https://i.pravatar.cc/150?img=6",
-		status: "Last seen : 2h ago"
+		status: "Online: 2 hours ago",
+		pending: false
 	},
 	{
 		username: "Friend3",
 		linkofavatar: "https://i.pravatar.cc/150?img=7",
-		status: "In Game"
+		status: "In Game",
+		pending: false
 	},
 	{
 		username: "Friend4",
 		linkofavatar: "https://i.pravatar.cc/150?img=8",
-		status: "Online"
+		status: "Online",
+		pending: false
 	},{
 		username: "Friend1",
 		linkofavatar: "https://i.pravatar.cc/150?img=5",
-		status: "Online"
+		status: "Online",
+		pending: false
 	},
 	{
 		username: "Friend2",
 		linkofavatar: "https://i.pravatar.cc/150?img=6",
-		status: "Last seen : 2h ago"
+		status: "Online: 2 hours ago",
+		pending: false
 	},
 	{
 		username: "Friend3",
 		linkofavatar: "https://i.pravatar.cc/150?img=7",
-		status: "In Game"
+		status: "In Game",
+		pending: false
 	},
 	{
 		username: "Friend4",
 		linkofavatar: "https://i.pravatar.cc/150?img=8",
-		status: "Online"
+		status: "Online",
+		pending: false
 	},{
 		username: "Friend1",
 		linkofavatar: "https://i.pravatar.cc/150?img=5",
-		status: "Online"
+		status: "Online",
+		pending: false
 	},
 	{
 		username: "Friend2",
 		linkofavatar: "https://i.pravatar.cc/150?img=6",
-		status: "Last seen : 2h ago"
+		status: "Online: 2 hours ago",
+		pending: false
 	},
 	{
 		username: "Friend3",
 		linkofavatar: "https://i.pravatar.cc/150?img=7",
-		status: "In Game"
+		status: "In Game",
+		pending: false
 	},
 	{
 		username: "Friend4",
 		linkofavatar: "https://i.pravatar.cc/150?img=8",
-		status: "Online"
+		status: "Online",
+		pending: false
 	},{
 		username: "Friend1",
 		linkofavatar: "https://i.pravatar.cc/150?img=5",
-		status: "Online"
+		status: "Online",
+		pending: false
 	},
 	{
 		username: "Friend2",
 		linkofavatar: "https://i.pravatar.cc/150?img=6",
-		status: "Last seen : 2h ago"
+		status: "Online: 2 hours ago",
+		pending: false
 	},
 	{
 		username: "Friend3",
 		linkofavatar: "https://i.pravatar.cc/150?img=7",
-		status: "In Game"
+		status: "In Game",
+		pending: false
 	},
 	{
 		username: "Friend4",
 		linkofavatar: "https://i.pravatar.cc/150?img=8",
-		status: "Online"
+		status: "Online",
+		pending: false
 	},
 ];
 
@@ -322,20 +356,48 @@ function createFriendList() : HTMLDivElement
 	for (let i = 0; i < friends.length; i++) {
 		const friend = friends[i];
 		const friendDiv = document.createElement('div');
-		friendDiv.className = "flex items-center px-4 gap-x-4";
+		friendDiv.className = "flex flex-wrap items-center gap-x-4 place-content-between h-full";
 		friendDiv.innerHTML = `
-		<img src="${friend.linkofavatar}" alt="Avatar"
-					class="w-10 h-10 border border-green-500"></img>
-				<div class="flex flex-col gap-y-0">
-					<p>${friend.username}</p>
-					<p style="font-size: 10px;">${friend.status}</p>
+				<div class="flex flex-wrap items-center gap-x-4 w-auto border-red-600">
+					<img src="${friend.linkofavatar}" alt="Avatar" class="w-10 h-10 border border-green-500"></img>
+					<div class="flex flex-col gap-y-0">
+						<div class="flex flex-wrap">
+							<p>${friend.username}</p>
+						</div>
+						<p style="font-size: 10px;">${friend.status}</p>
+					</div>
 				</div>
-				<button id="removeFriendButton" class="ml-auto p-1 border border-green-500 hover:underline hover:underline-offset-2 cursor-pointer">Remove</button>
 		`
-		const removeButton = friendDiv.querySelector('#removeFriendButton') as HTMLButtonElement;
-		removeButton.addEventListener('click', () => {
-			removeFriend(friend.username);
-		});
+		if (friend.pending) {
+			const pendingTag = document.createElement('div');
+			pendingTag.className = "flex gap-x-2";
+			pendingTag.innerHTML = `
+				<button id="AcceptRequest" class="ml-auto p-1 border border-green-500 hover:underline hover:underline-offset-2 cursor-pointer">Accept</button>
+				<button id="RefuseRequest" class="ml-auto p-1 border border-green-500 hover:underline hover:underline-offset-2 cursor-pointer">Refuse</button>
+			`
+			const buttonAccept = pendingTag.querySelector('#AcceptRequest');
+			const buttonRefuse = pendingTag.querySelector('#RefuseRequest');
+			buttonAccept?.addEventListener('click', () => {
+				acceptFriendRequest(friend.username);
+			});
+			buttonRefuse?.addEventListener('click', () => {
+				refuseFriendRequest(friend.username);
+			});
+			friendDiv.appendChild(pendingTag);
+		}
+		else
+		{
+			const pendingTag = document.createElement('div');
+			pendingTag.className = "flex gap-x-2";
+			pendingTag.innerHTML = `
+				<button id="removeFriendButton" class="ml-auto p-1 border border-green-500 hover:underline hover:underline-offset-2 cursor-pointer">Remove</button>
+			`
+			const removeButton = pendingTag.querySelector('#removeFriendButton');
+			removeButton?.addEventListener('click', () => {
+				removeFriend(friend.username);
+			});
+			friendDiv.appendChild(pendingTag);
+		}
 		friendElement.appendChild(friendDiv);
 		if (i < friends.length - 1)
 			friendElement.appendChild(lign.cloneNode());
@@ -376,7 +438,7 @@ export namespace ExtendedView {
 		searchBar.type = "text";
 		searchBar.placeholder = "Search "+ (dataType === 'friend' ? 'friends' : 'matches');
 		searchBar.autocomplete = "off";
-		searchBar.className = "terminal-font border-green-500 border-2 resize-none w-full outline-0 p-2 h-auto overflow-y-hidden";
+		searchBar.className = "terminal-font border-green-500 border-2 resize-none w-full outline-0 p-2 my-2 h-auto overflow-y-hidden";
 		container.appendChild(searchBar);
 
 		if (dataType === 'friend') {
@@ -435,7 +497,15 @@ export namespace ExtendedView {
 	};
 }
 
+
+function acceptFriendRequest(username: string) {
+	console.log(`Accepted friend request from: ${username}`);
+}
+
+function refuseFriendRequest(username: string) {
+	console.log(`Refused friend request from: ${username}`);
+}
+
 function removeFriend(username: string) {
-	// Implement friend removal logic here
 	console.log(`Removing friend: ${username}`);
 }
