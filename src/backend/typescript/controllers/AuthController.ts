@@ -14,11 +14,6 @@ export class AuthController {
     // POST auth/register
     async register(request: FastifyRequest<{ Body: RegisterData }>, reply: FastifyReply) {
         try {
-            /*  - Check presence and the syntax of all these fields
-                    .username
-                    .password
-                    .email
-            */
             const validation = AuthSchema.register.safeParse(request.body);
             if (!validation.success)
                 return reply.status(400).send({
@@ -51,7 +46,6 @@ export class AuthController {
     // POST auth/login
     async login(request: FastifyRequest<{ Body: LoginData }>, reply: FastifyReply) {
         try {
-            // Check if the fields are not empty and verify the password format
             const validation = AuthSchema.login.safeParse(request.body);
             if (!validation.success)
                 return reply.status(400).send({ 
@@ -113,43 +107,5 @@ export class AuthController {
         }
     }
 
-    // --------------------------------------------------------------------------------- //
-    // POST auth/verifypassword
-    async verifyPassword(request: FastifyRequest<{ Body: VerifData }>, reply: FastifyReply) {
-        try {
-            const user = (request as any).user;
-
-            const validation = AuthSchema.verifyPassword.safeParse(request.body);
-            if (!validation.success)
-                return reply.status(400).send({
-                    success: false,
-                    message: validation.error?.issues?.[0]?.message || 'Invalid input'
-                });
-
-            // verify password
-            const tokenKey = await this.authService.verifyPassword(user.userId, validation.data.password);
-
-            return reply.status(200).send({
-                success: true,
-                message: 'Password verification successful',
-                tokenKey,
-            });
-        } catch (error) {
-            if (error instanceof AuthException) {
-                switch (error.code) {
-                    case AuthError.USR_NOT_FOUND:
-                        return reply.status(404).send({ success: false, message: error.message });
-                    default:
-                        return reply.status(401).send({ success: false, message: error.message });
-                }
-            }
-
-            request.log.error(error);
-            return reply.status(500).send({
-                success: false,
-                message: 'Internal server error',
-            });
-        }
-    }
 }
 

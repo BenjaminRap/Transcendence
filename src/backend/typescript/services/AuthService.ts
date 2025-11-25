@@ -27,22 +27,12 @@ export class AuthService {
 
         const hashedPassword = await this.passwordHasher.hash(data.password);
 
-        if (data.avatar) {
-            /**
-             * appeler le controller et lui laisser assurer la securite vis a vis
-             * gerer la mise a jour de l'avatar suivant le retour du controller
-             * 
-            */
-           
-        }
-
         // create user in the DB
         const user = await this.prisma.user.create({
             data: {
                 username: data.username,
                 email: data.email,
                 password: hashedPassword,
-                avatar: data.avatar,
             },
         });
 
@@ -84,20 +74,6 @@ export class AuthService {
             throw new AuthException(AuthError.USR_NOT_FOUND, AuthError.USR_NOT_FOUND);
         }
         return await this.tokenManager.generatePair(userId, email);
-    }
-
-    // --------------------------------------------------------------------------------- //
-    async verifyPassword(userId: number, password: string): Promise<TokenKey> {
-        const user = await this.findById(Number(userId));
-        if (!user) {
-            throw new AuthException(AuthError.USR_NOT_FOUND, AuthError.USR_NOT_FOUND);
-        }
-        
-        if ( !await this.passwordHasher.verify(password, user.password) ) {
-            throw new AuthException(AuthError.INVALID_CREDENTIALS, 'Invalid password');
-        }
-        
-        return await this.tokenManager.generateUnique(String(user.id), user.email, "5m");
     }
 
     // ==================================== PRIVATE ==================================== //

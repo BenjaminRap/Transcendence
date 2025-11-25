@@ -64,12 +64,6 @@ _Possibles responses:_
     "message": "Invalid or missing token in the header"
   }
 
-❌ 403 Forbidden :
-  {
-    "success": false,
-    "message": "Invalid / missing or expred tokenKey in the body"
-  } **il faut rappeler l'API POST /auth/verifypassword qui renvoie un token valide**
-
 ❌ 400 Bad Request :
   {
     "success": false,
@@ -158,19 +152,13 @@ _Possibles responses:_
 
 -------------------------------------------------------------------------------------------------------------------------
 
-**PUT suscriber/deleteaccount**
+**PUT suscriber/delete/account**
 
 _Description :_ permet de supprimer son profile
 
 _Mandatory headers :_
   Content-Type: application/json,
   Authorization: Bearer <TOKEN>
-
-_Body :_ JSON
-  {
-    "tokenKey":           string  -> "token recupere via API /auth/verifypassword"
-    "confirmChoice":      boolean -> true si l'utilisateur confirme son choix de changer mot de passe 
-  }
 
 _Possibles responses:_
 
@@ -180,19 +168,6 @@ _Possibles responses:_
   {
     "success": false,
     "message": "Invalid or missing token in the header"
-  }
-
-❌ 403 Forbidden :
-  {
-    "success": false,
-    "message": "Invalid / missing or expred tokenKey in the body"
-  } **il faut rappeler l'API POST /auth/verifypassword qui renvoie un token valide**
-
-❌ 400 Bad Request :
-  {
-    "success":    false,
-    "message":    "confimChoice n'est pas true",
-    "redirectTo": "suscriber/profile"
   }
 
 ❌ 404 Not Found :

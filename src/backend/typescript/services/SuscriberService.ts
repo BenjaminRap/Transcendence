@@ -33,19 +33,9 @@ export class SuscriberService {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
         }
 
-        const matchesWon = user.matchesWons?.length || 0;
-        const matchesLost = user.matchesLoses?.length || 0;
-        const totalMatches = matchesWon + matchesLost;
-        const ratio = totalMatches > 0 ? (matchesWon / totalMatches * 100).toFixed(2) : "0.00";
+		const stats: GameStats = this.calculateStats(user);
 
-        const gameStats: GameStats = {
-            wins: matchesWon,
-            losses: matchesLost,
-            total: totalMatches,
-            winRate: parseFloat(ratio),
-        };
-
-        // Récupérer les 4 derniers matchs
+		// Get last 4 matches
         const allMatches = [
             ...(user.matchesWons || []),
             ...(user.matchesLoses || []),
@@ -53,12 +43,13 @@ export class SuscriberService {
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, 4);
 
-        // Récupérer les 4 amis avec PENDING en priorité
+		// Get friendships
         const allFriendships = [
             ...(user.sentRequests || []),
             ...(user.receivedRequests || []),
         ];
 
+		//  and sort by PENDING status first
         const sortedFriendships = allFriendships
             .sort((a, b) => {
                 if (a.status === "PENDING" && b.status !== "PENDING") return -1;
@@ -71,7 +62,7 @@ export class SuscriberService {
             id: user.id.toString(),
             avatar: user.avatar,
             username: user.username,
-            gameStats,
+            gameStats: stats,
             lastMatchs: allMatches,
             friends: sortedFriendships,
         };
@@ -197,34 +188,6 @@ export class SuscriberService {
         });
     }
 
-    // ----------------------------------------------------------------------------- //
-    async getStats(id: number): Promise<SuscriberStats>{
-        if (!this.isExist(id)) {
-            throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
-        }
-
-        const gamesPlayed = await this.prisma.match.count({
-            where: {
-                OR: [
-                    { winnerId: id },
-                    { loserId: id }
-                ]
-            }
-        });
-
-        const gamesWon = await this.prisma.match.count({
-            where: { winnerId: id }
-        });
-
-        const winRate = gamesPlayed > 0 ? (gamesWon / gamesPlayed) * 100 : 0;
-
-        return {
-            gamesPlayed,
-            gamesWon,
-            winRate: parseFloat(winRate.toFixed(2))
-        } as SuscriberStats;
-    }
-
     // ================================== PRIVATE ================================== //
 
     // ----------------------------------------------------------------------------- //
@@ -237,9 +200,25 @@ export class SuscriberService {
         const user = await this.prisma.user.findFirst({ where: { id: Number(id) }, select: { id: true } });
         return user ? true : false;
     }
-    // ----------------------------------------------------------------------------- //
+    
+	// ----------------------------------------------------------------------------- //
     private hasChanged(userData: any, comparedData: any): boolean {
-        return userData === comparedData;
+		return userData === comparedData;
     }
+	
+	// ----------------------------------------------------------------------------- //
+	private calculateStats(user: any): GameStats {
+		const matchesWon = user.matchesWons?.length || 0;
+		const matchesLost = user.matchesLoses?.length || 0;
+		const totalMatches = matchesWon + matchesLost;
+		const ratio = totalMatches > 0 ? (matchesWon / totalMatches * 100).toFixed(2) : "0.00";
+
+		return {
+			wins: matchesWon,
+			losses: matchesLost,
+			total: totalMatches,
+			winRate: parseFloat(ratio),
+		};
+	}
 }
 

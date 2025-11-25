@@ -16,7 +16,4 @@ export function authRoutes(
         preHandler: middleware.refreshAuthenticate,
     }, controller.refresh.bind(controller));
  
-    // fastify.post<{ Body: VerifData }>('/verifypassword', {
-    //     preHandler: middleware.authenticate,
-    // }, controller.verifyPassword.bind(controller));
 }

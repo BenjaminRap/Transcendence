@@ -132,9 +132,9 @@ friend_test() {
 			-H "Authorization: Bearer ${accessTokens[0]}" \
 			-d "{}"
 		
-		if (( $i % 2 == 0 )); then
+		if (( $i % 2 != 0 )); then
 			(( user = i - 1 ))
-			echo "user=$user" ; echo "User $i try to accepts friend request from user 1"
+			echo ; echo "User $i try to accepts friend request from user 1"
 			curl -X PUT "http://localhost:8181/friend/accept/1" \
 				-H "Content-Type: application/json" \
 				-H "Authorization: Bearer ${accessTokens[$user]}" \

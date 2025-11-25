@@ -34,7 +34,6 @@ export async function suscriberRoute(
     fastify.delete('/delete/avatar', {
         preHandler: [
             middleware.auth.authenticate,
-            // middleware.auth.keyAuthenticate
         ]
     }, controller.deleteAvatar.bind(controller));
 
@@ -43,8 +42,4 @@ export async function suscriberRoute(
             middleware.auth.authenticate,
         ]
     }, controller.deleteAccount.bind(controller));
-
-    fastify.get('getstats', {
-        preHandler: middleware.auth.authenticate,
-    }, controller.getStats.bind(controller));
 }
