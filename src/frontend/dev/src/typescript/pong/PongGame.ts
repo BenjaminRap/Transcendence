@@ -128,7 +128,7 @@ export class PongGame extends HTMLElement {
 			this._multiplayerHandler.setReady();
 			await this._multiplayerHandler.onGameReady();
 			sceneData.events.getObservable("game-start").notifyObservers();
-			this._multiplayerHandler.onServerMessage()!.add((gameInfos : GameInfos | "server-error" | "forfeit") => {
+			this._multiplayerHandler.onServerMessage()!.add((gameInfos : GameInfos | "server-error" | "forfeit" | "room-closed") => {
 				if (gameInfos === "server-error")
 				{
 					console.log("Server Error !");

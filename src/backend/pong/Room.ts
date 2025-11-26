@@ -54,6 +54,7 @@ export class	Room
 		if (this._disposed)
 			return ;
 		console.log("disposing room !");
+		this._io.to(this._roomId).emit("room-closed");
 		this._disposed = true;
 		this._sockets.forEach((socket : DefaultSocket) => { this.removeSocketFromRoom(socket) });
 		this._serverPongGame?.dispose();

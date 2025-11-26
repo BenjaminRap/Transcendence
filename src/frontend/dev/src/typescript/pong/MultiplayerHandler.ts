@@ -3,18 +3,22 @@ import { ClientToServerEvents, ServerToClientEvents } from "@shared/MessageType"
 import { GameInfos, ZodGameInfos, ZodGameInit } from "@shared/ServerMessage";
 import { io, Socket } from "socket.io-client";
 
+type ServerInGameMessage = GameInfos | "server-error" | "forfeit" | "room-closed";
+
 export class	MultiplayerHandler
 {
 	private static readonly _apiUrl = "/api/socket.io/";
 
+	private _state : "disconnected" | "connected" = "disconnected";
 	private _socket  : Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
-	private _onServerMessageObservable : Observable<GameInfos | "server-error" | "forfeit"> | null = null;
+	private _onServerMessageObservable : Observable<ServerInGameMessage> | null = null;
 	private _playerIndex : int | undefined;
 
 	public disconnect()
 	{
 		if (!(this._socket))
 			return ;
+		this._state = "disconnected";
 		this._socket.disconnect();
 		this._socket = null;
 		this._onServerMessageObservable?.clear();
@@ -56,6 +60,7 @@ export class	MultiplayerHandler
 				this._socket!.once("disconnect", () => {
 					this.disconnect();
 				});
+				this._state = "connected";
 				resolve();
 			});
 			this._socket!.once("connect_error", (error : Error) => {
@@ -78,13 +83,13 @@ export class	MultiplayerHandler
 		});
 	}
 
-	public onServerMessage() : Observable<GameInfos | "server-error" | "forfeit"> | null
+	public onServerMessage() : Observable<ServerInGameMessage> | null
 	{
 		if (this._onServerMessageObservable !== null)
 			return (this._onServerMessageObservable);
 		if (this._socket === null)
 			return null;
-		const	observable = new Observable<GameInfos | "server-error" | "forfeit">();
+		const	observable = new Observable<ServerInGameMessage>();
 
 		this._socket.on("game-infos", (data : any) => {
 			const	gameInfos = ZodGameInfos.safeParse(data);
@@ -95,6 +100,7 @@ export class	MultiplayerHandler
 				observable.notifyObservers(gameInfos.data);
 		});
 		this._socket.on("forfeit", () => { observable.notifyObservers("forfeit") });
+		this._socket.on("room-closed", () => { observable.notifyObservers("room-closed") });
 		this._onServerMessageObservable = observable;
 		return observable;
 	}
