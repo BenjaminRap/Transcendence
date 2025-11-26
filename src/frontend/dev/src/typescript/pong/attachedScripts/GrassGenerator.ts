@@ -1,18 +1,21 @@
 import { Scene } from "@babylonjs/core/scene";
-import { Mesh, TransformNode } from "@babylonjs/core/Meshes";
+import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { buildGrassMaterial } from "../shaders/grass";
 import { Camera } from "@babylonjs/core/Cameras/camera";
 import { Matrix, Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { getRandomCoordinatesInTrapeze } from "../utilities";
 import { RandomTerrainGenerator } from "./RandomTerrainGenerator";
+import { Lod, LodLevel, LodLevelProcessed } from "../Lod";
 
 export class GrassGenerator extends ScriptComponent {
-	private _grassMesh! : Mesh;
+	private _grassLodLevels! : LodLevel[];
 	private _cameraTransform! : TransformNode & { camera: Camera };
 	private	_ground! : TransformNode & { randomTerrainGenerator : RandomTerrainGenerator}
 	private _grassInstanceCount : number = 100;
 	private _grassMaxDistance : number = 5;
+
+	private	_grassLod! : Lod;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "GrassGenerator") {
         super(transform, scene, properties, alias);
@@ -20,6 +23,7 @@ export class GrassGenerator extends ScriptComponent {
 
 	protected	awake()
 	{	
+		this._grassLod = new Lod(this._grassLodLevels, this.scene);
 		this.initAttributes();
 		this.setGrassMaterial();
 	}
@@ -27,6 +31,7 @@ export class GrassGenerator extends ScriptComponent {
 	protected	start()
 	{
 		this.placeGrassInFrontOfCamera();
+		this.syncThinInstancesBuffer();
 	}
 
 	private	initAttributes()
@@ -41,7 +46,9 @@ export class GrassGenerator extends ScriptComponent {
 	{
 		const	[material, _inputs] = buildGrassMaterial("grass", this.scene);
 
-		this._grassMesh.material = material;
+		this._grassLod.getLodLevels().forEach((lodLevel : LodLevelProcessed) => {
+			lodLevel.mesh.material = material;
+		});
 	}
 
 	private	placeGrassInFrontOfCamera()
@@ -52,7 +59,7 @@ export class GrassGenerator extends ScriptComponent {
 		const	baseNear = baseForCircleUnit * camera.minZ;
 		const	baseFar = baseForCircleUnit * this._grassMaxDistance;
 		const	height = this._grassMaxDistance - camera.minZ;
-		const	inverseMeshWorldMatrix = Matrix.Invert(this._grassMesh.worldMatrixFromCache);
+		const	inverseMeshWorldMatrix = Matrix.Invert(this._grassLod.worldMatrix);
 
 		for (let index = 0; index < this._grassInstanceCount; index++) {
 			const	localPos2D = getRandomCoordinatesInTrapeze(baseNear, baseFar, height);
@@ -64,9 +71,21 @@ export class GrassGenerator extends ScriptComponent {
 			const	matrix = Matrix.Compose(Vector3.OneReadOnly, rotation, globalPos3D);
 
 			const	invertedMatrix = matrix.multiply(inverseMeshWorldMatrix);
-			const	updateInstanceBuffer = index === this._grassInstanceCount - 1;
-			this._grassMesh.thinInstanceAdd(invertedMatrix, updateInstanceBuffer);
+			const	squaredDistance = Vector3.DistanceSquared(this._cameraTransform.absolutePosition, globalPos3D);
+			const	lod = this._grassLod.getLod(squaredDistance);
+
+			lod?.thinInstanceAdd(invertedMatrix, false);
 		}
+	}
+
+	private	syncThinInstancesBuffer()
+	{
+		this._grassLod.getLodLevels().forEach((lodLevel : LodLevelProcessed) => {
+			lodLevel.mesh.thinInstanceBufferUpdated("matrix");
+			if (!lodLevel.mesh.doNotSyncBoundingInfo) {
+				lodLevel.mesh.thinInstanceRefreshBoundingInfo(false);
+			}
+		});
 	}
 }
 
