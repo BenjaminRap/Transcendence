@@ -12,6 +12,7 @@ import { TerminalUtils } from './terminalUtils/terminalUtils.ts';
 
 import FileSystem from './filesystem.json' with { type: "json" };
 import { promises } from 'dns';
+import { get } from 'http';
 
 
 export namespace TerminalElements {
@@ -216,8 +217,6 @@ function lsCommand(args: string[], description: string, usage: string): string {
 	let node: Node | null;
 	let targetPath: string;
 
-	console.log("ls command args:", args);
-
 	if (args.length === 1) {
 		node = getNode(TerminalFileSystem.currentDirectory);
 		targetPath = TerminalFileSystem.currentDirectory;
@@ -265,6 +264,11 @@ function getStartWithList(prefix: string, list: string[]): string[] {
 function isFirstWord(command: string, cursorPosition: number): boolean {
 	const beforeCursor = command.slice(0, cursorPosition);
 	return !beforeCursor.includes(' ');
+}
+
+function getFirstWord(command: string): string {
+	const parts = command.trim().split(' ');
+	return parts[0];
 }
 
 function normalizePath(path: string): string {
@@ -380,28 +384,38 @@ function TabProcessInTab() {
 	return;
 }
 
-function getListOfElementTabCompletion(command: string, cursorPosition: number): string[] {
+async function getListOfElementTabCompletion(command: string, cursorPosition: number): Promise<string[]> {
 	let result: string[] | null = null;
 	if (isFirstWord(command, cursorPosition))
 		result = getStartWithList(command.trim(), TerminalCommand.commandAvailable.map(cmd => cmd.name));
 	else
 	{
-		const path = command.slice(0, cursorPosition).split(' ').pop() || '';
-		if (path.includes('/'))
+		if (getFirstWord(command) === 'profile')
 		{
-			let clearedPath =  path.slice(0, path.lastIndexOf('/') + 1);
-			let filePart = path.slice(path.lastIndexOf('/') + 1);
-			if (!clearedPath.startsWith('/'))
-				clearedPath = '/' + clearedPath;
-			result = lsCommand(['ls', clearedPath], '', '').split('\n> ').filter(item => item !== '');
-			if (filePart !== '')
-				result = getStartWithList(filePart, result);
+			const startby = command.slice(0, cursorPosition).split(' ').pop() || '';
+			if (startby === '')
+				return [];
+			result = await RequestBackendModule.getTenUsers(startby)
 		}
 		else
 		{
-			result = lsCommand(['ls'], '', '').split('\n> ').filter(item => item !== '');
-			if (path !== '')
-				result = getStartWithList(path, result);
+			const path = command.slice(0, cursorPosition).split(' ').pop() || '';
+			if (path.includes('/'))
+			{
+				let clearedPath =  path.slice(0, path.lastIndexOf('/') + 1);
+				let filePart = path.slice(path.lastIndexOf('/') + 1);
+				if (!clearedPath.startsWith('/'))
+					clearedPath = '/' + clearedPath;
+				result = lsCommand(['ls', clearedPath], '', '').split('\n> ').filter(item => item !== '');
+				if (filePart !== '')
+					result = getStartWithList(filePart, result);
+			}
+			else
+			{
+				result = lsCommand(['ls'], '', '').split('\n> ').filter(item => item !== '');
+				if (path !== '')
+					result = getStartWithList(path, result);
+			}
 		}
 	}
 	return result;
@@ -644,14 +658,14 @@ function ArrowDownCase() {
 	}
 }
 
-function tabCase() {
+async function tabCase() {
 	if (!TerminalElements.currentInput || !TerminalElements.terminal)
 		return;
 	if (TerminalConfigVariables.isTabInProcess)
 		return TabProcessInTab();
 	const command = TerminalElements.currentInput.value.slice(TerminalPromptAndEnv.promptText.length);
 	const cursorPosition = TerminalElements.currentInput.selectionStart - TerminalPromptAndEnv.promptText.length;
-	let result = getListOfElementTabCompletion(command, cursorPosition);
+	let result = await getListOfElementTabCompletion(command, cursorPosition);
 	if (!result || !result[0] || result[0].startsWith('ls:'))
 		return;
 	if (result.length === 0)

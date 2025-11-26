@@ -86,7 +86,7 @@ export namespace RequestBackendModule {
 				isLoggedIn = true;
 				return true;
 			}
-			if (data.message === 'Token expired') {
+			if (data.message === 'Invalid or expired token') {
 				const refreshed = await tryRefreshToken();
 				if (!refreshed) {
 					WriteOnTerminal.printErrorOnTerminal("Please log in.");
@@ -98,6 +98,43 @@ export namespace RequestBackendModule {
 		} catch (error) {
 			console.error("Error:", error);
 			return false;
+		}
+	}
+
+
+	export async function getTenUsers(args: string): Promise<string[]> {
+		const token = TerminalUtils.getCookie('accessToken') || '';
+		if (token === '') {
+			return [];
+		}
+		try {
+			const response = await fetch('http://localhost:8181/users/search/username/' + args, {
+				method: 'GET',
+				headers: {
+					'Content-Type': 'application/json',
+					'Authorization': 'Bearer ' + token
+				},
+			});
+			const data = await response.json();
+			if (data.success) {
+				let result: string[] = [];
+				for (let i = 0; i < data.user.length && i < 10; i++) {
+					result.push(data.user[i].username);
+				}
+				return result;
+			}
+			if (data.message === 'Invalid or expired token') {
+				const refreshed = await tryRefreshToken();
+				if (!refreshed) {
+					WriteOnTerminal.printErrorOnTerminal("Please log in.");
+					return [];
+				}
+				return await getTenUsers(args);
+			}
+			return [];
+		} catch (error) {
+			console.error("Error:", error);
+			return [];
 		}
 	}
 
