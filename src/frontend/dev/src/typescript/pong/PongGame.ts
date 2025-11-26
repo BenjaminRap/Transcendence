@@ -9,7 +9,7 @@ import { HavokPlugin } from "@babylonjs/core/Physics";
 import HavokPhysics from "@babylonjs/havok";
 import { ClientInput, FrontendSceneData } from "./FrontendSceneData";
 import { Color4 } from "@babylonjs/core";
-import { FrontendGameType, getSceneData, SceneData } from "@shared/SceneData";
+import { FrontendGameType, getSceneData } from "@shared/SceneData";
 import { MultiplayerHandler } from "./MultiplayerHandler";
 import { Settings } from "./Settings";
 import { ServerProxy } from "./ServerProxy";
@@ -77,7 +77,7 @@ export class PongGame extends HTMLElement {
 	private async changeScene(newSceneName : string, gameType : FrontendGameType, clientInputs : readonly ClientInput[], serverCommunicationHandler? : ServerProxy) : Promise<void>
 	{
 		if (this._scene)
-			this.disposeScene();
+			this._scene.dispose();
 		this._scene = await this.getNewScene(newSceneName, gameType, clientInputs, serverCommunicationHandler);
 	}
 
@@ -105,7 +105,7 @@ export class PongGame extends HTMLElement {
 		const	sceneData = getFrontendSceneData(this._scene!);
 
 		await sceneData.readyPromise.promise;
-		sceneData.messageBus.PostMessage("game-start");
+		sceneData.events.getObservable("game-start").notifyObservers();
 	}
 
 	public startOnlineGame(sceneName : "Basic.gltf" | "Magic.gltf")
@@ -128,7 +128,7 @@ export class PongGame extends HTMLElement {
 			await sceneData.readyPromise.promise;
 			this._multiplayerHandler.setReady();
 			await this._multiplayerHandler.onGameReady();
-			sceneData.messageBus.PostMessage("game-start");
+			sceneData.events.getObservable("game-start").notifyObservers();
 			this._multiplayerHandler.onServerMessage()!.add((gameInfos : GameInfos | "room-closed" | "server-error" | "forfeit") => {
 				if (gameInfos === "server-error")
 				{
@@ -156,10 +156,10 @@ export class PongGame extends HTMLElement {
 			const	sceneData = getFrontendSceneData(this._scene);
 
 			sceneData.inputs = inputs;
-			sceneData.messageBus.PostMessage("input-change");
+			sceneData.events.getObservable("input-change").notifyObservers();
 			sceneData.serverProxy?.sendServerMessage("ready");
 			await this._multiplayerHandler.onGameReady();
-			sceneData.messageBus.PostMessage("game-start");
+			sceneData.events.getObservable("game-start").notifyObservers();
 		} catch (error) {
 			if (error !== "io client disconnect") // meaning we disconnected ourselves
 				console.error(error);
@@ -204,23 +204,14 @@ export class PongGame extends HTMLElement {
 		scene.activeCameras = scene.cameras;
 	}
 
-	private	disposeScene()
-	{
-		if (!this._scene)
-			return ;
-		if (this._scene.metadata && this._scene.metadata.sceneData instanceof SceneData)
-			this._scene.metadata.sceneData.dispose();
-		this._scene.dispose();
-	}
-
 	public disconnectedCallback() : void {
 		this._multiplayerHandler.disconnect();
 		if (globalThis.HKP)
 			delete globalThis.HKP;
 		if (globalThis.HKP)
 			delete globalThis.HKP;
-		this.disposeScene();
-		this._engine?.dispose();
+		this._engine.dispose();
+		this._scene?.dispose();
 	}
 }
 

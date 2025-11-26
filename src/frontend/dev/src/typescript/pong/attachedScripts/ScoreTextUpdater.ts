@@ -5,7 +5,7 @@ import { Text } from "./Text";
 import { getFrontendSceneData } from "../PongGame";
 
 export class ScoreTextUpdater extends ScriptComponent {
-	private _eventName! : string ;
+	private _eventName! : "updateRightScore" | "updateLeftScore";
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "ScoreTextUpdater") {
         super(transform, scene, properties, alias);
@@ -16,10 +16,10 @@ export class ScoreTextUpdater extends ScriptComponent {
 		const	text = SceneManager.GetComponent<Text>(this.transform, "Text", false);
 
 		const	sceneData = getFrontendSceneData(this.scene);
-		sceneData.messageBus.OnMessage(this._eventName, (newScore : number) => {
+		sceneData.events.getObservable(this._eventName).add((newScore : number) => {
 			text.setText(newScore.toString());
 		});
-		sceneData.messageBus.OnMessage("game-start", () => {
+		sceneData.events.getObservable("game-start").add(() => {
 			text.setText("0");
 		});
 	}

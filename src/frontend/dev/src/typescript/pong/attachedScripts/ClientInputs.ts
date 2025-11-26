@@ -29,7 +29,7 @@ export class ClientInputs extends ScriptComponent {
 		this.setInputsListener(inputManager);
 		this.setMultiplayerEvents(inputManager);
 		this.scene.onKeyboardObservable.add(this.onKeyboardInput.bind(this));
-		this._sceneData.messageBus.OnMessage("input-change", () => {
+		this._sceneData.events.getObservable("input-change").add(() => {
 			this.clear();
 			this.setInputsListener(inputManager);
 			this.setMultiplayerEvents(inputManager);

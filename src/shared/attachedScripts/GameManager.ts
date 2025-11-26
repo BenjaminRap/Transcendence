@@ -1,6 +1,6 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
-import { LocalMessageBus, SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
+import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { IBasePhysicsCollisionEvent, PhysicsEventType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { int } from "@babylonjs/core/types";
 import { Ball } from "@shared/attachedScripts/Ball";
@@ -21,7 +21,6 @@ export class GameManager extends ScriptComponent {
 
 	private _scoreRight : int = 0;
 	private _scoreLeft : int = 0;
-	private _messageBus : LocalMessageBus;
 	private _ended : boolean = false;
 	private _sceneData : SceneData;
 
@@ -30,16 +29,14 @@ export class GameManager extends ScriptComponent {
 
 		this._sceneData = getSceneData(this.scene);
 
-		this._messageBus = this._sceneData.messageBus;
-
 		if (this._sceneData.gameType !== "Multiplayer")
 			this._sceneData.havokPlugin.onTriggerCollisionObservable.add(this.onTriggerEvent.bind(this));
     }
 
 	protected	ready()
 	{
-		this._messageBus.OnMessage("game-start", () => { this.reset() });
-		this._messageBus.OnMessage("forfeit", (winner : "left" | "right" | "highestScore") => { this.endMatch(winner, true) });
+		this._sceneData.events.getObservable("game-start").add(() => { this.reset() });
+		this._sceneData.events.getObservable("forfeit").add((winner) => { this.endMatch(winner, true) });
 		this._sceneData.readyPromise.resolve();
 	}
 
@@ -63,14 +60,14 @@ export class GameManager extends ScriptComponent {
 		if (side === "right")
 		{
 			this._scoreRight++;
-			this._messageBus.PostMessage("updateRightScore", this._scoreRight);
+			this._sceneData.events.getObservable("updateRightScore").notifyObservers(this._scoreRight);
 			if (this._scoreRight === GameManager._pointsToWin)
 				this.endMatch("right", false);
 		}
 		else
 		{
 			this._scoreLeft++;
-			this._messageBus.PostMessage("updateLeftScore", this._scoreLeft);
+			this._sceneData.events.getObservable("updateRightScore").notifyObservers(this._scoreLeft);
 			if (this._scoreLeft === GameManager._pointsToWin)
 				this.endMatch("left", false);
 		}
@@ -89,7 +86,7 @@ export class GameManager extends ScriptComponent {
 			winner: (winner === "highestScore") ? this.getHighestScoreSide() : winner,
 			forfeit: forfeit
 		}
-		this._messageBus.PostMessage("end", endData);
+		this._sceneData.events.getObservable("end").notifyObservers(endData);
 	}
 
 	private	getHighestScoreSide()

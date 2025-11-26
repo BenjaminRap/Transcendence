@@ -37,8 +37,6 @@ export class	MultiplayerHandler
 	{
 		if (!(this._socket))
 			return ;
-		console.log()
-		console.log("disconnect");
 		this._socket.disconnect();
 		this._socket = null;
 		this._onServerMessageObservable?.clear();
@@ -48,7 +46,6 @@ export class	MultiplayerHandler
 	public async joinGame() : Promise<void>
 	{
 		this._socket!.emit("join-matchmaking");
-		console.log("join-matchamking !");
 		return new Promise((resolve, reject) => {
 			this._socket!.once("joined-game", (data : any) => {
 				const	gameInit = ZodGameInit.safeParse(data);

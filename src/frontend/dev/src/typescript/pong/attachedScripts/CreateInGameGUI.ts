@@ -46,7 +46,7 @@ export class CreateInGameGUI extends ScriptComponent {
 				this.toggleMenu(this._pauseGUI);
 		});
 
-		this._sceneData.messageBus.OnMessage("end", (endData : EndData) => { this.onGameEnd(endData) });
+		this._sceneData.events.getObservable("end").add((endData : EndData) => { this.onGameEnd(endData) });
 	}
 
 	private	createPauseGUI(theme : ThemeName)
@@ -123,11 +123,11 @@ export class CreateInGameGUI extends ScriptComponent {
 			const	opponentIndex = this._sceneData.serverProxy.getOpponentIndex();
 			const	winningSide = (opponentIndex === 0) ? "left" : "right";
 
-			this._sceneData.messageBus.PostMessage("forfeit", winningSide);
+			this._sceneData.events.getObservable("forfeit").notifyObservers(winningSide);
 			this._sceneData.serverProxy.sendServerMessage("forfeit");
 		}
 		else if (this._sceneData.serverProxy)
-			this._sceneData.messageBus.PostMessage("forfeit", "highestScore");
+			this._sceneData.events.getObservable("forfeit").notifyObservers("highestScore");
 	}
 
 	private	onRestart() : void
@@ -144,7 +144,7 @@ export class CreateInGameGUI extends ScriptComponent {
 		else
 		{
 			this._sceneData.havokPlugin.setTimeStep(this._defaultTimeStep);
-			this._sceneData.messageBus.PostMessage("game-start");
+			this._sceneData.events.getObservable("game-start").notifyObservers();
 			this._endGUI.classList.add("hidden");
 		}
 	}

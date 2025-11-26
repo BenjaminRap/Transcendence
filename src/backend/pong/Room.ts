@@ -72,8 +72,6 @@ export class	Room
 		socket.removeAllListeners("forfeit");
 		if (socket.data.getState() === "ready")
 			this._socketsReadyCount--;
-		console.log(socket.eventNames());
-		console.log(socket.conn.readyState);
 	}
 
 	private async addSocketToRoom(socket : DefaultSocket, playerIndex : number)
@@ -102,15 +100,15 @@ export class	Room
 	private	async startGame()
 	{
 		await this._sceneData!.readyPromise.promise;
-		this._sceneData!.messageBus.PostMessage("game-start");
-		this._sceneData!.messageBus.OnMessage("end", () => { this.gameEnd() });
+		this._sceneData!.events.getObservable("game-start").notifyObservers();
+		this._sceneData!.events.getObservable("end").add(() => { this.gameEnd() });
 		this.sendMessageToRoom("ready");
 		this._sockets.forEach((socket : DefaultSocket, index : int) => {
 			socket.once("forfeit", () => {
 				socket.broadcast.to(this._roomId).emit("forfeit");
 				const	winningSide = (index === 0) ? "left" : "right";
 
-				this._sceneData!.messageBus.PostMessage("forfeit", winningSide);
+				this._sceneData!.events.getObservable("forfeit").notifyObservers(winningSide);
 			});
 		});
 	}

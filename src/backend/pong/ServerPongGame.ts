@@ -83,24 +83,13 @@ export class ServerPongGame {
 		globalThis.HKP = undefined;
 	}
 
-	private	disposeScene()
-	{
-		if (!this._scene)
-			return ;
-		if (this._scene.metadata && this._scene.metadata.sceneData instanceof SceneData)
-			this._scene.metadata.sceneData.dispose();
-		console.log("dispose scene");
-		this._scene.dispose();
-	}
-
 	public dispose() : void {
 		if (globalThis.HKP)
 			delete globalThis.HKP;
 		if (globalThis.HKP)
 			delete globalThis.HKP;
-		this.disposeScene();
-		console.log("dispose engine");
 		this._engine.dispose();
+		this._scene.dispose();
 	}
 }
 

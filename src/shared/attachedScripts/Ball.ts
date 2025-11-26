@@ -20,8 +20,8 @@ export class Ball extends ScriptComponent {
 
 		const	sceneData = getSceneData(this.scene);
 
-		sceneData.messageBus.OnMessage("game-start", () => {
-			this.launch()
+		sceneData.events.getObservable("game-start").add(() => {
+			this.launch();
 		});
     }
 

@@ -47,7 +47,7 @@ export class ClientSync extends ScriptComponent {
 			{
 				const	winningSide = (serverProxy.getPlayerIndex() === 0) ? "left" : "right";
 
-				this._sceneData.messageBus.PostMessage("forfeit", winningSide);
+				this._sceneData.events.getObservable("forfeit").notifyObservers(winningSide);
 			}
 			else if (gameInfos.type === "input")
 			{
