@@ -30,6 +30,7 @@ export class ClientInputs extends ScriptComponent {
 		this.setMultiplayerEvents(inputManager);
 		this.scene.onKeyboardObservable.add(this.onKeyboardInput.bind(this));
 		this._sceneData.messageBus.OnMessage("input-change", () => {
+			this.clear();
 			this.setInputsListener(inputManager);
 			this.setMultiplayerEvents(inputManager);
 		})
@@ -41,10 +42,6 @@ export class ClientInputs extends ScriptComponent {
 
 		if (this._sceneData.gameType !== "Multiplayer" || !serverProxy)
 			return ;
-		if (this._upCallback)
-			this._mainPlayerInput?.up.removeKeyObserver(this._upCallback);
-		if (this._downCallback)
-			this._mainPlayerInput?.down.removeKeyObserver(this._downCallback);
 
 		this._mainPlayerInput = inputManager.getPlayerInput(serverProxy.getPlayerIndex()!);
 		this._upCallback = (event : "keyDown" | "keyUp") => {
@@ -59,7 +56,6 @@ export class ClientInputs extends ScriptComponent {
 
 	private	setInputsListener(inputManager : InputManager)
 	{
-		this._inputsMap.clear();
 		this._sceneData.inputs.forEach((clientInput : ClientInput) => {
 			const	playerInput = inputManager.getPlayerInput(clientInput.index);
 
@@ -67,6 +63,16 @@ export class ClientInputs extends ScriptComponent {
 			this._inputsMap.set(clientInput.downKey, playerInput.down);
 		});
 		this._inputsMap.set("Escape", inputManager.getEscapeInput());
+	}
+
+	private	clear()
+	{
+		if (this._upCallback)
+			this._mainPlayerInput?.up.removeKeyObserver(this._upCallback);
+		if (this._downCallback)
+			this._mainPlayerInput?.down.removeKeyObserver(this._downCallback);
+		this._inputsMap.forEach((value : InputKey) => { value.setKeyUp() })
+		this._inputsMap.clear();
 	}
 
 	private onKeyboardInput(info : KeyboardInfo)

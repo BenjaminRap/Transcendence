@@ -111,6 +111,7 @@ export class Paddle extends ScriptComponent {
 	private	reset()
 	{
 		this.transform.position.copyFrom(this._initialPosition);
+		this._physicsBody.setLinearVelocity(Vector3.ZeroReadOnly);
 	}
 }
 
