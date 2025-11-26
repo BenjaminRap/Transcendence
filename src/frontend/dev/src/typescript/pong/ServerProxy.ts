@@ -31,11 +31,6 @@ export class	ServerProxy
 		return this._multiplayerHandler.sendServerMessage(event, ...args);
 	}
 
-	public async joinGame()
-	{
-		return this._multiplayerHandler.joinGame();
-	}
-
 	public getPlayerIndex()
 	{
 		return this._multiplayerHandler.getplayerIndex();

@@ -8,10 +8,42 @@ export class	MultiplayerHandler
 	private static readonly _apiUrl = "/api/socket.io/";
 
 	private _socket  : Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
-	private _onServerMessageObservable : Observable<GameInfos | "room-closed" | "server-error" | "forfeit"> | null = null;
+	private _onServerMessageObservable : Observable<GameInfos | "server-error" | "forfeit"> | null = null;
 	private _playerIndex : int | undefined;
 
-	public async connect() : Promise<void>
+	public disconnect()
+	{
+		if (!(this._socket))
+			return ;
+		this._socket.disconnect();
+		this._socket = null;
+		this._onServerMessageObservable?.clear();
+		this._onServerMessageObservable = null;
+	}
+
+	public async joinGame() : Promise<void>
+	{
+		await this.connect();
+		this._socket!.emit("join-matchmaking");
+		return new Promise((resolve, reject) => {
+			this._socket!.once("joined-game", (data : any) => {
+				const	gameInit = ZodGameInit.safeParse(data);
+
+				if (!gameInit.success)
+					reject("Server sent wrong data !");
+				else
+				{
+					this._playerIndex = gameInit.data.playerIndex;
+					resolve();
+				}
+			});
+			this._socket!.once("disconnect", (reason) => {
+				reject(reason);
+			});
+		});
+	}
+
+	private async connect() : Promise<void>
 	{
 		if (this._socket != null)
 			return ;
@@ -33,36 +65,6 @@ export class	MultiplayerHandler
 		});
 	}
 
-	public disconnect()
-	{
-		if (!(this._socket))
-			return ;
-		this._socket.disconnect();
-		this._socket = null;
-		this._onServerMessageObservable?.clear();
-		this._onServerMessageObservable = null;
-	}
-
-	public async joinGame() : Promise<void>
-	{
-		this._socket!.emit("join-matchmaking");
-		return new Promise((resolve, reject) => {
-			this._socket!.once("joined-game", (data : any) => {
-				const	gameInit = ZodGameInit.safeParse(data);
-
-				if (!gameInit.success)
-					reject("Server sent wrong data !");
-				else
-				{
-					this._playerIndex = gameInit.data.playerIndex;
-					resolve();
-				}
-			});
-			this._socket!.once("disconnect", (reason) => {
-				reject(reason);
-			});
-		});
-	}
 
 	public async	onGameReady() : Promise<void>
 	{
@@ -76,34 +78,25 @@ export class	MultiplayerHandler
 		});
 	}
 
-	public onServerMessage() : Observable<GameInfos | "room-closed" | "server-error" | "forfeit"> | null
+	public onServerMessage() : Observable<GameInfos | "server-error" | "forfeit"> | null
 	{
 		if (this._onServerMessageObservable !== null)
 			return (this._onServerMessageObservable);
 		if (this._socket === null)
 			return null;
-		const	observable = new Observable<GameInfos | "room-closed" | "server-error" | "forfeit">();
+		const	observable = new Observable<GameInfos | "server-error" | "forfeit">();
 
 		this._socket.on("game-infos", (data : any) => {
 			const	gameInfos = ZodGameInfos.safeParse(data);
 
 			if (!gameInfos.success)
-				this.stopListeningToGameInfos("server-error");
+				observable.notifyObservers("server-error");
 			else
 				observable.notifyObservers(gameInfos.data);
 		});
 		this._socket.on("forfeit", () => { observable.notifyObservers("forfeit") });
 		this._onServerMessageObservable = observable;
 		return observable;
-	}
-
-	private	stopListeningToGameInfos(reason : "room-closed" | "server-error")
-	{
-		if (this._socket !== null)
-			this._socket.off("game-infos");
-		this._onServerMessageObservable?.notifyObservers(reason);
-		this._onServerMessageObservable?.clear();
-		this._onServerMessageObservable = null;
 	}
 
 	public	setReady()

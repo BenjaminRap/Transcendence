@@ -116,7 +116,6 @@ export class PongGame extends HTMLElement {
 	private async startOnlineGameAsync(sceneName : "Basic.gltf" | "Magic.gltf") : Promise<void>
 	{
 		try {
-			await this._multiplayerHandler.connect();
 			await this._multiplayerHandler.joinGame();
 			const	playerIndex = this._multiplayerHandler.getplayerIndex()!;
 			const	inputs = this._settings._playerInputs.filter((value : ClientInput) => value.index === playerIndex);
@@ -129,7 +128,7 @@ export class PongGame extends HTMLElement {
 			this._multiplayerHandler.setReady();
 			await this._multiplayerHandler.onGameReady();
 			sceneData.events.getObservable("game-start").notifyObservers();
-			this._multiplayerHandler.onServerMessage()!.add((gameInfos : GameInfos | "room-closed" | "server-error" | "forfeit") => {
+			this._multiplayerHandler.onServerMessage()!.add((gameInfos : GameInfos | "server-error" | "forfeit") => {
 				if (gameInfos === "server-error")
 				{
 					console.log("Server Error !");
@@ -148,7 +147,6 @@ export class PongGame extends HTMLElement {
 		if (!this._scene)
 			throw new Error("restartOnlineGameAsync called without a scene !");
 		try {
-			await this._multiplayerHandler.connect();
 			await this._multiplayerHandler.joinGame();
 
 			const	playerIndex = this._multiplayerHandler.getplayerIndex()!;
