@@ -52,9 +52,9 @@ async function	start() : Promise<void>
 		await fastify.listen({ port: 8181, host: '0.0.0.0' });
 
 		const	matchMaker = new MatchMaker(io);
-		io.on('connection', (socket) => {
+		io.on('connection', (socket : DefaultSocket) => {
 			console.log("user connected !");
-			socket.data = new SocketData();
+			socket.data = new SocketData(socket);
 			socket.on("join-matchmaking", () => {
 				console.log("try-join-matchmaking");
 				matchMaker.addUserToMatchMaking(socket);
@@ -62,6 +62,7 @@ async function	start() : Promise<void>
 			socket.once("disconnect", () => {
 				console.log("disconnected !");
 				matchMaker.removeUserFromMatchMaking(socket);
+				socket.data.disconnect();
 			});
 		});
 	}

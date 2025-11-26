@@ -49,7 +49,7 @@ export class	Room
 		this._serverPongGame = new ServerPongGame(this._sceneData);
 	}
 
-	public dispose()
+	private dispose()
 	{
 		if (this._disposed)
 			return ;
@@ -58,14 +58,21 @@ export class	Room
 		this._sockets.forEach((socket : DefaultSocket) => { this.removeSocketFromRoom(socket) });
 		this._serverPongGame?.dispose();
 		this._serverPongGame = undefined;
-		console.log("room disposed !");
 	}
 
-	public removeSocketFromRoom(socket : DefaultSocket)
+	public onSocketDisconnect(socket : DefaultSocket)
+	{
+		if (!socket.data.isInRoom(this) || this._ended)
+			return ;
+		socket.broadcast.to(this._roomId).emit("forfeit");
+		this.gameEnd();
+	}
+
+	private removeSocketFromRoom(socket : DefaultSocket)
 	{
 		if (!socket.data.isInRoom(this))
 			return ;
-		socket.data.leaveGame();
+		socket.data.leaveRoom();
 		socket.leave(this._roomId);
 		socket.removeAllListeners("ready");
 		socket.removeAllListeners("input-infos");
@@ -115,9 +122,8 @@ export class	Room
 
 	private gameEnd()
 	{
+		this._ended = true;
 		setTimeout(() => {
-			console.log("game end");
-			this._ended = true;
 			this.dispose();
 		}, 0);
 	}

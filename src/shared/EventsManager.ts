@@ -19,7 +19,6 @@ export class	EventsManager
 
 	public getObservable<T extends keyof typeof this._events>(event : T) : (typeof this._events)[T]
 	{
-		console.log(event);
 		return this._events[event];
 	}
 }

@@ -1,3 +1,4 @@
+import { DefaultSocket } from ".";
 import { Room } from "./Room";
 
 export class	SocketData
@@ -7,6 +8,10 @@ export class	SocketData
 
 	public getState = () => this._state;
 	public isInRoom = (room : Room) => this._room == room;
+
+	constructor(private readonly _socket : DefaultSocket)
+	{
+	}
 
 	public setInWaitingQueue() {
 		this._state = "waiting";
@@ -24,11 +29,12 @@ export class	SocketData
 		this._state = "ready";
 	}
 
-	public leaveGame() {
-		// const	previousRoom = this._room;
-		//
-		// this._room = null;
-		// previousRoom?.dispose();
+	public leaveRoom() {
+		this._room = null;
 		this._state = "unactive";
+	}
+
+	public disconnect() {
+		this._room?.onSocketDisconnect(this._socket);
 	}
 }
