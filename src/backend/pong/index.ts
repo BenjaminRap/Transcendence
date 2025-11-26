@@ -56,9 +56,13 @@ async function	start() : Promise<void>
 			console.log("user connected !");
 			socket.data = new SocketData();
 			socket.on("join-matchmaking", () => {
-				matchMaker.addUserToMatchMaking(socket)
+				console.log("try-join-matchmaking");
+				matchMaker.addUserToMatchMaking(socket);
 			});
-			socket.once("disconnect", () => matchMaker.removeUserToMatchMaking(socket));
+			socket.once("disconnect", () => {
+				console.log("disconnected !");
+				matchMaker.removeUserFromMatchMaking(socket);
+			});
 		});
 	}
 	catch (error)

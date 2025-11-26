@@ -1,5 +1,5 @@
 import { LocalMessageBus } from "@babylonjs-toolkit/next";
-import { HavokPlugin, Scene } from "@babylonjs/core";
+import { Deferred, HavokPlugin, Scene } from "@babylonjs/core";
 
 export type ServerGameType = "Server";
 export type FrontendGameType = "Local" | "Multiplayer" | "Bot" | "Menu";
@@ -8,11 +8,13 @@ export type GameType = ServerGameType | FrontendGameType;
 export class	SceneData
 {
 	public readonly messageBus = new LocalMessageBus();
+	public readonly readyPromise;
+
 	constructor(
 		public readonly havokPlugin : HavokPlugin,
 		public readonly gameType : GameType,
 	) {
-
+		this.readyPromise = new Deferred<void>
 	}
 
 	public dispose()

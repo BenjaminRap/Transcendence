@@ -32,10 +32,8 @@ export class CreateInGameGUI extends ScriptComponent {
 	{
 		this._gameManager.script = SceneManager.GetComponent(this._gameManager, "GameManager", false);
 
-		const	rematchButtonEnabled : boolean = this._sceneData.gameType === "Multiplayer";
-
 		this.createPauseGUI(this._style);
-		this.createEndGUI(rematchButtonEnabled, this._style);
+		this.createEndGUI(this._style);
 		this.createInMatchmakingGUI(this._style);
 	}
 
@@ -65,16 +63,15 @@ export class CreateInGameGUI extends ScriptComponent {
 		buttons.quit.addEventListener("click", () => { this.onQuit() });
 	}
 
-	private	createEndGUI(rematchButtonEnabled : boolean, theme : ThemeName)
+	private	createEndGUI(theme : ThemeName)
 	{
-		this._endGUI = new EndGUI(theme, rematchButtonEnabled);
+		this._endGUI = new EndGUI(theme);
 		this._sceneData.pongHTMLElement.appendChild(this._endGUI);
 		this.toggleMenu(this._endGUI);
 
 		const	buttons = this._endGUI.getButtons()!;
 
 		buttons.restart.addEventListener("click", () => { this.onRestart() });
-		buttons.rematch?.addEventListener("click", () => { this.onRematch() });
 		buttons.goToMenu.addEventListener("click", () => { this.onGoToMenu() });
 		buttons.quit.addEventListener("click", () => { this.onQuit() });
 	}
@@ -87,7 +84,7 @@ export class CreateInGameGUI extends ScriptComponent {
 		
 		const	cancelButton = this._inMatchmakingGUI.getCancelButton()!;
 
-		cancelButton.addEventListener("click", () => { this.quitMatchmaking() });
+		cancelButton.addEventListener("click", () => { this.cancelMatchmaking() });
 	}
 
 	private	onGameEnd(endData : EndData)
@@ -119,21 +116,11 @@ export class CreateInGameGUI extends ScriptComponent {
 			this.toggleMenu(menu);
 	}
 
-	private	quitMatchmaking()
-	{
-
-	}
-
-	private	onRematch() : void
-	{
-		this._sceneData.serverProxy?.sendServerMessage("rematch");
-	}
-
 	private	onForfeit()
 	{
 		if (this._sceneData.gameType === "Multiplayer" && this._sceneData.serverProxy)
 		{
-			const	opponentIndex = this._sceneData.serverProxy.opponentIndex;
+			const	opponentIndex = this._sceneData.serverProxy.getOpponentIndex();
 			const	winningSide = (opponentIndex === 0) ? "left" : "right";
 
 			this._sceneData.messageBus.PostMessage("forfeit", winningSide);
@@ -145,11 +132,28 @@ export class CreateInGameGUI extends ScriptComponent {
 
 	private	onRestart() : void
 	{
-		this._sceneData.havokPlugin.setTimeStep(this._defaultTimeStep);
-		this._pauseGUI.classList.add("hidden");
-		this._endGUI.classList.add("hidden");
-		this._sceneData.serverProxy?.sendServerMessage("leave-game");
-		this._gameManager.script.restart();
+		if (this._sceneData.gameType === "Multiplayer")
+		{
+			this._endGUI.classList.add("hidden");
+			this._inMatchmakingGUI.classList.remove("hidden");
+			this._sceneData.pongHTMLElement.restartOnlineGameAsync().then(() => {
+				this._sceneData.havokPlugin.setTimeStep(this._defaultTimeStep);
+				this._inMatchmakingGUI.classList.add("hidden");
+			});
+		}
+		else
+		{
+			this._sceneData.havokPlugin.setTimeStep(this._defaultTimeStep);
+			this._sceneData.messageBus.PostMessage("game-start");
+			this._endGUI.classList.add("hidden");
+		}
+	}
+
+	private	cancelMatchmaking()
+	{
+		this._inMatchmakingGUI.classList.add("hidden");
+		this._endGUI.classList.remove("hidden");
+		this._sceneData.pongHTMLElement.cancelMatchmaking();
 	}
 
 	private	onGoToMenu() : void
@@ -169,6 +173,8 @@ export class CreateInGameGUI extends ScriptComponent {
 			this._pauseGUI.remove();
 		if (this._endGUI)
 			this._endGUI.remove();
+		if (this._inMatchmakingGUI)
+			this._inMatchmakingGUI.remove();
 	}
 }
 

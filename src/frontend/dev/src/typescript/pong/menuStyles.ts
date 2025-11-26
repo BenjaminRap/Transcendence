@@ -1,3 +1,18 @@
+const	head = document.querySelector("head");
+
+addImageToPreload("/scenes/assets/project/textures/arrowColorful.png");
+addImageToPreload("/scenes/assets/project/textures/arrowBasic.png");
+addImageToPreload("/scenes/assets/project/textures/arrowBasicHover.png");
+
+function	addImageToPreload(imageUrl : string)
+{
+	if (!head)
+		return ;
+	head.innerHTML += `
+		<link rel="prefetch" as="image" href="${imageUrl}">
+	`;
+}
+
 type Theme = {
 	"--text-color": string,
 	"--font-weight": string,

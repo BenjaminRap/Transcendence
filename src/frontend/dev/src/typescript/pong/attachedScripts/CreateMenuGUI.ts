@@ -98,7 +98,7 @@ export class CreateMenuGUI extends ScriptComponent {
 		
 		const	cancelButton = this._inMatchmakingGUI.getCancelButton()!;
 
-		cancelButton.addEventListener("click", () => { this.quitMatchmaking() });
+		cancelButton.addEventListener("click", () => { this.cancelMatchmaking() });
 	}
 
 	private	onSceneChange(currentIndex : number, newIndex : number) : boolean
@@ -122,7 +122,7 @@ export class CreateMenuGUI extends ScriptComponent {
 		return true;
 	}
 
-	private	quitMatchmaking()
+	private	cancelMatchmaking()
 	{
 		this._inMatchmakingGUI.classList.add("hidden");
 		this._menuGUI.classList.remove("hidden");

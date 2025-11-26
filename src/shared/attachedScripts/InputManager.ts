@@ -6,8 +6,8 @@ import { int } from "@babylonjs/core";
 
 export class PlayerInput
 {
-	up: InputKey = new InputKey;
-	down: InputKey = new InputKey;
+	up: InputKey = new InputKey();
+	down: InputKey = new InputKey();
 }
 
 export class InputManager extends ScriptComponent {

@@ -32,14 +32,11 @@ export class Paddle extends ScriptComponent {
 		sceneData.havokPlugin.onTriggerCollisionObservable.add(this.onTriggerEnter.bind(this));
 		sceneData.messageBus.OnMessage("game-start", () => {
 			this._canMove = true;
+			this.reset();
 		})
 		sceneData.messageBus.OnMessage("end", () => {
 			this._physicsBody.setLinearVelocity(Vector3.ZeroReadOnly);
 			this._canMove = false;
-			this.reset();
-		});
-		sceneData.messageBus.OnMessage("reset", () => {
-			this.reset();
 		});
     }
 

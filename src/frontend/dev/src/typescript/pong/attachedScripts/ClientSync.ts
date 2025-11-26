@@ -33,11 +33,6 @@ export class ClientSync extends ScriptComponent {
 
 		this.listenToGameInfos(gameManager, inputManager);
 	}
-
-	protected	ready()
-	{
-		this._sceneData.serverProxy?.sendServerMessage("ready");
-	}
 	
 	private	listenToGameInfos(gameManager : GameManager, inputManager : InputManager)
 	{
@@ -50,13 +45,13 @@ export class ClientSync extends ScriptComponent {
 				return ;
 			if (gameInfos === "forfeit")
 			{
-				const	winningSide = (serverProxy.opponentIndex === 0) ? "left" : "right";
+				const	winningSide = (serverProxy.getPlayerIndex() === 0) ? "left" : "right";
 
 				this._sceneData.messageBus.PostMessage("forfeit", winningSide);
 			}
 			else if (gameInfos.type === "input")
 			{
-				const	opponentInputs = inputManager.getPlayerInput(serverProxy.opponentIndex);
+				const	opponentInputs = inputManager.getPlayerInput(serverProxy.getOpponentIndex());
 
 				this.updateKey(gameInfos.infos.up, opponentInputs.up);
 				this.updateKey(gameInfos.infos.down, opponentInputs.down);

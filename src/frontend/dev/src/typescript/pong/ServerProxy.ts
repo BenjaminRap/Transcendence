@@ -5,13 +5,9 @@ import { ClientToServerEvents } from "@shared/MessageType";
 
 export class	ServerProxy
 {
-	public readonly opponentIndex : number;
-
 	constructor(
 		private _multiplayerHandler : MultiplayerHandler,
-		public readonly playerIndex : number
 	) {
-		this.opponentIndex = (playerIndex === 0) ? 1 : 0;
 	}
 
 	public keyUpdate(key : "up" | "down", event : "keyUp" | "keyDown")
@@ -33,5 +29,20 @@ export class	ServerProxy
 	public sendServerMessage<T extends keyof ClientToServerEvents>(event : T, ...args : Parameters<ClientToServerEvents[T]>)
 	{
 		return this._multiplayerHandler.sendServerMessage(event, ...args);
+	}
+
+	public async joinGame()
+	{
+		return this._multiplayerHandler.joinGame();
+	}
+
+	public getPlayerIndex()
+	{
+		return this._multiplayerHandler.getplayerIndex();
+	}
+
+	public getOpponentIndex()
+	{
+		return (this.getPlayerIndex() === 0) ? 1 : 0;
 	}
 }

@@ -22,6 +22,7 @@ export class	Room
 	private _observers : Map<string, Observable<SocketMessage>>;
 	private _socketsReadyCount : int = 0;
 	private _sceneData : ServerSceneData | undefined;
+	private _ended : boolean = false;
 	
 	constructor(
 		private readonly _io : Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>,
@@ -57,35 +58,35 @@ export class	Room
 		this._sockets.forEach((socket : DefaultSocket) => { this.removeSocketFromRoom(socket) });
 		this._serverPongGame?.dispose();
 		this._serverPongGame = undefined;
+		console.log("room disposed !");
 	}
 
-	private removeSocketFromRoom(socket : DefaultSocket)
+	public removeSocketFromRoom(socket : DefaultSocket)
 	{
 		if (!socket.data.isInRoom(this))
 			return ;
 		socket.data.leaveGame();
 		socket.leave(this._roomId);
-		socket.emit("room-closed");
 		socket.removeAllListeners("ready");
-		socket.removeAllListeners("leave-game");
 		socket.removeAllListeners("input-infos");
 		socket.removeAllListeners("forfeit");
 		if (socket.data.getState() === "ready")
 			this._socketsReadyCount--;
+		console.log(socket.eventNames());
+		console.log(socket.conn.readyState);
 	}
 
 	private async addSocketToRoom(socket : DefaultSocket, playerIndex : number)
 	{
 		if (socket.data.isInRoom(this))
 			return ;
+		socket.data.joinRoom(this);
+		await socket.join(this._roomId);
 		const	gameInit : GameInit = {
 			playerIndex: playerIndex
 		}
-		socket.data.joinRoom(this);
-		await socket.join(this._roomId);
 		socket.emit("joined-game", gameInit);
 		socket.once("ready", () => { this.setSocketReady(socket) } );
-		socket.once("leave-game", () => { this.removeSocketFromRoom(socket) });
 	}
 
 	private	setSocketReady(socket : DefaultSocket)
@@ -98,18 +99,29 @@ export class	Room
 			this.startGame();
 	}
 
-	private	startGame()
+	private	async startGame()
 	{
-		this._sceneData?.messageBus.PostMessage("game-start");
+		await this._sceneData!.readyPromise.promise;
+		this._sceneData!.messageBus.PostMessage("game-start");
+		this._sceneData!.messageBus.OnMessage("end", () => { this.gameEnd() });
 		this.sendMessageToRoom("ready");
 		this._sockets.forEach((socket : DefaultSocket, index : int) => {
 			socket.once("forfeit", () => {
 				socket.broadcast.to(this._roomId).emit("forfeit");
 				const	winningSide = (index === 0) ? "left" : "right";
 
-				this._sceneData?.messageBus.PostMessage("forfeit", winningSide);
+				this._sceneData!.messageBus.PostMessage("forfeit", winningSide);
 			});
 		});
+	}
+
+	private gameEnd()
+	{
+		setTimeout(() => {
+			console.log("game end");
+			this._ended = true;
+			this.dispose();
+		}, 0);
 	}
 
 	public sendMessageToRoom<T extends keyof ServerToClientEvents>

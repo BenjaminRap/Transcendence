@@ -21,10 +21,7 @@ export class Ball extends ScriptComponent {
 		const	sceneData = getSceneData(this.scene);
 
 		sceneData.messageBus.OnMessage("game-start", () => {
-			this.reset()
-		});
-		sceneData.messageBus.OnMessage("reset", () => {
-			this.reset();
+			this.launch()
 		});
     }
 
@@ -38,13 +35,9 @@ export class Ball extends ScriptComponent {
 		this._physicsBody.disablePreStep = false;
 	}
 
-	public reset() : void
+	public launch() : void
 	{
-		if (this._ballStartTimeout !== null)
-			clearTimeout(this._ballStartTimeout);
-		this.transform.position.copyFrom(this._initialPosition);
-		this._physicsBody.setLinearVelocity(Vector3.Zero());
-
+		this.reset();
 		this._ballStartTimeout = setTimeout(() => {
 			const	direction = this.getBallDirection();
 			const	velocity = direction.scale(this._initialSpeed);
@@ -53,6 +46,14 @@ export class Ball extends ScriptComponent {
 			this._startsRight = !this._startsRight;
 			this._ballStartTimeout = null;
 		}, this._goalTimeoutMs);
+	}
+
+	public reset() : void
+	{
+		if (this._ballStartTimeout !== null)
+			clearTimeout(this._ballStartTimeout);
+		this.transform.position.copyFrom(this._initialPosition);
+		this._physicsBody.setLinearVelocity(Vector3.Zero());
 	}
 
 	private getBallDirection() : Vector3

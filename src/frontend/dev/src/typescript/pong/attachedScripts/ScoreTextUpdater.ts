@@ -19,7 +19,7 @@ export class ScoreTextUpdater extends ScriptComponent {
 		sceneData.messageBus.OnMessage(this._eventName, (newScore : number) => {
 			text.setText(newScore.toString());
 		});
-		sceneData.messageBus.OnMessage("reset", () => {
+		sceneData.messageBus.OnMessage("game-start", () => {
 			text.setText("0");
 		});
 	}

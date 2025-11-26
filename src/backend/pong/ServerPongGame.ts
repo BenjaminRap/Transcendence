@@ -89,6 +89,7 @@ export class ServerPongGame {
 			return ;
 		if (this._scene.metadata && this._scene.metadata.sceneData instanceof SceneData)
 			this._scene.metadata.sceneData.dispose();
+		console.log("dispose scene");
 		this._scene.dispose();
 	}
 
@@ -98,7 +99,8 @@ export class ServerPongGame {
 		if (globalThis.HKP)
 			delete globalThis.HKP;
 		this.disposeScene();
-		this._engine?.dispose();
+		console.log("dispose engine");
+		this._engine.dispose();
 	}
 }
 

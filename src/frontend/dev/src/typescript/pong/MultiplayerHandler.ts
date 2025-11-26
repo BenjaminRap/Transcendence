@@ -1,6 +1,6 @@
-import { Observable } from "@babylonjs/core";
+import { int, Observable } from "@babylonjs/core";
 import { ClientToServerEvents, ServerToClientEvents } from "@shared/MessageType";
-import { GameInfos, GameInit, ZodGameInfos, ZodGameInit } from "@shared/ServerMessage";
+import { GameInfos, ZodGameInfos, ZodGameInit } from "@shared/ServerMessage";
 import { io, Socket } from "socket.io-client";
 
 export class	MultiplayerHandler
@@ -9,6 +9,7 @@ export class	MultiplayerHandler
 
 	private _socket  : Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
 	private _onServerMessageObservable : Observable<GameInfos | "room-closed" | "server-error" | "forfeit"> | null = null;
+	private _playerIndex : int | undefined;
 
 	public async connect() : Promise<void>
 	{
@@ -36,15 +37,18 @@ export class	MultiplayerHandler
 	{
 		if (!(this._socket))
 			return ;
+		console.log()
+		console.log("disconnect");
 		this._socket.disconnect();
 		this._socket = null;
 		this._onServerMessageObservable?.clear();
 		this._onServerMessageObservable = null;
 	}
 
-	public async joinGame() : Promise<GameInit>
+	public async joinGame() : Promise<void>
 	{
-		this._socket?.emit("join-matchmaking");
+		this._socket!.emit("join-matchmaking");
+		console.log("join-matchamking !");
 		return new Promise((resolve, reject) => {
 			this._socket!.once("joined-game", (data : any) => {
 				const	gameInit = ZodGameInit.safeParse(data);
@@ -52,7 +56,10 @@ export class	MultiplayerHandler
 				if (!gameInit.success)
 					reject("Server sent wrong data !");
 				else
-					resolve(gameInit.data);
+				{
+					this._playerIndex = gameInit.data.playerIndex;
+					resolve();
+				}
 			});
 			this._socket!.once("disconnect", (reason) => {
 				reject(reason);
@@ -89,7 +96,6 @@ export class	MultiplayerHandler
 				observable.notifyObservers(gameInfos.data);
 		});
 		this._socket.on("forfeit", () => { observable.notifyObservers("forfeit") });
-		this._socket.once("room-closed", () => { this.stopListeningToGameInfos("room-closed") });
 		this._onServerMessageObservable = observable;
 		return observable;
 	}
@@ -111,5 +117,10 @@ export class	MultiplayerHandler
 	public sendServerMessage<T extends keyof ClientToServerEvents>(event : T, ...args: Parameters<ClientToServerEvents[T]>)
 	{
 		this._socket?.emit(event, ...args);
+	}
+
+	public getplayerIndex()
+	{
+		return this._playerIndex;
 	}
 }

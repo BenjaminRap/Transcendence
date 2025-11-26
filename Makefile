@@ -37,11 +37,17 @@ compile-watch:
 up:
 	$(DOCKER_EXEC) up -d
 ifeq ($(PROFILE), prod)
-	$(DOCKER_EXEC) logs -f nginx > ./dockerFiles/nginx/nginx.logs &
+	$(DOCKER_EXEC) logs -f nginx &
 else
-	$(DOCKER_EXEC) logs -f vite > ./dockerFiles/vite/vite.logs &
+	$(DOCKER_EXEC) logs -f vite &
 endif
-	$(DOCKER_EXEC) logs -f fastify > ./dockerFiles/fastify/fastify.logs &
+	$(DOCKER_EXEC) logs -f fastify &
+# ifeq ($(PROFILE), prod)
+# 	$(DOCKER_EXEC) logs -f nginx > ./dockerFiles/nginx/nginx.logs &
+# else
+# 	$(DOCKER_EXEC) logs -f vite > ./dockerFiles/vite/vite.logs &
+# endif
+# 	$(DOCKER_EXEC) logs -f fastify > ./dockerFiles/fastify/fastify.logs &
 
 install:
 	npm install

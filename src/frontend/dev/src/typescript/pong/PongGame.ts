@@ -95,8 +95,17 @@ export class PongGame extends HTMLElement {
 
 	public startLocalGame(sceneName : "Basic.gltf" | "Magic.gltf")
 	{
+		this.startLocalGameAsync(sceneName);
+	}
+
+	private async startLocalGameAsync(sceneName : "Basic.gltf" | "Magic.gltf")
+	{
 		this._multiplayerHandler.disconnect();
-		this.changeScene(sceneName, "Local", this._settings._playerInputs);
+		await this.changeScene(sceneName, "Local", this._settings._playerInputs);
+		const	sceneData = getFrontendSceneData(this._scene!);
+
+		await sceneData.readyPromise.promise;
+		sceneData.messageBus.PostMessage("game-start");
 	}
 
 	public startOnlineGame(sceneName : "Basic.gltf" | "Magic.gltf")
@@ -108,24 +117,49 @@ export class PongGame extends HTMLElement {
 	{
 		try {
 			await this._multiplayerHandler.connect();
-			const	gameInit = await this._multiplayerHandler.joinGame();
-			const	inputs = this._settings._playerInputs.filter((value : ClientInput) => value.index === gameInit.playerIndex);
-			const	serverProxy = new ServerProxy(this._multiplayerHandler, gameInit.playerIndex);
-			this.changeScene(sceneName, "Multiplayer", inputs, serverProxy);
+			await this._multiplayerHandler.joinGame();
+			const	playerIndex = this._multiplayerHandler.getplayerIndex()!;
+			const	inputs = this._settings._playerInputs.filter((value : ClientInput) => value.index === playerIndex);
+			const	serverProxy = new ServerProxy(this._multiplayerHandler);
+
+			await this.changeScene(sceneName, "Multiplayer", inputs, serverProxy);
+			const	sceneData = getFrontendSceneData(this._scene!);
+
+			await sceneData.readyPromise.promise;
+			this._multiplayerHandler.setReady();
 			await this._multiplayerHandler.onGameReady();
-			getFrontendSceneData(this._scene!).messageBus.PostMessage("game-start");
-			this._multiplayerHandler.onServerMessage()!.add((gameInfos : GameInfos | "room-closed" | "server-error") => {
-				if (gameInfos === "room-closed")
-				{
-					console.log("The room has been closed !");
-					this.goToMenuScene();
-				}
-				else if (gameInfos === "server-error")
+			sceneData.messageBus.PostMessage("game-start");
+			this._multiplayerHandler.onServerMessage()!.add((gameInfos : GameInfos | "room-closed" | "server-error" | "forfeit") => {
+				if (gameInfos === "server-error")
 				{
 					console.log("Server Error !");
 					this.goToMenuScene();
 				}
 			});
+		} catch (error) {
+			if (error !== "io client disconnect") // meaning we disconnected ourselves
+				console.error(error);
+			this.goToMenuScene();
+		}
+	}
+
+	public	async restartOnlineGameAsync() : Promise<void>
+	{
+		if (!this._scene)
+			throw new Error("restartOnlineGameAsync called without a scene !");
+		try {
+			await this._multiplayerHandler.connect();
+			await this._multiplayerHandler.joinGame();
+
+			const	playerIndex = this._multiplayerHandler.getplayerIndex()!;
+			const	inputs = this._settings._playerInputs.filter((value : ClientInput) => value.index === playerIndex);
+			const	sceneData = getFrontendSceneData(this._scene);
+
+			sceneData.inputs = inputs;
+			sceneData.messageBus.PostMessage("input-change");
+			sceneData.serverProxy?.sendServerMessage("ready");
+			await this._multiplayerHandler.onGameReady();
+			sceneData.messageBus.PostMessage("game-start");
 		} catch (error) {
 			if (error !== "io client disconnect") // meaning we disconnected ourselves
 				console.error(error);

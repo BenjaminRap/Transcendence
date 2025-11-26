@@ -25,10 +25,10 @@ export class	SocketData
 	}
 
 	public leaveGame() {
-		const	previousRoom = this._room;
-
-		this._room = null;
-		previousRoom?.dispose();
+		// const	previousRoom = this._room;
+		//
+		// this._room = null;
+		// previousRoom?.dispose();
 		this._state = "unactive";
 	}
 }

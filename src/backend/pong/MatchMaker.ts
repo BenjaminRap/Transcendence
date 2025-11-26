@@ -17,13 +17,13 @@ export class	MatchMaker
 		if (socket.data.getState() !== "unactive")
 			return ;
 		console.log("user added to matchmaking !");
-		socket.once("leave-matchmaking", () => { this.removeUserToMatchMaking(socket) });
+		socket.once("leave-matchmaking", () => { this.removeUserFromMatchMaking(socket) });
 		this._waitingSockets.push(socket);
 		socket.data.setInWaitingQueue();
 		this.createParty();
 	}
 
-	public	removeUserToMatchMaking(socket : DefaultSocket)
+	public	removeUserFromMatchMaking(socket : DefaultSocket)
 	{
 		if (socket.data.getState() === "unactive")
 			return ;

@@ -38,9 +38,9 @@ export class GameManager extends ScriptComponent {
 
 	protected	ready()
 	{
-		if (this._sceneData.gameType !== "Multiplayer" && this._sceneData.gameType !== "Server")
-			this._messageBus.PostMessage("game-start");
+		this._messageBus.OnMessage("game-start", () => { this.reset() });
 		this._messageBus.OnMessage("forfeit", (winner : "left" | "right" | "highestScore") => { this.endMatch(winner, true) });
+		this._sceneData.readyPromise.resolve();
 	}
 
 	private onTriggerEvent(eventData : IBasePhysicsCollisionEvent)
@@ -75,6 +75,8 @@ export class GameManager extends ScriptComponent {
 				this.endMatch("left", false);
 		}
 		if (!this._ended)
+			this._ball.script.launch();
+		else
 			this._ball.script.reset();
 	}
 
@@ -104,11 +106,9 @@ export class GameManager extends ScriptComponent {
 		this._ball.script = SceneManager.GetComponent<Ball>(this._ball, "Ball", false);
 	}
 
-	public	restart()
+	private	reset()
 	{
 		this._ended = false;
-		this._messageBus.PostMessage("reset");
-		this._messageBus.PostMessage("game-start");
 		this._scoreLeft = 0;
 		this._scoreRight = 0;
 	}
