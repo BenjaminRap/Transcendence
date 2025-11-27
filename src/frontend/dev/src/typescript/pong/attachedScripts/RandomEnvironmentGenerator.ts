@@ -2,9 +2,10 @@ import { Scene } from "@babylonjs/core/scene";
 import { GroundMesh, Mesh, TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { int } from "@babylonjs/core/types";
-import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { Matrix, Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Range } from "../Range";
 import { randomFromRange } from "../utilities";
+import { DirectionalLight, ShadowGenerator } from "@babylonjs/core";
 
 interface	RandomEnvironmentElement
 {
@@ -44,18 +45,25 @@ export class RandomEnvironmentGenerator extends ScriptComponent {
 
 		if (!(mesh instanceof Mesh))
 			throw new Error(`An EnvElement in the RandomEnvironmentGenerator script is not a mesh ! : ${mesh?.name}`);
+		const	inverseMeshWorldMatrix = Matrix.Invert(mesh.getWorldMatrix());
 		for (let i = 0; i < envElement.instanceCount * this._instancesCountFactor; i++) {
 			const	position = this.getRandomPositionOnGround(ground, posRange);
 
 			if (position.length() < this._distanceWithoutElements)
 				continue ;
 
-			position.subtractInPlace(mesh.absolutePosition);
+			// position.subtractInPlace(mesh.absolutePosition);
 
-			const instance = mesh.createInstance(mesh.name + "Instance");
+			const	rotation = Quaternion.RotationAxis(Vector3.UpReadOnly, Math.random() * 2 * Math.PI);
+			const	matrix = Matrix.Compose(Vector3.OneReadOnly, rotation, position);
+			const	invertedMatrix = matrix.multiply(inverseMeshWorldMatrix);
 
-			instance.position = position;
+			mesh.thinInstanceAdd(invertedMatrix, true)
 		}
+		// mesh.thinInstanceBufferUpdated("matrix");
+		// if (!mesh.doNotSyncBoundingInfo) {
+		// 	mesh.thinInstanceRefreshBoundingInfo(false);
+		// }
 	}
 
 	private getRandomPositionOnGround(ground : GroundMesh, posRange : Range) : Vector3

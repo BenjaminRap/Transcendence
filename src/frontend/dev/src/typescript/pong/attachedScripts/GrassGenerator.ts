@@ -1,16 +1,30 @@
 import { Scene } from "@babylonjs/core/scene";
-import { TransformNode } from "@babylonjs/core/Meshes";
+import { Mesh, TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { buildGrassMaterial } from "../shaders/grass";
 import { Camera } from "@babylonjs/core/Cameras/camera";
-import { Matrix, Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { Matrix, Quaternion, Vector2, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { getRandomCoordinatesInTrapeze } from "../utilities";
 import { RandomTerrainGenerator } from "./RandomTerrainGenerator";
 import { Lod, LodLevel, LodLevelProcessed } from "../Lod";
+import { buildStylizedGrassMaterial } from "../shaders/stylizedGrass";
+import { Color3, Texture } from "@babylonjs/core";
 
 export class GrassGenerator extends ScriptComponent {
 	private _grassLodLevels! : LodLevel[];
 	private _cameraTransform! : TransformNode & { camera: Camera };
+	private _grassTexture! : Texture;
+	private _bottomColor! : Color3;
+	private _nearColor! : Color3;
+	private _farColor! : Color3;
+	private _windSpeed! : number;
+	private _windDirection! : Vector3;
+	private _windSwayScale! : number;
+	private _windSwaySpeed! : number;
+	private _windSwayContrast! : Vector2;
+	private _windSwayDirection! : Vector3;
+	private _swayColor! : Color3;
+
 	private	_ground! : TransformNode & { randomTerrainGenerator : RandomTerrainGenerator}
 	private _grassInstanceCount : number = 100;
 	private _grassMaxDistance : number = 5;
@@ -25,7 +39,7 @@ export class GrassGenerator extends ScriptComponent {
 	{	
 		this._grassLod = new Lod(this._grassLodLevels, this.scene);
 		this.initAttributes();
-		this.setGrassMaterial();
+		this.setAllGrassMaterials();
 	}
 
 	protected	start()
@@ -42,13 +56,38 @@ export class GrassGenerator extends ScriptComponent {
 		this._ground.randomTerrainGenerator = SceneManager.GetComponent(this._ground, "RandomTerrainGenerator", false);
 	}
 
-	private	setGrassMaterial()
+	private	setAllGrassMaterials()
 	{
-		const	[material, _inputs] = buildGrassMaterial("grass", this.scene);
-
 		this._grassLod.getLodLevels().forEach((lodLevel : LodLevelProcessed) => {
-			lodLevel.mesh.material = material;
+			this.setGrassMaterial(lodLevel.mesh);
 		});
+	}
+
+	private	setGrassMaterial(grassMesh : Mesh)
+	{
+		const	[material, _inputs] = buildStylizedGrassMaterial("stylizedGrass", this.scene);
+		const	rawBoundingInfo = grassMesh.getRawBoundingInfo();
+		const	minHeight = rawBoundingInfo.boundingBox.minimum;
+		const	maxHeight = rawBoundingInfo.boundingBox.maximum;
+		const	near = this._cameraTransform.camera.minZ;
+		const	far = this._grassMaxDistance;
+
+		grassMesh.material = material;
+		_inputs.mainTextureSource.texture = this._grassTexture;
+		_inputs.bottomColor.value = this._bottomColor;
+		_inputs.nearColor.value = this._nearColor;
+		_inputs.farColor.value = this._farColor;
+		_inputs.near.value = near;
+		_inputs.far.value = far;
+		_inputs.minHeight.value = minHeight.y;
+		_inputs.maxHeight.value = maxHeight.y;
+		_inputs.windSpeed.value = this._windSpeed;
+		_inputs.windDirection.value = this._windDirection;
+		_inputs.windSwayScale.value = this._windSwayScale;
+		_inputs.windSwaySpeed.value = this._windSwaySpeed;
+		_inputs.windSwayContrast.value = this._windSwayContrast;
+		_inputs.windSwayDirection.value = this._windSwayDirection;
+		_inputs.swayColor.value = this._swayColor;
 	}
 
 	private	placeGrassInFrontOfCamera()

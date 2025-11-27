@@ -3,7 +3,7 @@ import { GameInfos, GameInit, KeysUpdate } from "./ServerMessage";
 export type ClientMessage = "join-matchmaking" | "ready" | "input-infos" | "forfeit" | "leave-matchmaking"
 export type ClientMessageData<T extends ClientMessage> = T extends "input-infos" ? KeysUpdate : undefined;
 
-export type ServerEvents = "game-infos" | "joined-game" | "ready" | "forfeit";
+export type ServerEvents = "game-infos" | "joined-game" | "ready" | "forfeit" | "room-closed";
 export type ServerEventsData<T extends ServerEvents> =
 	T extends "game-infos" ? GameInfos :
 	T extends "joined-game" ? GameInit :
