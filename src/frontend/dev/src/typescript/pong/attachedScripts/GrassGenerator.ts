@@ -1,7 +1,6 @@
 import { Scene } from "@babylonjs/core/scene";
 import { Mesh, TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
-import { buildGrassMaterial } from "../shaders/grass";
 import { Camera } from "@babylonjs/core/Cameras/camera";
 import { Matrix, Quaternion, Vector2, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { getRandomCoordinatesInTrapeze } from "../utilities";
@@ -24,7 +23,6 @@ export class GrassGenerator extends ScriptComponent {
 	private _windSwayContrast! : Vector2;
 	private _windSwayDirection! : Vector3;
 	private _swayColor! : Color3;
-
 	private	_ground! : TransformNode & { randomTerrainGenerator : RandomTerrainGenerator}
 	private _grassInstanceCount : number = 100;
 	private _grassMaxDistance : number = 5;
@@ -45,7 +43,6 @@ export class GrassGenerator extends ScriptComponent {
 	protected	start()
 	{
 		this.placeGrassInFrontOfCamera();
-		this.syncThinInstancesBuffer();
 	}
 
 	private	initAttributes()
@@ -111,15 +108,16 @@ export class GrassGenerator extends ScriptComponent {
 
 			const	invertedMatrix = matrix.multiply(inverseMeshWorldMatrix);
 			const	squaredDistance = Vector3.DistanceSquared(this._cameraTransform.absolutePosition, globalPos3D);
-			const	lod = this._grassLod.getLod(squaredDistance);
+			const	lodLevel = this._grassLod.getLodLevel(squaredDistance);
 
-			lod?.thinInstanceAdd(invertedMatrix, false);
+			lodLevel?.thinInstanceAdd(invertedMatrix, false);
 		}
+		this.syncThinInstancesBuffer(this._grassLod);
 	}
 
-	private	syncThinInstancesBuffer()
+	private	syncThinInstancesBuffer(lod : Lod)
 	{
-		this._grassLod.getLodLevels().forEach((lodLevel : LodLevelProcessed) => {
+		lod.getLodLevels().forEach((lodLevel : LodLevelProcessed) => {
 			lodLevel.mesh.thinInstanceBufferUpdated("matrix");
 			if (!lodLevel.mesh.doNotSyncBoundingInfo) {
 				lodLevel.mesh.thinInstanceRefreshBoundingInfo(false);

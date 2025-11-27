@@ -1,15 +1,16 @@
 import { Scene } from "@babylonjs/core/scene";
-import { GroundMesh, Mesh, TransformNode } from "@babylonjs/core/Meshes";
+import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { int } from "@babylonjs/core/types";
 import { Matrix, Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Range } from "../Range";
 import { randomFromRange } from "../utilities";
-import { DirectionalLight, ShadowGenerator } from "@babylonjs/core";
+import { Lod, LodLevel, LodLevelProcessed } from "../Lod";
+import { RandomTerrainGenerator } from "./RandomTerrainGenerator";
 
 interface	RandomEnvironmentElement
 {
-	id : string;
+	lodLevels: LodLevel[]
 	instanceCount : int;
 }
 
@@ -18,61 +19,77 @@ export class RandomEnvironmentGenerator extends ScriptComponent {
 	private _envElements : RandomEnvironmentElement[] = [];
 	private _instancesCountFactor : number = 1;
 	private _distanceWithoutElements : number = 10;
+	private _ground! : TransformNode;
+
+	private _elementsLods! : Lod[];
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "RandomEnvironmentGenerator") {
         super(transform, scene, properties, alias);
     }
 
-	public populateEnvironment(ground : GroundMesh) : void
+	protected	start()
 	{
-		if (this._envElements.length === 0)
-			return ;
+		const	ground = SceneManager.GetComponent<RandomTerrainGenerator>(this._ground, "RandomTerrainGenerator", false);
+
+		this.populateEnvironment(ground);
+	}
+
+	private populateEnvironment(ground : RandomTerrainGenerator) : void
+	{
+		this._elementsLods = this._envElements.map((envElement) => new Lod(envElement.lodLevels, this.scene));
 		const	posRange = new Range(-this._dimension / 2, this._dimension / 2);
 
 		this.instanciateAllEnvElements(ground, posRange);
 	}
 
-	private instanciateAllEnvElements(ground : GroundMesh, posRange : Range)
+	private instanciateAllEnvElements(ground : RandomTerrainGenerator, posRange : Range)
 	{
-		this._envElements.forEach((envElement : RandomEnvironmentElement) => {
-			this.instanciateEnvElement(envElement, ground, posRange);
-		});
+		for (let index = 0; index < this._envElements.length; index++) {
+			this.instanciateEnvElement(index, ground, posRange);
+		}
 	}
 
-	private instanciateEnvElement(envElement : RandomEnvironmentElement, ground : GroundMesh, posRange : Range)
+	private instanciateEnvElement(index : int, ground : RandomTerrainGenerator, posRange : Range)
 	{
-		const	mesh = this.scene.getNodeByName(envElement.id);
+		const	lod = this._elementsLods[index];
+		const	instanceCount = this._envElements[index].instanceCount;
 
-		if (!(mesh instanceof Mesh))
-			throw new Error(`An EnvElement in the RandomEnvironmentGenerator script is not a mesh ! : ${mesh?.name}`);
-		const	inverseMeshWorldMatrix = Matrix.Invert(mesh.getWorldMatrix());
-		for (let i = 0; i < envElement.instanceCount * this._instancesCountFactor; i++) {
+		const	inverseMeshWorldMatrix = Matrix.Invert(lod.worldMatrix);
+		for (let i = 0; i < instanceCount * this._instancesCountFactor; i++) {
 			const	position = this.getRandomPositionOnGround(ground, posRange);
 
 			if (position.length() < this._distanceWithoutElements)
 				continue ;
 
-			// position.subtractInPlace(mesh.absolutePosition);
-
+			const	squaredDistance = Vector3.DistanceSquared(this.transform.position, position);
+			const	lodLevel = lod.getLodLevel(squaredDistance);
+			const	scale = lodLevel?.scaling ?? Vector3.OneReadOnly;
 			const	rotation = Quaternion.RotationAxis(Vector3.UpReadOnly, Math.random() * 2 * Math.PI);
-			const	matrix = Matrix.Compose(Vector3.OneReadOnly, rotation, position);
+			const	matrix = Matrix.Compose(scale, rotation, position);
 			const	invertedMatrix = matrix.multiply(inverseMeshWorldMatrix);
 
-			mesh.thinInstanceAdd(invertedMatrix, true)
+			lodLevel?.thinInstanceAdd(invertedMatrix, true)
 		}
-		// mesh.thinInstanceBufferUpdated("matrix");
-		// if (!mesh.doNotSyncBoundingInfo) {
-		// 	mesh.thinInstanceRefreshBoundingInfo(false);
-		// }
+		this.syncThinInstancesBuffer(lod);
 	}
 
-	private getRandomPositionOnGround(ground : GroundMesh, posRange : Range) : Vector3
+	private	syncThinInstancesBuffer(lod : Lod)
+	{
+		lod.getLodLevels().forEach((lodLevel : LodLevelProcessed) => {
+			lodLevel.mesh.thinInstanceBufferUpdated("matrix");
+			if (!lodLevel.mesh.doNotSyncBoundingInfo) {
+				lodLevel.mesh.thinInstanceRefreshBoundingInfo(false);
+			}
+		});
+	}
+
+	private getRandomPositionOnGround(ground : RandomTerrainGenerator, posRange : Range) : Vector3
 	{
 		const	position = new Vector3();
 
 		position.x = randomFromRange(posRange);
 		position.z = randomFromRange(posRange);
-		position.addInPlace(ground.absolutePosition);
+		position.addInPlace(ground.transform.absolutePosition);
 
 		position.y = ground.getHeightAtCoordinates(position.x, position.z);
 

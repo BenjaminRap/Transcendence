@@ -54,7 +54,7 @@ export class	Lod
 		return this._levels;
 	}
 
-	public	getLod(squaredDistance : number) : Mesh | null
+	public	getLodLevel(squaredDistance : number) : Mesh | null
 	{
 		for (let index = 0; index < this._levels.length; index++) {
 			const lodLevel = this._levels[index];

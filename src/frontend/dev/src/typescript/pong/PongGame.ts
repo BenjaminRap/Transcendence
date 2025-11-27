@@ -53,6 +53,7 @@ export class PongGame extends HTMLElement {
 		try {
 			if (this._scene)
 				this._scene.render();
+			// console.log(this._scene?.getEngine().getFps());
 		} catch (error) {
 			console.error(`Could not render the scene : ${error}`)
 		}

@@ -33,13 +33,6 @@ export class RandomTerrainGenerator extends ScriptComponent {
 		this._ground.material = this._groundMaterial;
 	}
 
-	protected	start()
-	{
-		this.getComponents<RandomEnvironmentGenerator>("RandomEnvironmentGenerator", false).forEach((randomEnvironmentGenerator) => {
-			randomEnvironmentGenerator.populateEnvironment(this._ground);
-		});
-	}
-
 	private createGroundGrid() : GroundMesh
 	{
 		const	subdivisions = 2 * this._subdivisionsFactor;
