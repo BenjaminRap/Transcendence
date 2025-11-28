@@ -16,6 +16,9 @@ interface Friend {
 	pending: boolean;
 }
 
+
+let type = '';
+
 const friends: Friend[] = [
 	{
 		username: "Friend1",
@@ -307,15 +310,20 @@ const matches: Match[] = [
 
 
 
+let MatchDiplay: Match[] = [...matches];
+let FriendDisplay: Friend[] = [...friends];
+
+
 
 function createListMatches() : HTMLDivElement
 {
 	const matchElement = document.createElement('div');
+	matchElement.id = "matchList";
 	matchElement.className = "flex flex-col gap-y-4 h-full overflow-y-auto";
 	const lign = document.createElement('hr');
 	lign.className = "border-green-500";
-	for (let i = 0; i < matches.length; i++) {
-		const match = matches[i];
+	for (let i = 0; i < MatchDiplay.length; i++) {
+		const match = MatchDiplay[i];
 		const matchDiv = document.createElement('div');
 		matchDiv.className = "flex px-4 shadow-lg place-content-between";
 		matchDiv.innerHTML = `
@@ -339,7 +347,7 @@ function createListMatches() : HTMLDivElement
 				</div>
 			`
 		matchElement.appendChild(matchDiv);
-		if (i < matches.length - 1)
+		if (i < MatchDiplay.length - 1)
 			matchElement.appendChild(lign.cloneNode());
 	}
 	return matchElement;
@@ -350,11 +358,12 @@ function createListMatches() : HTMLDivElement
 function createFriendList() : HTMLDivElement
 {
 	const friendElement = document.createElement('div');
+	friendElement.id = "friendList";
 	const lign = document.createElement('hr');
 	lign.className = "border-green-500";
 	friendElement.className = "flex flex-col gap-y-4 h-full overflow-y-auto";
-	for (let i = 0; i < friends.length; i++) {
-		const friend = friends[i];
+	for (let i = 0; i < FriendDisplay.length; i++) {
+		const friend = FriendDisplay[i];
 		const friendDiv = document.createElement('div');
 		friendDiv.className = "flex flex-wrap items-center gap-x-4 place-content-between h-full";
 		friendDiv.innerHTML = `
@@ -399,13 +408,11 @@ function createFriendList() : HTMLDivElement
 			friendDiv.appendChild(pendingTag);
 		}
 		friendElement.appendChild(friendDiv);
-		if (i < friends.length - 1)
+		if (i < FriendDisplay.length - 1)
 			friendElement.appendChild(lign.cloneNode());
 	}
 	return friendElement;
 }
-
-
 
 export namespace ExtendedView { 
 	export var isExtendedViewIsActive = false;
@@ -413,6 +420,7 @@ export namespace ExtendedView {
 	export function makeExtendedView(dataType: 'match' | 'friend', username: string | '') {
 		if (isExtendedViewIsActive)
 			return;
+		type = dataType;
 		const view = document.createElement('div');
 		view.className = "fixed top-[50%] left-[50%] border p-4 border-green-500 bg-black z-2 flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 w-[20%] max-h-[50vh] overflow-y-hidden";
 		view.id = "view";
@@ -433,23 +441,27 @@ export namespace ExtendedView {
 
 
 		const container = document.createElement('div');
-		container.className = "flex flex-col gap-2 px-2 h-full overflow-y-auto";
+		container.className = "flex flex-col px-2 h-full";
 		const searchBar = document.createElement('input');
+		searchBar.id = "searchBar";
 		searchBar.type = "text";
 		searchBar.placeholder = "Search "+ (dataType === 'friend' ? 'friends' : 'matches');
 		searchBar.autocomplete = "off";
-		searchBar.className = "terminal-font border-green-500 border-2 resize-none w-full outline-0 p-2 my-2 h-auto overflow-y-hidden";
+		searchBar.className = "terminal-font border-green-500 border-2 resize-none w-full outline-0 p-2 my-2 h-auto";
+		searchBarFunctionality(searchBar);
 		container.appendChild(searchBar);
 
+		const displayContainer = document.createElement('div');
+		displayContainer.className = "flex flex-col gap-2 h-full overflow-y-auto";
 		if (dataType === 'friend') {
 			const friendList = createFriendList();
-			container.appendChild(friendList);
+			displayContainer.appendChild(friendList);
 		}
 		else if (dataType === 'match') {
 			const matchList = createListMatches();
-			container.appendChild(matchList);
+			displayContainer.appendChild(matchList);
 		}
-
+		container.appendChild(displayContainer);
 		view.appendChild(container);
 
 		setTimeout(() => {
@@ -497,7 +509,6 @@ export namespace ExtendedView {
 	};
 }
 
-
 function acceptFriendRequest(username: string) {
 	console.log(`Accepted friend request from: ${username}`);
 }
@@ -509,3 +520,33 @@ function refuseFriendRequest(username: string) {
 function removeFriend(username: string) {
 	console.log(`Removing friend: ${username}`);
 }
+
+function searchBarFunctionality(searchBar: HTMLInputElement) {
+	
+	searchBar.addEventListener('input', () => {
+		const filter = searchBar.value.toLowerCase();
+		if (type === 'friend') {
+			if (filter === '')
+				FriendDisplay = [...friends];
+			else
+				FriendDisplay = friends.filter(friend => friend.username.toLowerCase().startsWith(filter));
+			const oldList = document.getElementById('friendList');
+			if (oldList && oldList.parentNode)
+				oldList.parentNode.removeChild(oldList);
+			const newFriendList = createFriendList();
+			document.getElementById('view')?.appendChild(newFriendList);
+		}
+		else if (type === 'match') {
+			if (filter === '')
+				MatchDiplay = [...matches];
+			else
+				MatchDiplay = matches.filter(match => match.opponent.toLowerCase().startsWith(filter));
+			const matchList = document.getElementById('matchList');
+			if (matchList && matchList.parentNode)
+				matchList.parentNode.removeChild(matchList);
+			const newMatchList = createListMatches();
+			document.getElementById('view')?.appendChild(newMatchList);	
+		}
+	});
+}
+
