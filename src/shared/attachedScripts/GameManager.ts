@@ -13,7 +13,7 @@ export type EndData = {
 }
 
 export class GameManager extends ScriptComponent {
-	private static readonly _pointsToWin = 1;
+	private static readonly _pointsToWin = 5;
 
 	private	_goalLeft! : TransformNode;
 	private	_goalRight! : TransformNode;
@@ -67,7 +67,7 @@ export class GameManager extends ScriptComponent {
 		else
 		{
 			this._scoreLeft++;
-			this._sceneData.events.getObservable("updateRightScore").notifyObservers(this._scoreLeft);
+			this._sceneData.events.getObservable("updateLeftScore").notifyObservers(this._scoreLeft);
 			if (this._scoreLeft === GameManager._pointsToWin)
 				this.endMatch("left", false);
 		}
