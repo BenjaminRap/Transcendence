@@ -7,7 +7,7 @@ import { PhysicsBody, Vector3 } from "@babylonjs/core";
 
 export class Bot extends ScriptComponent {
 	private static readonly _paddleMinimumMovement = 0.5;
-	private static readonly _refreshIntervalMs = 1000;
+	private static readonly _refreshIntervalMs = 100;
 	private	_inputManager! : TransformNode;
 	private _paddleRight! : TransformNode;
 	private _paddleLeft! : TransformNode;
@@ -15,6 +15,7 @@ export class Bot extends ScriptComponent {
 
 	private _inputs! : PlayerInput;
 	private _updateInterval : number | undefined;
+	private _targetHeight : number = 0;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "Bot") {
         super(transform, scene, properties, alias);
@@ -23,9 +24,9 @@ export class Bot extends ScriptComponent {
 
 		if (sceneData.gameType !== "Bot")
 			SceneManager.DestroyScriptComponent(this);
-		// sceneData.events.getObservable("game-start").add(() => {
-		// 	this._updateInterval = window.setInterval(this.refreshGameView.bind(this), Bot._refreshIntervalMs);
-		// });
+		sceneData.events.getObservable("game-start").add(() => {
+			this._updateInterval = window.setInterval(this.refreshGameView.bind(this), Bot._refreshIntervalMs);
+		});
     }
 
 	protected	start()
@@ -42,20 +43,19 @@ export class Bot extends ScriptComponent {
 
 	protected	update()
 	{
-		this.refreshGameView();
-	}
-
-	private	refreshGameView()
-	{
 		const	direction = this.getTargetDirection();
 
 		this.setInput(direction);
 	}
 
+	private	refreshGameView()
+	{
+		this._targetHeight = this.getTargetHeight();
+	}
+
 	private	getTargetDirection() : number
 	{
-		const	position = this.getTargetHeight();
-		const	direction = position - this._paddleRight.position.y;
+		const	direction = this._targetHeight - this._paddleRight.position.y;
 
 		if (Math.abs(direction) < Bot._paddleMinimumMovement)
 			return 0;
@@ -66,10 +66,9 @@ export class Bot extends ScriptComponent {
 	{
 		const	isBallHeadingOurGoal = Vector3.Dot(this._ball.physicsBody.getLinearVelocity(), Vector3.RightReadOnly) > 0;
 
-		if (isBallHeadingOurGoal)
-			return this._ball.position.y;
-		else
+		if (!isBallHeadingOurGoal)
 			return 0;
+		return this._ball.position.y;
 	}
 
 	private	setInput(direction : number)
