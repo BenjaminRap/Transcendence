@@ -3,7 +3,7 @@ import { TransformNode } from "@babylonjs/core/Meshes";
 import { IPhysicsShapeCastQuery, SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { getFrontendSceneData } from "../PongGame";
 import { InputManager, PlayerInput } from "@shared/attachedScripts/InputManager";
-import { int, PhysicsBody, PhysicsShape, Quaternion, ShapeCastResult, Vector3 } from "@babylonjs/core";
+import { int, PhysicsBody, ShapeCastResult, Vector3 } from "@babylonjs/core";
 import { FrontendSceneData } from "../FrontendSceneData";
 import { Platform } from "@shared/attachedScripts/Platform";
 import { Paddle } from "@shared/attachedScripts/Paddle";
@@ -113,12 +113,12 @@ export class Bot extends ScriptComponent {
 
 		if (transform === this._paddleRight || transform === this._goalRight)
 			return hitPoint.y;
-		if (transform === this._paddleLeft)
-		{
-			const	newDirection = this._paddleLeft.script.getNewDirection(hitPoint);
-
-			return this.getTargetHeightRecursive(hitPoint, newDirection, maxRecursion - 1);
-		}
+		// if (transform === this._paddleLeft)
+		// {
+		// 	const	newDirection = this._paddleLeft.script.getNewDirection(hitPoint);
+		//
+		// 	return this.getTargetHeightRecursive(hitPoint, newDirection, maxRecursion - 1);
+		// }
 		if (transform === this._top)
 		{
 			const	newVelocity = this._top.script.getNewVelocity(direction);
