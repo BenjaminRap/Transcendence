@@ -94,6 +94,22 @@ export class PongGame extends HTMLElement {
 			await this.changeScene("Menu.gltf", "Menu", []);
 	}
 
+	public startBotGame(sceneName : "Basic.gltf" | "Magic.gltf")
+	{
+		this.startBotGameAsync(sceneName);
+	}
+
+	private async startBotGameAsync(sceneName : "Basic.gltf" | "Magic.gltf")
+	{
+		this._multiplayerHandler.disconnect();
+		const	inputs = [this._settings._playerInputs[0]];
+		await this.changeScene(sceneName, "Bot", inputs);
+		const	sceneData = getFrontendSceneData(this._scene!);
+
+		await sceneData.readyPromise.promise;
+		sceneData.events.getObservable("game-start").notifyObservers();
+	}
+
 	public startLocalGame(sceneName : "Basic.gltf" | "Magic.gltf")
 	{
 		this.startLocalGameAsync(sceneName);

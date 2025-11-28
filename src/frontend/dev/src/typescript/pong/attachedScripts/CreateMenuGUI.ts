@@ -159,8 +159,8 @@ export class CreateMenuGUI extends ScriptComponent {
 			this._menuGUI.classList.add("hidden");
 			this._sceneData.pongHTMLElement.startOnlineGame(sceneName);
 		}
-		else
-			console.error("Not implemented yet !!");
+		else if (enemyType === "Bot")
+			this._sceneData.pongHTMLElement.startBotGame(sceneName);
 	}
 
 	protected destroy()
