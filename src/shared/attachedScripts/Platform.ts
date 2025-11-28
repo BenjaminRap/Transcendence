@@ -25,14 +25,14 @@ export class Platform extends ScriptComponent {
 			return ;
 		const	collidedAgainst = collision.collider;
 
-		const	newVelocity = this.getNewVelocity(collidedAgainst);
+		const	newVelocity = this.getNewVelocity(collidedAgainst.getLinearVelocity());
 
 		collidedAgainst.setLinearVelocity(newVelocity);
 	}
 
-	private getNewVelocity(collidedAgainst : PhysicsBody) : Vector3
+	public getNewVelocity(currentVelocity : Vector3) : Vector3
 	{
-		let	newVelocity = collidedAgainst.getLinearVelocity();
+		let	newVelocity = currentVelocity.clone();
 
 		newVelocity.applyRotationQuaternionInPlace(this.transform.rotationQuaternion!.invert());
 		newVelocity.x *= -1;

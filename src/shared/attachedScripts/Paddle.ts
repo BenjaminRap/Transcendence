@@ -47,17 +47,16 @@ export class Paddle extends ScriptComponent {
 			return ;
 		const	collidedAgainst = collision.collidedAgainst;
 
-		const	newDirection = this.getNewDirection(collidedAgainst);
+		const	newDirection = this.getNewDirection(collidedAgainst.transformNode.absolutePosition);
 		const	newSpeed = this.getNewSpeed(collidedAgainst);
 		const	newVelocity = newDirection.scale(newSpeed);
 
 		collidedAgainst.setLinearVelocity(newVelocity);
 	}
 
-	private getNewDirection(collidedAgainst : PhysicsBody) : Vector3
+	public getNewDirection(collidedWorldPos : Vector3) : Vector3
 	{
-		const	collidedPosInWorld = collidedAgainst.transformNode.absolutePosition;
-		const	collidedPosInPaddleLocal = Vector3.TransformCoordinates(collidedPosInWorld, this.transform.getWorldMatrix().invert());
+		const	collidedPosInPaddleLocal = Vector3.TransformCoordinates(collidedWorldPos, this.transform.getWorldMatrix().invert());
 		const	maxAngle = Math.PI / 4;
 		if (Math.abs(collidedPosInPaddleLocal.y) < 0.04)
 			collidedPosInPaddleLocal.y = 0;
