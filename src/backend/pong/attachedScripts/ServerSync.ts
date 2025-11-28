@@ -10,6 +10,7 @@ import { SocketMessage } from "../Room";
 import { int } from "@babylonjs/core/types";
 import { Vector3 } from "@babylonjs/core";
 import { getSceneData } from "../ServerPongGame";
+import { TimerManager } from "@shared/attachedScripts/TimerManager";
 
 export class ServerSync extends ScriptComponent {
 	private static readonly	_sendInfoDelay = 100;
@@ -18,9 +19,9 @@ export class ServerSync extends ScriptComponent {
 	private _paddleRight! : TransformNode;
 	private _paddleLeft! : TransformNode;
 	private _inputManager! : TransformNode;
+	private _timerManager! : TransformNode;
 
 	private _sceneData : ServerSceneData;
-	private _sendInfosInterval? : NodeJS.Timeout;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "ServerSync") {
         super(transform, scene, properties, alias);
@@ -38,7 +39,8 @@ export class ServerSync extends ScriptComponent {
 
 	protected	start()
 	{
-		this._sendInfosInterval = setInterval(this.sendInfos.bind(this), ServerSync._sendInfoDelay);
+		const	timerManager = SceneManager.GetComponent<TimerManager>(this._timerManager, "TimerManager", false);
+		timerManager.setInterval(this.sendInfos.bind(this), ServerSync._sendInfoDelay);
 
 		const	inputManager = SceneManager.GetComponent<InputManager>(this._inputManager, "InputManager", false);
 		this.listenToClients(inputManager);
@@ -106,12 +108,6 @@ export class ServerSync extends ScriptComponent {
 			inputKey.setKeyDown();
 		else
 			inputKey.setKeyUp();
-	}
-
-	protected	destroy()
-	{
-		if (this._sendInfosInterval)
-			clearInterval(this._sendInfosInterval);
 	}
 }
 

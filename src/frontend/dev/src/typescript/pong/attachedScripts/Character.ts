@@ -2,7 +2,7 @@ import { Scene } from "@babylonjs/core/scene";
 import { AbstractMesh, TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { AnimationGroup, ImportMeshAsync, Space, Vector3 } from "@babylonjs/core";
-import { delay } from "../utilities";
+import { TimerManager } from "@shared/attachedScripts/TimerManager";
 
 enum CharacterAnim
 {
@@ -16,10 +16,12 @@ enum CharacterAnim
 export class Character extends ScriptComponent {
 	private static readonly _expectedMeshCount = 2;
 	private static readonly _expectedAnimationGroupsCount = 5;
+	private static readonly _timeBeforeGoingOnScreenMs = 2000;
 	
 	private _knightPath! : string;
 	private _fightPoint! : Vector3
 	private _speed : number = 3;
+	private _timerManager! : TransformNode;
 
 	private _direction : Vector3 = Vector3.Zero();
 	private _knight! : AbstractMesh;
@@ -47,8 +49,9 @@ export class Character extends ScriptComponent {
 
 	protected async ready()
 	{
-		await delay(2000);
-		this.setCharacterDirection();
+		SceneManager.GetComponent<TimerManager>(this._timerManager, "TimerManager", false).setTimeout(() => {
+			this.setCharacterDirection();
+		}, Character._timeBeforeGoingOnScreenMs);
 	}
 
 	private setCharacterDirection()
@@ -57,10 +60,10 @@ export class Character extends ScriptComponent {
 
 		const distance = this._direction.length();
 		const durationSeconds = this._speed / distance;
-
-		setTimeout(this.setCharacterIdle.bind(this), durationSeconds * 1000);
-
 		this._direction.normalize();
+
+		SceneManager.GetComponent<TimerManager>(this._timerManager, "TimerManager", false).setTimeout(this.setCharacterIdle.bind(this), durationSeconds * 1000);
+
 	}
 
 	private setCharacterIdle()

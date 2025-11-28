@@ -4,6 +4,7 @@ import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
 import { getSceneData } from "@shared/SceneData";
+import { TimerManager } from "./TimerManager";
 
 export class Ball extends ScriptComponent {
 	private _initialSpeed : number = 6;
@@ -12,7 +13,8 @@ export class Ball extends ScriptComponent {
 	private _physicsBody! : PhysicsBody;
 	private _initialPosition : Vector3;
 	private _startsRight : boolean = true;
-	private	_ballStartTimeout : ReturnType<typeof setTimeout> | null = null;
+	private _timerManager! : TransformNode;
+	private	_ballStartTimeout : number | null = null;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "Ball") {
         super(transform, scene, properties, alias);
@@ -38,7 +40,7 @@ export class Ball extends ScriptComponent {
 	public launch() : void
 	{
 		this.reset();
-		this._ballStartTimeout = setTimeout(() => {
+		this._ballStartTimeout = SceneManager.GetComponent<TimerManager>(this._timerManager, "TimerManager", false).setTimeout(() => {
 			const	direction = this.getBallDirection();
 			const	velocity = direction.scale(this._initialSpeed);
 
@@ -51,7 +53,7 @@ export class Ball extends ScriptComponent {
 	public reset() : void
 	{
 		if (this._ballStartTimeout !== null)
-			clearTimeout(this._ballStartTimeout);
+			SceneManager.GetComponent<TimerManager>(this._timerManager, "TimerManager", false).clearTimer(this._ballStartTimeout);
 		this.transform.position.copyFrom(this._initialPosition);
 		this._physicsBody.setLinearVelocity(Vector3.Zero());
 	}
@@ -62,12 +64,6 @@ export class Ball extends ScriptComponent {
 			return Vector3.Right();
 		else
 			return Vector3.Left();
-	}
-
-	protected	destroy()
-	{
-		if (this._ballStartTimeout !== null)
-			clearTimeout(this._ballStartTimeout);
 	}
 }
 

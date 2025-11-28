@@ -139,6 +139,15 @@ export class GameManager extends ScriptComponent {
 		this._sceneData.events.getObservable("game-unpaused").notifyObservers();
 	}
 
+	public isGamePaused()
+	{
+		return this._isGamePaused;
+	}
+
+	protected	destroy()
+	{
+		this.unPause();
+	}
 }
 
 SceneManager.RegisterClass("GameManager", GameManager);

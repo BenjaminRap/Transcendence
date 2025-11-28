@@ -7,6 +7,7 @@ import { int, PhysicsBody, ShapeCastResult, Vector3 } from "@babylonjs/core";
 import { FrontendSceneData } from "../FrontendSceneData";
 import { Platform } from "@shared/attachedScripts/Platform";
 import { Paddle } from "@shared/attachedScripts/Paddle";
+import { TimerManager } from "@shared/attachedScripts/TimerManager";
 
 export class Bot extends ScriptComponent {
 	private static readonly _paddleMinimumMovement = 0.5;
@@ -14,6 +15,7 @@ export class Bot extends ScriptComponent {
 	private static readonly _maxReboundCalculationRecursion = 4;
 
 	private	_inputManager! : TransformNode;
+	private	_timerManager! : TransformNode & { script : TimerManager };
 	private _paddleRight! : TransformNode & { script : Paddle };
 	private _paddleLeft! : TransformNode & { script : Paddle };
 	private _goalRight! : TransformNode;
@@ -23,7 +25,6 @@ export class Bot extends ScriptComponent {
 	private _ball! : TransformNode & { physicsBody : PhysicsBody };
 
 	private _inputs! : PlayerInput;
-	private _updateInterval : number | undefined;
 	private _targetHeight : number = 0;
 	private _sceneData : FrontendSceneData;
 
@@ -34,9 +35,6 @@ export class Bot extends ScriptComponent {
 
 		if (this._sceneData.gameType !== "Bot")
 			SceneManager.DestroyScriptComponent(this);
-		this._sceneData.events.getObservable("game-start").add(() => {
-			this._updateInterval = window.setInterval(this.refreshGameView.bind(this), Bot._refreshIntervalMs);
-		});
     }
 
 	protected	awake()
@@ -45,6 +43,9 @@ export class Bot extends ScriptComponent {
 		this._paddleLeft.script = SceneManager.GetComponent<Paddle>(this._paddleLeft, "Paddle", false);
 		this._bottom.script = SceneManager.GetComponent<Platform>(this._bottom, "Platform", false);
 		this._top.script = SceneManager.GetComponent<Platform>(this._top, "Platform", false);
+		this._sceneData.events.getObservable("game-start").add(() => {
+			SceneManager.GetComponent<TimerManager>(this._timerManager, "TimerManager", false).setInterval(this.refreshGameView.bind(this), Bot._refreshIntervalMs);
+		});
 	}
 
 	protected	start()
@@ -98,7 +99,8 @@ export class Bot extends ScriptComponent {
 		if (!hitWorldResult.hasHit || !hitWorldResult.body)
 			return 0;
 		const	transform = hitWorldResult.body.transformNode;
-		const	hitPoint = startPosition.add(castVector.scale(hitWorldResult.hitFraction));
+		const	hitPoint = hitWorldResult.hitPoint;
+		// const	hitPoint = startPosition.add(castVector.scale(hitWorldResult.hitFraction));
 
 		if (transform === this._paddleRight || transform === this._goalRight)
 			return hitPoint.y;
@@ -155,12 +157,6 @@ export class Bot extends ScriptComponent {
 			this._inputs.up.setKeyUp();
 			this._inputs.down.setKeyUp();
 		}
-	}
-
-	protected	destroy()
-	{
-		if (this._updateInterval)
-			clearInterval(this._updateInterval);
 	}
 }
 
