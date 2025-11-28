@@ -531,8 +531,19 @@ function searchBarFunctionality(searchBar: HTMLInputElement) {
 			const oldList = document.getElementById('friendList');
 			if (oldList && oldList.parentNode)
 				oldList.parentNode.removeChild(oldList);
-			const newFriendList = createFriendList();
-			document.getElementById('view')?.appendChild(newFriendList);
+			if (FriendDisplay.length === 0) {
+				const noFriendMessage = document.createElement('p');
+				noFriendMessage.id = "friendList";
+				noFriendMessage.className = "terminal-font text-center mt-4";
+				noFriendMessage.textContent = "No friends found.";
+				document.getElementById('view')?.appendChild(noFriendMessage);
+				return;
+			}
+			else
+			{
+				const newFriendList = createFriendList();
+				document.getElementById('view')?.appendChild(newFriendList);
+			}
 		}
 		else if (type === 'match') {
 			if (filter === '')
@@ -542,8 +553,19 @@ function searchBarFunctionality(searchBar: HTMLInputElement) {
 			const matchList = document.getElementById('matchList');
 			if (matchList && matchList.parentNode)
 				matchList.parentNode.removeChild(matchList);
-			const newMatchList = createListMatches();
-			document.getElementById('view')?.appendChild(newMatchList);	
+			if (MatchDiplay.length === 0) {
+				const noMatchMessage = document.createElement('p');
+				noMatchMessage.id = "matchList";
+				noMatchMessage.className = "terminal-font text-center mt-4";
+				noMatchMessage.textContent = "No matches found.";
+				document.getElementById('view')?.appendChild(noMatchMessage);
+				return;
+			}
+			else
+			{
+				const newMatchList = createListMatches();
+				document.getElementById('view')?.appendChild(newMatchList);
+			}
 		}
 	});
 }
