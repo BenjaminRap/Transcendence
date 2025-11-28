@@ -447,12 +447,13 @@ export namespace ExtendedView {
 		searchBar.type = "text";
 		searchBar.placeholder = "Search "+ (dataType === 'friend' ? 'friends' : 'matches');
 		searchBar.autocomplete = "off";
-		searchBar.className = "terminal-font border-green-500 border-2 resize-none w-full outline-0 p-2 my-2 h-auto";
+		searchBar.className = "terminal-font border-green-500 border-2 resize-none w-full outline-0 p-2 h-auto";
 		searchBarFunctionality(searchBar);
 		container.appendChild(searchBar);
 
 		const displayContainer = document.createElement('div');
-		displayContainer.className = "flex flex-col gap-2 h-full overflow-y-auto";
+		displayContainer.id = "displayContainer";
+		displayContainer.className = "flex flex-col gap-2 h-full p-2 overflow-y-auto";
 		if (dataType === 'friend') {
 			const friendList = createFriendList();
 			displayContainer.appendChild(friendList);
@@ -545,7 +546,7 @@ function searchBarFunctionality(searchBar: HTMLInputElement) {
 			if (matchList && matchList.parentNode)
 				matchList.parentNode.removeChild(matchList);
 			const newMatchList = createListMatches();
-			document.getElementById('view')?.appendChild(newMatchList);	
+			document.getElementById('displayContainer')?.appendChild(newMatchList);	
 		}
 	});
 }
