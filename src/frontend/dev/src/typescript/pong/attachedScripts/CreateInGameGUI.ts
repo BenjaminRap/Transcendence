@@ -17,7 +17,6 @@ export class CreateInGameGUI extends ScriptComponent {
 
 	private _pauseGUI! : PauseGUI;
 	private _endGUI! : EndGUI;
-	private _defaultTimeStep : number;
 	private _sceneData : FrontendSceneData;
 	private _inMatchmakingGUI! : InMatchmakingGUI;
 
@@ -25,7 +24,6 @@ export class CreateInGameGUI extends ScriptComponent {
         super(transform, scene, properties, alias);
 		
 		this._sceneData = getFrontendSceneData(this.scene);
-		this._defaultTimeStep = this._sceneData.havokPlugin.getTimeStep();
     }
 
 	protected	awake()
@@ -37,7 +35,7 @@ export class CreateInGameGUI extends ScriptComponent {
 		this.createInMatchmakingGUI(this._style);
 	}
 
-	protected	ready()
+	protected	start()
 	{
 		const	inputManager = SceneManager.GetComponent<InputManager>(this._inputManager, "InputManager", false);
 
@@ -99,13 +97,12 @@ export class CreateInGameGUI extends ScriptComponent {
 	private	toggleMenu(menu : HTMLElement) : void
 	{
 		const	isMenuVisible = !menu.classList.toggle("hidden");
-		const	isMultiplayerGame = this._sceneData.gameType === "Multiplayer"
-		const	gamePaused = isMenuVisible && !isMultiplayerGame;
+		const	gameManager = this._gameManager.script;
 
-		if (gamePaused)
-			this._sceneData.havokPlugin.setTimeStep(0);
+		if (isMenuVisible)
+			gameManager.pause();
 		else
-			this._sceneData.havokPlugin.setTimeStep(this._defaultTimeStep);
+			gameManager.unPause();
 	}
 
 	private	setMenuVisibility(menu : HTMLElement, visible : boolean)
@@ -137,13 +134,11 @@ export class CreateInGameGUI extends ScriptComponent {
 			this._endGUI.classList.add("hidden");
 			this._inMatchmakingGUI.classList.remove("hidden");
 			this._sceneData.pongHTMLElement.restartOnlineGameAsync().then(() => {
-				this._sceneData.havokPlugin.setTimeStep(this._defaultTimeStep);
 				this._inMatchmakingGUI.classList.add("hidden");
 			});
 		}
 		else
 		{
-			this._sceneData.havokPlugin.setTimeStep(this._defaultTimeStep);
 			this._sceneData.events.getObservable("game-start").notifyObservers();
 			this._endGUI.classList.add("hidden");
 		}
@@ -158,7 +153,6 @@ export class CreateInGameGUI extends ScriptComponent {
 
 	private	onGoToMenu() : void
 	{
-		this._sceneData.havokPlugin.setTimeStep(this._defaultTimeStep);
 		this._sceneData.pongHTMLElement.goToMenuScene();
 	}
 

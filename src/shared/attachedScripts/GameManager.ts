@@ -23,11 +23,14 @@ export class GameManager extends ScriptComponent {
 	private _scoreLeft : int = 0;
 	private _ended : boolean = false;
 	private _sceneData : SceneData;
+	private _isGamePaused : boolean = false;
+	private _defaultTimeStep : number;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "GameManager") {
         super(transform, scene, properties, alias);
 
 		this._sceneData = getSceneData(this.scene);
+		this._defaultTimeStep = this._sceneData.havokPlugin.getTimeStep();
 
 		if (this._sceneData.gameType !== "Multiplayer")
 			this._sceneData.havokPlugin.onTriggerCollisionObservable.add(this.onTriggerEvent.bind(this));
@@ -35,7 +38,10 @@ export class GameManager extends ScriptComponent {
 
 	protected	ready()
 	{
-		this._sceneData.events.getObservable("game-start").add(() => { this.reset() });
+		this._sceneData.events.getObservable("game-start").add(() => {
+			this.reset();
+			this.unPause();
+		});
 		this._sceneData.events.getObservable("forfeit").add((winner) => { this.endMatch(winner, true) });
 		this._sceneData.readyPromise.resolve();
 	}
@@ -114,6 +120,25 @@ export class GameManager extends ScriptComponent {
 	{
 		return (this._ended);
 	}
+
+	public pause()
+	{
+		if (this._isGamePaused || this._sceneData.gameType === "Multiplayer")
+			return ;
+		this._isGamePaused = true;
+		this._sceneData.havokPlugin.setTimeStep(0);
+		this._sceneData.events.getObservable("game-paused").notifyObservers();
+	}
+
+	public unPause()
+	{
+		if (!this._isGamePaused)
+			return ;
+		this._isGamePaused = false;
+		this._sceneData.havokPlugin.setTimeStep(this._defaultTimeStep);
+		this._sceneData.events.getObservable("game-unpaused").notifyObservers();
+	}
+
 }
 
 SceneManager.RegisterClass("GameManager", GameManager);

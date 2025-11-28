@@ -13,7 +13,9 @@ export class	EventsManager
 			"end": new Observable<EndData>,
 			"game-start": new Observable<void>,
 			"forfeit": new Observable<"left" | "right" | "highestScore">,
-			"input-change": new Observable<void>
+			"input-change": new Observable<void>,
+			"game-paused" : new Observable<void>,
+			"game-unpaused": new Observable<void>
 		}
 	}
 
