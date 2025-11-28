@@ -69,7 +69,6 @@ export class Bot extends ScriptComponent {
 	private	refreshGameView()
 	{
 		this._targetHeight = this.getTargetHeight();
-		console.log(this._targetHeight);
 	}
 
 	private	getTargetDirection() : number
@@ -95,6 +94,35 @@ export class Bot extends ScriptComponent {
 			return 0;
 		const	castVector = direction.normalize().scale(100);
 		const	endPosition = startPosition.add(castVector);
+		const	hitWorldResult = this.shapeCastBall(startPosition, endPosition);
+		if (!hitWorldResult.hasHit || !hitWorldResult.body)
+			return 0;
+		const	transform = hitWorldResult.body.transformNode;
+		const	hitPoint = startPosition.add(castVector.scale(hitWorldResult.hitFraction));
+
+		if (transform === this._paddleRight || transform === this._goalRight)
+			return hitPoint.y;
+		const	platformScript = this.getPlatformScript(transform);
+		if (platformScript)
+		{
+			const	newVelocity = platformScript.getNewVelocity(direction);
+
+			return this.getTargetHeightRecursive(hitPoint, newVelocity, maxRecursion - 1);
+		}
+		return 0;
+	}
+
+	private	getPlatformScript(transform : TransformNode)
+	{
+		if (transform === this._top)
+			return this._top.script;
+		if (transform === this._bottom)
+			return this._bottom.script;
+		return null;
+	}
+
+	private	shapeCastBall(startPosition : Vector3, endPosition : Vector3) : ShapeCastResult
+	{
 		const	shapeLocalResult : ShapeCastResult = new ShapeCastResult();
 		const	hitWorldResult : ShapeCastResult = new ShapeCastResult();
 		const	query : IPhysicsShapeCastQuery = {
@@ -105,33 +133,9 @@ export class Bot extends ScriptComponent {
 			shouldHitTriggers: true,
 			ignoreBody: this._ball.physicsBody
 		};
+
 		this._sceneData.havokPlugin.shapeCast(query, shapeLocalResult, hitWorldResult);
-		if (!hitWorldResult.hasHit || !hitWorldResult.body)
-			return 0;
-		const	transform = hitWorldResult.body.transformNode;
-		const	hitPoint = startPosition.add(castVector.scale(hitWorldResult.hitFraction));
-
-		if (transform === this._paddleRight || transform === this._goalRight)
-			return hitPoint.y;
-		// if (transform === this._paddleLeft)
-		// {
-		// 	const	newDirection = this._paddleLeft.script.getNewDirection(hitPoint);
-		//
-		// 	return this.getTargetHeightRecursive(hitPoint, newDirection, maxRecursion - 1);
-		// }
-		if (transform === this._top)
-		{
-			const	newVelocity = this._top.script.getNewVelocity(direction);
-
-			return this.getTargetHeightRecursive(hitPoint, newVelocity, maxRecursion - 1);
-		}
-		if (transform === this._bottom)
-		{
-			const	newVelocity = this._bottom.script.getNewVelocity(direction);
-
-			return this.getTargetHeightRecursive(hitPoint, newVelocity, maxRecursion - 1);
-		}
-		return 0;
+		return hitWorldResult;
 	}
 
 	private	setInput(direction : number)
