@@ -319,7 +319,7 @@ function createListMatches() : HTMLDivElement
 {
 	const matchElement = document.createElement('div');
 	matchElement.id = "matchList";
-	matchElement.className = "flex flex-col gap-y-4 h-full overflow-y-auto";
+	matchElement.className = "flex flex-col gap-y-4 px-2 h-full overflow-y-auto";
 	const lign = document.createElement('hr');
 	lign.className = "border-green-500";
 	for (let i = 0; i < MatchDiplay.length; i++) {
@@ -361,7 +361,7 @@ function createFriendList() : HTMLDivElement
 	friendElement.id = "friendList";
 	const lign = document.createElement('hr');
 	lign.className = "border-green-500";
-	friendElement.className = "flex flex-col gap-y-4 h-full overflow-y-auto";
+	friendElement.className = "flex flex-col gap-y-4 px-2 h-full overflow-y-auto";
 	for (let i = 0; i < FriendDisplay.length; i++) {
 		const friend = FriendDisplay[i];
 		const friendDiv = document.createElement('div');
@@ -451,19 +451,16 @@ export namespace ExtendedView {
 		searchBarFunctionality(searchBar);
 		container.appendChild(searchBar);
 
-		const displayContainer = document.createElement('div');
-		displayContainer.id = "displayContainer";
-		displayContainer.className = "flex flex-col gap-2 h-full p-2 overflow-y-auto";
+				view.appendChild(container);
+
 		if (dataType === 'friend') {
 			const friendList = createFriendList();
-			displayContainer.appendChild(friendList);
+			view.appendChild(friendList);
 		}
 		else if (dataType === 'match') {
 			const matchList = createListMatches();
-			displayContainer.appendChild(matchList);
+			view.appendChild(matchList);
 		}
-		container.appendChild(displayContainer);
-		view.appendChild(container);
 
 		setTimeout(() => {
 			window?.addEventListener('click', handleOutsideClick);
@@ -546,7 +543,7 @@ function searchBarFunctionality(searchBar: HTMLInputElement) {
 			if (matchList && matchList.parentNode)
 				matchList.parentNode.removeChild(matchList);
 			const newMatchList = createListMatches();
-			document.getElementById('displayContainer')?.appendChild(newMatchList);	
+			document.getElementById('view')?.appendChild(newMatchList);	
 		}
 	});
 }
