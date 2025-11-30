@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import path from 'path';
 
 export default defineConfig({
 	root: './src/frontend/dev/',
@@ -9,5 +10,10 @@ export default defineConfig({
 	publicDir: 'public',   // ce chemin est relatif à root (donc dev/public)
 	optimizeDeps: {
 		exclude: ['@babylonjs/havok'],
+	},
+	resolve: {
+		alias: {
+			"@shared": path.resolve(__dirname, "./src/shared/")
+		}
 	}
 })
