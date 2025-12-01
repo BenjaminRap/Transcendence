@@ -1,4 +1,4 @@
-import { applyTheme, ThemeName } from "./menuStyles";
+import { applyTheme, type ThemeName } from "./menuStyles";
 
 export class	InMatchmakingGUI extends HTMLElement
 {

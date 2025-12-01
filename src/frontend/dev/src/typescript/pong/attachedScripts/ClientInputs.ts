@@ -1,14 +1,16 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
-import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
-import { InputKey, InputKeyCallback } from "@shared/InputKey";
+import { SceneManager } from "@babylonjs-toolkit/next";
+import { InputKey, type InputKeyCallback } from "@shared/InputKey";
 import { InputManager, PlayerInput } from "@shared/attachedScripts/InputManager";
 import { KeyboardEventTypes, KeyboardInfo } from "@babylonjs/core";
-import { ClientInput, FrontendSceneData } from "../FrontendSceneData";
+import { type ClientInput, FrontendSceneData } from "../FrontendSceneData";
 import { getFrontendSceneData } from "../PongGame";
+import { Imported } from "@shared/ImportedDecorator";
+import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 
-export class ClientInputs extends ScriptComponent {
-	private _inputManager! : TransformNode;
+export class ClientInputs extends CustomScriptComponent {
+	@Imported(InputManager) private _inputManager! : InputManager;
 	
 	private _inputsMap : Map<string, InputKey> = new Map<string, InputKey>;
 	private _mainPlayerInput : PlayerInput | null = null;
@@ -24,26 +26,24 @@ export class ClientInputs extends ScriptComponent {
 
 	protected start()
 	{
-		const	inputManager = SceneManager.GetComponent<InputManager>(this._inputManager, "InputManager", false);
-
-		this.setInputsListener(inputManager);
-		this.setMultiplayerEvents(inputManager);
+		this.setInputsListener();
+		this.setMultiplayerEvents();
 		this.scene.onKeyboardObservable.add(this.onKeyboardInput.bind(this));
 		this._sceneData.events.getObservable("input-change").add(() => {
 			this.clear();
-			this.setInputsListener(inputManager);
-			this.setMultiplayerEvents(inputManager);
+			this.setInputsListener();
+			this.setMultiplayerEvents();
 		})
 	}
 
-	private	setMultiplayerEvents(inputManager : InputManager)
+	private	setMultiplayerEvents()
 	{
 		const	serverProxy = this._sceneData.serverProxy;
 
 		if (this._sceneData.gameType !== "Multiplayer" || !serverProxy)
 			return ;
 
-		this._mainPlayerInput = inputManager.getPlayerInput(serverProxy.getPlayerIndex()!);
+		this._mainPlayerInput = this._inputManager.getPlayerInput(serverProxy.getPlayerIndex()!);
 		this._upCallback = (event : "keyDown" | "keyUp") => {
 			serverProxy!.keyUpdate("up", event);
 		};
@@ -54,15 +54,15 @@ export class ClientInputs extends ScriptComponent {
 		this._mainPlayerInput.down.addKeyObserver(this._downCallback);
 	}
 
-	private	setInputsListener(inputManager : InputManager)
+	private	setInputsListener()
 	{
 		this._sceneData.inputs.forEach((clientInput : ClientInput) => {
-			const	playerInput = inputManager.getPlayerInput(clientInput.index);
+			const	playerInput = this._inputManager.getPlayerInput(clientInput.index);
 
 			this._inputsMap.set(clientInput.upKey, playerInput.up);
 			this._inputsMap.set(clientInput.downKey, playerInput.down);
 		});
-		this._inputsMap.set("Escape", inputManager.getEscapeInput());
+		this._inputsMap.set("Escape", this._inputManager.getEscapeInput());
 	}
 
 	private	clear()

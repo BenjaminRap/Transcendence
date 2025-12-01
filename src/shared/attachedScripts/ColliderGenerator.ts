@@ -1,23 +1,28 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
-import { IUnityVector3, SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
+import { type IUnityVector3, SceneManager } from "@babylonjs-toolkit/next";
 import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
 import { PhysicsShape, PhysicsShapeContainer } from "@babylonjs/core/Physics/v2/physicsShape";
 import { PhysicsMotionType, Quaternion, Vector3 } from "@babylonjs/core";
+import zod from "zod";
+import { Imported } from "@shared/ImportedDecorator";
+import { zodVector3 } from "@shared/ServerMessage";
+import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 
-interface SerializableShape
-{
-    type : number;
-    center : IUnityVector3;
-	isTrigger : boolean;
+const	zodSerializedShape = zod.object({
+	type: zod.int(),
+	center: zodVector3,
+	isTrigger: zod.boolean(),
+	extents: zodVector3.nullable(),
+	radius: zod.number().nullable()
+});
+type SerializableShape = zod.infer<typeof zodSerializedShape>;
 
-    extents : IUnityVector3 | undefined;
-    radius : number | undefined;
-}
+const	zodPhysicsMotionType = zod.literal([0, 1, 2]);
 
-export class ColliderGenerator extends ScriptComponent {
-	private	_shapeProperties : SerializableShape[] = [];
-	private	_physicsMotionType : PhysicsMotionType = PhysicsMotionType.STATIC;
+export class ColliderGenerator extends CustomScriptComponent {
+	@Imported(zodSerializedShape, true) private	_shapeProperties : SerializableShape[] = [];
+	@Imported(zodPhysicsMotionType) private	_physicsMotionType! : PhysicsMotionType;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "ColliderGenerator") {
         super(transform, scene, properties, alias);
@@ -55,7 +60,7 @@ export class ColliderGenerator extends ScriptComponent {
 			parameters: {
 				center: this.getVector3FromIUnityVector3(properties.center),
 				rotation: Quaternion.Identity(),
-				extents: this.getVector3FromIUnityVector3(properties.extents)
+				extents: properties.extents ? this.getVector3FromIUnityVector3(properties.extents) : undefined
 			}
 		}, this.scene);
 
@@ -63,7 +68,7 @@ export class ColliderGenerator extends ScriptComponent {
 		return shape;
 	}
 
-	private getVector3FromIUnityVector3(vector3 : IUnityVector3 | undefined) : Vector3 | undefined
+	private getVector3FromIUnityVector3(vector3 : IUnityVector3) : Vector3 | undefined
 	{
 		if (vector3 === undefined)
 			return (undefined);

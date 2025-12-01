@@ -1,20 +1,24 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
-import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
+import { SceneManager } from "@babylonjs-toolkit/next";
 import { FrontendSceneData } from "../FrontendSceneData";
-import { GameInfos } from "@shared/ServerMessage";
+import type { GameInfos } from "@shared/ServerMessage";
 import { GameManager } from "@shared/attachedScripts/GameManager";
 import { InputKey } from "@shared/InputKey";
 import { InputManager } from "@shared/attachedScripts/InputManager";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { getFrontendSceneData } from "../PongGame";
+import { CustomScriptComponent } from "@shared/CustomScriptComponent";
+import { Imported } from "@shared/ImportedDecorator";
+import { Ball } from "@shared/attachedScripts/Ball";
+import { Paddle } from "@shared/attachedScripts/Paddle";
 
-export class ClientSync extends ScriptComponent {
-	private	_inputManager! : TransformNode;
-	private	_gameManager! : TransformNode;
-	private _ball! : TransformNode;
-	private _paddleRight! : TransformNode;
-	private _paddleLeft! : TransformNode;
+export class ClientSync extends CustomScriptComponent {
+	@Imported(InputManager) private	_inputManager! : InputManager;
+	@Imported(GameManager) private	_gameManager! : GameManager;
+	@Imported(Ball) private _ball! : Ball;
+	@Imported(Paddle) private _paddleRight! : Paddle;
+	@Imported(Paddle) private _paddleLeft! : Paddle;
 
 	private _sceneData : FrontendSceneData;
 
@@ -28,13 +32,11 @@ export class ClientSync extends ScriptComponent {
 	{
 		if (this._sceneData.gameType !== "Multiplayer")
 			return ;
-		const	gameManager = SceneManager.GetComponent<GameManager>(this._gameManager, "GameManager", false);
-		const	inputManager = SceneManager.GetComponent<InputManager>(this._inputManager, "InputManager", false);
 
-		this.listenToGameInfos(gameManager, inputManager);
+		this.listenToGameInfos();
 	}
 	
-	private	listenToGameInfos(gameManager : GameManager, inputManager : InputManager)
+	private	listenToGameInfos()
 	{
 		const	serverProxy = this._sceneData.serverProxy;
 	
@@ -51,20 +53,20 @@ export class ClientSync extends ScriptComponent {
 			}
 			else if (gameInfos.type === "input")
 			{
-				const	opponentInputs = inputManager.getPlayerInput(serverProxy.getOpponentIndex());
+				const	opponentInputs = this._inputManager.getPlayerInput(serverProxy.getOpponentIndex());
 
 				this.updateKey(gameInfos.infos.up, opponentInputs.up);
 				this.updateKey(gameInfos.infos.down, opponentInputs.down);
 			}
 			else if (gameInfos.type === "itemsUpdate")
 			{
-				this._ball.position.copyFrom(this.xyzToVector3(gameInfos.infos.ball.pos));
-				this._ball.getPhysicsBody()!.setLinearVelocity(this.xyzToVector3(gameInfos.infos.ball.linearVelocity));
-				this._paddleLeft.position.copyFrom(this.xyzToVector3(gameInfos.infos.paddleLeftPos));
-				this._paddleRight.position.copyFrom(this.xyzToVector3(gameInfos.infos.paddleRightPos));
+				this._ball.transform.position.copyFrom(this.xyzToVector3(gameInfos.infos.ball.pos));
+				this._ball.transform.getPhysicsBody()!.setLinearVelocity(this.xyzToVector3(gameInfos.infos.ball.linearVelocity));
+				this._paddleLeft.transform.position.copyFrom(this.xyzToVector3(gameInfos.infos.paddleLeftPos));
+				this._paddleRight.transform.position.copyFrom(this.xyzToVector3(gameInfos.infos.paddleRightPos));
 			}
 			else if (gameInfos.type === "goal")
-				gameManager.onGoal(gameInfos.infos.side);
+				this._gameManager.onGoal(gameInfos.infos.side);
 		});
 	}
 	

@@ -1,20 +1,22 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
-import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
+import { SceneManager } from "@babylonjs-toolkit/next";
 import { FrontendSceneData } from "../FrontendSceneData";
-import { MenuGUI, SwitchButton } from "../MenuGUI";
-import { Animation, EasingFunction, MotionBlurPostProcess, Nullable, SineEase } from "@babylonjs/core";
+import { MenuGUI, type SwitchButton } from "../MenuGUI";
+import { Animation, EasingFunction, type Nullable, SineEase } from "@babylonjs/core";
 import { Animatable } from "@babylonjs/core/Animations/animatable";
 import { SceneMenuData } from "./SceneMenuData";
 import { InMatchmakingGUI } from "../InMatchmakingGUI";
 import { getFrontendSceneData } from "../PongGame";
-import { applyTheme, ThemeName } from "../menuStyles";
+import { applyTheme, type ThemeName } from "../menuStyles";
 import { TitleGUI } from "../TitleGUI";
+import { CustomScriptComponent } from "@shared/CustomScriptComponent";
+import { Imported } from "@shared/ImportedDecorator";
 
-export class CreateMenuGUI extends ScriptComponent {
+export class CreateMenuGUI extends CustomScriptComponent {
 	private static readonly _enemyTypes = [ "Local", "Multiplayer", "Bot" ];
 
-	private _scenesParent! : TransformNode;
+	@Imported(TransformNode) private _scenesParent! : TransformNode;
 
 	private _scenes! : SceneMenuData[];
 	private _animation : Nullable<Animatable> = null;
@@ -33,7 +35,7 @@ export class CreateMenuGUI extends ScriptComponent {
 	protected	awake()
 	{
 		this.setScenes();
-		const	style : ThemeName = (this._scenes.length === 0) ? "basic" : this._scenes[0].style;
+		const	style : ThemeName = (this._scenes.length === 0) ? "basic" : this._scenes[0].getStyle();
 
 		this.createTitleGUI(style);
 		this.createMenuGUI(style);
@@ -70,7 +72,7 @@ export class CreateMenuGUI extends ScriptComponent {
 	private	createMenuGUI(theme : ThemeName)
 	{
 		const	sceneButtonSwitch : SwitchButton = {
-			items: this._scenes.map((scene) => scene.sceneName),
+			items: this._scenes.map((scene) => scene.getSceneName()),
 			currentItemIndex: 0,
 			onItemChange: this.onSceneChange.bind(this)
 		};
@@ -111,9 +113,11 @@ export class CreateMenuGUI extends ScriptComponent {
 		newScene.onSceneSwitch("added", 0.5, this._easeFunction);
 		currentScene.onSceneSwitch("removed", 0.5, this._easeFunction);
 
-		applyTheme(this._menuGUI, newScene.style);
-		applyTheme(this._inMatchmakingGUI, newScene.style);
-		applyTheme(this._titleGUI, newScene.style);
+		const	newStyle = newScene.getStyle();
+
+		applyTheme(this._menuGUI, newStyle);
+		applyTheme(this._inMatchmakingGUI, newStyle);
+		applyTheme(this._titleGUI, newStyle);
 		const	distance = this._scenes[newIndex].transform.position.subtract(this._scenes[currentIndex].transform.position);
 		const	startPosition = this._scenesParent.position;
 		const	endPosition = this._scenesParent.position.subtract(distance);
@@ -141,7 +145,7 @@ export class CreateMenuGUI extends ScriptComponent {
 
 	private onPlay(sceneIndex : number, enemyTypeIndex : number, _skinIndex : number)
 	{
-		const	sceneName = this._scenes[sceneIndex].sceneFileName;
+		const	sceneName = this._scenes[sceneIndex].getSceneFileName();
 
 		if (sceneName !== "Basic.gltf" && sceneName !== "Magic.gltf")
 		{

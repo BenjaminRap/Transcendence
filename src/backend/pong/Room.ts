@@ -1,12 +1,12 @@
 import { ServerSceneData } from "./ServerSceneData";
 import { ServerPongGame } from "./ServerPongGame";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
-import { GameInit, KeysUpdate, ZodKeysUpdate } from "@shared/ServerMessage"
+import { type GameInit, type KeysUpdate, zodKeysUpdate } from "@shared/ServerMessage"
 import { ClientProxy } from "./ClientProxy";
-import { int, Observable } from "@babylonjs/core";
-import { DefaultEventsMap, Server } from "socket.io";
-import { ServerEvents, ServerToClientEvents } from "@shared/MessageType";
-import { DefaultSocket } from ".";
+import { type int, Observable } from "@babylonjs/core";
+import { type DefaultEventsMap, Server } from "socket.io";
+import type { ServerEvents, ServerToClientEvents } from "@shared/MessageType";
+import type { DefaultSocket } from ".";
 
 export type SocketMessage = {
 	socketIndex : int,
@@ -183,7 +183,7 @@ export class	Room
 
 		this._sockets.forEach((socket : DefaultSocket, index : number) => {
 			socket.on(event, (data : any) => {
-				const	keysUpdate = ZodKeysUpdate.safeParse(data);
+				const	keysUpdate = zodKeysUpdate.safeParse(data);
 				if (!keysUpdate.success)
 				{
 					this.removeSocketFromRoom(socket);

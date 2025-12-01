@@ -1,3 +1,5 @@
+import zod from "zod";
+
 export class	Range {
 	public min : number;
 	public max : number;
@@ -11,3 +13,9 @@ export class	Range {
 	}
 }
 
+export const	zodRange = zod.object({
+	min: zod.number(),
+	max: zod.number()
+}).refine(arg => arg.min <= arg.max, {
+	message: "The min attribute should be smaller or equal to the max attribute !"
+});

@@ -1,23 +1,25 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
-import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
-import { IBasePhysicsCollisionEvent, PhysicsEventType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
-import { int } from "@babylonjs/core/types";
+import { SceneManager } from "@babylonjs-toolkit/next";
+import { type IBasePhysicsCollisionEvent, PhysicsEventType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
+import type { int } from "@babylonjs/core/types";
 import { Ball } from "@shared/attachedScripts/Ball";
 import { getSceneData, SceneData } from "@shared/SceneData";
 import { Vector3 } from "@babylonjs/core";
+import { Imported } from "@shared/ImportedDecorator";
+import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 
 export type EndData = {
 	winner : "left" | "right" | "draw",
 	forfeit : boolean
 }
 
-export class GameManager extends ScriptComponent {
+export class GameManager extends CustomScriptComponent {
 	private static readonly _pointsToWin = 5;
 
-	private	_goalLeft! : TransformNode;
-	private	_goalRight! : TransformNode;
-	private	_ball! : TransformNode & { script : Ball};
+	@Imported(TransformNode) private	_goalLeft! : TransformNode;
+	@Imported(TransformNode) private	_goalRight! : TransformNode;
+	@Imported(Ball) private	_ball! : Ball;
 
 	private _scoreRight : int = 0;
 	private _scoreLeft : int = 0;
@@ -50,7 +52,7 @@ export class GameManager extends ScriptComponent {
 	{
 		if (this._ended
 			|| eventData.type === PhysicsEventType.TRIGGER_ENTERED
-			|| eventData.collider.transformNode !== this._ball
+			|| eventData.collider.transformNode !== this._ball.transform
 			|| eventData.collider.getLinearVelocity().equals(Vector3.ZeroReadOnly))
 			return ;
 		const	collidedNode = eventData.collidedAgainst.transformNode;
@@ -78,9 +80,9 @@ export class GameManager extends ScriptComponent {
 				this.endMatch("left", false);
 		}
 		if (!this._ended)
-			this._ball.script.launch();
+			this._ball.launch();
 		else
-			this._ball.script.reset();
+			this._ball.reset();
 	}
 
 	private	endMatch(winner : "left" | "right" | "highestScore", forfeit: boolean)
@@ -102,11 +104,6 @@ export class GameManager extends ScriptComponent {
 		if (this._scoreRight > this._scoreLeft)
 			return "right";
 		return "draw";
-	}
-
-	protected awake()
-	{
-		this._ball.script = SceneManager.GetComponent<Ball>(this._ball, "Ball", false);
 	}
 
 	private	reset()

@@ -1,5 +1,5 @@
-import { int, Observable } from "@babylonjs/core";
-import { EndData } from "./attachedScripts/GameManager";
+import { type int, Observable } from "@babylonjs/core";
+import type { EndData } from "./attachedScripts/GameManager";
 
 export class	EventsManager
 {

@@ -1,4 +1,4 @@
-import { ClientInput } from "./FrontendSceneData";
+import type { ClientInput } from "./FrontendSceneData";
 
 export class	Settings
 {

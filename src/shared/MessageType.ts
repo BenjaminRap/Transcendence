@@ -1,4 +1,4 @@
-import { GameInfos, GameInit, KeysUpdate } from "./ServerMessage";
+import type { GameInfos, GameInit, KeysUpdate } from "./ServerMessage";
 
 export type ClientMessage = "join-matchmaking" | "ready" | "input-infos" | "forfeit" | "leave-matchmaking"
 export type ClientMessageData<T extends ClientMessage> = T extends "input-infos" ? KeysUpdate : undefined;

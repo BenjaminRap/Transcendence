@@ -1,25 +1,28 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
-import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
 import { ServerSceneData } from "../ServerSceneData";
-import { GameInfos, KeysUpdate } from "@shared/ServerMessage"
+import type { GameInfos, KeysUpdate } from "@shared/ServerMessage";
 import { InputManager, PlayerInput } from "@shared/attachedScripts/InputManager";
 import { InputKey } from "@shared/InputKey";
-import { SocketMessage } from "../Room";
-import { int } from "@babylonjs/core/types";
+import type { SocketMessage } from "../Room";
+import type { int } from "@babylonjs/core/types";
 import { Vector3 } from "@babylonjs/core";
 import { getSceneData } from "../ServerPongGame";
 import { TimerManager } from "@shared/attachedScripts/TimerManager";
+import { Paddle } from "@shared/attachedScripts/Paddle";
+import { Imported } from "@shared/ImportedDecorator";
+import { Ball } from "@shared/attachedScripts/Ball";
+import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 
-export class ServerSync extends ScriptComponent {
+export class ServerSync extends CustomScriptComponent {
 	private static readonly	_sendInfoDelay = 100;
 
-	private _ball! : TransformNode & { physicsBody : PhysicsBody };
-	private _paddleRight! : TransformNode;
-	private _paddleLeft! : TransformNode;
-	private _inputManager! : TransformNode;
-	private _timerManager! : TransformNode;
+	@Imported(Ball) private _ball! : Ball;
+	@Imported(Paddle) private _paddleRight! : Paddle;
+	@Imported(Paddle) private _paddleLeft! : Paddle;
+	@Imported(InputManager) private _inputManager! : InputManager;
+	@Imported(TimerManager) private _timerManager! : TimerManager;
 
 	private _sceneData : ServerSceneData;
 
@@ -29,21 +32,12 @@ export class ServerSync extends ScriptComponent {
 		this._sceneData = getSceneData(this.scene);
     }
 
-	protected	awake()
-	{
-		const	physicsBody = this._ball.getPhysicsBody();
-		if (physicsBody == null)
-			throw new Error("The ball doesn't have a physics body !");
-		this._ball.physicsBody = physicsBody;
-	}
 
 	protected	start()
 	{
-		const	timerManager = SceneManager.GetComponent<TimerManager>(this._timerManager, "TimerManager", false);
-		timerManager.setInterval(this.sendInfos.bind(this), ServerSync._sendInfoDelay);
+		this._timerManager.setInterval(this.sendInfos.bind(this), ServerSync._sendInfoDelay);
 
-		const	inputManager = SceneManager.GetComponent<InputManager>(this._inputManager, "InputManager", false);
-		this.listenToClients(inputManager);
+		this.listenToClients();
 		this._sceneData.events.getObservable("updateLeftScore").add(() => { this.notifyGoal("left") });
 		this._sceneData.events.getObservable("updateRightScore").add(() => { this.notifyGoal("right") });
 	}
@@ -63,11 +57,11 @@ export class ServerSync extends ScriptComponent {
 		const	message : GameInfos = {
 			type : "itemsUpdate",
 			infos: {
-				paddleRightPos: this.getXYZ(this._paddleRight.position),
-				paddleLeftPos: this.getXYZ(this._paddleLeft.position),
+				paddleRightPos: this.getXYZ(this._paddleRight.transform.position),
+				paddleLeftPos: this.getXYZ(this._paddleLeft.transform.position),
 				ball: {
-					pos: this.getXYZ(this._ball.position),
-					linearVelocity: this.getXYZ(this._ball.physicsBody.getLinearVelocity())
+					pos: this.getXYZ(this._ball.transform.position),
+					linearVelocity: this.getXYZ(this._ball.getPhysicsBody().getLinearVelocity())
 				}
 			}
 		}
@@ -79,10 +73,10 @@ export class ServerSync extends ScriptComponent {
 		return { x: v.x, y: v.y, z: v.z };
 	}
 
-	private	listenToClients(inputManager : InputManager)
+	private	listenToClients()
 	{
 		this._sceneData.clientProxy.onSocketMessage("input-infos").add((message : SocketMessage) => {
-			const	inputs = inputManager.getPlayerInput(message.socketIndex);
+			const	inputs = this._inputManager.getPlayerInput(message.socketIndex);
 
 			this.onKeyUpdate(message.data, inputs, message.socketIndex);
 		});

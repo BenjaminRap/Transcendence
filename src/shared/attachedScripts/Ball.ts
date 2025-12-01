@@ -1,23 +1,26 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
-import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
+import { SceneManager } from "@babylonjs-toolkit/next";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
 import { getSceneData } from "@shared/SceneData";
 import { TimerManager } from "./TimerManager";
+import { Imported } from "@shared/ImportedDecorator";
+import { zodNumber } from "@shared/ImportedHelpers";
+import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 
-export class Ball extends ScriptComponent {
-	private _initialSpeed : number = 6;
-	private _goalTimeoutMs : number = 500;
+export class Ball extends CustomScriptComponent {
+	@Imported(TransformNode) private _timerManager! : TransformNode;
+	@Imported(zodNumber) private _initialSpeed! : number;
+	@Imported(zodNumber) private _goalTimeoutMs! : number;
 
 	private _physicsBody! : PhysicsBody;
 	private _initialPosition : Vector3;
 	private _startsRight : boolean = true;
-	private _timerManager! : TransformNode;
 	private	_ballStartTimeout : number | null = null;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "Ball") {
-        super(transform, scene, properties, alias);
+		super(transform, scene, properties, alias);
 		this._initialPosition = transform.position.clone();
 
 		const	sceneData = getSceneData(this.scene);
@@ -41,7 +44,7 @@ export class Ball extends ScriptComponent {
 	{
 		this.reset();
 		this._ballStartTimeout = SceneManager.GetComponent<TimerManager>(this._timerManager, "TimerManager", false).setTimeout(() => {
-			const	direction = this.getBallDirection();
+			const	direction = this.getBallStartDirection();
 			const	velocity = direction.scale(this._initialSpeed);
 
 			this._physicsBody.setLinearVelocity(velocity);
@@ -58,12 +61,17 @@ export class Ball extends ScriptComponent {
 		this._physicsBody.setLinearVelocity(Vector3.Zero());
 	}
 
-	private getBallDirection() : Vector3
+	private getBallStartDirection() : Vector3
 	{
 		if (this._startsRight)
 			return Vector3.Right();
 		else
 			return Vector3.Left();
+	}
+
+	public getPhysicsBody()
+	{
+		return this._physicsBody;
 	}
 }
 

@@ -9,7 +9,6 @@ import { XMLHttpRequest } from 'w3c-xmlhttprequest';
 import { NullEngine, NullEngineOptions } from "@babylonjs/core";
 import { importGlob } from "./importUtils";
 import { ServerSceneData } from "./ServerSceneData";
-import { SceneData } from "@shared/SceneData";
 
 importGlob("dev/backend/pong/attachedScripts/*.js");
 importGlob("dev/shared/attachedScripts/*.js");

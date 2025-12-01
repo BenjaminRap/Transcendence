@@ -1,12 +1,14 @@
 import { Matrix } from "@babylonjs/core";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { Scene } from "@babylonjs/core/scene";
+import zod from "zod";
 
-export interface	LodLevel
-{
-	meshId : string;
-	distance : number;
-}
+export const zodLodLevel = zod.object({
+	meshName: zod.string().nonempty(),
+	distance: zod.number().positive()
+});
+
+export type LodLevel = zod.infer<typeof zodLodLevel>;
 
 export interface	LodLevelProcessed
 {
@@ -32,12 +34,12 @@ export class	Lod
 			throw new Error("Lod created with 0 levels !");
 		lodLevels.sort((a: LodLevel, b: LodLevel) => a.distance - b.distance);
 		return lodLevels.map((lodLevel : LodLevel) => {
-			const	mesh = scene.getMeshByName(lodLevel.meshId);
+			const	mesh = scene.getMeshByName(lodLevel.meshName);
 
 			if (mesh === null)
-				console.error(`Can't find an lod mesh, id : ${lodLevel.meshId}!`);
+				console.error(`Can't find an lod mesh, id : ${lodLevel.meshName}!`);
 			else if (!(mesh instanceof Mesh))
-				console.error(`The lod AbstractMesh is not a Mesh, id :  ${lodLevel.meshId}`)
+				console.error(`The lod AbstractMesh is not a Mesh, id :  ${lodLevel.meshName}`)
 			else
 			{
 				return {

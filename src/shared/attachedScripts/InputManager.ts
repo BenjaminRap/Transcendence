@@ -1,8 +1,9 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
-import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
+import { SceneManager } from "@babylonjs-toolkit/next";
 import { InputKey } from "../InputKey";
-import { int } from "@babylonjs/core";
+import type { int } from "@babylonjs/core";
+import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 
 export class PlayerInput
 {
@@ -10,7 +11,7 @@ export class PlayerInput
 	down: InputKey = new InputKey();
 }
 
-export class InputManager extends ScriptComponent {
+export class InputManager extends CustomScriptComponent {
 	private _playersInputs : PlayerInput[];
 	private _escapeInput : InputKey;
 

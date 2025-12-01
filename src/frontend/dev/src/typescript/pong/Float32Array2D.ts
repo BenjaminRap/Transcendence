@@ -1,4 +1,4 @@
-import { float, int } from "@babylonjs/core/types";
+import type { float, int } from "@babylonjs/core/types";
 
 export class	Float32Array2D {
 	private _data : Float32Array;

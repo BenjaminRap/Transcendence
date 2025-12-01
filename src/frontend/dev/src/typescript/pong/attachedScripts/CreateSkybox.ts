@@ -1,10 +1,13 @@
 import { Scene } from "@babylonjs/core/scene";
 import { Mesh, MeshBuilder, TransformNode } from "@babylonjs/core/Meshes";
-import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
+import { SceneManager } from "@babylonjs-toolkit/next";
 import { CubeTexture, StandardMaterial, Texture } from "@babylonjs/core";
+import { Imported } from "@shared/ImportedDecorator";
+import { CustomScriptComponent } from "@shared/CustomScriptComponent";
+import { zodString } from "@shared/ImportedHelpers";
 
-export class CreateSkybox extends ScriptComponent {
-	private _skyboxPath! : string;
+export class CreateSkybox extends CustomScriptComponent {
+	@Imported(zodString) private _skyboxPath! : string;
 
 	private _skybox : Mesh | undefined = undefined;
 

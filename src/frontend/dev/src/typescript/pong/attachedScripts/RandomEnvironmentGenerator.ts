@@ -1,25 +1,29 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
-import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
-import { int } from "@babylonjs/core/types";
+import { SceneManager } from "@babylonjs-toolkit/next";
+import { type int } from "@babylonjs/core/types";
 import { Matrix, Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Range } from "../Range";
 import { randomFromRange } from "../utilities";
-import { Lod, LodLevel, LodLevelProcessed } from "../Lod";
+import { Lod, zodLodLevel, type LodLevelProcessed } from "../Lod";
 import { RandomTerrainGenerator } from "./RandomTerrainGenerator";
+import { Imported } from "@shared/ImportedDecorator";
+import zod from "zod";
+import { zodInt, zodNumber } from "@shared/ImportedHelpers";
+import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 
-interface	RandomEnvironmentElement
-{
-	lodLevels: LodLevel[]
-	instanceCount : int;
-}
+const zodRandomEnvironmentElement = zod.object({
+	lodLevels: zod.array(zodLodLevel),
+	instanceCount: zod.number().int()
+});
+type RandomEnvironmentElement = zod.infer<typeof zodRandomEnvironmentElement>;
 
-export class RandomEnvironmentGenerator extends ScriptComponent {
-	private _dimension : number = 100;
-	private _envElements : RandomEnvironmentElement[] = [];
-	private _instancesCountFactor : number = 1;
-	private _distanceWithoutElements : number = 10;
-	private _ground! : TransformNode;
+export class RandomEnvironmentGenerator extends CustomScriptComponent {
+	@Imported(zodInt) private _dimension! : int;
+	@Imported(zodRandomEnvironmentElement, true) private _envElements! : RandomEnvironmentElement[];
+	@Imported(zodNumber) private _instancesCountFactor! : number;
+	@Imported(zodNumber) private _distanceWithoutElements! : number;
+	@Imported(TransformNode) private _ground! : TransformNode;
 
 	private _elementsLods! : Lod[];
 

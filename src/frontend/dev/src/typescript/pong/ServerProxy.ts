@@ -1,7 +1,7 @@
-import { GameInfos, KeysUpdate } from "@shared/ServerMessage";
+import type { GameInfos, KeysUpdate } from "@shared/ServerMessage";
 import { MultiplayerHandler } from "./MultiplayerHandler";
 import { Observable } from "@babylonjs/core/Misc/observable";
-import { ClientToServerEvents } from "@shared/MessageType";
+import type { ClientToServerEvents } from "@shared/MessageType";
 
 export class	ServerProxy
 {

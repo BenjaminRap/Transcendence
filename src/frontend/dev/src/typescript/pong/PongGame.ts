@@ -7,13 +7,13 @@ import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
 import { HavokPlugin } from "@babylonjs/core/Physics";
 
 import HavokPhysics from "@babylonjs/havok";
-import { ClientInput, FrontendSceneData } from "./FrontendSceneData";
+import { type ClientInput, FrontendSceneData } from "./FrontendSceneData";
 import { Color4 } from "@babylonjs/core";
-import { FrontendGameType, getSceneData } from "@shared/SceneData";
+import { type FrontendGameType, getSceneData } from "@shared/SceneData";
 import { MultiplayerHandler } from "./MultiplayerHandler";
 import { Settings } from "./Settings";
 import { ServerProxy } from "./ServerProxy";
-import { GameInfos } from "@shared/ServerMessage";
+import type { GameInfos } from "@shared/ServerMessage";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
@@ -217,7 +217,7 @@ export class PongGame extends HTMLElement {
 		SceneManager.HideLoadingScreen(this._engine);
 		SceneManager.FocusRenderCanvas(scene);
 		scene.activeCameras = scene.cameras;
-		scene.activeCameras[0].attachControl();
+		// scene.activeCameras[0].attachControl();
 	}
 
 	public disconnectedCallback() : void {

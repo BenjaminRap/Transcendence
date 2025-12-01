@@ -1,28 +1,31 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
-import { IPhysicsShapeCastQuery, SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
+import { type IPhysicsShapeCastQuery, SceneManager } from "@babylonjs-toolkit/next";
 import { getFrontendSceneData } from "../PongGame";
 import { InputManager, PlayerInput } from "@shared/attachedScripts/InputManager";
-import { int, PhysicsBody, ShapeCastResult, Vector3 } from "@babylonjs/core";
+import { type int, ShapeCastResult, Vector3 } from "@babylonjs/core";
 import { FrontendSceneData } from "../FrontendSceneData";
 import { Platform } from "@shared/attachedScripts/Platform";
 import { Paddle } from "@shared/attachedScripts/Paddle";
 import { TimerManager } from "@shared/attachedScripts/TimerManager";
+import { CustomScriptComponent } from "@shared/CustomScriptComponent";
+import { Imported } from "@shared/ImportedDecorator";
+import { Ball } from "@shared/attachedScripts/Ball";
 
-export class Bot extends ScriptComponent {
+export class Bot extends CustomScriptComponent {
 	private static readonly _paddleMinimumMovement = 0.5;
 	private static readonly _refreshIntervalMs = 1000;
 	private static readonly _maxReboundCalculationRecursion = 4;
 
-	private	_inputManager! : TransformNode;
-	private	_timerManager! : TransformNode & { script : TimerManager };
-	private _paddleRight! : TransformNode & { script : Paddle };
-	private _paddleLeft! : TransformNode & { script : Paddle };
-	private _goalRight! : TransformNode;
-	private _goalLeft! : TransformNode;
-	private _bottom! : TransformNode & { script: Platform };
-	private _top! : TransformNode & { script: Platform };
-	private _ball! : TransformNode & { physicsBody : PhysicsBody };
+	@Imported(InputManager) private	_inputManager! : InputManager;
+	@Imported(TimerManager) private _timerManager! : TimerManager;
+	@Imported(Paddle) private _paddleRight! : Paddle;
+	@Imported(Paddle) private _paddleLeft! : Paddle;
+	@Imported(TransformNode) private _goalRight! : TransformNode;
+	@Imported(TransformNode) private _goalLeft! : TransformNode;
+	@Imported(Platform) private _bottom! : Platform;
+	@Imported(Platform) private _top! : Platform;
+	@Imported(Ball) private _ball! : Ball;
 
 	private _inputs! : PlayerInput;
 	private _targetHeight : number = 0;
@@ -39,25 +42,14 @@ export class Bot extends ScriptComponent {
 
 	protected	awake()
 	{
-		this._paddleRight.script = SceneManager.GetComponent<Paddle>(this._paddleRight, "Paddle", false);
-		this._paddleLeft.script = SceneManager.GetComponent<Paddle>(this._paddleLeft, "Paddle", false);
-		this._bottom.script = SceneManager.GetComponent<Platform>(this._bottom, "Platform", false);
-		this._top.script = SceneManager.GetComponent<Platform>(this._top, "Platform", false);
 		this._sceneData.events.getObservable("game-start").add(() => {
-			SceneManager.GetComponent<TimerManager>(this._timerManager, "TimerManager", false).setInterval(this.refreshGameView.bind(this), Bot._refreshIntervalMs);
+			this._timerManager.setInterval(this.refreshGameView.bind(this), Bot._refreshIntervalMs);
 		});
 	}
 
 	protected	start()
 	{
-		const	inputManager = SceneManager.GetComponent<InputManager>(this._inputManager, "InputManager", false);
-
-		this._inputs = inputManager.getPlayerInput(1);
-
-		const	physicsBody = this._ball.getPhysicsBody();
-		if (physicsBody == null)
-			throw new Error("The ball doesn't have a physics body !");
-		this._ball.physicsBody = physicsBody;
+		this._inputs = this._inputManager.getPlayerInput(1);
 	}
 
 	protected	update()
@@ -74,7 +66,7 @@ export class Bot extends ScriptComponent {
 
 	private	getTargetDirection() : number
 	{
-		const	direction = this._targetHeight - this._paddleRight.absolutePosition.y;
+		const	direction = this._targetHeight - this._paddleRight.transform.absolutePosition.y;
 
 		if (Math.abs(direction) < Bot._paddleMinimumMovement)
 			return 0;
@@ -83,8 +75,8 @@ export class Bot extends ScriptComponent {
 	
 	private	getTargetHeight() : number
 	{
-		const	startPosition = this._ball.absolutePosition;
-		const	direction = this._ball.physicsBody.getLinearVelocity();
+		const	startPosition = this._ball.transform.absolutePosition;
+		const	direction = this._ball.getPhysicsBody().getLinearVelocity();
 
 		return this.getTargetHeightRecursive(startPosition, direction, Bot._maxReboundCalculationRecursion);
 	}
@@ -102,9 +94,10 @@ export class Bot extends ScriptComponent {
 		const	hitPoint = hitWorldResult.hitPoint;
 		// const	hitPoint = startPosition.add(castVector.scale(hitWorldResult.hitFraction));
 
-		if (transform === this._paddleRight || transform === this._goalRight)
+		if (transform === this._paddleRight.transform || transform === this._goalRight)
 			return hitPoint.y;
 		const	platformScript = this.getPlatformScript(transform);
+
 		if (platformScript)
 		{
 			const	newVelocity = platformScript.getNewVelocity(direction);
@@ -116,10 +109,10 @@ export class Bot extends ScriptComponent {
 
 	private	getPlatformScript(transform : TransformNode)
 	{
-		if (transform === this._top)
-			return this._top.script;
-		if (transform === this._bottom)
-			return this._bottom.script;
+		if (transform === this._top.transform)
+			return this._top;
+		if (transform === this._bottom.transform)
+			return this._bottom;
 		return null;
 	}
 
@@ -128,12 +121,12 @@ export class Bot extends ScriptComponent {
 		const	shapeLocalResult : ShapeCastResult = new ShapeCastResult();
 		const	hitWorldResult : ShapeCastResult = new ShapeCastResult();
 		const	query : IPhysicsShapeCastQuery = {
-			shape: this._ball.physicsBody.shape!,
-			rotation: this._ball.rotationQuaternion!,
+			shape: this._ball.getPhysicsBody().shape!,
+			rotation: this._ball.transform.rotationQuaternion!,
 			startPosition: startPosition,
 			endPosition: endPosition,
 			shouldHitTriggers: true,
-			ignoreBody: this._ball.physicsBody
+			ignoreBody: this._ball.getPhysicsBody()
 		};
 
 		this._sceneData.havokPlugin.shapeCast(query, shapeLocalResult, hitWorldResult);

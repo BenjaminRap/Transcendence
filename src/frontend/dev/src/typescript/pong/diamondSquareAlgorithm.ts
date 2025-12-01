@@ -1,5 +1,5 @@
 import { Vector2 } from "@babylonjs/core/Maths/math.vector";
-import { int } from "@babylonjs/core/types";
+import type { int } from "@babylonjs/core/types";
 import { Range } from "./Range";
 import { Float32Array2D } from "./Float32Array2D";
 import { randomFromRange } from "./utilities";

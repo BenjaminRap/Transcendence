@@ -1,21 +1,23 @@
 import { Scene } from "@babylonjs/core/scene";
 import { GroundMesh, MeshBuilder, TransformNode } from "@babylonjs/core/Meshes";
-import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
-import { float, int, Material, Scalar, VertexBuffer } from "@babylonjs/core";
+import { SceneManager } from "@babylonjs-toolkit/next";
+import { type float, type int, Material, Scalar, VertexBuffer } from "@babylonjs/core";
 import { getDiamondSquareArray } from "../diamondSquareAlgorithm";
-import { Range } from "../Range";
+import { Range, zodRange } from "../Range";
 
 import { Float32Array2D } from "../Float32Array2D";
-import { RandomEnvironmentGenerator } from "./RandomEnvironmentGenerator";
+import { Imported } from "@shared/ImportedDecorator";
+import { zodInt, zodNumber } from "@shared/ImportedHelpers";
+import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 
-export class RandomTerrainGenerator extends ScriptComponent {
-	private _dimension : number = 100;
-	private _subdivisionsFactor : int = 8;
-	private _heightRange : Range = new Range(1, 16);
-	private _randomnessRange : Range = new Range(-2, 2);
-	private _groundMaterial! : Material;
-	private _flattenHeightDistance : number = 20;
-	private _flattenHeightTransitionDistance : number = 100;
+export class RandomTerrainGenerator extends CustomScriptComponent {
+	@Imported(zodInt) private _dimension! : int;
+	@Imported(zodInt) private _subdivisionsFactor! : int;
+	@Imported(zodRange) private _heightRange! : Range;
+	@Imported(zodRange) private _randomnessRange! : Range;
+	@Imported(Material) private _groundMaterial! : Material;
+	@Imported(zodNumber) private _flattenHeightDistance! : number;
+	@Imported(zodNumber) private _flattenHeightTransitionDistance! : number;
 
 	private _ground! : GroundMesh;
 

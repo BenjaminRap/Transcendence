@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import fs from 'fs'
 import path from 'path';
+import swc from "@z-code/vite-plugin-swc";
 
 export default defineConfig({
 	server: {
@@ -38,7 +39,26 @@ export default defineConfig({
 					next();
 				});
 			}
-		}
+		},
+		swc({
+			include: /\.ts?$/,
+			exclude: "node_modules",
+			swcrc: false,
+			configFile: false,
+			minify: false,
+			jsc: {
+			  parser: {
+				syntax: "typescript",
+				decorators: true,
+			  },
+			  transform: {
+				decoratorMetadata: true,
+				legacyDecorator: true,
+				useDefineForClassFields: false,
+				verbatimModuleSyntax: true
+			  },
+			},
+		})
 	],
 	optimizeDeps: {
 		exclude: ['@babylonjs/havok'],

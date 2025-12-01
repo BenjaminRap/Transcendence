@@ -1,4 +1,4 @@
-import { applyTheme, ThemeName } from "./menuStyles";
+import { applyTheme, type ThemeName } from "./menuStyles";
 
 export type	OnItemChange = (currentIndex : number, newIndex : number) => boolean;
 export type OnPlay = (sceneIndex : number, enemyTypeIndex : number, skinIndex : number) => void;

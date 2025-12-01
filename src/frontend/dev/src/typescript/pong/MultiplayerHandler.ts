@@ -1,6 +1,6 @@
-import { int, Observable } from "@babylonjs/core";
-import { ClientToServerEvents, ServerToClientEvents } from "@shared/MessageType";
-import { GameInfos, ZodGameInfos, ZodGameInit } from "@shared/ServerMessage";
+import { type int, Observable } from "@babylonjs/core";
+import type { ClientToServerEvents, ServerToClientEvents } from "@shared/MessageType";
+import { type GameInfos, zodGameInfos, zodGameInit } from "@shared/ServerMessage";
 import { io, Socket } from "socket.io-client";
 
 type ServerInGameMessage = GameInfos | "server-error" | "forfeit" | "room-closed";
@@ -31,7 +31,7 @@ export class	MultiplayerHandler
 		this._socket!.emit("join-matchmaking");
 		return new Promise((resolve, reject) => {
 			this._socket!.once("joined-game", (data : any) => {
-				const	gameInit = ZodGameInit.safeParse(data);
+				const	gameInit = zodGameInit.safeParse(data);
 
 				if (!gameInit.success)
 					reject("Server sent wrong data !");
@@ -92,7 +92,7 @@ export class	MultiplayerHandler
 		const	observable = new Observable<ServerInGameMessage>();
 
 		this._socket.on("game-infos", (data : any) => {
-			const	gameInfos = ZodGameInfos.safeParse(data);
+			const	gameInfos = zodGameInfos.safeParse(data);
 
 			if (!gameInfos.success)
 				observable.notifyObservers("server-error");

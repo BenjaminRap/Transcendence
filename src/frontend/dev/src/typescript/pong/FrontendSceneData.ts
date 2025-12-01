@@ -1,6 +1,6 @@
-import { HavokPlugin, int } from "@babylonjs/core";
+import { HavokPlugin, type int } from "@babylonjs/core";
 import { PongGame } from "./PongGame";
-import { FrontendGameType, SceneData } from "@shared/SceneData";
+import { type FrontendGameType, SceneData } from "@shared/SceneData";
 import { ServerProxy } from "./ServerProxy";
 
 export interface	ClientInput

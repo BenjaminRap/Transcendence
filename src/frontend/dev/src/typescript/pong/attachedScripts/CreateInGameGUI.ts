@@ -1,19 +1,22 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
-import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
+import { SceneManager } from "@babylonjs-toolkit/next";
 import { PauseGUI } from "../PauseGUI";
 import { InputManager } from "@shared/attachedScripts/InputManager";
-import { EndData, GameManager } from "@shared/attachedScripts/GameManager";
+import { type EndData, GameManager } from "@shared/attachedScripts/GameManager";
 import { FrontendSceneData } from "../FrontendSceneData";
 import { EndGUI } from "../EndGUI";
 import { getFrontendSceneData } from "../PongGame";
 import { InMatchmakingGUI } from "../InMatchmakingGUI";
-import { ThemeName } from "../menuStyles";
+import { zodThemeName } from "../menuStyles";
+import { CustomScriptComponent } from "@shared/CustomScriptComponent";
+import { Imported } from "@shared/ImportedDecorator";
+import type { ThemeName } from "../menuStyles";
 
-export class CreateInGameGUI extends ScriptComponent {
-	private _inputManager! : TransformNode;
-	private _gameManager! : TransformNode & { script : GameManager };
-	private _style! : ThemeName;
+export class CreateInGameGUI extends CustomScriptComponent {
+	@Imported(InputManager) private _inputManager! : InputManager;
+	@Imported(GameManager) private _gameManager! : GameManager;
+	@Imported(zodThemeName) private _style! : ThemeName;
 
 	private _pauseGUI! : PauseGUI;
 	private _endGUI! : EndGUI;
@@ -28,8 +31,6 @@ export class CreateInGameGUI extends ScriptComponent {
 
 	protected	awake()
 	{
-		this._gameManager.script = SceneManager.GetComponent(this._gameManager, "GameManager", false);
-
 		this.createPauseGUI(this._style);
 		this.createEndGUI(this._style);
 		this.createInMatchmakingGUI(this._style);
@@ -37,10 +38,8 @@ export class CreateInGameGUI extends ScriptComponent {
 
 	protected	start()
 	{
-		const	inputManager = SceneManager.GetComponent<InputManager>(this._inputManager, "InputManager", false);
-
-		inputManager.getEscapeInput().addKeyObserver((event : "keyDown" | "keyUp") => {
-			if (event == "keyDown" && !this._gameManager.script.hasEnded())
+		this._inputManager.getEscapeInput().addKeyObserver((event : "keyDown" | "keyUp") => {
+			if (event == "keyDown" && !this._gameManager.hasEnded())
 				this.toggleMenu(this._pauseGUI);
 		});
 
@@ -97,12 +96,11 @@ export class CreateInGameGUI extends ScriptComponent {
 	private	toggleMenu(menu : HTMLElement) : void
 	{
 		const	isMenuVisible = !menu.classList.toggle("hidden");
-		const	gameManager = this._gameManager.script;
 
 		if (isMenuVisible)
-			gameManager.pause();
+			this._gameManager.pause();
 		else
-			gameManager.unPause();
+			this._gameManager.unPause();
 	}
 
 	private	setMenuVisibility(menu : HTMLElement, visible : boolean)

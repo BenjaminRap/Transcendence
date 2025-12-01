@@ -2,12 +2,12 @@ import Fastify from 'fastify';
 import { fpSqlitePlugin } from 'fastify-sqlite-typed';
 import fastifyStatic from '@fastify/static';
 import path from 'path';
-import { DefaultEventsMap, Server, Socket } from 'socket.io';
+import { type DefaultEventsMap, Server, Socket } from 'socket.io';
 import { MatchMaker } from './MatchMaker';
 import { SocketData } from './SocketData';
 import fs from 'fs';
 import HavokPhysics from "@babylonjs/havok";
-import { ClientToServerEvents, ServerToClientEvents } from '@shared/MessageType';
+import type { ClientToServerEvents, ServerToClientEvents } from '@shared/MessageType';
 
 export type DefaultSocket = Socket<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>;
 

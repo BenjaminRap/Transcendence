@@ -1,18 +1,20 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
-import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
+import { SceneManager } from "@babylonjs-toolkit/next";
 import { CreateSkybox } from "./CreateSkybox";
-import { Animation, EasingFunction, Material, Nullable } from "@babylonjs/core";
+import { Animation, EasingFunction, Material, type Nullable } from "@babylonjs/core";
 import { Animatable } from "@babylonjs/core/Animations/animatable";
-import { ThemeName } from "../menuStyles";
+import { type ThemeName, zodThemeName } from "../menuStyles";
+import { Imported } from "@shared/ImportedDecorator";
+import { ImportedComponentOptional, zodBoolean, zodString } from "@shared/ImportedHelpers";
+import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 
-export class SceneMenuData extends ScriptComponent {
-	public readonly sceneName! : string;
-	public readonly sceneFileName! : string;
-	public readonly style! : ThemeName;
-
-	private _skyboxCreator : (TransformNode & { script : CreateSkybox }) | null = null;
-	public _defaultSkybox : boolean = false;
+export class SceneMenuData extends CustomScriptComponent {
+	@Imported(zodString) private _sceneName! : string;
+	@Imported(zodString) private _sceneFileName! : string;
+	@Imported(zodThemeName) private _style! : ThemeName;
+	@ImportedComponentOptional(CreateSkybox) private _skyboxCreator! : CreateSkybox | null;
+	@Imported(zodBoolean) private _defaultSkybox! : boolean;
 
 	private _skyboxAnimation : Nullable<Animatable> = null;
 	private _skyboxMaterial : Material | undefined;
@@ -23,18 +25,16 @@ export class SceneMenuData extends ScriptComponent {
 
 	protected	start()
 	{
-		if (this._skyboxCreator != null)
-		{
-			this._skyboxCreator.script = SceneManager.GetComponent<CreateSkybox>(this._skyboxCreator, "CreateSkybox", false);
-			const	skybox = this._skyboxCreator?.script.getSkybox();
+		if (this._skyboxCreator === null)
+			return ;
+		const	skybox = this._skyboxCreator.getSkybox();
 
-			if (!skybox || !skybox.material)
-				throw new Error("Invalid SkyboxCreator !");
-			this._skyboxMaterial = skybox.material;
+		if (!skybox || !skybox.material)
+			throw new Error("Invalid SkyboxCreator !");
+		this._skyboxMaterial = skybox.material;
 
-			if (!this._defaultSkybox)
-				this._skyboxMaterial.alpha = 0;
-		}
+		if (!this._defaultSkybox)
+			this._skyboxMaterial.alpha = 0;
 	}
 
 	public onSceneSwitch(state : "removed" | "added", transitionDuration : number, easingFunction : EasingFunction)
@@ -54,6 +54,21 @@ export class SceneMenuData extends ScriptComponent {
 		const	previousAlphaValue = this._skyboxMaterial.alpha;
 
 		this._skyboxAnimation = Animation.CreateAndStartAnimation("skyboxBlend", this._skyboxMaterial, "alpha", 60, 60 * duration, previousAlphaValue, newAlpha, Animation.ANIMATIONLOOPMODE_CONSTANT, easingFunction, () => { this._skyboxAnimation = null });
+	}
+
+	public getSceneName()
+	{
+		return this._sceneName;
+	}
+
+	public getSceneFileName()
+	{
+		return this._sceneFileName;
+	}
+
+	public getStyle()
+	{
+		return this._style;
 	}
 }
 

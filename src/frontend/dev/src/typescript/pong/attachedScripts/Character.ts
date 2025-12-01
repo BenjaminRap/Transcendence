@@ -1,8 +1,11 @@
 import { Scene } from "@babylonjs/core/scene";
 import { AbstractMesh, TransformNode } from "@babylonjs/core/Meshes";
-import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
+import { SceneManager } from "@babylonjs-toolkit/next";
 import { AnimationGroup, ImportMeshAsync, Space, Vector3 } from "@babylonjs/core";
 import { TimerManager } from "@shared/attachedScripts/TimerManager";
+import { Imported } from "@shared/ImportedDecorator";
+import { CustomScriptComponent } from "@shared/CustomScriptComponent";
+import { zodNumber, zodString } from "@shared/ImportedHelpers";
 
 enum CharacterAnim
 {
@@ -13,15 +16,15 @@ enum CharacterAnim
 	WALK
 }
 
-export class Character extends ScriptComponent {
+export class Character extends CustomScriptComponent {
 	private static readonly _expectedMeshCount = 2;
 	private static readonly _expectedAnimationGroupsCount = 5;
 	private static readonly _timeBeforeGoingOnScreenMs = 2000;
 	
-	private _knightPath! : string;
-	private _fightPoint! : Vector3
-	private _speed : number = 3;
-	private _timerManager! : TransformNode;
+	@Imported(zodString) private _knightPath! : string;
+	@Imported(Vector3) private _fightPoint! : Vector3
+	@Imported(zodNumber) private _speed : number = 3;
+	@Imported(TimerManager) private _timerManager! : TimerManager;
 
 	private _direction : Vector3 = Vector3.Zero();
 	private _knight! : AbstractMesh;
@@ -49,7 +52,7 @@ export class Character extends ScriptComponent {
 
 	protected async ready()
 	{
-		SceneManager.GetComponent<TimerManager>(this._timerManager, "TimerManager", false).setTimeout(() => {
+		this._timerManager.setTimeout(() => {
 			this.setCharacterDirection();
 		}, Character._timeBeforeGoingOnScreenMs);
 	}
@@ -62,7 +65,7 @@ export class Character extends ScriptComponent {
 		const durationSeconds = this._speed / distance;
 		this._direction.normalize();
 
-		SceneManager.GetComponent<TimerManager>(this._timerManager, "TimerManager", false).setTimeout(this.setCharacterIdle.bind(this), durationSeconds * 1000);
+		this._timerManager.setTimeout(this.setCharacterIdle.bind(this), durationSeconds * 1000);
 
 	}
 

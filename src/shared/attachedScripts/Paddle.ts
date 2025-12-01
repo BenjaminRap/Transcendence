@@ -1,22 +1,26 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
-import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
+import { SceneManager } from "@babylonjs-toolkit/next";
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
 import { InputManager, PlayerInput } from "./InputManager";
-import { IBasePhysicsCollisionEvent, PhysicsEventType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
+import { type IBasePhysicsCollisionEvent, PhysicsEventType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { Scalar } from "@babylonjs/core/Maths/math.scalar";
-import { Epsilon, int } from "@babylonjs/core";
+import { Epsilon } from "@babylonjs/core";
+import type { int } from "@babylonjs/core";
 import { getSceneData } from "@shared/SceneData";
+import { Imported } from "@shared/ImportedDecorator";
+import { zodInt, zodNumber } from "@shared/ImportedHelpers";
+import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 
-export class Paddle extends ScriptComponent {
+export class Paddle extends CustomScriptComponent {
 	private static _range : number = 9.4 + Epsilon;
 
-	private	_speed : number = 6.0;
-	private	_inputManagerTransform! : TransformNode;
-	private _minReboundSpeed : number = 10;
-	private _maxReboundSpeed : number = 15;
-	private _playerIndex : int = 0;
+	@Imported(TransformNode) private	_inputManager! : TransformNode;
+	@Imported(zodNumber) private	_speed! : number;
+	@Imported(zodNumber) private _minReboundSpeed! : number;
+	@Imported(zodNumber) private _maxReboundSpeed! : number;
+	@Imported(zodInt) private _playerIndex! : int;
 
 	private	_physicsBody! : PhysicsBody;
 	private _playerInput! : PlayerInput;
@@ -78,7 +82,7 @@ export class Paddle extends ScriptComponent {
 
 	protected start()
 	{
-		const	inputManager = SceneManager.GetComponent<InputManager>(this._inputManagerTransform, "InputManager", false);
+		const	inputManager = SceneManager.GetComponent<InputManager>(this._inputManager, "InputManager", false);
 
 		this._playerInput = inputManager.getPlayerInput(this._playerIndex);
 		const	physicsBody = this.transform.getPhysicsBody();

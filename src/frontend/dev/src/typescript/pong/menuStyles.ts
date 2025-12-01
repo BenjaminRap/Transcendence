@@ -1,3 +1,5 @@
+import zod from "zod";
+
 const	head = document.querySelector("head");
 
 addImageToPreload("/scenes/assets/project/textures/arrowColorful.png");
@@ -88,7 +90,8 @@ const	themes : Themes = {
 	}
 };
 
-export type ThemeName = keyof Themes;
+export const	zodThemeName = zod.literal(["basic", "colorful"]);
+export type ThemeName = zod.infer<typeof zodThemeName>
 
 export function	applyTheme(element : HTMLElement, theme : ThemeName)
 {

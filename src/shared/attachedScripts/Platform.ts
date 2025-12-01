@@ -1,12 +1,13 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
-import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
-import { IBasePhysicsCollisionEvent, PhysicsEventType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
+import { SceneManager } from "@babylonjs-toolkit/next";
+import { type IBasePhysicsCollisionEvent, PhysicsEventType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
-import { getSceneData, SceneData } from "@shared/SceneData";
+import { getSceneData } from "@shared/SceneData";
+import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 
-export class Platform extends ScriptComponent {
+export class Platform extends CustomScriptComponent {
 
 	private	_physicsBody! : PhysicsBody;
 

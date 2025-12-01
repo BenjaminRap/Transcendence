@@ -1,6 +1,6 @@
-import { DefaultEventsMap, Server } from "socket.io";
+import { type DefaultEventsMap, Server } from "socket.io";
 import { Room } from "./Room";
-import { DefaultSocket } from ".";
+import type { DefaultSocket } from ".";
 
 export class	MatchMaker
 {

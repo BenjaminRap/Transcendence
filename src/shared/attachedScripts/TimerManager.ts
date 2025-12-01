@@ -1,8 +1,10 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
-import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
+import { SceneManager } from "@babylonjs-toolkit/next";
 import { GameManager } from "./GameManager";
-import { int } from "@babylonjs/core/types";
+import type { int } from "@babylonjs/core/types";
+import { Imported } from "@shared/ImportedDecorator";
+import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 
 export interface	Timer
 {
@@ -12,26 +14,20 @@ export interface	Timer
 	remainingCall : int
 }
 
-export class TimerManager extends ScriptComponent {
-	private _gameManager! : TransformNode & { script: GameManager };
+export class TimerManager extends CustomScriptComponent {
+	@Imported(GameManager) private _gameManager! : GameManager;
 
 	private _timers : Map<number, Timer>;
 	private _nextId : number = 0;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "TimerManager") {
         super(transform, scene, properties, alias);
-
 		this._timers = new Map<number, Timer>();
     }
 
-	protected	awake()
-	{
-		this._gameManager.script = SceneManager.GetComponent<GameManager>(this._gameManager, "GameManager", false);
-	}
-
 	protected	update()
 	{
-		if (this._gameManager.script.isGamePaused())
+		if (this._gameManager.isGamePaused())
 			return ;
 		this._timers.forEach((timer : Timer, key : number) => {
 			timer.remainingTime -= this.getDeltaMilliseconds();
