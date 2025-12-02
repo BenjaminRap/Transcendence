@@ -1,13 +1,14 @@
 import { Scene } from "@babylonjs/core/scene";
 import { Mesh, MeshBuilder, TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager } from "@babylonjs-toolkit/next";
-import { CubeTexture, StandardMaterial, Texture } from "@babylonjs/core";
+import { CubeTexture, StandardMaterial, Texture, Vector3 } from "@babylonjs/core";
 import { Imported } from "@shared/ImportedDecorator";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { zodString } from "@shared/ImportedHelpers";
 
 export class CreateSkybox extends CustomScriptComponent {
 	@Imported(zodString) private _skyboxPath! : string;
+	@Imported(Vector3) private _rotationAngle! : Vector3;
 
 	private _skybox : Mesh | undefined = undefined;
 
@@ -31,6 +32,7 @@ export class CreateSkybox extends CustomScriptComponent {
 		skybox.material = skyboxMaterial;
 		skybox.infiniteDistance = true;
 		skybox.layerMask = 2;
+		skybox.rotation = this._rotationAngle.scale(Math.PI / 180);
 
 		this._skybox = skybox;
 	}
