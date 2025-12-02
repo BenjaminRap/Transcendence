@@ -252,8 +252,9 @@ async function fetchProfileData(user: string): Promise<string> {
 	if (token === '') {
 		return 'You are not logged in.';
 	}
+	// Add https - port 8080
 	try {
-		const response = await fetch('http://localhost:8181/suscriber/profile', {
+		const response = await fetch('https://localhost:8080/api/suscriber/profile', {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',

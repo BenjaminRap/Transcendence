@@ -340,7 +340,7 @@ function createListMatches() : HTMLDivElement
 				<div class="card flex justify-center items-center gap-2 max-w-1/2 relative ">
 					<div class="group w-full max-w-[80%]">
 						<p class="truncate cursor-pointer">${match.opponent}</p>
-						<p class="absolute top-[-24px] right-0 hidden group-hover:block border p-1 border-green-500 bg-black">${match.opponent}</p>
+						<p class="absolute right-0 z-50 hidden group-hover:block border p-1 border-green-500 bg-black ${i == 0 ? 'top-[34px]' : 'top-[-24px]'}">${match.opponent}</p>
 					</div>
 					<img src="${match.profilelinkopponent}" alt="Avatar"
 						class="w-10 h-10 border border-green-500"></img>
@@ -422,7 +422,7 @@ export namespace ExtendedView {
 			return;
 		type = dataType;
 		const view = document.createElement('div');
-		view.className = "fixed top-[50%] left-[50%] border p-4 border-green-500 bg-black z-2 flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 w-[20%] max-h-[50vh] overflow-y-hidden";
+		view.className = "fixed top-[50%] left-[50%] border p-4 border-green-500 bg-black z-2 flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 w-[20%] max-h-[50vh]";
 		view.id = "view";
 
 		view.setAttribute('tabindex', '0');
@@ -547,7 +547,7 @@ function searchBarFunctionality(searchBar: HTMLInputElement) {
 		}
 		else if (type === 'match') {
 			if (filter === '')
-				MatchDiplay = [...matches];
+				MatchDiplay = [...matches]; // Sa evite les shadow copy
 			else
 				MatchDiplay = matches.filter(match => match.opponent.toLowerCase().startsWith(filter));
 			const matchList = document.getElementById('matchList');

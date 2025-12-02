@@ -11,8 +11,7 @@ import { TerminalUtils } from './terminalUtils/terminalUtils.ts';
 
 
 import FileSystem from './filesystem.json' with { type: "json" };
-import { promises } from 'dns';
-import { get } from 'http';
+import HelpNotLog from './terminalUtils/helpText/notLog.md?raw';
 
 
 export namespace TerminalElements {
@@ -127,11 +126,10 @@ function echoCommand(args: string[], description: string, usage: string): string
 }
 
 function helpCommand(): string {
-	let helpText = 'Available commands:\n';
-	for (let i = 0; i < TerminalCommand.commandAvailable.length; i++) {
-		helpText += `${TerminalCommand.commandAvailable[i].name}\n\n`;
-	}
-	return helpText;
+
+	let result = typeof HelpNotLog === 'string' ? HelpNotLog : String(HelpNotLog);
+	result = result.split('\n').map(line => '> ' + line).join('\n');
+	return result;
 }
 
 function whoamiCommand(): string {
@@ -741,7 +739,7 @@ function setEventListeners() {
 
 // -------------------------------------------------------------------- Initialisation ---------------------------------------------------------------------
 export namespace Terminal {
-	export async function buildTerminal() {
+	export async function buildTerminal() : Promise<void> {
 		if (TerminalConfigVariables.isBuilded)
 			return;
 		const success = await RequestBackendModule.loadUser();

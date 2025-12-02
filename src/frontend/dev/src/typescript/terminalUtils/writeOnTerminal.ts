@@ -18,6 +18,7 @@ export namespace WriteOnTerminal {
 			TerminalElements.terminal.scrollTop = TerminalElements.terminal.scrollHeight;
 		}
 	}
+
 	export function printErrorOnTerminal(text: string) {
 		if (!TerminalElements.output)
 			return;

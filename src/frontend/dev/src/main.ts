@@ -3,8 +3,6 @@ import { ProfileBuilder } from './typescript/profile'
 import { WriteOnTerminal } from './typescript/terminalUtils/writeOnTerminal'
 import { ExtProfileBuilder } from './typescript/extprofile'
 
-Terminal.buildTerminal();
-
 const url = new URL( window.location.href);
 const path = url.pathname;
 
@@ -17,6 +15,7 @@ function Error404() {
 	history.pushState({}, '', `/`);
 }
 
+await Terminal.buildTerminal();
 
 
 if (path === '/')
@@ -36,6 +35,9 @@ else if (path.startsWith('/profile/')) {
 	}
 }
 else
+{
 	Error404();
+	console.log('404 Not Found');
+}
 
 
