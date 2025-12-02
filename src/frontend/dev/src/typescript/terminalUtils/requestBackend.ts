@@ -6,7 +6,6 @@ import { TerminalFileSystem, TerminalUserManagement } from "../terminal";
 
 export namespace RequestBackendModule {
 	export var isLoggedIn = false;
-	// export var username = 'usah';
 	
 	export async function register(args: string[]): Promise<string> 
 	{
@@ -55,7 +54,7 @@ export namespace RequestBackendModule {
 				document.cookie = `accessToken=${data.tokens.accessToken}; path=/;`;
 				document.cookie = `refreshToken=${data.tokens.refreshToken}; path=/;`;
 				await loadUser();
-				return 'Login successful!';
+				return 'Login successful! Type **help** for new instructions.';
 			} else {
 				let message = data.message || "Unknown error";
 				return 'Login failed: ' + message;
@@ -83,7 +82,7 @@ export namespace RequestBackendModule {
 			if (data.success) {
 				TerminalUserManagement.username = data.user.username;
 				TerminalUtils.updatePromptText( TerminalUserManagement.username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ " );
-				isLoggedIn = true;
+				TerminalUserManagement.isLoggedIn = true;
 				return true;
 			}
 			if (data.message === 'Invalid or expired token') {
@@ -169,11 +168,11 @@ export namespace RequestBackendModule {
 
 	export function logout(): string
 	{
-		if (!isLoggedIn)
+		if (!TerminalUserManagement.isLoggedIn)
 			return 'You are not logged in.';
 		document.cookie = 'accessToken=; path=/;';
 		document.cookie = 'refreshToken=; path=/;';
-		isLoggedIn = false;
+		TerminalUserManagement.isLoggedIn = false;
 		TerminalUserManagement.username = 'usah';
 		TerminalUtils.updatePromptText( TerminalUserManagement.username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ " );
 		return 'Logged out successfully.';

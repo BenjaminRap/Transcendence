@@ -2,6 +2,7 @@ import { Terminal } from './typescript/terminal'
 import { ProfileBuilder } from './typescript/profile'
 import { WriteOnTerminal } from './typescript/terminalUtils/writeOnTerminal'
 import { ExtProfileBuilder } from './typescript/extprofile'
+import { TerminalUserManagement } from './typescript/terminal'
 
 const url = new URL( window.location.href);
 const path = url.pathname;
@@ -20,6 +21,10 @@ await Terminal.buildTerminal();
 
 if (path === '/')
 {
+	if (!TerminalUserManagement.isLoggedIn)
+		WriteOnTerminal.printErrorOnTerminal("Welcome to Transencdence ! Type `help` for instructions.");
+	else
+		WriteOnTerminal.printErrorOnTerminal(`Welcome back ${TerminalUserManagement.username} ! Type \`help\` for instructions.`);
 	if (ProfileBuilder.isActive)
 		ProfileBuilder.removeProfile();
 }

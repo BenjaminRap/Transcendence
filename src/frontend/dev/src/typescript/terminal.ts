@@ -11,7 +11,7 @@ import { TerminalUtils } from './terminalUtils/terminalUtils.ts';
 
 
 import FileSystem from './filesystem.json' with { type: "json" };
-import HelpNotLog from './terminalUtils/helpText/notLog.md?raw';
+import { HELP_MESSAGE_NOT_LOG, HELP_MESSAGE } from './terminalUtils/helpText/help.ts';
 
 
 export namespace TerminalElements {
@@ -127,8 +127,19 @@ function echoCommand(args: string[], description: string, usage: string): string
 
 function helpCommand(): string {
 
-	let result = typeof HelpNotLog === 'string' ? HelpNotLog : String(HelpNotLog);
-	result = result.split('\n').map(line => '> ' + line).join('\n');
+	let result: string;
+
+	console.log(TerminalUserManagement.isLoggedIn);
+	if (!TerminalUserManagement.isLoggedIn)
+		result = HELP_MESSAGE_NOT_LOG;
+	else
+		result = HELP_MESSAGE;
+	const lines = result.split('\n');
+	if (lines.length > 1) {
+		result = lines[0] + '\n' + lines.slice(1).map(line => '> ' + line).join('\n');
+	} else {
+		result = lines[0];
+	}
 	return result;
 }
 
@@ -552,6 +563,9 @@ async function enterCase() {
 	resetInput();
 	if (changeHidden)
 		TerminalConfigVariables.isHidden = false;
+	if (TerminalElements.terminal) {
+		TerminalElements.terminal.scrollTop = TerminalElements.terminal.scrollHeight;
+	}
 }
 
 function clearOutput() {
