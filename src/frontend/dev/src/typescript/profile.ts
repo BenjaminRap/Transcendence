@@ -254,7 +254,7 @@ async function fetchProfileData(user: string): Promise<string> {
 	}
 	// Add https - port 8080
 	try {
-		const response = await fetch('https://localhost:8080/api/suscriber/profile', {
+		const response = await fetch('https://10.14.5.7:8080/api/suscriber/profile', {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',

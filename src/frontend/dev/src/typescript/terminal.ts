@@ -551,12 +551,12 @@ async function enterCase() {
 	if (result != '')
 	{
 		TerminalElements.output.textContent += command + '\n';
-		TerminalElements.output.textContent += result + '\n' + '\f';
+		TerminalElements.output.textContent += result + '\f' + '\n';
 	}
 	else if (result === '' && command.slice(TerminalPromptAndEnv.promptText.length).trim() === 'clear')
-		TerminalElements.output.textContent += '\f';
+		TerminalElements.output.textContent += '';
 	else
-		TerminalElements.output.textContent += command + '\n' + '\f';
+		TerminalElements.output.textContent += command + '\f' + '\n';
 	if (TerminalConfigVariables.isWaitingInput)
 		TerminalPromptAndEnv.promptText = TerminalConfigVariables.InputArgs[TerminalConfigVariables.InputArgs.length - TerminalConfigVariables.InputIncomming] + ': ';
 	resetInput();

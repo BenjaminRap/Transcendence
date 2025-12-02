@@ -11,9 +11,9 @@ export namespace WriteOnTerminal {
 			TerminalElements.output.textContent = TerminalElements.output.textContent.slice(TerminalElements.output.textContent.indexOf('\f') + 1);
 		}
 		if (showPrompt)
-			TerminalElements.output.textContent += TerminalPromptAndEnv.promptText + text + '\n' + '\f';
+			TerminalElements.output.textContent += TerminalPromptAndEnv.promptText + text + '\f' + '\n';
 		else
-		TerminalElements.output.textContent += text + '\n' + '\f';
+		TerminalElements.output.textContent += text + '\f' + '\n';
 		if (TerminalElements.terminal) {
 			TerminalElements.terminal.scrollTop = TerminalElements.terminal.scrollHeight;
 		}
@@ -25,7 +25,7 @@ export namespace WriteOnTerminal {
 		if (TerminalUtils.countChar('\f') > TerminalConfigVariables.maxOutputLines) {
 			TerminalElements.output.textContent = TerminalElements.output.textContent.slice(TerminalElements.output.textContent.indexOf('\f') + 1);
 		}
-		TerminalElements.output.textContent += '> ' + text + '\n' + '\f';
+		TerminalElements.output.textContent += '> ' + text + '\f' + '\n';
 		if (TerminalElements.terminal) {
 			TerminalElements.terminal.scrollTop = TerminalElements.terminal.scrollHeight;
 		}
