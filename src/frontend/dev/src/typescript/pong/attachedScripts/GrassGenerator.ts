@@ -1,7 +1,7 @@
 import { Scene } from "@babylonjs/core/scene";
 import { Mesh, TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager } from "@babylonjs-toolkit/next";
-import { Matrix, Quaternion, Vector2, Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { Matrix, Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { getRandomCoordinatesInTrapeze } from "../utilities";
 import { RandomTerrainGenerator } from "./RandomTerrainGenerator";
 import { Lod, zodLodLevel, type LodLevel, type LodLevelProcessed } from "../Lod";
@@ -22,7 +22,7 @@ export class GrassGenerator extends CustomScriptComponent {
 	@Imported(Vector3) private _windDirection! : Vector3;
 	@Imported(zodNumber) private _windSwayScale! : number;
 	@Imported(zodNumber) private _windSwaySpeed! : number;
-	@Imported(Vector2) private _windSwayContrast! : Vector2;
+	@Imported(zodNumber) private _windTextureSubtract! : number;
 	@Imported(Vector3) private _windSwayDirection! : Vector3;
 	@Imported(Color4) private _swayColor! : Color4;
 	@Imported(RandomTerrainGenerator) private	_ground! : RandomTerrainGenerator;
@@ -48,6 +48,7 @@ export class GrassGenerator extends CustomScriptComponent {
 
 	private	setAllGrassMaterials()
 	{
+		this._grassTexture.vScale = -1;
 		this._grassLod.getLodLevels().forEach((lodLevel : LodLevelProcessed) => {
 			this.setGrassMaterial(lodLevel.mesh);
 		});
@@ -56,6 +57,7 @@ export class GrassGenerator extends CustomScriptComponent {
 	private	setGrassMaterial(grassMesh : Mesh)
 	{
 		const	[material, _inputs] = buildStylizedGrassMaterial("stylizedGrass", this.scene);
+
 		const	rawBoundingInfo = grassMesh.getRawBoundingInfo();
 		const	minHeight = rawBoundingInfo.boundingBox.minimum;
 		const	maxHeight = rawBoundingInfo.boundingBox.maximum;
@@ -75,7 +77,7 @@ export class GrassGenerator extends CustomScriptComponent {
 		_inputs.windDirection.value = this._windDirection;
 		_inputs.windSwayScale.value = this._windSwayScale;
 		_inputs.windSwaySpeed.value = this._windSwaySpeed;
-		_inputs.windSwayContrast.value = this._windSwayContrast;
+		_inputs.windTextureSubtract.value = this._windTextureSubtract;
 		_inputs.windSwayDirection.value = this._windSwayDirection;
 		_inputs.swayColor.value = this._swayColor;
 	}

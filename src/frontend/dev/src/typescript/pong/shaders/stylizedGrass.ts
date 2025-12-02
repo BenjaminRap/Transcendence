@@ -1,5 +1,5 @@
 import { Color3, Scene, Texture, Vector2, Vector3 } from "@babylonjs/core";
-import { AddBlock, AnimatedInputBlockTypes, ClampBlock, DistanceBlock, FragmentOutputBlock, ImageSourceBlock, InputBlock, InstancesBlock, LerpBlock, LightBlock, MultiplyBlock, NegateBlock, NodeMaterial, NodeMaterialModes, NodeMaterialSystemValues, SimplexPerlin3DBlock, SmoothStepBlock, TextureBlock, TransformBlock, VectorMergerBlock, VectorSplitterBlock, VertexOutputBlock } from "@babylonjs/core/Materials/Node";
+import { AddBlock, AnimatedInputBlockTypes, ClampBlock, DistanceBlock, FragmentOutputBlock, ImageSourceBlock, InputBlock, InstancesBlock, LerpBlock, LightBlock, MultiplyBlock, NegateBlock, NodeMaterial, NodeMaterialModes, NodeMaterialSystemValues, SimplexPerlin3DBlock, SmoothStepBlock, SubtractBlock, TextureBlock, TransformBlock, VectorMergerBlock, VectorSplitterBlock, VertexOutputBlock } from "@babylonjs/core/Materials/Node";
 
 export type	StylizedGrassMaterialAndInputs = [ NodeMaterial, StylizedGrassMaterialInputsBlocks ];
 
@@ -17,7 +17,7 @@ interface	StylizedGrassMaterialInputsBlocks
 	windDirection: InputBlock,
 	windSwayScale: InputBlock,
 	windSwaySpeed: InputBlock,
-	windSwayContrast: InputBlock
+	windTextureSubtract: InputBlock
 	windSwayDirection: InputBlock,
 	swayColor: InputBlock
 }
@@ -101,11 +101,11 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	Multiply1.visibleOnFrame = false;
 	Multiply1.target = 4;
 
-	// SmoothStepBlock
-	var Smoothstep = new SmoothStepBlock("Smooth step");
-	Smoothstep.visibleInInspector = false;
-	Smoothstep.visibleOnFrame = false;
-	Smoothstep.target = 4;
+	// SubtractBlock
+	var Subtract = new SubtractBlock("Subtract");
+	Subtract.visibleInInspector = false;
+	Subtract.visibleOnFrame = false;
+	Subtract.target = 4;
 
 	// TextureBlock
 	var windTexture = new TextureBlock("windTexture");
@@ -564,19 +564,18 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	windTextureSource.texture.vScale = 1;
 	windTextureSource.texture.coordinatesMode = 7;
 
-	// VectorSplitterBlock
-	var VectorSplitter1 = new VectorSplitterBlock("VectorSplitter");
-	VectorSplitter1.visibleInInspector = false;
-	VectorSplitter1.visibleOnFrame = false;
-	VectorSplitter1.target = 4;
-
 	// InputBlock
-	var windSwayContrast = new InputBlock("windSwayContrast");
-	windSwayContrast.visibleInInspector = false;
-	windSwayContrast.visibleOnFrame = false;
-	windSwayContrast.target = 1;
-	windSwayContrast.value = new Vector2(0, 1);
-	windSwayContrast.isConstant = false;
+	var windTextureSubtract = new InputBlock("windTextureSubtract");
+	windTextureSubtract.visibleInInspector = false;
+	windTextureSubtract.visibleOnFrame = false;
+	windTextureSubtract.target = 1;
+	windTextureSubtract.value = 0.3;
+	windTextureSubtract.min = 0;
+	windTextureSubtract.max = 0;
+	windTextureSubtract.isBoolean = false;
+	windTextureSubtract.matrixMode = 0;
+	windTextureSubtract.animationType = AnimatedInputBlockTypes.None;
+	windTextureSubtract.isConstant = false;
 
 	// InputBlock
 	var windSwayDirection = new InputBlock("windSwayDirection");
@@ -612,11 +611,9 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	Multiply4.output.connectTo(Add1.right);
 	Add1.output.connectTo(windTexture.uv);
 	windTextureSource.source.connectTo(windTexture.source);
-	windTexture.r.connectTo(Smoothstep.value);
-	windSwayContrast.output.connectTo(VectorSplitter1.xyIn);
-	VectorSplitter1.x.connectTo(Smoothstep.edge0);
-	VectorSplitter1.y.connectTo(Smoothstep.edge1);
-	Smoothstep.output.connectTo(Multiply1.left);
+	windTexture.r.connectTo(Subtract.left);
+	windTextureSubtract.output.connectTo(Subtract.right);
+	Subtract.output.connectTo(Multiply1.left);
 	windSwayDirection.output.connectTo(Multiply1.right);
 	Multiply1.output.connectTo(Add.right);
 	Add.output.connectTo(Multiply3.left);
@@ -651,7 +648,7 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	Clamp.output.connectTo(unlitColor.gradient);
 	unlitColor.output.connectTo(Lerp.left);
 	swayColor.output.connectTo(Lerp.right);
-	Smoothstep.output.connectTo(Lerp.gradient);
+	windTexture.r.connectTo(Lerp.gradient);
 	Lerp.output.connectTo(lights.diffuseColor);
 	View.output.connectTo(lights.view);
 	lights.diffuseOutput.connectTo(litColor.left);
@@ -682,7 +679,7 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 			windDirection: windDirection,
 			windSwaySpeed: windSwaySpeed,
 			windSwayScale: windSwayScale,
-			windSwayContrast: windSwayContrast,
+			windTextureSubtract: windTextureSubtract,
 			windSwayDirection: windSwayDirection,
 			swayColor: swayColor
 		}];
