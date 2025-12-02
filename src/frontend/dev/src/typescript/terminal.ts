@@ -11,7 +11,7 @@ import { TerminalUtils } from './terminalUtils/terminalUtils.ts';
 
 
 import FileSystem from './filesystem.json' with { type: "json" };
-import { HELP_MESSAGE_NOT_LOG, HELP_MESSAGE } from './terminalUtils/helpText/help.ts';
+import { HELP_MESSAGE_NOT_LOG, HELP_MESSAGE } from './terminalUtils/helpText/help';
 
 
 export namespace TerminalElements {
@@ -129,7 +129,6 @@ function helpCommand(): string {
 
 	let result: string;
 
-	console.log(TerminalUserManagement.isLoggedIn);
 	if (!TerminalUserManagement.isLoggedIn)
 		result = HELP_MESSAGE_NOT_LOG;
 	else
