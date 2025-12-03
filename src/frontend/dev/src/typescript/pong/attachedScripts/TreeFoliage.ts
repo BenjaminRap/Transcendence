@@ -2,7 +2,7 @@ import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager } from "@babylonjs-toolkit/next";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
-import { Color4, Vector2, Vector3, type MultiMaterial } from "@babylonjs/core";
+import { Color4, Texture, Vector2, Vector3, type MultiMaterial } from "@babylonjs/core";
 import { buildStylizedFoliageMaterial } from "../shaders/stylizedFoliage";
 import { zodNumber } from "@shared/ImportedHelpers";
 import { Imported } from "@shared/ImportedDecorator";
@@ -18,6 +18,8 @@ export class TreeFoliage extends CustomScriptComponent {
 	@Imported(zodNumber) private _windTextureSubtract! : number;
 	@Imported(Vector3) private _windSwayDirection! : Vector3;
 	@Imported(Color4) private _windSwayColor! : Color4;
+	@Imported(Texture) private _leavesTexture! : Texture;
+	@Imported(Texture) private _windTexture! : Texture;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "TreeFoliage") {
         super(transform, scene, properties, alias);
@@ -27,6 +29,8 @@ export class TreeFoliage extends CustomScriptComponent {
 	{
 		const	[ material, inputs ] = buildStylizedFoliageMaterial("stylizedFoliage", this.scene);
 
+		this._leavesTexture.vScale = -1;
+		inputs.mainImageSource.texture = this._leavesTexture;
 		inputs.windSpeed.value = this._windSpeed;
 		inputs.maxBounds.value = this._maxBounds;
 		inputs.center.value = this._center;
