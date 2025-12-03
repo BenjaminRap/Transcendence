@@ -1,8 +1,8 @@
 import { Scene } from "@babylonjs/core/scene";
-import { TransformNode } from "@babylonjs/core/Meshes";
+import { AbstractMesh, TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager } from "@babylonjs-toolkit/next";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
-import { Color4, Texture, Vector2, Vector3, type MultiMaterial } from "@babylonjs/core";
+import { Color4, Material, MultiMaterial, Texture, Vector2, Vector3 } from "@babylonjs/core";
 import { buildStylizedFoliageMaterial } from "../shaders/stylizedFoliage";
 import { zodNumber } from "@shared/ImportedHelpers";
 import { Imported } from "@shared/ImportedDecorator";
@@ -20,6 +20,7 @@ export class TreeFoliage extends CustomScriptComponent {
 	@Imported(Color4) private _windSwayColor! : Color4;
 	@Imported(Texture) private _leavesTexture! : Texture;
 	@Imported(Texture) private _windTexture! : Texture;
+	@Imported(Material) private _currentLeavesMaterial! : Material;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "TreeFoliage") {
         super(transform, scene, properties, alias);
@@ -27,9 +28,35 @@ export class TreeFoliage extends CustomScriptComponent {
 
 	protected	awake()
 	{
+		this._leavesTexture.vScale = -1;
+		this._windTexture.vScale = -1;
+		const	foliageMaterial = this.getTreeFoliageMaterial();
+
+		this.replaceMaterial(this._currentLeavesMaterial, foliageMaterial);
+	}
+
+	private	replaceMaterial(currentMaterial : Material, newMaterial : Material)
+	{
+
+		this.scene.meshes.forEach((mesh : AbstractMesh) => {
+			if (mesh.material instanceof MultiMaterial)
+			{
+				const	multiMaterial = mesh.material;
+
+				multiMaterial.subMaterials.forEach((material : Material | null, index : number) => {
+					if (material === currentMaterial)
+						multiMaterial.subMaterials[index] = newMaterial;
+				});
+			}
+			else if (mesh.material === currentMaterial)
+				mesh.material = newMaterial;
+		});
+	}
+
+	private	getTreeFoliageMaterial()
+	{
 		const	[ material, inputs ] = buildStylizedFoliageMaterial("stylizedFoliage", this.scene);
 
-		this._leavesTexture.vScale = -1;
 		inputs.mainImageSource.texture = this._leavesTexture;
 		inputs.windSpeed.value = this._windSpeed;
 		inputs.maxBounds.value = this._maxBounds;
@@ -41,12 +68,9 @@ export class TreeFoliage extends CustomScriptComponent {
 		inputs.windTextureSubtract.value = this._windTextureSubtract;
 		inputs.windSwayDirection.value = this._windSwayDirection;
 		inputs.windSwayColor.value = this._windSwayColor;
-		this._windTexture.vScale = -1;
 		inputs.windTextureSource.texture = this._windTexture;
 
-		(this.scene.getMeshByName("tree_1_LOD0")!.material as MultiMaterial).subMaterials[1] = material;
-		(this.scene.getMeshByName("tree_1_LOD1")!.material as MultiMaterial).subMaterials[0] = material;
-		(this.scene.getMeshByName("tree_1_LOD2")!.material as MultiMaterial).subMaterials[0] = material;
+		return material;
 	}
 }
 
