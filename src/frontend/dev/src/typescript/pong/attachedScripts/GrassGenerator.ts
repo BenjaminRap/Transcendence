@@ -52,7 +52,8 @@ export class GrassGenerator extends CustomScriptComponent {
 		this._grassTexture.vScale = -1;
 		this._windTexture.vScale = -1;
 		this._grassLod.getLodLevels().forEach((lodLevel : LodLevelProcessed) => {
-			this.setGrassMaterial(lodLevel.mesh);
+			if (lodLevel.mesh)
+				this.setGrassMaterial(lodLevel.mesh);
 		});
 	}
 
@@ -92,7 +93,6 @@ export class GrassGenerator extends CustomScriptComponent {
 		const	baseNear = baseForCircleUnit * this._camera.minZ;
 		const	baseFar = baseForCircleUnit * this._grassMaxDistance;
 		const	height = this._grassMaxDistance - this._camera.minZ;
-		const	inverseMeshWorldMatrix = Matrix.Invert(this._grassLod.worldMatrix);
 
 		for (let index = 0; index < this._grassInstanceCount; index++) {
 			const	localPos2D = getRandomCoordinatesInTrapeze(baseNear, baseFar, height);
@@ -100,14 +100,17 @@ export class GrassGenerator extends CustomScriptComponent {
 			const	globalPos3D = Vector3.TransformCoordinates(localPos3D, this._camera.worldMatrixFromCache);
 
 			globalPos3D.y = this._ground.getHeightAtCoordinates(globalPos3D.x, globalPos3D.z);
-			const	rotation = Quaternion.RotationAxis(Vector3.UpReadOnly, Math.random() * 2 * Math.PI);
-			const	matrix = Matrix.Compose(Vector3.OneReadOnly, rotation, globalPos3D);
 
-			const	invertedMatrix = matrix.multiply(inverseMeshWorldMatrix);
 			const	squaredDistance = Vector3.DistanceSquared(this._camera.position, globalPos3D);
 			const	lodLevel = this._grassLod.getLodLevel(squaredDistance);
+			if (!lodLevel)
+				continue ;
 
-			lodLevel?.thinInstanceAdd(invertedMatrix, false);
+			const	rotation = Quaternion.RotationAxis(Vector3.UpReadOnly, Math.random() * 2 * Math.PI);
+			const	matrix = Matrix.Compose(Vector3.OneReadOnly, rotation, globalPos3D);
+			const	invertedMatrix = matrix.multiply(lodLevel.inverseWorldMatrix);
+
+			lodLevel.thinInstanceAdd(invertedMatrix, false);
 		}
 		this.syncThinInstancesBuffer(this._grassLod);
 	}
@@ -115,6 +118,8 @@ export class GrassGenerator extends CustomScriptComponent {
 	private	syncThinInstancesBuffer(lod : Lod)
 	{
 		lod.getLodLevels().forEach((lodLevel : LodLevelProcessed) => {
+			if (!lodLevel.mesh)
+				return ;
 			lodLevel.mesh.thinInstanceBufferUpdated("matrix");
 			if (!lodLevel.mesh.doNotSyncBoundingInfo) {
 				lodLevel.mesh.thinInstanceRefreshBoundingInfo(false);

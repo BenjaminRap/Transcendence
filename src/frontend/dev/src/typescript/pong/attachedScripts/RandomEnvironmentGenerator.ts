@@ -3,8 +3,7 @@ import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager } from "@babylonjs-toolkit/next";
 import { type int } from "@babylonjs/core/types";
 import { Matrix, Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
-import { Range } from "../Range";
-import { getRandomCoordinatesInTrapeze, randomFromRange } from "../utilities";
+import { getRandomCoordinatesInTrapeze } from "../utilities";
 import { Lod, zodLodLevel, type LodLevelProcessed } from "../Lod";
 import { RandomTerrainGenerator } from "./RandomTerrainGenerator";
 import { Imported } from "@shared/ImportedDecorator";
@@ -62,7 +61,6 @@ export class RandomEnvironmentGenerator extends CustomScriptComponent {
 		const	baseNear = baseForCircleUnit * this._camera.minZ;
 		const	baseFar = baseForCircleUnit * this._dimension / 2;
 		const	height = this._dimension / 2 - this._camera.minZ;
-		const	inverseMeshWorldMatrix = Matrix.Invert(lod.worldMatrix);
 		for (let i = 0; i < instanceCount * this._instancesCountFactor; i++) {
 			const	position = this.getRandomPositionOnGround(baseNear, baseFar, height);
 
@@ -71,12 +69,14 @@ export class RandomEnvironmentGenerator extends CustomScriptComponent {
 
 			const	squaredDistance = Vector3.DistanceSquared(this.transform.position, position);
 			const	lodLevel = lod.getLodLevel(squaredDistance);
+			if (!lodLevel)
+				continue ;
 			const	scale = lodLevel?.scaling ?? Vector3.OneReadOnly;
 			const	rotation = Quaternion.RotationAxis(Vector3.UpReadOnly, Math.random() * 2 * Math.PI);
 			const	matrix = Matrix.Compose(scale, rotation, position);
-			const	invertedMatrix = matrix.multiply(inverseMeshWorldMatrix);
+			const	invertedMatrix = matrix.multiply(lodLevel.inverseWorldMatrix);
 
-			lodLevel?.thinInstanceAdd(invertedMatrix, true)
+			lodLevel.thinInstanceAdd(invertedMatrix, true)
 		}
 		this.syncThinInstancesBuffer(lod);
 	}
@@ -84,6 +84,8 @@ export class RandomEnvironmentGenerator extends CustomScriptComponent {
 	private	syncThinInstancesBuffer(lod : Lod)
 	{
 		lod.getLodLevels().forEach((lodLevel : LodLevelProcessed) => {
+			if (!lodLevel.mesh)
+				return ;
 			lodLevel.mesh.thinInstanceBufferUpdated("matrix");
 			if (!lodLevel.mesh.doNotSyncBoundingInfo) {
 				lodLevel.mesh.thinInstanceRefreshBoundingInfo(false);

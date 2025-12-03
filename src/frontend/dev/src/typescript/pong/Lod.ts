@@ -4,7 +4,7 @@ import { Scene } from "@babylonjs/core/scene";
 import zod from "zod";
 
 export const zodLodLevel = zod.object({
-	meshName: zod.string().nonempty(),
+	meshName: zod.string().nonempty().nullable(),
 	distance: zod.number().positive()
 });
 
@@ -12,20 +12,22 @@ export type LodLevel = zod.infer<typeof zodLodLevel>;
 
 export interface	LodLevelProcessed
 {
-	mesh : Mesh;
+	mesh : LodMesh | null;
 	squaredDistance : number;
+}
+
+export interface	LodMesh extends Mesh
+{
+	inverseWorldMatrix : Matrix;
 }
 
 export class	Lod
 {
-	public readonly worldMatrix : Matrix;
-
 	private	readonly _levels : readonly LodLevelProcessed[];
 
 	constructor(lodLevels : LodLevel[], scene : Scene)
 	{
 		this._levels = this.getLodLevelsProcessed(lodLevels, scene);
-		this.worldMatrix = this._levels[0].mesh.getWorldMatrix();
 	}
 
 	private	getLodLevelsProcessed(lodLevels : LodLevel[], scene : Scene)
@@ -34,21 +36,25 @@ export class	Lod
 			throw new Error("Lod created with 0 levels !");
 		lodLevels.sort((a: LodLevel, b: LodLevel) => a.distance - b.distance);
 		return lodLevels.map((lodLevel : LodLevel) => {
-			const	mesh = scene.getMeshByName(lodLevel.meshName);
+			const	mesh = lodLevel.meshName ? this.findMesh(scene, lodLevel.meshName) : null;
+			return {
+				mesh: mesh,
+				squaredDistance: Math.pow(lodLevel.distance, 2)
+			};
+		});
+	}
 
-			if (mesh === null)
-				console.error(`Can't find an lod mesh, id : ${lodLevel.meshName}!`);
-			else if (!(mesh instanceof Mesh))
-				console.error(`The lod AbstractMesh is not a Mesh, id :  ${lodLevel.meshName}`)
-			else
-			{
-				return {
-					mesh: mesh,
-					squaredDistance: Math.pow(lodLevel.distance, 2)
-				};
-			}
-			return null;
-		}).filter((value) => value !== null);
+	private	findMesh(scene : Scene, name : string) : LodMesh
+	{
+		const	mesh = scene.getMeshByName(name) as LodMesh;
+
+		if (mesh === null)
+			throw new Error(`Can't find an lod mesh, id : ${name}!`);
+		if (!(mesh instanceof Mesh))
+			throw new Error(`The lod AbstractMesh is not a Mesh, id :  ${name}`);
+
+		mesh.inverseWorldMatrix = Matrix.Invert(mesh.getWorldMatrix());
+		return mesh;
 	}
 
 	public getLodLevels()
@@ -56,7 +62,7 @@ export class	Lod
 		return this._levels;
 	}
 
-	public	getLodLevel(squaredDistance : number) : Mesh | null
+	public	getLodLevel(squaredDistance : number) : LodMesh | null
 	{
 		for (let index = 0; index < this._levels.length; index++) {
 			const lodLevel = this._levels[index];
