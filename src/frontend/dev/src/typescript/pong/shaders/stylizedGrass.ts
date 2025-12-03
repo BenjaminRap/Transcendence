@@ -1,5 +1,5 @@
 import { Color3, Scene, Texture, Vector2, Vector3 } from "@babylonjs/core";
-import { AddBlock, AnimatedInputBlockTypes, ClampBlock, DistanceBlock, FragmentOutputBlock, ImageSourceBlock, InputBlock, InstancesBlock, LerpBlock, LightBlock, MultiplyBlock, NegateBlock, NodeMaterial, NodeMaterialModes, NodeMaterialSystemValues, SimplexPerlin3DBlock, SmoothStepBlock, SubtractBlock, TextureBlock, TransformBlock, VectorMergerBlock, VectorSplitterBlock, VertexOutputBlock } from "@babylonjs/core/Materials/Node";
+import { AddBlock, AnimatedInputBlockTypes, ClampBlock, DistanceBlock, FragmentOutputBlock, ImageSourceBlock, InputBlock, InstancesBlock, LerpBlock, LightBlock, MultiplyBlock, NegateBlock, NodeMaterial, NodeMaterialModes, NodeMaterialSystemValues, NodeMaterialTeleportInBlock, NodeMaterialTeleportOutBlock, SimplexPerlin3DBlock, SmoothStepBlock, SubtractBlock, TextureBlock, TransformBlock, VectorMergerBlock, VectorSplitterBlock, VertexOutputBlock } from "@babylonjs/core/Materials/Node";
 
 export type	StylizedGrassMaterialAndInputs = [ NodeMaterial, StylizedGrassMaterialInputsBlocks ];
 
@@ -107,6 +107,12 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	Subtract.visibleOnFrame = false;
 	Subtract.target = 4;
 
+	// NodeMaterialTeleportInBlock
+	var windTextureSample = new NodeMaterialTeleportInBlock("windTextureSample");
+	windTextureSample.visibleInInspector = false;
+	windTextureSample.visibleOnFrame = false;
+	windTextureSample.target = 4;
+
 	// TextureBlock
 	var windTexture = new TextureBlock("windTexture");
 	windTexture.visibleInInspector = false;
@@ -155,13 +161,19 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	VectorSplitter.visibleOnFrame = false;
 	VectorSplitter.target = 4;
 
-	// TransformBlock
-	var worldPos = new TransformBlock("worldPos");
+	// NodeMaterialTeleportInBlock
+	var worldPos = new NodeMaterialTeleportInBlock("worldPos3");
 	worldPos.visibleInInspector = false;
 	worldPos.visibleOnFrame = false;
 	worldPos.target = 1;
-	worldPos.complementZ = 0;
-	worldPos.complementW = 1;
+
+	// TransformBlock
+	var worldPos1 = new TransformBlock("worldPos");
+	worldPos1.visibleInInspector = false;
+	worldPos1.visibleOnFrame = false;
+	worldPos1.target = 1;
+	worldPos1.complementZ = 0;
+	worldPos1.complementW = 1;
 
 	// InputBlock
 	var position = new InputBlock("position");
@@ -170,107 +182,113 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	position.target = 1;
 	position.setAsAttribute("position");
 
-	// VectorSplitterBlock
-	var vertexY = new VectorSplitterBlock("vertexY");
-	vertexY.visibleInInspector = false;
-	vertexY.visibleOnFrame = false;
-	vertexY.target = 4;
+	// NodeMaterialTeleportInBlock
+	var instanceWorld = new NodeMaterialTeleportInBlock("instanceWorld");
+	instanceWorld.visibleInInspector = false;
+	instanceWorld.visibleOnFrame = false;
+	instanceWorld.target = 1;
 
-	// SmoothStepBlock
-	var heightBlending = new SmoothStepBlock("heightBlending");
-	heightBlending.visibleInInspector = false;
-	heightBlending.visibleOnFrame = false;
-	heightBlending.target = 4;
-
-	// InputBlock
-	var minHeight = new InputBlock("minHeight");
-	minHeight.visibleInInspector = false;
-	minHeight.visibleOnFrame = false;
-	minHeight.target = 1;
-	minHeight.value = 0;
-	minHeight.min = 0;
-	minHeight.max = 1;
-	minHeight.isBoolean = false;
-	minHeight.matrixMode = 0;
-	minHeight.animationType = AnimatedInputBlockTypes.None;
-	minHeight.isConstant = false;
+	// InstancesBlock
+	var instances = new InstancesBlock("instances");
+	instances.visibleInInspector = false;
+	instances.visibleOnFrame = false;
+	instances.target = 1;
 
 	// InputBlock
-	var maxHeight = new InputBlock("maxHeight");
-	maxHeight.visibleInInspector = false;
-	maxHeight.visibleOnFrame = false;
-	maxHeight.target = 1;
-	maxHeight.value = 18;
-	maxHeight.min = 0;
-	maxHeight.max = 0;
-	maxHeight.isBoolean = false;
-	maxHeight.matrixMode = 0;
-	maxHeight.animationType = AnimatedInputBlockTypes.None;
-	maxHeight.isConstant = false;
-
-	// ClampBlock
-	var Clamp = new ClampBlock("Clamp");
-	Clamp.visibleInInspector = false;
-	Clamp.visibleOnFrame = false;
-	Clamp.target = 4;
-	Clamp.minimum = 0;
-	Clamp.maximum = 1;
-
-	// MultiplyBlock
-	var Multiply3 = new MultiplyBlock("Multiply");
-	Multiply3.visibleInInspector = false;
-	Multiply3.visibleOnFrame = false;
-	Multiply3.target = 4;
-
-	// AddBlock
-	var displacedWorldPos = new AddBlock("displacedWorldPos");
-	displacedWorldPos.visibleInInspector = false;
-	displacedWorldPos.visibleOnFrame = false;
-	displacedWorldPos.target = 4;
-
-	// VectorMergerBlock
-	var VectorMerger1 = new VectorMergerBlock("VectorMerger");
-	VectorMerger1.visibleInInspector = false;
-	VectorMerger1.visibleOnFrame = false;
-	VectorMerger1.target = 4;
-	VectorMerger1.xSwizzle = "x";
-	VectorMerger1.ySwizzle = "y";
-	VectorMerger1.zSwizzle = "z";
-	VectorMerger1.wSwizzle = "w";
+	var world = new InputBlock("world0");
+	world.visibleInInspector = false;
+	world.visibleOnFrame = false;
+	world.target = 1;
+	world.setAsAttribute("world0");
 
 	// InputBlock
-	var one = new InputBlock("one");
-	one.visibleInInspector = false;
-	one.visibleOnFrame = false;
-	one.target = 1;
-	one.value = 1;
-	one.min = 1;
-	one.max = 1;
-	one.isBoolean = false;
-	one.matrixMode = 0;
-	one.animationType = AnimatedInputBlockTypes.None;
-	one.isConstant = false;
+	var world1 = new InputBlock("world1");
+	world1.visibleInInspector = false;
+	world1.visibleOnFrame = false;
+	world1.target = 1;
+	world1.setAsAttribute("world1");
+
+	// InputBlock
+	var world2 = new InputBlock("world2");
+	world2.visibleInInspector = false;
+	world2.visibleOnFrame = false;
+	world2.target = 1;
+	world2.setAsAttribute("world2");
+
+	// InputBlock
+	var world3 = new InputBlock("world3");
+	world3.visibleInInspector = false;
+	world3.visibleOnFrame = false;
+	world3.target = 1;
+	world3.setAsAttribute("world3");
+
+	// InputBlock
+	var world4 = new InputBlock("world");
+	world4.visibleInInspector = false;
+	world4.visibleOnFrame = false;
+	world4.target = 1;
+	world4.setAsSystemValue(NodeMaterialSystemValues.World);
 
 	// TransformBlock
-	var vertexScreenPos = new TransformBlock("vertexScreenPos");
-	vertexScreenPos.visibleInInspector = false;
-	vertexScreenPos.visibleOnFrame = false;
-	vertexScreenPos.target = 1;
-	vertexScreenPos.complementZ = 0;
-	vertexScreenPos.complementW = 1;
+	var worldNormal = new TransformBlock("worldNormal");
+	worldNormal.visibleInInspector = false;
+	worldNormal.visibleOnFrame = false;
+	worldNormal.target = 1;
+	worldNormal.complementZ = 0;
+	worldNormal.complementW = 0;
 
 	// InputBlock
-	var viewProjection = new InputBlock("viewProjection");
-	viewProjection.visibleInInspector = false;
-	viewProjection.visibleOnFrame = false;
-	viewProjection.target = 1;
-	viewProjection.setAsSystemValue(NodeMaterialSystemValues.ViewProjection);
+	var normal = new InputBlock("normal");
+	normal.visibleInInspector = false;
+	normal.visibleOnFrame = false;
+	normal.target = 1;
+	normal.setAsAttribute("normal");
 
-	// VertexOutputBlock
-	var vertexOutput = new VertexOutputBlock("vertexOutput");
-	vertexOutput.visibleInInspector = false;
-	vertexOutput.visibleOnFrame = false;
-	vertexOutput.target = 1;
+	// NodeMaterialTeleportOutBlock
+	var instanceWorld1 = new NodeMaterialTeleportOutBlock("> instanceWorld");
+	instanceWorld1.visibleInInspector = false;
+	instanceWorld1.visibleOnFrame = false;
+	instanceWorld1.target = 1;
+	instanceWorld.attachToEndpoint(instanceWorld1);
+
+	// LightBlock
+	var lights = new LightBlock("lights");
+	lights.visibleInInspector = false;
+	lights.visibleOnFrame = false;
+	lights.target = 3;
+
+	// NodeMaterialTeleportInBlock
+	var worldPos2 = new NodeMaterialTeleportInBlock("worldPos4");
+	worldPos2.visibleInInspector = false;
+	worldPos2.visibleOnFrame = false;
+	worldPos2.target = 1;
+
+	// NodeMaterialTeleportOutBlock
+	var worldPos3 = new NodeMaterialTeleportOutBlock("> worldPos4");
+	worldPos3.visibleInInspector = false;
+	worldPos3.visibleOnFrame = false;
+	worldPos3.target = 1;
+	worldPos2.attachToEndpoint(worldPos3);
+
+	// NodeMaterialTeleportOutBlock
+	var worldPos4 = new NodeMaterialTeleportOutBlock("> worldPos4");
+	worldPos4.visibleInInspector = false;
+	worldPos4.visibleOnFrame = false;
+	worldPos4.target = 1;
+	worldPos2.attachToEndpoint(worldPos4);
+
+	// InputBlock
+	var cameraPosition = new InputBlock("cameraPosition");
+	cameraPosition.visibleInInspector = false;
+	cameraPosition.visibleOnFrame = false;
+	cameraPosition.target = 1;
+	cameraPosition.setAsSystemValue(NodeMaterialSystemValues.CameraPosition);
+
+	// LerpBlock
+	var Lerp = new LerpBlock("Lerp");
+	Lerp.visibleInInspector = false;
+	Lerp.visibleOnFrame = false;
+	Lerp.target = 4;
 
 	// LerpBlock
 	var unlitColor = new LerpBlock("unlitColor");
@@ -320,12 +338,19 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	viewVector.visibleOnFrame = false;
 	viewVector.target = 4;
 
+	// NodeMaterialTeleportOutBlock
+	var worldPos5 = new NodeMaterialTeleportOutBlock("> worldPos3");
+	worldPos5.visibleInInspector = false;
+	worldPos5.visibleOnFrame = false;
+	worldPos5.target = 1;
+	worldPos.attachToEndpoint(worldPos5);
+
 	// InputBlock
-	var cameraPosition = new InputBlock("cameraPosition");
-	cameraPosition.visibleInInspector = false;
-	cameraPosition.visibleOnFrame = false;
-	cameraPosition.target = 1;
-	cameraPosition.setAsSystemValue(NodeMaterialSystemValues.CameraPosition);
+	var cameraPosition1 = new InputBlock("cameraPosition");
+	cameraPosition1.visibleInInspector = false;
+	cameraPosition1.visibleOnFrame = false;
+	cameraPosition1.target = 1;
+	cameraPosition1.setAsSystemValue(NodeMaterialSystemValues.CameraPosition);
 
 	// InputBlock
 	var near = new InputBlock("near");
@@ -353,11 +378,148 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	far.animationType = AnimatedInputBlockTypes.None;
 	far.isConstant = false;
 
-	// LerpBlock
-	var Lerp = new LerpBlock("Lerp");
-	Lerp.visibleInInspector = false;
-	Lerp.visibleOnFrame = false;
-	Lerp.target = 4;
+	// ClampBlock
+	var Clamp = new ClampBlock("Clamp");
+	Clamp.visibleInInspector = false;
+	Clamp.visibleOnFrame = false;
+	Clamp.target = 4;
+	Clamp.minimum = 0;
+	Clamp.maximum = 1;
+
+	// SmoothStepBlock
+	var heightBlending = new SmoothStepBlock("heightBlending");
+	heightBlending.visibleInInspector = false;
+	heightBlending.visibleOnFrame = false;
+	heightBlending.target = 4;
+
+	// VectorSplitterBlock
+	var vertexY = new VectorSplitterBlock("vertexY");
+	vertexY.visibleInInspector = false;
+	vertexY.visibleOnFrame = false;
+	vertexY.target = 4;
+
+	// InputBlock
+	var position1 = new InputBlock("position");
+	position1.visibleInInspector = false;
+	position1.visibleOnFrame = false;
+	position1.target = 1;
+	position1.setAsAttribute("position");
+
+	// InputBlock
+	var minHeight = new InputBlock("minHeight");
+	minHeight.visibleInInspector = false;
+	minHeight.visibleOnFrame = false;
+	minHeight.target = 1;
+	minHeight.value = 0;
+	minHeight.min = 0;
+	minHeight.max = 1;
+	minHeight.isBoolean = false;
+	minHeight.matrixMode = 0;
+	minHeight.animationType = AnimatedInputBlockTypes.None;
+	minHeight.isConstant = false;
+
+	// InputBlock
+	var maxHeight = new InputBlock("maxHeight");
+	maxHeight.visibleInInspector = false;
+	maxHeight.visibleOnFrame = false;
+	maxHeight.target = 1;
+	maxHeight.value = 18;
+	maxHeight.min = 0;
+	maxHeight.max = 0;
+	maxHeight.isBoolean = false;
+	maxHeight.matrixMode = 0;
+	maxHeight.animationType = AnimatedInputBlockTypes.None;
+	maxHeight.isConstant = false;
+
+	// NodeMaterialTeleportInBlock
+	var normalizedHeight = new NodeMaterialTeleportInBlock("normalizedHeight");
+	normalizedHeight.visibleInInspector = false;
+	normalizedHeight.visibleOnFrame = false;
+	normalizedHeight.target = 4;
+
+	// MultiplyBlock
+	var Multiply3 = new MultiplyBlock("Multiply");
+	Multiply3.visibleInInspector = false;
+	Multiply3.visibleOnFrame = false;
+	Multiply3.target = 4;
+
+	// NodeMaterialTeleportOutBlock
+	var normalizedHeight1 = new NodeMaterialTeleportOutBlock("> normalizedHeight");
+	normalizedHeight1.visibleInInspector = false;
+	normalizedHeight1.visibleOnFrame = false;
+	normalizedHeight1.target = 4;
+	normalizedHeight.attachToEndpoint(normalizedHeight1);
+
+	// AddBlock
+	var displacedWorldPos = new AddBlock("displacedWorldPos");
+	displacedWorldPos.visibleInInspector = false;
+	displacedWorldPos.visibleOnFrame = false;
+	displacedWorldPos.target = 4;
+
+	// NodeMaterialTeleportOutBlock
+	var worldPos6 = new NodeMaterialTeleportOutBlock("> worldPos3");
+	worldPos6.visibleInInspector = false;
+	worldPos6.visibleOnFrame = false;
+	worldPos6.target = 1;
+	worldPos.attachToEndpoint(worldPos6);
+
+	// VectorMergerBlock
+	var VectorMerger1 = new VectorMergerBlock("VectorMerger");
+	VectorMerger1.visibleInInspector = false;
+	VectorMerger1.visibleOnFrame = false;
+	VectorMerger1.target = 4;
+	VectorMerger1.xSwizzle = "x";
+	VectorMerger1.ySwizzle = "y";
+	VectorMerger1.zSwizzle = "z";
+	VectorMerger1.wSwizzle = "w";
+
+	// InputBlock
+	var one = new InputBlock("one");
+	one.visibleInInspector = false;
+	one.visibleOnFrame = false;
+	one.target = 1;
+	one.value = 1;
+	one.min = 1;
+	one.max = 1;
+	one.isBoolean = false;
+	one.matrixMode = 0;
+	one.animationType = AnimatedInputBlockTypes.None;
+	one.isConstant = false;
+
+	// TransformBlock
+	var vertexScreenPos = new TransformBlock("vertexScreenPos");
+	vertexScreenPos.visibleInInspector = false;
+	vertexScreenPos.visibleOnFrame = false;
+	vertexScreenPos.target = 1;
+	vertexScreenPos.complementZ = 0;
+	vertexScreenPos.complementW = 1;
+
+	// InputBlock
+	var viewProjection = new InputBlock("viewProjection");
+	viewProjection.visibleInInspector = false;
+	viewProjection.visibleOnFrame = false;
+	viewProjection.target = 1;
+	viewProjection.setAsSystemValue(NodeMaterialSystemValues.ViewProjection);
+
+	// VertexOutputBlock
+	var vertexOutput = new VertexOutputBlock("vertexOutput");
+	vertexOutput.visibleInInspector = false;
+	vertexOutput.visibleOnFrame = false;
+	vertexOutput.target = 1;
+
+	// NodeMaterialTeleportOutBlock
+	var normalizedHeight2 = new NodeMaterialTeleportOutBlock("> normalizedHeight");
+	normalizedHeight2.visibleInInspector = false;
+	normalizedHeight2.visibleOnFrame = false;
+	normalizedHeight2.target = 4;
+	normalizedHeight.attachToEndpoint(normalizedHeight2);
+
+	// NodeMaterialTeleportOutBlock
+	var normalizedHeight3 = new NodeMaterialTeleportOutBlock("> normalizedHeight");
+	normalizedHeight3.visibleInInspector = false;
+	normalizedHeight3.visibleOnFrame = false;
+	normalizedHeight3.target = 4;
+	normalizedHeight.attachToEndpoint(normalizedHeight3);
 
 	// InputBlock
 	var swayColor = new InputBlock("swayColor");
@@ -367,74 +529,12 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	swayColor.value = new Color3(0, 0, 0);
 	swayColor.isConstant = false;
 
-	// LightBlock
-	var lights = new LightBlock("lights");
-	lights.visibleInInspector = false;
-	lights.visibleOnFrame = false;
-	lights.target = 3;
-
-	// TransformBlock
-	var worldNormal = new TransformBlock("worldNormal");
-	worldNormal.visibleInInspector = false;
-	worldNormal.visibleOnFrame = false;
-	worldNormal.target = 1;
-	worldNormal.complementZ = 0;
-	worldNormal.complementW = 0;
-
-	// InputBlock
-	var normal = new InputBlock("normal");
-	normal.visibleInInspector = false;
-	normal.visibleOnFrame = false;
-	normal.target = 1;
-	normal.setAsAttribute("normal");
-
-	// InstancesBlock
-	var instances = new InstancesBlock("instances");
-	instances.visibleInInspector = false;
-	instances.visibleOnFrame = false;
-	instances.target = 1;
-
-	// InputBlock
-	var world = new InputBlock("world0");
-	world.visibleInInspector = false;
-	world.visibleOnFrame = false;
-	world.target = 1;
-	world.setAsAttribute("world0");
-
-	// InputBlock
-	var world1 = new InputBlock("world1");
-	world1.visibleInInspector = false;
-	world1.visibleOnFrame = false;
-	world1.target = 1;
-	world1.setAsAttribute("world1");
-
-	// InputBlock
-	var world2 = new InputBlock("world2");
-	world2.visibleInInspector = false;
-	world2.visibleOnFrame = false;
-	world2.target = 1;
-	world2.setAsAttribute("world2");
-
-	// InputBlock
-	var world3 = new InputBlock("world3");
-	world3.visibleInInspector = false;
-	world3.visibleOnFrame = false;
-	world3.target = 1;
-	world3.setAsAttribute("world3");
-
-	// InputBlock
-	var world4 = new InputBlock("world");
-	world4.visibleInInspector = false;
-	world4.visibleOnFrame = false;
-	world4.target = 1;
-	world4.setAsSystemValue(NodeMaterialSystemValues.World);
-
-	// InputBlock
-	var cameraPosition1 = new InputBlock("cameraPosition");
-	cameraPosition1.visibleInInspector = false;
-	cameraPosition1.visibleOnFrame = false;
-	cameraPosition1.target = 1;
-	cameraPosition1.setAsSystemValue(NodeMaterialSystemValues.CameraPosition);
+	// NodeMaterialTeleportOutBlock
+	var windTextureSample1 = new NodeMaterialTeleportOutBlock("> windTextureSample");
+	windTextureSample1.visibleInInspector = false;
+	windTextureSample1.visibleOnFrame = false;
+	windTextureSample1.target = 4;
+	windTextureSample.attachToEndpoint(windTextureSample1);
 
 	// InputBlock
 	var View = new InputBlock("View");
@@ -502,6 +602,34 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	mainTextureSource.texture.vScale = 1;
 	mainTextureSource.texture.coordinatesMode = 7;
 
+	// NodeMaterialTeleportOutBlock
+	var instanceWorld2 = new NodeMaterialTeleportOutBlock("> instanceWorld");
+	instanceWorld2.visibleInInspector = false;
+	instanceWorld2.visibleOnFrame = false;
+	instanceWorld2.target = 1;
+	instanceWorld.attachToEndpoint(instanceWorld2);
+
+	// NodeMaterialTeleportOutBlock
+	var instanceWorld3 = new NodeMaterialTeleportOutBlock("> instanceWorld");
+	instanceWorld3.visibleInInspector = false;
+	instanceWorld3.visibleOnFrame = false;
+	instanceWorld3.target = 1;
+	instanceWorld.attachToEndpoint(instanceWorld3);
+
+	// NodeMaterialTeleportOutBlock
+	var worldPos7 = new NodeMaterialTeleportOutBlock("> worldPos3");
+	worldPos7.visibleInInspector = false;
+	worldPos7.visibleOnFrame = false;
+	worldPos7.target = 1;
+	worldPos.attachToEndpoint(worldPos7);
+
+	// NodeMaterialTeleportOutBlock
+	var worldPos8 = new NodeMaterialTeleportOutBlock("> worldPos3");
+	worldPos8.visibleInInspector = false;
+	worldPos8.visibleOnFrame = false;
+	worldPos8.target = 1;
+	worldPos.attachToEndpoint(worldPos8);
+
 	// InputBlock
 	var windSwayScale = new InputBlock("windSwayScale");
 	windSwayScale.visibleInInspector = false;
@@ -564,6 +692,20 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	windTextureSource.texture.vScale = 1;
 	windTextureSource.texture.coordinatesMode = 7;
 
+	// NodeMaterialTeleportOutBlock
+	var windTextureSample2 = new NodeMaterialTeleportOutBlock("> windTextureSample");
+	windTextureSample2.visibleInInspector = false;
+	windTextureSample2.visibleOnFrame = false;
+	windTextureSample2.target = 4;
+	windTextureSample.attachToEndpoint(windTextureSample2);
+
+	// NodeMaterialTeleportOutBlock
+	var windTextureSample3 = new NodeMaterialTeleportOutBlock("> windTextureSample");
+	windTextureSample3.visibleInInspector = false;
+	windTextureSample3.visibleOnFrame = false;
+	windTextureSample3.target = 4;
+	windTextureSample.attachToEndpoint(windTextureSample3);
+
 	// InputBlock
 	var windTextureSubtract = new InputBlock("windTextureSubtract");
 	windTextureSubtract.visibleInInspector = false;
@@ -593,14 +735,16 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	simplexPerlinD.output.connectTo(Multiply.left);
 	windDirection.output.connectTo(Multiply.right);
 	Multiply.output.connectTo(Add.left);
-	position.output.connectTo(worldPos.vector);
+	position.output.connectTo(worldPos1.vector);
 	world.output.connectTo(instances.world0);
 	world1.output.connectTo(instances.world1);
 	world2.output.connectTo(instances.world2);
 	world3.output.connectTo(instances.world3);
 	world4.output.connectTo(instances.world);
-	instances.output.connectTo(worldPos.transform);
-	worldPos.xyz.connectTo(VectorSplitter.xyzIn);
+	instances.output.connectTo(instanceWorld.input);
+	instanceWorld3.output.connectTo(worldPos1.transform);
+	worldPos1.xyz.connectTo(worldPos.input);
+	worldPos8.output.connectTo(VectorSplitter.xyzIn);
 	VectorSplitter.x.connectTo(VectorMerger.x);
 	VectorSplitter.z.connectTo(VectorMerger.y);
 	VectorMerger.xy.connectTo(Multiply2.left);
@@ -611,35 +755,38 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	Multiply4.output.connectTo(Add1.right);
 	Add1.output.connectTo(windTexture.uv);
 	windTextureSource.source.connectTo(windTexture.source);
-	windTexture.r.connectTo(Subtract.left);
+	windTexture.r.connectTo(windTextureSample.input);
+	windTextureSample3.output.connectTo(Subtract.left);
 	windTextureSubtract.output.connectTo(Subtract.right);
 	Subtract.output.connectTo(Multiply1.left);
 	windSwayDirection.output.connectTo(Multiply1.right);
 	Multiply1.output.connectTo(Add.right);
 	Add.output.connectTo(Multiply3.left);
-	position.output.connectTo(vertexY.xyzIn);
+	position1.output.connectTo(vertexY.xyzIn);
 	vertexY.y.connectTo(heightBlending.value);
 	minHeight.output.connectTo(heightBlending.edge0);
 	maxHeight.output.connectTo(heightBlending.edge1);
 	heightBlending.output.connectTo(Clamp.value);
-	Clamp.output.connectTo(Multiply3.right);
+	Clamp.output.connectTo(normalizedHeight.input);
+	normalizedHeight1.output.connectTo(Multiply3.right);
 	Multiply3.output.connectTo(displacedWorldPos.left);
-	worldPos.xyz.connectTo(displacedWorldPos.right);
+	worldPos6.output.connectTo(displacedWorldPos.right);
 	displacedWorldPos.output.connectTo(VectorMerger1.xyzIn);
 	one.output.connectTo(VectorMerger1.w);
 	VectorMerger1.xyzw.connectTo(vertexScreenPos.vector);
 	viewProjection.output.connectTo(vertexScreenPos.transform);
 	vertexScreenPos.output.connectTo(vertexOutput.vector);
-	worldPos.output.connectTo(lights.worldPosition);
+	worldPos1.output.connectTo(worldPos2.input);
+	worldPos4.output.connectTo(lights.worldPosition);
 	normal.output.connectTo(worldNormal.vector);
-	instances.output.connectTo(worldNormal.transform);
+	instanceWorld1.output.connectTo(worldNormal.transform);
 	worldNormal.output.connectTo(lights.worldNormal);
-	cameraPosition1.output.connectTo(lights.cameraPosition);
+	cameraPosition.output.connectTo(lights.cameraPosition);
 	bottomColor.output.connectTo(unlitColor.left);
 	nearColor.output.connectTo(distanceBlendedColor.left);
 	farColor.output.connectTo(distanceBlendedColor.right);
-	worldPos.xyz.connectTo(viewVector.left);
-	cameraPosition.output.connectTo(viewVector.right);
+	worldPos5.output.connectTo(viewVector.left);
+	cameraPosition1.output.connectTo(viewVector.right);
 	viewVector.output.connectTo(distanceBlending.value);
 	near.output.connectTo(distanceBlending.edge0);
 	far.output.connectTo(distanceBlending.edge1);
@@ -648,7 +795,7 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	Clamp.output.connectTo(unlitColor.gradient);
 	unlitColor.output.connectTo(Lerp.left);
 	swayColor.output.connectTo(Lerp.right);
-	windTexture.r.connectTo(Lerp.gradient);
+	windTextureSample1.output.connectTo(Lerp.gradient);
 	Lerp.output.connectTo(lights.diffuseColor);
 	View.output.connectTo(lights.view);
 	lights.diffuseOutput.connectTo(litColor.left);
