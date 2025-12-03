@@ -41,6 +41,8 @@ export class TreeFoliage extends CustomScriptComponent {
 		inputs.windTextureSubtract.value = this._windTextureSubtract;
 		inputs.windSwayDirection.value = this._windSwayDirection;
 		inputs.windSwayColor.value = this._windSwayColor;
+		this._windTexture.vScale = -1;
+		inputs.windTextureSource.texture = this._windTexture;
 
 		(this.scene.getMeshByName("tree_1_LOD0")!.material as MultiMaterial).subMaterials[1] = material;
 		(this.scene.getMeshByName("tree_1_LOD1")!.material as MultiMaterial).subMaterials[0] = material;
