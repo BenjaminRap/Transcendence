@@ -11,7 +11,6 @@ import { Imported } from "@shared/ImportedDecorator";
 import zod from "zod";
 import { zodInt, zodNumber } from "@shared/ImportedHelpers";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
-import type { MultiMaterial } from "@babylonjs/core";
 
 const zodRandomEnvironmentElement = zod.object({
 	lodLevels: zod.array(zodLodLevel),
