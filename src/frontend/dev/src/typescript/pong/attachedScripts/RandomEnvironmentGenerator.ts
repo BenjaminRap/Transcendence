@@ -4,13 +4,14 @@ import { SceneManager } from "@babylonjs-toolkit/next";
 import { type int } from "@babylonjs/core/types";
 import { Matrix, Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Range } from "../Range";
-import { randomFromRange } from "../utilities";
+import { getRandomCoordinatesInTrapeze, randomFromRange } from "../utilities";
 import { Lod, zodLodLevel, type LodLevelProcessed } from "../Lod";
 import { RandomTerrainGenerator } from "./RandomTerrainGenerator";
 import { Imported } from "@shared/ImportedDecorator";
 import zod from "zod";
-import { zodInt, zodNumber } from "@shared/ImportedHelpers";
+import { ImportedCamera, zodInt, zodNumber } from "@shared/ImportedHelpers";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
+import type { FreeCamera } from "@babylonjs/core";
 
 const zodRandomEnvironmentElement = zod.object({
 	lodLevels: zod.array(zodLodLevel),
@@ -23,7 +24,8 @@ export class RandomEnvironmentGenerator extends CustomScriptComponent {
 	@Imported(zodRandomEnvironmentElement, true) private _envElements! : RandomEnvironmentElement[];
 	@Imported(zodNumber) private _instancesCountFactor! : number;
 	@Imported(zodNumber) private _distanceWithoutElements! : number;
-	@Imported(TransformNode) private _ground! : TransformNode;
+	@Imported(RandomTerrainGenerator) private _ground! : RandomTerrainGenerator;
+	@ImportedCamera private _camera! : FreeCamera;
 
 	private _elementsLods! : Lod[];
 
@@ -33,34 +35,36 @@ export class RandomEnvironmentGenerator extends CustomScriptComponent {
 
 	protected	start()
 	{
-		const	ground = SceneManager.GetComponent<RandomTerrainGenerator>(this._ground, "RandomTerrainGenerator", false);
-
-		this.populateEnvironment(ground);
+		this.populateEnvironment();
 	}
 
-	private populateEnvironment(ground : RandomTerrainGenerator) : void
+	private populateEnvironment() : void
 	{
 		this._elementsLods = this._envElements.map((envElement) => new Lod(envElement.lodLevels, this.scene));
-		const	posRange = new Range(-this._dimension / 2, this._dimension / 2);
 
-		this.instanciateAllEnvElements(ground, posRange);
+		this.instanciateAllEnvElements();
 	}
 
-	private instanciateAllEnvElements(ground : RandomTerrainGenerator, posRange : Range)
+	private instanciateAllEnvElements()
 	{
 		for (let index = 0; index < this._envElements.length; index++) {
-			this.instanciateEnvElement(index, ground, posRange);
+			const	lod = this._elementsLods[index];
+			const	instanceCount = this._envElements[index].instanceCount;
+
+			this.instanciateEnvElement(lod, instanceCount);
 		}
 	}
 
-	private instanciateEnvElement(index : int, ground : RandomTerrainGenerator, posRange : Range)
+	private instanciateEnvElement(lod : Lod, instanceCount : number)
 	{
-		const	lod = this._elementsLods[index];
-		const	instanceCount = this._envElements[index].instanceCount;
-
+		const	aspectRatio = this.scene.getEngine().getAspectRatio(this._camera);
+		const	baseForCircleUnit = Math.tan(this._camera.fov / 2) * 2 * aspectRatio;
+		const	baseNear = baseForCircleUnit * this._camera.minZ;
+		const	baseFar = baseForCircleUnit * this._dimension / 2;
+		const	height = this._dimension / 2 - this._camera.minZ;
 		const	inverseMeshWorldMatrix = Matrix.Invert(lod.worldMatrix);
 		for (let i = 0; i < instanceCount * this._instancesCountFactor; i++) {
-			const	position = this.getRandomPositionOnGround(ground, posRange);
+			const	position = this.getRandomPositionOnGround(baseNear, baseFar, height);
 
 			if (position.length() < this._distanceWithoutElements)
 				continue ;
@@ -87,17 +91,16 @@ export class RandomEnvironmentGenerator extends CustomScriptComponent {
 		});
 	}
 
-	private getRandomPositionOnGround(ground : RandomTerrainGenerator, posRange : Range) : Vector3
+	private getRandomPositionOnGround(baseNear : number, baseFar : number, height : number) : Vector3
 	{
-		const	position = new Vector3();
 
-		position.x = randomFromRange(posRange);
-		position.z = randomFromRange(posRange);
-		position.addInPlace(ground.transform.absolutePosition);
+		const	localPos2D = getRandomCoordinatesInTrapeze(baseNear, baseFar, height);
+		const	localPos3D = new Vector3(localPos2D.x, -5, localPos2D.y + this._camera.minZ);
+		const	globalPos3D = Vector3.TransformCoordinates(localPos3D, this._camera.worldMatrixFromCache);
 
-		position.y = ground.getHeightAtCoordinates(position.x, position.z);
+		globalPos3D.y = this._ground.getHeightAtCoordinates(globalPos3D.x, globalPos3D.z);
 
-		return position;
+		return globalPos3D;
 	}
 }
 
