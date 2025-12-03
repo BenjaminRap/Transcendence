@@ -28,6 +28,7 @@ export class GrassGenerator extends CustomScriptComponent {
 	@Imported(RandomTerrainGenerator) private	_ground! : RandomTerrainGenerator;
 	@Imported(zodNumber) private _grassInstanceCount! : number;
 	@Imported(zodNumber) private _grassMaxDistance! : number;
+	@Imported(Texture) private _windTexture! : Texture;
 
 	private	_grassLod! : Lod;
 
@@ -49,6 +50,7 @@ export class GrassGenerator extends CustomScriptComponent {
 	private	setAllGrassMaterials()
 	{
 		this._grassTexture.vScale = -1;
+		this._windTexture.vScale = -1;
 		this._grassLod.getLodLevels().forEach((lodLevel : LodLevelProcessed) => {
 			this.setGrassMaterial(lodLevel.mesh);
 		});
@@ -80,6 +82,7 @@ export class GrassGenerator extends CustomScriptComponent {
 		_inputs.windTextureSubtract.value = this._windTextureSubtract;
 		_inputs.windSwayDirection.value = this._windSwayDirection;
 		_inputs.swayColor.value = this._swayColor;
+		_inputs.windTextureSource.texture = this._windTexture;
 	}
 
 	private	placeGrassInFrontOfCamera()
