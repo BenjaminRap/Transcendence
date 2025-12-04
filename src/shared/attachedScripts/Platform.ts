@@ -28,13 +28,13 @@ export class Platform extends CustomScriptComponent {
 			|| collision.collidedAgainst !== this._physicsBody
 			|| collision.collider.transformNode !== this._ball.transform)
 			return ;
-		this._ball.reverseBallPenetration(this.transform, "y");
+		this._ball.reverseColliderPenetration(this.transform, "y");
 
 		const	ballPhysicsBody = this._ball.getPhysicsBody();
 		const	currentVelocity = ballPhysicsBody.getLinearVelocity();
 		const	newVelocity = this.getNewVelocity(currentVelocity);
 
-		ballPhysicsBody.setLinearVelocity(newVelocity);
+		this._ball.setLinearVelocity(newVelocity);
 	}
 
 	public getNewVelocity(currentVelocity : Vector3) : Vector3

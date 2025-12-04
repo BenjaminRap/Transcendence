@@ -54,15 +54,36 @@ export class Paddle extends CustomScriptComponent {
 			|| collision.collider !== this._physicsBody
 			|| collision.collidedAgainst.transformNode !== this._ball.transform)
 			return ;
-		this._ball.reverseBallPenetration(this.transform, "x");
-
+		const	colliderPenetrationAxis = this._ball.getColliderPenetrationAxis(this.transform);
 		const	ballPhysicsBody = this._ball.getPhysicsBody();
+
+		if (colliderPenetrationAxis === "y")
+			this.onBallCollisionY(ballPhysicsBody);
+		else
+			this.onBallCollisionX(ballPhysicsBody);
+	}
+
+	private	onBallCollisionY(ballPhysicsBody : PhysicsBody)
+	{
+		const	newVelocity = ballPhysicsBody.getLinearVelocity();
+		const	directionSign = Math.sign(this._ball.transform.absolutePosition.y - this.transform.absolutePosition.y);
+
+		newVelocity.y = this._speed * 1.2 * directionSign;
+		this._ball.setLinearVelocity(newVelocity);
+		return ;
+	}
+
+	private	onBallCollisionX(ballPhysicsBody : PhysicsBody)
+	{
+
+		this._ball.reverseColliderPenetration(this.transform, "x");
+
 		const	ballAbsolutePosition = this._ball.transform.absolutePosition;
 		const	newDirection = this.getNewDirection(ballAbsolutePosition);
 		const	newSpeed = this.getNewSpeed(ballPhysicsBody);
 		const	newVelocity = newDirection.scale(newSpeed);
 
-		ballPhysicsBody.setLinearVelocity(newVelocity);
+		this._ball.setLinearVelocity(newVelocity);
 	}
 
 	public getNewDirection(collidedWorldPos : Vector3) : Vector3

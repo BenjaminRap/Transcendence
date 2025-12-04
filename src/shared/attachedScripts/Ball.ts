@@ -53,24 +53,43 @@ export class Ball extends CustomScriptComponent {
 		}, this._goalTimeoutMs);
 	}
 
-	public reverseBallPenetration(collider : TransformNode, axis : "x" | "y")
+	private	getColliderPenetration(collider : TransformNode, axis : "x" | "y", widthAxis : "x" | "y" = "x")
 	{
 		const	colliderPos = collider.absolutePosition[axis];
 		const	ballPos = this.transform.absolutePosition[axis];
-		const	colliderWidth = collider.absoluteScaling.x;
-		const	ballWidth = this.transform.absoluteScaling.x;
-		const	ballPenetration = (ballPos < colliderPos) ?
+		const	colliderWidth = collider.absoluteScaling[widthAxis];
+		const	ballWidth = this.transform.absoluteScaling[widthAxis];
+		const	colliderPenetration = (ballPos < colliderPos) ?
 			(colliderPos - colliderWidth / 2) - (ballPos + ballWidth / 2) :
 			
 			(colliderPos + colliderWidth / 2) - (ballPos - ballWidth / 2)
+	
+		return colliderPenetration;
+	}
+
+	public getColliderPenetrationAxis(collider : TransformNode)
+	{
+		const	velocity = this._physicsBody.getLinearVelocity();
+		const	colliderPenetrationX = this.getColliderPenetration(collider, "x");
+		const	colliderPenetrationY = this.getColliderPenetration(collider, "y", "y");
+		
+		console.log("y : " + colliderPenetrationY / velocity.y, "x : " + colliderPenetrationX / velocity.x)
+		if (Math.abs(colliderPenetrationY / velocity.y) > Math.abs(colliderPenetrationX / velocity.x))
+			return "x";
+		return "y";
+	}
+
+	public reverseColliderPenetration(collider : TransformNode, axis : "x" | "y")
+	{
+		const	colliderPenetration = this.getColliderPenetration(collider, axis);
 		const	velocity = this._physicsBody.getLinearVelocity();
 		const	oppositeAxis = (axis === "x") ? "y" : "x";
 		const	slope = velocity[oppositeAxis] / velocity[axis];
 
 		const	displacement = new Vector3();
 
-		displacement[axis] = ballPenetration;
-		displacement[oppositeAxis] = ballPenetration * slope;
+		displacement[axis] = colliderPenetration;
+		displacement[oppositeAxis] = colliderPenetration * slope;
 
 		const	newAbsolutionPosition = this.transform.absolutePosition.add(displacement);
 
@@ -80,7 +99,10 @@ export class Ball extends CustomScriptComponent {
 	public reset() : void
 	{
 		if (this._ballStartTimeout !== null)
+		{
 			this._timerManager.clearTimer(this._ballStartTimeout);
+			this._ballStartTimeout = null;
+		}
 		this.transform.position.copyFrom(this._initialPosition);
 		this._physicsBody.setLinearVelocity(Vector3.Zero());
 	}
@@ -96,6 +118,13 @@ export class Ball extends CustomScriptComponent {
 	public getPhysicsBody()
 	{
 		return this._physicsBody;
+	}
+
+	public setLinearVelocity(linearVelocity : Vector3)
+	{
+		if (this._ballStartTimeout !== null)
+			return ;
+		this._physicsBody.setLinearVelocity(linearVelocity);
 	}
 }
 
