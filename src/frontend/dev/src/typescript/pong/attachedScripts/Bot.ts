@@ -3,7 +3,7 @@ import { TransformNode } from "@babylonjs/core/Meshes";
 import { type IPhysicsShapeCastQuery, SceneManager } from "@babylonjs-toolkit/next";
 import { getFrontendSceneData } from "../PongGame";
 import { InputManager, PlayerInput } from "@shared/attachedScripts/InputManager";
-import { type int, ShapeCastResult, Vector3 } from "@babylonjs/core";
+import { Clamp, type int, ShapeCastResult, Vector3 } from "@babylonjs/core";
 import { FrontendSceneData } from "../FrontendSceneData";
 import { Platform } from "@shared/attachedScripts/Platform";
 import { Paddle } from "@shared/attachedScripts/Paddle";
@@ -78,8 +78,9 @@ export class Bot extends CustomScriptComponent {
 		const	startPosition = this._ball.transform.absolutePosition;
 		const	direction = this._ball.getPhysicsBody().getLinearVelocity();
 		const	paddleMiddle = this.getTargetHeightRecursive(startPosition, direction, Bot._maxReboundCalculationRecursion)
-		const	targetAngle = this.getAnglesToScoreAtHeight(-Paddle._range / 2 + 0.5, paddleMiddle);
-		const	displacement = this._paddleRight.getHeightDisplacementForAngle(targetAngle);
+		const	targetAngle = this.getAnglesToScoreAtHeight(Paddle._range / 2 + 0.1, paddleMiddle);
+		const	clampedTargetAngle = Clamp(targetAngle, -Paddle._maxAngle, Paddle._maxAngle);
+		const	displacement = this._paddleRight.getHeightDisplacementForAngle(clampedTargetAngle);
 		const	targetHeight = paddleMiddle + displacement;
 
 		return targetHeight;
@@ -128,12 +129,19 @@ export class Bot extends CustomScriptComponent {
 		const	shotWithoutRebound = endPos.subtract(startPos);
 		const	angleWithoutRebound = Vector3.GetAngleBetweenVectors(this.transform.right, shotWithoutRebound, Vector3.Forward());
 
-		const	distEndToTop = height - (this._top.transform.absolutePosition.y - this._top.transform.absoluteScaling.x / 2);
-		const	distStartToTop = paddleMiddle - (this._top.transform.absolutePosition.y - this._top.transform.absoluteScaling.x / 2);
+		const	topPlatformBottom = this._top.transform.absolutePosition.y - this._top.transform.absolutePosition.x / 2;
+		const	distEndToTop = height - topPlatformBottom;
+		const	distStartToTop = paddleMiddle - topPlatformBottom;
 		const	shotWithTopRebound = new Vector3(shotWithoutRebound.x, - (distEndToTop + distStartToTop), 0);
 		const	angleWithTopRebound = Vector3.GetAngleBetweenVectors(this.transform.right, shotWithTopRebound, Vector3.Forward());
 
-		return angleWithTopRebound;
+		const	bottomPlatformTop = this._bottom.transform.absolutePosition.y + this._bottom.transform.absolutePosition.x / 2;
+		const	distEndToBottom = height - bottomPlatformTop;
+		const	distStartToBottom = paddleMiddle - bottomPlatformTop;
+		const	shotWithBottomRebound = new Vector3(shotWithoutRebound.x, - (distEndToBottom + distStartToBottom), 0);
+		const	angleWithBottomRebound = Vector3.GetAngleBetweenVectors(this.transform.right, shotWithBottomRebound, Vector3.Forward());
+
+		return angleWithBottomRebound;
 	}
 
 	private	getPlatformScript(transform : TransformNode)
