@@ -77,8 +77,10 @@ export class Bot extends CustomScriptComponent {
 	{
 		const	startPosition = this._ball.transform.absolutePosition;
 		const	direction = this._ball.getPhysicsBody().getLinearVelocity();
+		const	paddleMiddle = this.getTargetHeightRecursive(startPosition, direction, Bot._maxReboundCalculationRecursion)
 
-		return this.getTargetHeightRecursive(startPosition, direction, Bot._maxReboundCalculationRecursion);
+		const	targetHeight = paddleMiddle + this._paddleRight.getHeightDisplacementForAngle(Math.PI / 8);
+		return targetHeight;
 	}
 
 	private	getTargetHeightRecursive(startPosition: Vector3, direction : Vector3, maxRecursion : int) : number

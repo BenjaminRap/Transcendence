@@ -14,7 +14,9 @@ import { zodInt, zodNumber } from "@shared/ImportedHelpers";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 
 export class Paddle extends CustomScriptComponent {
-	private static _range : number = 9.4 + Epsilon;
+	public static _range : number = 9.4 + Epsilon;
+
+	private static _maxAngle : number = Math.PI / 4;
 
 	@Imported(TransformNode) private	_inputManager! : TransformNode;
 	@Imported(zodNumber) private	_speed! : number;
@@ -84,15 +86,23 @@ export class Paddle extends CustomScriptComponent {
 	public getNewDirection(collidedWorldPos : Vector3) : Vector3
 	{
 		const	collidedPosInPaddleLocal = Vector3.TransformCoordinates(collidedWorldPos, this.transform.getWorldMatrix().invert());
-		const	maxAngle = Math.PI / 4;
 		if (Math.abs(collidedPosInPaddleLocal.y) < 0.04)
 			collidedPosInPaddleLocal.y = 0;
 		const	prct = collidedPosInPaddleLocal.y * 2;
-		const	angle = maxAngle * prct;
+		const	angle = Paddle._maxAngle * prct;
 		const	rotation = Quaternion.RotationAxis(Vector3.LeftHandedForwardReadOnly, angle);
 		const	direction = this.transform.right.applyRotationQuaternion(rotation);
 
 		return (direction);
+	}
+
+	public getHeightDisplacementForAngle(angle : number)
+	{
+		const	prct = angle / Paddle._maxAngle;
+		const	collidePosPaddleLocal = prct / 2;
+		const	heightDisplacementWorld = collidePosPaddleLocal * this.transform.absoluteScaling.y;
+
+		return heightDisplacementWorld;
 	}
 
 	private getNewSpeed(collidedAgainst : PhysicsBody) : number
