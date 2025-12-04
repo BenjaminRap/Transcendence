@@ -73,7 +73,6 @@ export class Ball extends CustomScriptComponent {
 		const	colliderPenetrationX = this.getColliderPenetration(collider, "x");
 		const	colliderPenetrationY = this.getColliderPenetration(collider, "y", "y");
 		
-		console.log("y : " + colliderPenetrationY / velocity.y, "x : " + colliderPenetrationX / velocity.x)
 		if (Math.abs(colliderPenetrationY / velocity.y) > Math.abs(colliderPenetrationX / velocity.x))
 			return "x";
 		return "y";

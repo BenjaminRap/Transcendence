@@ -17,7 +17,7 @@ import type { Ball } from "./Ball";
 export class Paddle extends CustomScriptComponent {
 	public static _range : number = 9.4 + Epsilon;
 
-	private static _maxAngle : number = Math.PI / 4;
+	public static _maxAngle : number = Math.PI / 3;
 
 	@Imported("InputManager") private	_inputManager! : InputManager;
 	@Imported(zodNumber) private	_speed! : number;
