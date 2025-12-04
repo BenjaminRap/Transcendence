@@ -25,7 +25,7 @@ export function	ImportedCustom<Checker extends zod.ZodType, Return>(zodChecker :
 
 					this[internalKey] = castedValue;
 				} catch (error) {
-					throw new Error(`Error importing ${key}, error : ${error}, value passed : ${JSON.stringify(value, null, 2)}`);
+					throw new Error(`Error importing ${key}, error : ${error}`);
 				}
 			},
 			configurable: true,
@@ -50,7 +50,7 @@ export function	Imported<T extends ToolkitExported | CustomScriptComponent>(impo
 
 					this[internalKey] = parsedValue;
 				} catch (error) {
-					throw new Error(`Error importing ${key}, error : ${error}, value passed : ${JSON.stringify(value, null, 2)}`);
+					throw new Error(`Error importing ${key}, error : ${error}`);
 				}
 			},
 			configurable: true,
