@@ -14,7 +14,7 @@ import { Ball } from "@shared/attachedScripts/Ball";
 
 export class Bot extends CustomScriptComponent {
 	private static readonly _paddleMinimumMovement = 0.3;
-	private static readonly _refreshIntervalMs = 1000;
+	private static readonly _refreshIntervalMs = 250;
 	private static readonly _maxReboundCalculationRecursion = 4;
 
 	@Imported(InputManager) private	_inputManager! : InputManager;
@@ -30,6 +30,7 @@ export class Bot extends CustomScriptComponent {
 	private _inputs! : PlayerInput;
 	private _targetHeight : number = 0;
 	private _sceneData : FrontendSceneData;
+	private _goalLeftXPosition! : number;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "Bot") {
         super(transform, scene, properties, alias);
@@ -42,6 +43,7 @@ export class Bot extends CustomScriptComponent {
 
 	protected	awake()
 	{
+		this._goalLeftXPosition = this._goalLeft.absolutePosition.x + this._goalLeft.absoluteScaling.x / 2;
 		this._sceneData.events.getObservable("game-start").add(() => {
 			this._timerManager.setInterval(this.refreshGameView.bind(this), Bot._refreshIntervalMs);
 		});
@@ -54,14 +56,15 @@ export class Bot extends CustomScriptComponent {
 
 	protected	update()
 	{
-		const	direction = this.getTargetDirection();
-
-		this.setInput(direction);
+		// const	direction = this.getTargetDirection();
+		//
+		// this.setInput(direction);
 	}
 
 	private	refreshGameView()
 	{
 		this._targetHeight = this.getTargetHeight();
+		this._paddleRight.transform.position.y = this._targetHeight;
 	}
 
 	private	getTargetDirection() : number
@@ -78,8 +81,9 @@ export class Bot extends CustomScriptComponent {
 		const	startPosition = this._ball.transform.absolutePosition;
 		const	direction = this._ball.getPhysicsBody().getLinearVelocity();
 		const	paddleMiddle = this.getTargetHeightRecursive(startPosition, direction, Bot._maxReboundCalculationRecursion)
+		const	targetAngle = this.getAnglesToScoreAtHeight(-Paddle._range / 2 + 0.5, paddleMiddle);
+		const	targetHeight = paddleMiddle + this._paddleRight.getHeightDisplacementForAngle(targetAngle);
 
-		const	targetHeight = paddleMiddle + this._paddleRight.getHeightDisplacementForAngle(Math.PI / 8);
 		return targetHeight;
 	}
 
@@ -114,6 +118,17 @@ export class Bot extends CustomScriptComponent {
 			return this.getTargetHeightRecursive(hitPoint, newVelocity, maxRecursion - 1);
 		}
 		return 0;
+	}
+
+	private	getAnglesToScoreAtHeight(height : number, paddleMiddle : number)
+	{
+		const	goalTarget = new Vector3(this._goalLeftXPosition ,height, 0);
+		const	paddlePos = new Vector3(this._paddleRight.transform.absolutePosition.x, paddleMiddle, 0);
+		const	shot = goalTarget.subtract(paddlePos);
+		
+		const	angleWithoutRebound = Vector3.GetAngleBetweenVectors(this.transform.right, shot, Vector3.Forward());
+
+		return angleWithoutRebound;
 	}
 
 	private	getPlatformScript(transform : TransformNode)

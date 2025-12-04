@@ -60,8 +60,6 @@ export class Paddle extends CustomScriptComponent {
 
 		collidedAgainst.transformNode.absolutePosition.x += ballPenetration;
 		collidedAgainst.transformNode.absolutePosition.y += ballPenetration * slope;
-		console.log("real : " + collidedAgainst.transformNode.absolutePosition.y);
-		console.log("paddle : " + this.transform.absolutePosition.y);
 
 		const	newDirection = this.getNewDirection(collidedAgainst.transformNode.absolutePosition);
 		const	newSpeed = this.getNewSpeed(collidedAgainst);
