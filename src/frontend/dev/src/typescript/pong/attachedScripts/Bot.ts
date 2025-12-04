@@ -14,18 +14,18 @@ import { Ball } from "@shared/attachedScripts/Ball";
 
 export class Bot extends CustomScriptComponent {
 	private static readonly _paddleMinimumMovement = 0.3;
-	private static readonly _refreshIntervalMs = 500;
+	private static readonly _refreshIntervalMs = 1000;
 	private static readonly _maxReboundCalculationRecursion = 4;
 
-	@Imported(InputManager) private	_inputManager! : InputManager;
-	@Imported(TimerManager) private _timerManager! : TimerManager;
-	@Imported(Paddle) private _paddleRight! : Paddle;
-	@Imported(Paddle) private _paddleLeft! : Paddle;
+	@Imported("InputManager") private	_inputManager! : InputManager;
+	@Imported("TimerManager") private _timerManager! : TimerManager;
+	@Imported("Paddle") private _paddleRight! : Paddle;
+	@Imported("Paddle") private _paddleLeft! : Paddle;
 	@Imported(TransformNode) private _goalRight! : TransformNode;
 	@Imported(TransformNode) private _goalLeft! : TransformNode;
-	@Imported(Platform) private _bottom! : Platform;
-	@Imported(Platform) private _top! : Platform;
-	@Imported(Ball) private _ball! : Ball;
+	@Imported("Platform") private _bottom! : Platform;
+	@Imported("Platform") private _top! : Platform;
+	@Imported("Ball") private _ball! : Ball;
 
 	private _inputs! : PlayerInput;
 	private _targetHeight : number = 0;
@@ -54,15 +54,14 @@ export class Bot extends CustomScriptComponent {
 
 	protected	update()
 	{
-		// const	direction = this.getTargetDirection();
-		//
-		// this.setInput(direction);
+		const	direction = this.getTargetDirection();
+
+		this.setInput(direction);
 	}
 
 	private	refreshGameView()
 	{
 		this._targetHeight = this.getTargetHeight();
-		this._paddleRight.transform.position.y = this._targetHeight;
 	}
 
 	private	getTargetDirection() : number
@@ -80,7 +79,8 @@ export class Bot extends CustomScriptComponent {
 		const	direction = this._ball.getPhysicsBody().getLinearVelocity();
 		const	paddleMiddle = this.getTargetHeightRecursive(startPosition, direction, Bot._maxReboundCalculationRecursion)
 		const	targetAngle = this.getAnglesToScoreAtHeight(-Paddle._range / 2 + 0.5, paddleMiddle);
-		const	targetHeight = paddleMiddle + this._paddleRight.getHeightDisplacementForAngle(targetAngle);
+		const	displacement = this._paddleRight.getHeightDisplacementForAngle(targetAngle);
+		const	targetHeight = paddleMiddle + displacement;
 
 		return targetHeight;
 	}

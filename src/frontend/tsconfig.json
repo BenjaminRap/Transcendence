@@ -16,7 +16,6 @@
 		"vite/client"
 	],
 	"experimentalDecorators": true,
-	"emitDecoratorMetadata": true,
 	"useDefineForClassFields": false,
 	"verbatimModuleSyntax": true,
 	"paths": {

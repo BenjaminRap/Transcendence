@@ -19,7 +19,7 @@ export class GameManager extends CustomScriptComponent {
 
 	@Imported(TransformNode) private	_goalLeft! : TransformNode;
 	@Imported(TransformNode) private	_goalRight! : TransformNode;
-	@Imported(Ball) private	_ball! : Ball;
+	@Imported("Ball") private	_ball! : Ball;
 
 	private _scoreRight : int = 0;
 	private _scoreLeft : int = 0;

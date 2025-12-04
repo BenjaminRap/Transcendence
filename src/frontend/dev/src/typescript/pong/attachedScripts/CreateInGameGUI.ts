@@ -14,8 +14,8 @@ import { Imported } from "@shared/ImportedDecorator";
 import type { ThemeName } from "../menuStyles";
 
 export class CreateInGameGUI extends CustomScriptComponent {
-	@Imported(InputManager) private _inputManager! : InputManager;
-	@Imported(GameManager) private _gameManager! : GameManager;
+	@Imported("InputManager") private _inputManager! : InputManager;
+	@Imported("GameManager") private _gameManager! : GameManager;
 	@Imported(zodThemeName) private _style! : ThemeName;
 
 	private _pauseGUI! : PauseGUI;

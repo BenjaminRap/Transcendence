@@ -10,7 +10,7 @@ import { Imported } from "@shared/ImportedDecorator";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 
 export class ClientInputs extends CustomScriptComponent {
-	@Imported(InputManager) private _inputManager! : InputManager;
+	@Imported("InputManager") private _inputManager! : InputManager;
 	
 	private _inputsMap : Map<string, InputKey> = new Map<string, InputKey>;
 	private _mainPlayerInput : PlayerInput | null = null;

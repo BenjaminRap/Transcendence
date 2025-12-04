@@ -6,24 +6,25 @@ import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
 import { InputManager, PlayerInput } from "./InputManager";
 import { type IBasePhysicsCollisionEvent, PhysicsEventType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { Scalar } from "@babylonjs/core/Maths/math.scalar";
-import { Epsilon } from "@babylonjs/core";
+import { Clamp, Epsilon } from "@babylonjs/core";
 import type { int } from "@babylonjs/core";
 import { getSceneData } from "@shared/SceneData";
 import { Imported } from "@shared/ImportedDecorator";
 import { zodInt, zodNumber } from "@shared/ImportedHelpers";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
+import type { Ball } from "./Ball";
 
 export class Paddle extends CustomScriptComponent {
 	public static _range : number = 9.4 + Epsilon;
 
 	private static _maxAngle : number = Math.PI / 4;
 
-	@Imported(TransformNode) private	_inputManager! : TransformNode;
+	@Imported("InputManager") private	_inputManager! : InputManager;
 	@Imported(zodNumber) private	_speed! : number;
 	@Imported(zodNumber) private _minReboundSpeed! : number;
 	@Imported(zodNumber) private _maxReboundSpeed! : number;
 	@Imported(zodInt) private _playerIndex! : int;
-	@Imported(TransformNode) private _ball! : TransformNode;
+	@Imported("Ball") private _ball! : Ball;
 
 	private	_physicsBody! : PhysicsBody;
 	private _playerInput! : PlayerInput;
@@ -51,34 +52,17 @@ export class Paddle extends CustomScriptComponent {
 	{
 		if (collision.type !== PhysicsEventType.TRIGGER_ENTERED
 			|| collision.collider !== this._physicsBody
-			|| collision.collidedAgainst.transformNode !== this._ball)
+			|| collision.collidedAgainst.transformNode !== this._ball.transform)
 			return ;
-		const	collidedAgainst = collision.collidedAgainst;
-		const	ballPenetration = this.getBallPenetration(collidedAgainst);
-		const	currentVelocity = collidedAgainst.getLinearVelocity();
-		const	slope = currentVelocity.y / currentVelocity.x;
+		this._ball.reverseBallPenetration(this.transform, "x");
 
-		collidedAgainst.transformNode.absolutePosition.x += ballPenetration;
-		collidedAgainst.transformNode.absolutePosition.y += ballPenetration * slope;
-
-		const	newDirection = this.getNewDirection(collidedAgainst.transformNode.absolutePosition);
-		const	newSpeed = this.getNewSpeed(collidedAgainst);
+		const	ballPhysicsBody = this._ball.getPhysicsBody();
+		const	ballAbsolutePosition = this._ball.transform.absolutePosition;
+		const	newDirection = this.getNewDirection(ballAbsolutePosition);
+		const	newSpeed = this.getNewSpeed(ballPhysicsBody);
 		const	newVelocity = newDirection.scale(newSpeed);
 
-		collidedAgainst.setLinearVelocity(newVelocity);
-	}
-
-	private	getBallPenetration(collidedAgainst : PhysicsBody)
-	{
-		const	platformX = this.transform.absolutePosition.x;
-		const	ballX = collidedAgainst.transformNode.absolutePosition.x;
-		const	platformWidth = this.transform.absoluteScaling.x;
-		const	ballWidth = collidedAgainst.transformNode.absoluteScaling.x;
-
-		if (ballX < platformX)
-			return (platformX - platformWidth / 2) - (ballX + ballWidth / 2);
-		else
-			return (platformX + platformWidth / 2) - (ballX - ballWidth / 2);
+		ballPhysicsBody.setLinearVelocity(newVelocity);
 	}
 
 	public getNewDirection(collidedWorldPos : Vector3) : Vector3
@@ -86,7 +70,7 @@ export class Paddle extends CustomScriptComponent {
 		const	collidedPosInPaddleLocal = Vector3.TransformCoordinates(collidedWorldPos, this.transform.getWorldMatrix().invert());
 		if (Math.abs(collidedPosInPaddleLocal.y) < 0.04)
 			collidedPosInPaddleLocal.y = 0;
-		const	prct = collidedPosInPaddleLocal.y * 2;
+		const	prct = Clamp(collidedPosInPaddleLocal.y * 2, -1, 1);
 		const	angle = Paddle._maxAngle * prct;
 		const	rotation = Quaternion.RotationAxis(Vector3.LeftHandedForwardReadOnly, angle);
 		const	direction = this.transform.right.applyRotationQuaternion(rotation);
@@ -94,7 +78,7 @@ export class Paddle extends CustomScriptComponent {
 		return (direction);
 	}
 
-	public getHeightDisplacementForAngle(angle : number)
+	public getHeightDisplacementForAngle(angle : number) : number
 	{
 		const	prct = angle / Paddle._maxAngle;
 		const	collidePosPaddleLocal = prct / 2;
@@ -113,9 +97,7 @@ export class Paddle extends CustomScriptComponent {
 
 	protected start()
 	{
-		const	inputManager = SceneManager.GetComponent<InputManager>(this._inputManager, "InputManager", false);
-
-		this._playerInput = inputManager.getPlayerInput(this._playerIndex);
+		this._playerInput = this._inputManager.getPlayerInput(this._playerIndex);
 		const	physicsBody = this.transform.getPhysicsBody();
 
 		if (!physicsBody)

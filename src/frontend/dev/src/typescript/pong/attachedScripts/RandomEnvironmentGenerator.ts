@@ -23,7 +23,7 @@ export class RandomEnvironmentGenerator extends CustomScriptComponent {
 	@Imported(zodRandomEnvironmentElement, true) private _envElements! : RandomEnvironmentElement[];
 	@Imported(zodNumber) private _instancesCountFactor! : number;
 	@Imported(zodNumber) private _distanceWithoutElements! : number;
-	@Imported(RandomTerrainGenerator) private _ground! : RandomTerrainGenerator;
+	@Imported("RandomTerrainGenerator") private _ground! : RandomTerrainGenerator;
 	@ImportedCamera private _camera! : FreeCamera;
 
 	private _elementsLods! : Lod[];

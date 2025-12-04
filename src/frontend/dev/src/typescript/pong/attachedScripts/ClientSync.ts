@@ -14,11 +14,11 @@ import { Ball } from "@shared/attachedScripts/Ball";
 import { Paddle } from "@shared/attachedScripts/Paddle";
 
 export class ClientSync extends CustomScriptComponent {
-	@Imported(InputManager) private	_inputManager! : InputManager;
-	@Imported(GameManager) private	_gameManager! : GameManager;
-	@Imported(Ball) private _ball! : Ball;
-	@Imported(Paddle) private _paddleRight! : Paddle;
-	@Imported(Paddle) private _paddleLeft! : Paddle;
+	@Imported("InputManager") private	_inputManager! : InputManager;
+	@Imported("GameManager") private	_gameManager! : GameManager;
+	@Imported("Ball") private _ball! : Ball;
+	@Imported("Paddle") private _paddleRight! : Paddle;
+	@Imported("Paddle") private _paddleLeft! : Paddle;
 
 	private _sceneData : FrontendSceneData;
 

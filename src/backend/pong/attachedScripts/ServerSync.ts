@@ -1,6 +1,6 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
-import { SceneManager, ScriptComponent } from "@babylonjs-toolkit/next";
+import { SceneManager } from "@babylonjs-toolkit/next";
 import { ServerSceneData } from "../ServerSceneData";
 import type { GameInfos, KeysUpdate } from "@shared/ServerMessage";
 import { InputManager, PlayerInput } from "@shared/attachedScripts/InputManager";
@@ -18,11 +18,11 @@ import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 export class ServerSync extends CustomScriptComponent {
 	private static readonly	_sendInfoDelay = 100;
 
-	@Imported(Ball) private _ball! : Ball;
-	@Imported(Paddle) private _paddleRight! : Paddle;
-	@Imported(Paddle) private _paddleLeft! : Paddle;
-	@Imported(InputManager) private _inputManager! : InputManager;
-	@Imported(TimerManager) private _timerManager! : TimerManager;
+	@Imported("Ball") private _ball! : Ball;
+	@Imported("Paddle") private _paddleRight! : Paddle;
+	@Imported("Paddle") private _paddleLeft! : Paddle;
+	@Imported("InputManager") private _inputManager! : InputManager;
+	@Imported("TimerManager") private _timerManager! : TimerManager;
 
 	private _sceneData : ServerSceneData;
 

@@ -7,9 +7,10 @@ import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { getSceneData } from "@shared/SceneData";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { Imported } from "@shared/ImportedDecorator";
+import type { Ball } from "./Ball";
 
 export class Platform extends CustomScriptComponent {
-	@Imported(TransformNode) private _ball! : TransformNode;
+	@Imported("Ball") private _ball! : Ball;
 
 	private	_physicsBody! : PhysicsBody;
 
@@ -25,31 +26,15 @@ export class Platform extends CustomScriptComponent {
 	{
 		if (collision.type !== PhysicsEventType.TRIGGER_ENTERED
 			|| collision.collidedAgainst !== this._physicsBody
-			|| collision.collider.transformNode !== this._ball)
+			|| collision.collider.transformNode !== this._ball.transform)
 			return ;
-		const	collidedAgainst = collision.collider;
-		const	ballPenetration = this.getBallPenetration(collidedAgainst);
-		const	currentVelocity = collidedAgainst.getLinearVelocity();
-		const	oppositeSlope = currentVelocity.x / currentVelocity.y;
-		collidedAgainst.transformNode.absolutePosition.y += ballPenetration;
-		collidedAgainst.transformNode.absolutePosition.x += ballPenetration * oppositeSlope;
+		this._ball.reverseBallPenetration(this.transform, "y");
 
+		const	ballPhysicsBody = this._ball.getPhysicsBody();
+		const	currentVelocity = ballPhysicsBody.getLinearVelocity();
 		const	newVelocity = this.getNewVelocity(currentVelocity);
 
-		collidedAgainst.setLinearVelocity(newVelocity);
-	}
-
-	private	getBallPenetration(collidedAgainst : PhysicsBody)
-	{
-		const	platformY = this.transform.absolutePosition.y;
-		const	ballY = collidedAgainst.transformNode.absolutePosition.y;
-		const	platformWidth = this.transform.absoluteScaling.x;
-		const	ballHeight = collidedAgainst.transformNode.absoluteScaling.y;
-
-		if (ballY < platformY)
-			return (platformY - platformWidth / 2) - (ballY + ballHeight / 2);
-		else
-			return (platformY + platformWidth / 2) - (ballY - ballHeight / 2);
+		ballPhysicsBody.setLinearVelocity(newVelocity);
 	}
 
 	public getNewVelocity(currentVelocity : Vector3) : Vector3

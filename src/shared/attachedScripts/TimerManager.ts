@@ -15,7 +15,7 @@ export interface	Timer
 }
 
 export class TimerManager extends CustomScriptComponent {
-	@Imported(GameManager) private _gameManager! : GameManager;
+	@Imported("GameManager") private _gameManager! : GameManager;
 
 	private _timers : Map<number, Timer>;
 	private _nextId : number = 0;

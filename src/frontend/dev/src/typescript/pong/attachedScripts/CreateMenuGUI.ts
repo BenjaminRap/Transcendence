@@ -50,8 +50,8 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 	private	setScenes()
 	{
-
 		const	childs = this._scenesParent.getChildren<TransformNode>(undefined, true);
+
 		this._scenes = childs.reduce((accumulator : SceneMenuData[], currentValue : TransformNode) => {
 			const	sceneMenuData = SceneManager.GetComponent<SceneMenuData>(currentValue, "SceneMenuData", false);
 

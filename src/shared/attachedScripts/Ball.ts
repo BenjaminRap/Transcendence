@@ -10,7 +10,7 @@ import { zodNumber } from "@shared/ImportedHelpers";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 
 export class Ball extends CustomScriptComponent {
-	@Imported(TransformNode) private _timerManager! : TransformNode;
+	@Imported("TimerManager") private _timerManager! : TimerManager;
 	@Imported(zodNumber) private _initialSpeed! : number;
 	@Imported(zodNumber) private _goalTimeoutMs! : number;
 
@@ -42,8 +42,8 @@ export class Ball extends CustomScriptComponent {
 
 	public launch() : void
 	{
-		this.reset();
-		this._ballStartTimeout = SceneManager.GetComponent<TimerManager>(this._timerManager, "TimerManager", false).setTimeout(() => {
+		this._ballStartTimeout = this._timerManager.setTimeout(() => {
+			this.transform.position.copyFrom(this._initialPosition);
 			const	direction = this.getBallStartDirection();
 			const	velocity = direction.scale(this._initialSpeed);
 
@@ -53,10 +53,34 @@ export class Ball extends CustomScriptComponent {
 		}, this._goalTimeoutMs);
 	}
 
+	public reverseBallPenetration(collider : TransformNode, axis : "x" | "y")
+	{
+		const	colliderPos = collider.absolutePosition[axis];
+		const	ballPos = this.transform.absolutePosition[axis];
+		const	colliderWidth = collider.absoluteScaling.x;
+		const	ballWidth = this.transform.absoluteScaling.x;
+		const	ballPenetration = (ballPos < colliderPos) ?
+			(colliderPos - colliderWidth / 2) - (ballPos + ballWidth / 2) :
+			
+			(colliderPos + colliderWidth / 2) - (ballPos - ballWidth / 2)
+		const	velocity = this._physicsBody.getLinearVelocity();
+		const	oppositeAxis = (axis === "x") ? "y" : "x";
+		const	slope = velocity[oppositeAxis] / velocity[axis];
+
+		const	displacement = new Vector3();
+
+		displacement[axis] = ballPenetration;
+		displacement[oppositeAxis] = ballPenetration * slope;
+
+		const	newAbsolutionPosition = this.transform.absolutePosition.add(displacement);
+
+		this.transform.setAbsolutePosition(newAbsolutionPosition);
+	}
+
 	public reset() : void
 	{
 		if (this._ballStartTimeout !== null)
-			SceneManager.GetComponent<TimerManager>(this._timerManager, "TimerManager", false).clearTimer(this._ballStartTimeout);
+			this._timerManager.clearTimer(this._ballStartTimeout);
 		this.transform.position.copyFrom(this._initialPosition);
 		this._physicsBody.setLinearVelocity(Vector3.Zero());
 	}

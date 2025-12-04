@@ -25,7 +25,7 @@ export class GrassGenerator extends CustomScriptComponent {
 	@Imported(zodNumber) private _windTextureSubtract! : number;
 	@Imported(Vector3) private _windSwayDirection! : Vector3;
 	@Imported(Color4) private _swayColor! : Color4;
-	@Imported(RandomTerrainGenerator) private	_ground! : RandomTerrainGenerator;
+	@Imported("RandomTerrainGenerator") private	_ground! : RandomTerrainGenerator;
 	@Imported(zodNumber) private _grassInstanceCount! : number;
 	@Imported(zodNumber) private _grassMaxDistance! : number;
 	@Imported(Texture) private _windTexture! : Texture;

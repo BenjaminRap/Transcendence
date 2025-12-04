@@ -14,7 +14,6 @@
     "lib": ["ESNext"],
     "types": ["node"],
 	"experimentalDecorators": true,
-	"emitDecoratorMetadata": true,
 	"useDefineForClassFields": false,
 	"verbatimModuleSyntax": true,
 	"paths": {

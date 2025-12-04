@@ -24,7 +24,7 @@ export class Character extends CustomScriptComponent {
 	@Imported(zodString) private _knightPath! : string;
 	@Imported(Vector3) private _fightPoint! : Vector3
 	@Imported(zodNumber) private _speed : number = 3;
-	@Imported(TimerManager) private _timerManager! : TimerManager;
+	@Imported("TimerManager") private _timerManager! : TimerManager;
 
 	private _direction : Vector3 = Vector3.Zero();
 	private _knight! : AbstractMesh;

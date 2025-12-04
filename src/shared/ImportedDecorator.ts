@@ -6,7 +6,7 @@ import { AbstractMesh, Color4, Material, Texture, Vector2, Vector3, Vector4 } fr
 
 export type Constructor<T> = abstract new (...args : any[]) => T;
 export type ToolkitExported = Vector2 | Vector3 | Vector4 | Color4 | TransformNode | Material | Texture | AbstractMesh;
-export type ImportedType<T extends ToolkitExported | CustomScriptComponent> = Constructor<T> | zod.ZodType;
+export type ImportedType<T extends ToolkitExported> = Constructor<T> | zod.ZodType | string;
 
 export function	ImportedCustom<Checker extends zod.ZodType, Return>(zodChecker : Checker, cast : (value : zod.infer<Checker>) => Return)
 {
@@ -34,7 +34,7 @@ export function	ImportedCustom<Checker extends zod.ZodType, Return>(zodChecker :
 	}
 }
 
-export function	Imported<T extends ToolkitExported | CustomScriptComponent>(importedType : ImportedType<T>, isArray : boolean = false)
+export function	Imported<T extends ToolkitExported>(importedType : ImportedType<T>, isArray : boolean = false)
 {
 	return (target : any, key : string) => {
 		if (!(target instanceof CustomScriptComponent))
@@ -59,24 +59,24 @@ export function	Imported<T extends ToolkitExported | CustomScriptComponent>(impo
 	}
 }
 
-function	parseValue<T extends ToolkitExported | CustomScriptComponent>(importedType : ImportedType<T>, value : any, isArray : boolean)
+function	parseValue<T extends ToolkitExported>(importedType : ImportedType<T>, value : any, isArray : boolean)
 {
 	if (isArray)
 		return parseArrayValue(importedType, value);
 	return parseSingleValue(importedType, value);
 }
 
-function	parseArrayValue<T extends ToolkitExported | CustomScriptComponent>(importedType : ImportedType<T>, value : any[]) : any[] {
+function	parseArrayValue<T extends ToolkitExported>(importedType : ImportedType<T>, value : any[]) : any[] {
 	return value.map((value : any) => parseSingleValue(importedType, value));
 }
 
-function	parseSingleValue<T extends ToolkitExported | CustomScriptComponent>(importedType : ImportedType<T>, value : any) : any {
-	if (typeof importedType !== "function")
-		return parseZodType(importedType, value);
-	if (importedType.prototype instanceof CustomScriptComponent)
-		return parseCustomScriptComponent(importedType as Constructor<CustomScriptComponent>, value);
+function	parseSingleValue<T extends ToolkitExported>(importedType : ImportedType<T>, value : any) : any {
+	if (typeof importedType === "string")
+		return parseCustomScriptComponent(importedType, value);
+	if (typeof importedType === "function")
+		return parseToolkitExported(importedType, value);
 	else
-		return parseToolkitExported(importedType as Constructor<ToolkitExported>, value);
+		return parseZodType(importedType, value);
 }
 
 function	parseZodType(importedType : zod.ZodType, value : any) : any
@@ -88,17 +88,14 @@ function	parseZodType(importedType : zod.ZodType, value : any) : any
 	return parsed.data;
 }
 
-function	parseCustomScriptComponent<T extends CustomScriptComponent>(importedType : Constructor<T>, value : any) : CustomScriptComponent
+function	parseCustomScriptComponent(importedType : string, value : any) : CustomScriptComponent
 {
 	if (!(value instanceof TransformNode))
 		throw new Error(`Imported CustomScriptComponent variable assigned with the wrong type, expecting TransformNode`);
-	const	componentName = importedType.name;
-	const	component = SceneManager.GetComponent(value, componentName, false);
+	const	component = SceneManager.GetComponent(value, importedType, false);
 
 	if (component === null)
-		throw new Error(`The TransformNode ${value} doesn't have the ${componentName} component !`);
-	if (!(component instanceof importedType))
-		throw new Error(`The SceneManager retreived a component who isn't a ${componentName} !`);
+		throw new Error(`The TransformNode ${value} doesn't have the ${importedType} component !`);
 	return component;
 }
 
