@@ -14,7 +14,7 @@ import { Ball } from "@shared/attachedScripts/Ball";
 
 export class Bot extends CustomScriptComponent {
 	private static readonly _paddleMinimumMovement = 0.3;
-	private static readonly _refreshIntervalMs = 250;
+	private static readonly _refreshIntervalMs = 500;
 	private static readonly _maxReboundCalculationRecursion = 4;
 
 	@Imported(InputManager) private	_inputManager! : InputManager;
@@ -30,7 +30,6 @@ export class Bot extends CustomScriptComponent {
 	private _inputs! : PlayerInput;
 	private _targetHeight : number = 0;
 	private _sceneData : FrontendSceneData;
-	private _goalLeftXPosition! : number;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "Bot") {
         super(transform, scene, properties, alias);
@@ -43,7 +42,6 @@ export class Bot extends CustomScriptComponent {
 
 	protected	awake()
 	{
-		this._goalLeftXPosition = this._goalLeft.absolutePosition.x + this._goalLeft.absoluteScaling.x / 2;
 		this._sceneData.events.getObservable("game-start").add(() => {
 			this._timerManager.setInterval(this.refreshGameView.bind(this), Bot._refreshIntervalMs);
 		});
@@ -122,13 +120,20 @@ export class Bot extends CustomScriptComponent {
 
 	private	getAnglesToScoreAtHeight(height : number, paddleMiddle : number)
 	{
-		const	goalTarget = new Vector3(this._goalLeftXPosition ,height, 0);
-		const	paddlePos = new Vector3(this._paddleRight.transform.absolutePosition.x, paddleMiddle, 0);
-		const	shot = goalTarget.subtract(paddlePos);
+		const	endPosX = this._goalLeft.absolutePosition.x + this._goalLeft.absoluteScaling.x / 2 + this._ball.transform.absoluteScaling.x / 2;
+		const	endPos = new Vector3(endPosX, height, 0);
+		const	startPosX = this._paddleRight.transform.absolutePosition.x - this._paddleRight.transform.absoluteScaling.x / 2 - this._ball.transform.absoluteScaling.x / 2;
+		const	startPos = new Vector3(startPosX, paddleMiddle, 0);
 		
-		const	angleWithoutRebound = Vector3.GetAngleBetweenVectors(this.transform.right, shot, Vector3.Forward());
+		const	shotWithoutRebound = endPos.subtract(startPos);
+		const	angleWithoutRebound = Vector3.GetAngleBetweenVectors(this.transform.right, shotWithoutRebound, Vector3.Forward());
 
-		return angleWithoutRebound;
+		const	distEndToTop = height - (this._top.transform.absolutePosition.y - this._top.transform.absoluteScaling.x / 2);
+		const	distStartToTop = paddleMiddle - (this._top.transform.absolutePosition.y - this._top.transform.absoluteScaling.x / 2);
+		const	shotWithTopRebound = new Vector3(shotWithoutRebound.x, - (distEndToTop + distStartToTop), 0);
+		const	angleWithTopRebound = Vector3.GetAngleBetweenVectors(this.transform.right, shotWithTopRebound, Vector3.Forward());
+
+		return angleWithTopRebound;
 	}
 
 	private	getPlatformScript(transform : TransformNode)
