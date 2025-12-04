@@ -52,12 +52,33 @@ export class Paddle extends CustomScriptComponent {
 			|| collision.collidedAgainst.transformNode !== this._ball)
 			return ;
 		const	collidedAgainst = collision.collidedAgainst;
+		const	ballPenetration = this.getBallPenetration(collidedAgainst);
+		const	currentVelocity = collidedAgainst.getLinearVelocity();
+		const	slope = currentVelocity.y / currentVelocity.x;
+
+		collidedAgainst.transformNode.absolutePosition.x += ballPenetration;
+		collidedAgainst.transformNode.absolutePosition.y += ballPenetration * slope;
+		console.log("real : " + collidedAgainst.transformNode.absolutePosition.y);
+		console.log("paddle : " + this.transform.absolutePosition.y);
 
 		const	newDirection = this.getNewDirection(collidedAgainst.transformNode.absolutePosition);
 		const	newSpeed = this.getNewSpeed(collidedAgainst);
 		const	newVelocity = newDirection.scale(newSpeed);
 
 		collidedAgainst.setLinearVelocity(newVelocity);
+	}
+
+	private	getBallPenetration(collidedAgainst : PhysicsBody)
+	{
+		const	platformX = this.transform.absolutePosition.x;
+		const	ballX = collidedAgainst.transformNode.absolutePosition.x;
+		const	platformWidth = this.transform.absoluteScaling.x;
+		const	ballWidth = collidedAgainst.transformNode.absoluteScaling.x;
+
+		if (ballX < platformX)
+			return (platformX - platformWidth / 2) - (ballX + ballWidth / 2);
+		else
+			return (platformX + platformWidth / 2) - (ballX - ballWidth / 2);
 	}
 
 	public getNewDirection(collidedWorldPos : Vector3) : Vector3
