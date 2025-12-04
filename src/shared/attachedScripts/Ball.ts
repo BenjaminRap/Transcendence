@@ -4,7 +4,7 @@ import { SceneManager } from "@babylonjs-toolkit/next";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
 import { getSceneData } from "@shared/SceneData";
-import { TimerManager } from "./TimerManager";
+import { TimerManager } from "@shared/attachedScripts/TimerManager";
 import { Imported } from "@shared/ImportedDecorator";
 import { zodNumber } from "@shared/ImportedHelpers";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";

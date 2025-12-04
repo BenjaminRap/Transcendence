@@ -6,8 +6,10 @@ import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { getSceneData } from "@shared/SceneData";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
+import { Imported } from "@shared/ImportedDecorator";
 
 export class Platform extends CustomScriptComponent {
+	@Imported(TransformNode) private _ball! : TransformNode;
 
 	private	_physicsBody! : PhysicsBody;
 
@@ -22,7 +24,8 @@ export class Platform extends CustomScriptComponent {
 	private onTriggerEnter(collision : IBasePhysicsCollisionEvent)
 	{
 		if (collision.type !== PhysicsEventType.TRIGGER_ENTERED
-			|| collision.collidedAgainst !== this._physicsBody)
+			|| collision.collidedAgainst !== this._physicsBody
+			|| collision.collider.transformNode !== this._ball)
 			return ;
 		const	collidedAgainst = collision.collider;
 		const	ballPenetration = this.getBallPenetration(collidedAgainst);

@@ -21,6 +21,7 @@ export class Paddle extends CustomScriptComponent {
 	@Imported(zodNumber) private _minReboundSpeed! : number;
 	@Imported(zodNumber) private _maxReboundSpeed! : number;
 	@Imported(zodInt) private _playerIndex! : int;
+	@Imported(TransformNode) private _ball! : TransformNode;
 
 	private	_physicsBody! : PhysicsBody;
 	private _playerInput! : PlayerInput;
@@ -47,7 +48,8 @@ export class Paddle extends CustomScriptComponent {
 	private onTriggerEnter(collision : IBasePhysicsCollisionEvent)
 	{
 		if (collision.type !== PhysicsEventType.TRIGGER_ENTERED
-			|| collision.collider !== this._physicsBody)
+			|| collision.collider !== this._physicsBody
+			|| collision.collidedAgainst.transformNode !== this._ball)
 			return ;
 		const	collidedAgainst = collision.collidedAgainst;
 
