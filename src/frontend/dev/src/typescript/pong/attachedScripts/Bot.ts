@@ -13,7 +13,7 @@ import { Imported } from "@shared/ImportedDecorator";
 import { Ball } from "@shared/attachedScripts/Ball";
 
 export class Bot extends CustomScriptComponent {
-	private static readonly _paddleMinimumMovement = 0.5;
+	private static readonly _paddleMinimumMovement = 0.3;
 	private static readonly _refreshIntervalMs = 1000;
 	private static readonly _maxReboundCalculationRecursion = 4;
 
@@ -91,11 +91,18 @@ export class Bot extends CustomScriptComponent {
 		if (!hitWorldResult.hasHit || !hitWorldResult.body)
 			return 0;
 		const	transform = hitWorldResult.body.transformNode;
-		const	hitPoint = hitWorldResult.hitPoint;
-		// const	hitPoint = startPosition.add(castVector.scale(hitWorldResult.hitFraction));
+		const	hitPoint = startPosition.add(castVector.scale(hitWorldResult.hitFraction));
 
-		if (transform === this._paddleRight.transform || transform === this._goalRight)
+		if (transform === this._paddleRight.transform)
 			return hitPoint.y;
+		if (transform === this._goalRight)
+		{
+			const	slope = castVector.y / castVector.x;
+			const	ballWidth = this._ball.transform.absoluteScaling.x;
+			const	yFix = ballWidth * slope;
+
+			return hitPoint.y - yFix;
+		}
 		const	platformScript = this.getPlatformScript(transform);
 
 		if (platformScript)
