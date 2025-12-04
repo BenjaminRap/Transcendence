@@ -25,10 +25,28 @@ export class Platform extends CustomScriptComponent {
 			|| collision.collidedAgainst !== this._physicsBody)
 			return ;
 		const	collidedAgainst = collision.collider;
+		const	ballPenetration = this.getBallPenetration(collidedAgainst);
+		const	currentVelocity = collidedAgainst.getLinearVelocity();
+		const	oppositeSlope = currentVelocity.x / currentVelocity.y;
+		collidedAgainst.transformNode.absolutePosition.y += ballPenetration;
+		collidedAgainst.transformNode.absolutePosition.x += ballPenetration * oppositeSlope;
 
-		const	newVelocity = this.getNewVelocity(collidedAgainst.getLinearVelocity());
+		const	newVelocity = this.getNewVelocity(currentVelocity);
 
 		collidedAgainst.setLinearVelocity(newVelocity);
+	}
+
+	private	getBallPenetration(collidedAgainst : PhysicsBody)
+	{
+		const	platformY = this.transform.absolutePosition.y;
+		const	ballY = collidedAgainst.transformNode.absolutePosition.y;
+		const	platformWidth = this.transform.absoluteScaling.x;
+		const	ballHeight = collidedAgainst.transformNode.absoluteScaling.y;
+
+		if (ballY < platformY)
+			return (platformY - platformWidth / 2) - (ballY + ballHeight / 2);
+		else
+			return (platformY + platformWidth / 2) - (ballY - ballHeight / 2);
 	}
 
 	public getNewVelocity(currentVelocity : Vector3) : Vector3
