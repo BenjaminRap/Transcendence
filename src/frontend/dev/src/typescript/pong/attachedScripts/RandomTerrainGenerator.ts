@@ -3,7 +3,7 @@ import { GroundMesh, MeshBuilder, TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager } from "@babylonjs-toolkit/next";
 import { type float, type int, Material, Scalar, VertexBuffer } from "@babylonjs/core";
 import { getDiamondSquareArray } from "../diamondSquareAlgorithm";
-import { Range, zodRange } from "../Range";
+import { Range, zodRange } from "@shared/Range";
 
 import { Float32Array2D } from "../Float32Array2D";
 import { Imported } from "@shared/ImportedDecorator";

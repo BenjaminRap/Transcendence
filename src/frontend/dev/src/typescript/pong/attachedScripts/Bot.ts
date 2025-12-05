@@ -3,7 +3,7 @@ import { TransformNode } from "@babylonjs/core/Meshes";
 import { type IPhysicsShapeCastQuery, SceneManager } from "@babylonjs-toolkit/next";
 import { getFrontendSceneData } from "../PongGame";
 import { InputManager, PlayerInput } from "@shared/attachedScripts/InputManager";
-import { Clamp, type int, ShapeCastResult, Vector3 } from "@babylonjs/core";
+import { Clamp, type int, RandomRange, ShapeCastResult, Vector3 } from "@babylonjs/core";
 import { FrontendSceneData } from "../FrontendSceneData";
 import { Platform } from "@shared/attachedScripts/Platform";
 import { Paddle } from "@shared/attachedScripts/Paddle";
@@ -78,9 +78,14 @@ export class Bot extends CustomScriptComponent {
 		const	startPosition = this._ball.transform.absolutePosition;
 		const	direction = this._ball.getPhysicsBody().getLinearVelocity();
 		const	paddleMiddle = this.getTargetHeightRecursive(startPosition, direction, Bot._maxReboundCalculationRecursion)
-		const	targetAngle = this.getAnglesToScoreAtHeight(Paddle._range / 2 + 0.1, paddleMiddle);
-		const	clampedTargetAngle = Clamp(targetAngle, -Paddle._maxAngle, Paddle._maxAngle);
-		const	displacement = this._paddleRight.getHeightDisplacementForAngle(clampedTargetAngle);
+		const	targetAngles = this.getAnglesToScoreAtHeight(Paddle._range / 2 + 0.1, paddleMiddle);
+		const	targetAnglesClamped = targetAngles.filter((angle : number) => Math.abs(angle) <= Paddle._maxAngle);
+		if (targetAnglesClamped.length === 0)
+			console.log("nothing possible");
+		const	finalAngle = (targetAnglesClamped.length === 0) ?
+			RandomRange(-Paddle._maxAngle, Paddle._maxAngle) :
+			targetAnglesClamped[Math.round(RandomRange(0, targetAnglesClamped.length - 1))];
+		const	displacement = this._paddleRight.getHeightDisplacementForAngle(finalAngle);
 		const	targetHeight = paddleMiddle + displacement;
 
 		return targetHeight;
@@ -141,7 +146,7 @@ export class Bot extends CustomScriptComponent {
 		const	shotWithBottomRebound = new Vector3(shotWithoutRebound.x, - (distEndToBottom + distStartToBottom), 0);
 		const	angleWithBottomRebound = Vector3.GetAngleBetweenVectors(this.transform.right, shotWithBottomRebound, Vector3.Forward());
 
-		return angleWithBottomRebound;
+		return [ angleWithoutRebound, angleWithTopRebound, angleWithBottomRebound ];
 	}
 
 	private	getPlatformScript(transform : TransformNode)

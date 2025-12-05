@@ -5,24 +5,25 @@ import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
 import { InputManager, PlayerInput } from "./InputManager";
 import { type IBasePhysicsCollisionEvent, PhysicsEventType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
-import { Scalar } from "@babylonjs/core/Maths/math.scalar";
 import { Clamp, Epsilon } from "@babylonjs/core";
 import type { int } from "@babylonjs/core";
 import { getSceneData } from "@shared/SceneData";
 import { Imported } from "@shared/ImportedDecorator";
-import { zodInt, zodNumber } from "@shared/ImportedHelpers";
+import { zodInt } from "@shared/ImportedHelpers";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import type { Ball } from "./Ball";
+import { Range } from "../Range"
 
 export class Paddle extends CustomScriptComponent {
 	public static _range : number = 9.4 + Epsilon;
+	public static _hitAcceleration : number = 1.05;
+	public static _ballXSpeedRange = new Range(8, 12);
+	public static _ballmaxSpeed = 16;
+	public static _speed : number = 9;
 
 	public static _maxAngle : number = Math.PI / 3;
 
 	@Imported("InputManager") private	_inputManager! : InputManager;
-	@Imported(zodNumber) private	_speed! : number;
-	@Imported(zodNumber) private _minReboundSpeed! : number;
-	@Imported(zodNumber) private _maxReboundSpeed! : number;
 	@Imported(zodInt) private _playerIndex! : int;
 	@Imported("Ball") private _ball! : Ball;
 
@@ -68,7 +69,7 @@ export class Paddle extends CustomScriptComponent {
 		const	newVelocity = ballPhysicsBody.getLinearVelocity();
 		const	directionSign = Math.sign(this._ball.transform.absolutePosition.y - this.transform.absolutePosition.y);
 
-		newVelocity.y = this._speed * 1.2 * directionSign;
+		newVelocity.y = Paddle._speed * 1.2 * directionSign;
 		this._ball.setLinearVelocity(newVelocity);
 		return ;
 	}
@@ -80,7 +81,7 @@ export class Paddle extends CustomScriptComponent {
 
 		const	ballAbsolutePosition = this._ball.transform.absolutePosition;
 		const	newDirection = this.getNewDirection(ballAbsolutePosition);
-		const	newSpeed = this.getNewSpeed(ballPhysicsBody);
+		const	newSpeed = this.getNewSpeed(ballPhysicsBody.getLinearVelocity(), newDirection);
 		const	newVelocity = newDirection.scale(newSpeed);
 
 		this._ball.setLinearVelocity(newVelocity);
@@ -108,12 +109,14 @@ export class Paddle extends CustomScriptComponent {
 		return heightDisplacementWorld;
 	}
 
-	private getNewSpeed(collidedAgainst : PhysicsBody) : number
+	private getNewSpeed(currentVelocity : Vector3, newDirection : Vector3) : number
 	{
-		const	previousSpeed = collidedAgainst.getLinearVelocity().length();
-		const	newSpeed = Scalar.Clamp(previousSpeed * 1.05, this._minReboundSpeed, this._maxReboundSpeed);
+		const	newXVelocity = Math.abs(currentVelocity.x) * Paddle._hitAcceleration;
+		const	clampedNewXVelocity = Clamp(newXVelocity, Paddle._ballXSpeedRange.min, Paddle._ballXSpeedRange.max);
+		const	newSpeed = clampedNewXVelocity / Math.abs(newDirection.x);
+		const	clampedNewSpeed = Math.min(newSpeed, Paddle._ballmaxSpeed);
 
-		return newSpeed;
+		return clampedNewSpeed;
 	}
 
 	protected start()
@@ -142,7 +145,7 @@ export class Paddle extends CustomScriptComponent {
 		else if (isDownPressed && !isUpPressed && canMoveDown)
 			yVelocity = -1;
 
-		this._physicsBody.setLinearVelocity(Vector3.Up().scale(yVelocity * this._speed));
+		this._physicsBody.setLinearVelocity(Vector3.Up().scale(yVelocity * Paddle._speed));
 	}
 
 	private	reset()

@@ -1,5 +1,5 @@
 import { Vector2 } from "@babylonjs/core/Maths/math.vector";
-import { Range } from "./Range";
+import { Range } from "@shared/Range";
 
 export function randomFromRange(range : Range) : number
 {
