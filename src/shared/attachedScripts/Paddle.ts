@@ -55,10 +55,9 @@ export class Paddle extends CustomScriptComponent {
 			|| collision.collider !== this._physicsBody
 			|| collision.collidedAgainst.transformNode !== this._ball.transform)
 			return ;
-		const	colliderPenetrationAxis = this._ball.getColliderPenetrationAxis(this.transform);
 		const	currentVelocity = this._ball.getLinearVelocity();
 
-		if (colliderPenetrationAxis === "y")
+		if (this._ball.isInResetTimeout())
 			this.onBallCollisionY(currentVelocity);
 		else
 			this.onBallCollisionX(currentVelocity);

@@ -55,29 +55,18 @@ export class Ball extends CustomScriptComponent {
 		}, this._goalTimeoutMs);
 	}
 
-	private	getColliderPenetration(collider : TransformNode, axis : "x" | "y", widthAxis : "x" | "y" = "x")
+	private	getColliderPenetration(collider : TransformNode, axis : "x" | "y")
 	{
 		const	colliderPos = collider.absolutePosition[axis];
 		const	ballPos = this.transform.absolutePosition[axis];
-		const	colliderWidth = collider.absoluteScaling[widthAxis];
-		const	ballWidth = this.transform.absoluteScaling[widthAxis];
+		const	colliderWidth = collider.absoluteScaling.x;
+		const	ballWidth = this.transform.absoluteScaling.x;
 		const	colliderPenetration = (ballPos < colliderPos) ?
 			(colliderPos - colliderWidth / 2) - (ballPos + ballWidth / 2) :
 			
 			(colliderPos + colliderWidth / 2) - (ballPos - ballWidth / 2)
 	
 		return colliderPenetration;
-	}
-
-	public getColliderPenetrationAxis(collider : TransformNode)
-	{
-		const	velocity = this._physicsBody.getLinearVelocity();
-		const	colliderPenetrationX = this.getColliderPenetration(collider, "x");
-		const	colliderPenetrationY = this.getColliderPenetration(collider, "y", "y");
-		
-		if (Math.abs(colliderPenetrationY / velocity.y) > Math.abs(colliderPenetrationX / velocity.x))
-			return "x";
-		return "y";
 	}
 
 	public reverseColliderPenetration(collider : TransformNode, axis : "x" | "y")
@@ -143,6 +132,11 @@ export class Ball extends CustomScriptComponent {
 		if (this._ballStartTimeout !== null)
 			return ;
 		this._physicsBody.setLinearVelocity(linearVelocity);
+	}
+
+	public isInResetTimeout()
+	{
+		return (this._ballStartTimeout !== null);
 	}
 }
 
