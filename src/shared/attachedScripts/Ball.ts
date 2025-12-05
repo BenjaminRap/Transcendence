@@ -1,13 +1,14 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
-import { SceneManager } from "@babylonjs-toolkit/next";
+import { SceneManager, type IPhysicsShapeCastQuery } from "@babylonjs-toolkit/next";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
-import { getSceneData } from "@shared/SceneData";
+import { getSceneData, SceneData } from "@shared/SceneData";
 import { TimerManager } from "@shared/attachedScripts/TimerManager";
 import { Imported } from "@shared/ImportedDecorator";
 import { zodNumber } from "@shared/ImportedHelpers";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
+import { ShapeCastResult } from "@babylonjs/core/Physics/shapeCastResult";
 
 export class Ball extends CustomScriptComponent {
 	@Imported("TimerManager") private _timerManager! : TimerManager;
@@ -18,14 +19,15 @@ export class Ball extends CustomScriptComponent {
 	private _initialPosition : Vector3;
 	private _startsRight : boolean = true;
 	private	_ballStartTimeout : number | null = null;
+	private _sceneData : SceneData;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "Ball") {
 		super(transform, scene, properties, alias);
 		this._initialPosition = transform.position.clone();
 
-		const	sceneData = getSceneData(this.scene);
+		this._sceneData = getSceneData(this.scene);
 
-		sceneData.events.getObservable("game-start").add(() => {
+		this._sceneData.events.getObservable("game-start").add(() => {
 			this.launch();
 		});
     }
@@ -114,9 +116,26 @@ export class Ball extends CustomScriptComponent {
 			return Vector3.Left();
 	}
 
-	public getPhysicsBody()
+	public	shapeCast(startPosition : Vector3, endPosition : Vector3) : ShapeCastResult
 	{
-		return this._physicsBody;
+		const	shapeLocalResult : ShapeCastResult = new ShapeCastResult();
+		const	hitWorldResult : ShapeCastResult = new ShapeCastResult();
+		const	query : IPhysicsShapeCastQuery = {
+			shape: this._physicsBody.shape!,
+			rotation: this.transform.rotationQuaternion!,
+			startPosition: startPosition,
+			endPosition: endPosition,
+			shouldHitTriggers: true,
+			ignoreBody: this._physicsBody
+		};
+
+		this._sceneData.havokPlugin.shapeCast(query, shapeLocalResult, hitWorldResult);
+		return hitWorldResult;
+	}
+
+	public getLinearVelocity()
+	{
+		return this._physicsBody.getLinearVelocity();
 	}
 
 	public setLinearVelocity(linearVelocity : Vector3)

@@ -1,9 +1,9 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
-import { type IPhysicsShapeCastQuery, SceneManager } from "@babylonjs-toolkit/next";
+import { SceneManager } from "@babylonjs-toolkit/next";
 import { getFrontendSceneData } from "../PongGame";
 import { InputManager, PlayerInput } from "@shared/attachedScripts/InputManager";
-import { type int, RandomRange, ShapeCastResult, Vector3 } from "@babylonjs/core";
+import { type int, RandomRange, Vector3 } from "@babylonjs/core";
 import { FrontendSceneData } from "../FrontendSceneData";
 import { Platform } from "@shared/attachedScripts/Platform";
 import { Paddle } from "@shared/attachedScripts/Paddle";
@@ -11,6 +11,7 @@ import { TimerManager } from "@shared/attachedScripts/TimerManager";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { Imported } from "@shared/ImportedDecorator";
 import { Ball } from "@shared/attachedScripts/Ball";
+import { ShotFactory } from "../Shot";
 
 export class Bot extends CustomScriptComponent {
 	private static readonly _paddleMinimumMovement = 0.3;
@@ -29,6 +30,7 @@ export class Bot extends CustomScriptComponent {
 	@Imported("Ball") private _ball! : Ball;
 
 	private _inputs! : PlayerInput;
+	private _shotFactory! : ShotFactory;
 	private _targetHeight : number = 0;
 	private _sceneData : FrontendSceneData;
 
@@ -43,6 +45,7 @@ export class Bot extends CustomScriptComponent {
 
 	protected	awake()
 	{
+		this._shotFactory = new ShotFactory(this._top, this._bottom, this._goalLeft, this._paddleRight, this._ball);
 		this._sceneData.events.getObservable("game-start").add(() => {
 			this._timerManager.setInterval(this.refreshGameView.bind(this), Bot._refreshIntervalMs);
 		});
@@ -77,7 +80,7 @@ export class Bot extends CustomScriptComponent {
 	private	getTargetHeight() : number
 	{
 		const	startPosition = this._ball.transform.absolutePosition;
-		const	direction = this._ball.getPhysicsBody().getLinearVelocity();
+		const	direction = this._ball.getLinearVelocity();
 		const	paddleMiddle = this.getTargetHeightRecursive(startPosition, direction, Bot._maxReboundCalculationRecursion)
 		const	displacement = (paddleMiddle === null) ?
 			this.getHeightDisplacementForDefense() :
@@ -96,9 +99,9 @@ export class Bot extends CustomScriptComponent {
 	private	getHeightDisplacementForAttack(paddleMiddle : number) : number
 	{
 		const	targetHeight = this.getHeightTargetAttack();
-		const	targetAngles = this.getAnglesToScoreAtHeight(targetHeight, paddleMiddle);
-		const	sortedTargetAngles = targetAngles.sort((a, b) => a.score - b.score);
-		const	displacement = this._paddleRight.getHeightDisplacementForAngle(sortedTargetAngles[0].angle);
+		const	shots = this._shotFactory.getShotsAtHeight(targetHeight, paddleMiddle, 2);
+		const	sortedShots = shots.sort((a, b) => b.score - a.score);
+		const	displacement = this._paddleRight.getHeightDisplacementForAngle(sortedShots[0].angle);
 
 		return displacement;
 	}
@@ -118,7 +121,7 @@ export class Bot extends CustomScriptComponent {
 			return 0;
 		const	castVector = direction.normalize().scale(100);
 		const	endPosition = startPosition.add(castVector);
-		const	hitWorldResult = this.shapeCastBall(startPosition, endPosition);
+		const	hitWorldResult = this._ball.shapeCast(startPosition, endPosition);
 		if (!hitWorldResult.hasHit || !hitWorldResult.body)
 			return 0;
 		const	transform = hitWorldResult.body.transformNode;
@@ -145,40 +148,6 @@ export class Bot extends CustomScriptComponent {
 		return null;
 	}
 
-	private	getAnglesToScoreAtHeight(height : number, paddleMiddle : number)
-	{
-		const	endPosX = this._goalLeft.absolutePosition.x + this._goalLeft.absoluteScaling.x / 2 + this._ball.transform.absoluteScaling.x / 2;
-		const	endPos = new Vector3(endPosX, height, 0);
-		const	startPosX = this._paddleRight.transform.absolutePosition.x - this._paddleRight.transform.absoluteScaling.x / 2 - this._ball.transform.absoluteScaling.x / 2;
-		const	startPos = new Vector3(startPosX, paddleMiddle, 0);
-		
-		const	shotWithoutRebound = endPos.subtract(startPos);
-		const	angleWithoutRebound = Vector3.GetAngleBetweenVectors(this.transform.right, shotWithoutRebound, Vector3.Forward());
-
-		const	topPlatformBottom = this._top.transform.absolutePosition.y - this._top.transform.absolutePosition.x / 2;
-		const	distEndToTop = height - topPlatformBottom;
-		const	distStartToTop = paddleMiddle - topPlatformBottom;
-		const	shotWithTopRebound = new Vector3(shotWithoutRebound.x, - (distEndToTop + distStartToTop), 0);
-		const	angleWithTopRebound = Vector3.GetAngleBetweenVectors(this.transform.right, shotWithTopRebound, Vector3.Forward());
-
-		const	bottomPlatformTop = this._bottom.transform.absolutePosition.y + this._bottom.transform.absolutePosition.x / 2;
-		const	distEndToBottom = height - bottomPlatformTop;
-		const	distStartToBottom = paddleMiddle - bottomPlatformTop;
-		const	shotWithBottomRebound = new Vector3(shotWithoutRebound.x, - (distEndToBottom + distStartToBottom), 0);
-		const	angleWithBottomRebound = Vector3.GetAngleBetweenVectors(this.transform.right, shotWithBottomRebound, Vector3.Forward());
-
-		return [{
-					angle : angleWithoutRebound,
-					score : 1
-				}, {
-					angle : angleWithTopRebound,
-					score : 2
-				}, {
-					angle : angleWithBottomRebound,
-					score : 2
-				}];
-	}
-
 	private	getPlatformScript(transform : TransformNode)
 	{
 		if (transform === this._top.transform)
@@ -186,23 +155,6 @@ export class Bot extends CustomScriptComponent {
 		if (transform === this._bottom.transform)
 			return this._bottom;
 		return null;
-	}
-
-	private	shapeCastBall(startPosition : Vector3, endPosition : Vector3) : ShapeCastResult
-	{
-		const	shapeLocalResult : ShapeCastResult = new ShapeCastResult();
-		const	hitWorldResult : ShapeCastResult = new ShapeCastResult();
-		const	query : IPhysicsShapeCastQuery = {
-			shape: this._ball.getPhysicsBody().shape!,
-			rotation: this._ball.transform.rotationQuaternion!,
-			startPosition: startPosition,
-			endPosition: endPosition,
-			shouldHitTriggers: true,
-			ignoreBody: this._ball.getPhysicsBody()
-		};
-
-		this._sceneData.havokPlugin.shapeCast(query, shapeLocalResult, hitWorldResult);
-		return hitWorldResult;
 	}
 
 	private	setInput(direction : number)

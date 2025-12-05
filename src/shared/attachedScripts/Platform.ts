@@ -30,8 +30,7 @@ export class Platform extends CustomScriptComponent {
 			return ;
 		this._ball.reverseColliderPenetration(this.transform, "y");
 
-		const	ballPhysicsBody = this._ball.getPhysicsBody();
-		const	currentVelocity = ballPhysicsBody.getLinearVelocity();
+		const	currentVelocity = this._ball.getLinearVelocity();
 		const	newVelocity = this.getNewVelocity(currentVelocity);
 
 		this._ball.setLinearVelocity(newVelocity);

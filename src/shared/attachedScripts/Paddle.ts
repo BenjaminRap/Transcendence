@@ -56,32 +56,31 @@ export class Paddle extends CustomScriptComponent {
 			|| collision.collidedAgainst.transformNode !== this._ball.transform)
 			return ;
 		const	colliderPenetrationAxis = this._ball.getColliderPenetrationAxis(this.transform);
-		const	ballPhysicsBody = this._ball.getPhysicsBody();
+		const	currentVelocity = this._ball.getLinearVelocity();
 
 		if (colliderPenetrationAxis === "y")
-			this.onBallCollisionY(ballPhysicsBody);
+			this.onBallCollisionY(currentVelocity);
 		else
-			this.onBallCollisionX(ballPhysicsBody);
+			this.onBallCollisionX(currentVelocity);
 	}
 
-	private	onBallCollisionY(ballPhysicsBody : PhysicsBody)
+	private	onBallCollisionY(currentVelocity : Vector3)
 	{
-		const	newVelocity = ballPhysicsBody.getLinearVelocity();
 		const	directionSign = Math.sign(this._ball.transform.absolutePosition.y - this.transform.absolutePosition.y);
+		const	newVelocity = currentVelocity.clone();
 
 		newVelocity.y = Paddle._speed * 1.2 * directionSign;
 		this._ball.setLinearVelocity(newVelocity);
 		return ;
 	}
 
-	private	onBallCollisionX(ballPhysicsBody : PhysicsBody)
+	private	onBallCollisionX(currentVelocity : Vector3)
 	{
-
 		this._ball.reverseColliderPenetration(this.transform, "x");
 
 		const	ballAbsolutePosition = this._ball.transform.absolutePosition;
 		const	newDirection = this.getNewDirection(ballAbsolutePosition);
-		const	newSpeed = this.getNewSpeed(ballPhysicsBody.getLinearVelocity(), newDirection);
+		const	newSpeed = this.getNewSpeed(currentVelocity, newDirection);
 		const	newVelocity = newDirection.scale(newSpeed);
 
 		this._ball.setLinearVelocity(newVelocity);
