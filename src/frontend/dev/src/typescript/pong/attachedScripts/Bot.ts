@@ -3,7 +3,7 @@ import { TransformNode } from "@babylonjs/core/Meshes";
 import { type IPhysicsShapeCastQuery, SceneManager } from "@babylonjs-toolkit/next";
 import { getFrontendSceneData } from "../PongGame";
 import { InputManager, PlayerInput } from "@shared/attachedScripts/InputManager";
-import { Clamp, type int, RandomRange, ShapeCastResult, Vector3 } from "@babylonjs/core";
+import { type int, RandomRange, ShapeCastResult, Vector3 } from "@babylonjs/core";
 import { FrontendSceneData } from "../FrontendSceneData";
 import { Platform } from "@shared/attachedScripts/Platform";
 import { Paddle } from "@shared/attachedScripts/Paddle";
@@ -16,6 +16,7 @@ export class Bot extends CustomScriptComponent {
 	private static readonly _paddleMinimumMovement = 0.3;
 	private static readonly _refreshIntervalMs = 1000;
 	private static readonly _maxReboundCalculationRecursion = 4;
+	private static readonly _shootAtOppositeProbability = 0.5;
 
 	@Imported("InputManager") private	_inputManager! : InputManager;
 	@Imported("TimerManager") private _timerManager! : TimerManager;
@@ -78,20 +79,40 @@ export class Bot extends CustomScriptComponent {
 		const	startPosition = this._ball.transform.absolutePosition;
 		const	direction = this._ball.getPhysicsBody().getLinearVelocity();
 		const	paddleMiddle = this.getTargetHeightRecursive(startPosition, direction, Bot._maxReboundCalculationRecursion)
-		const	targetAngles = this.getAnglesToScoreAtHeight(Paddle._range / 2 + 0.1, paddleMiddle);
-		const	targetAnglesClamped = targetAngles.filter((angle : number) => Math.abs(angle) <= Paddle._maxAngle);
-		if (targetAnglesClamped.length === 0)
-			console.log("nothing possible");
-		const	finalAngle = (targetAnglesClamped.length === 0) ?
-			RandomRange(-Paddle._maxAngle, Paddle._maxAngle) :
-			targetAnglesClamped[Math.round(RandomRange(0, targetAnglesClamped.length - 1))];
-		const	displacement = this._paddleRight.getHeightDisplacementForAngle(finalAngle);
-		const	targetHeight = paddleMiddle + displacement;
+		const	displacement = (paddleMiddle === null) ?
+			this.getHeightDisplacementForDefense() :
+			this.getHeightDisplacementForAttack(paddleMiddle)
+
+		const	targetHeight = (paddleMiddle ?? 0) + displacement;
 
 		return targetHeight;
 	}
 
-	private	getTargetHeightRecursive(startPosition: Vector3, direction : Vector3, maxRecursion : int) : number
+	private	getHeightDisplacementForDefense() : number
+	{
+		return 0;
+	}
+
+	private	getHeightDisplacementForAttack(paddleMiddle : number) : number
+	{
+		const	targetHeight = this.getHeightTargetAttack();
+		const	targetAngles = this.getAnglesToScoreAtHeight(targetHeight, paddleMiddle);
+		const	sortedTargetAngles = targetAngles.sort((a, b) => a.score - b.score);
+		const	displacement = this._paddleRight.getHeightDisplacementForAngle(sortedTargetAngles[0].angle);
+
+		return displacement;
+	}
+
+	private	getHeightTargetAttack() : number
+	{
+		if (Math.random() > Bot._shootAtOppositeProbability)
+			return RandomRange(-Paddle._range / 2, Paddle._range / 2);
+		if (this._paddleLeft.transform.absolutePosition.y > 0)
+			return -Paddle._range / 2 + 0.1;
+		return Paddle._range / 2 + 0.1;
+	}
+
+	private	getTargetHeightRecursive(startPosition: Vector3, direction : Vector3, maxRecursion : int) : number | null
 	{
 		if (maxRecursion <= 0 || direction.length() == 0)
 			return 0;
@@ -121,7 +142,7 @@ export class Bot extends CustomScriptComponent {
 
 			return this.getTargetHeightRecursive(hitPoint, newVelocity, maxRecursion - 1);
 		}
-		return 0;
+		return null;
 	}
 
 	private	getAnglesToScoreAtHeight(height : number, paddleMiddle : number)
@@ -146,7 +167,16 @@ export class Bot extends CustomScriptComponent {
 		const	shotWithBottomRebound = new Vector3(shotWithoutRebound.x, - (distEndToBottom + distStartToBottom), 0);
 		const	angleWithBottomRebound = Vector3.GetAngleBetweenVectors(this.transform.right, shotWithBottomRebound, Vector3.Forward());
 
-		return [ angleWithoutRebound, angleWithTopRebound, angleWithBottomRebound ];
+		return [{
+					angle : angleWithoutRebound,
+					score : 1
+				}, {
+					angle : angleWithTopRebound,
+					score : 2
+				}, {
+					angle : angleWithBottomRebound,
+					score : 2
+				}];
 	}
 
 	private	getPlatformScript(transform : TransformNode)
