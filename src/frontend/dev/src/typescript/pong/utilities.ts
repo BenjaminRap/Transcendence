@@ -26,3 +26,19 @@ function	remap(value : number, min : number, max : number, newMin : number, newM
 {
 	return newMin + (newMax - newMin) * (value - min) / (max - min);
 }
+
+export function	getRandomWeightedIndex(weights : number[]) : number
+{
+	let	totalWeight = 0;
+	const	weightsSteps = weights.map((value : number) => {
+		totalWeight += value;
+		return totalWeight;
+	});
+	const	random = Math.random() * totalWeight;
+
+	for (let index = 0; index < weightsSteps.length; index++) {
+		if (random <= weightsSteps[index])
+			return index;
+	}
+	throw new Error("getRandomWeighted isn't working properly !");
+}

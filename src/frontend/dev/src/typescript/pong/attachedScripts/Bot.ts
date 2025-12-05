@@ -11,7 +11,9 @@ import { TimerManager } from "@shared/attachedScripts/TimerManager";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { Imported } from "@shared/ImportedDecorator";
 import { Ball } from "@shared/attachedScripts/Ball";
-import { ShotFactory } from "../Shot";
+import { ShotFactory } from "../ShotFactory";
+import type { Shot } from "../Shot";
+import { getRandomWeightedIndex } from "../utilities";
 
 export class Bot extends CustomScriptComponent {
 	private static readonly _paddleMinimumMovement = 0.3;
@@ -100,8 +102,10 @@ export class Bot extends CustomScriptComponent {
 	{
 		const	targetHeight = this.getHeightTargetAttack();
 		const	shots = this._shotFactory.getShotsAtHeight(targetHeight, paddleMiddle, 2);
-		const	sortedShots = shots.sort((a, b) => b.score - a.score);
-		const	displacement = this._paddleRight.getHeightDisplacementForAngle(sortedShots[0].angle);
+		const	scores = shots.map((shot : Shot) => shot.score);
+		const	selectedShotIndex = getRandomWeightedIndex(scores);
+		const	selectedShot = shots[selectedShotIndex];
+		const	displacement = this._paddleRight.getHeightDisplacementForAngle(selectedShot.angle);
 
 		return displacement;
 	}
@@ -178,3 +182,6 @@ export class Bot extends CustomScriptComponent {
 }
 
 SceneManager.RegisterClass("Bot", Bot);
+function getRandomWeighted(scores: number[]) {
+    throw new Error("Function not implemented.");
+}
