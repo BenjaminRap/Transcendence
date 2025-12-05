@@ -26,7 +26,7 @@ export class	ShotFactory
 		const	terrainWidth = this._startPosX - this._endPosX;
 		const	angles = [ this.getShotAtHeight(height, paddleMiddle, terrainWidth) ];
 
-		for (let index = 1; index < maxRebounds; index++) {
+		for (let index = 1; index <= maxRebounds; index++) {
 			const	angleWithTopRebound = this.getShotAtHeightWithRebound(index, "top", height, paddleMiddle, terrainWidth);
 			const	angleWithBottomRebound = this.getShotAtHeightWithRebound(index, "bottom", height, paddleMiddle, terrainWidth);
 
@@ -48,9 +48,12 @@ export class	ShotFactory
 		if (reboundCount < 1)
 			throw new Error("reboundCount should be greater to 1 in getAngleShootAtHeightWithRebound");
 		const	colliderY = (firstRebound === "top") ? this._topCollisionY : this._bottomCollisionY;
-		const	distEndToCollider = height - colliderY;
-		const	distStartToCollider = paddleMiddle - colliderY;
-		const	direction = new Vector3(-terrainWidth, - (distEndToCollider + distStartToCollider), 0);
+		const	distEndToCollider = Math.abs(height - colliderY);
+		const	distStartToCollider = Math.abs(paddleMiddle - colliderY);
+		const	distTopToBottom = this._topCollisionY - this._bottomCollisionY;
+		const	totalY = distEndToCollider + distStartToCollider + distTopToBottom * (reboundCount - 1);
+		const	sign = "top" ? 1 : -1;
+		const	direction = new Vector3(-terrainWidth, sign * totalY, 0);
 
 		return new Shot(direction, this._paddleRightVector);
 	}
