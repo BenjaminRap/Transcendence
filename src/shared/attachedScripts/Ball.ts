@@ -44,6 +44,7 @@ export class Ball extends CustomScriptComponent {
 
 	public launch() : void
 	{
+		this.reset();
 		this._ballStartTimeout = this._timerManager.setTimeout(() => {
 			this.transform.position.copyFrom(this._initialPosition);
 			const	direction = this.getBallStartDirection();

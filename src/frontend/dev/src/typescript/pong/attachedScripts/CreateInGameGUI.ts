@@ -121,7 +121,7 @@ export class CreateInGameGUI extends CustomScriptComponent {
 			this._sceneData.events.getObservable("forfeit").notifyObservers(winningSide);
 			this._sceneData.serverProxy.sendServerMessage("forfeit");
 		}
-		else if (this._sceneData.serverProxy)
+		else
 			this._sceneData.events.getObservable("forfeit").notifyObservers("highestScore");
 	}
 
