@@ -1,4 +1,4 @@
-import { Color3, Scene, Texture, Vector2, Vector3 } from "@babylonjs/core";
+import { Color3, Scene, Vector3 } from "@babylonjs/core";
 import { AddBlock, AnimatedInputBlockTypes, ClampBlock, DistanceBlock, FragmentOutputBlock, ImageSourceBlock, InputBlock, InstancesBlock, LerpBlock, LightBlock, MultiplyBlock, NegateBlock, NodeMaterial, NodeMaterialModes, NodeMaterialSystemValues, NodeMaterialTeleportInBlock, NodeMaterialTeleportOutBlock, SimplexPerlin3DBlock, SmoothStepBlock, SubtractBlock, TextureBlock, TransformBlock, VectorMergerBlock, VectorSplitterBlock, VertexOutputBlock } from "@babylonjs/core/Materials/Node";
 
 export type	StylizedGrassMaterialAndInputs = [ NodeMaterial, StylizedGrassMaterialInputsBlocks ];
