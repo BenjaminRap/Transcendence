@@ -53,7 +53,7 @@ export class	ShotFactory
 		const	distStartToCollider = Math.abs(paddleMiddle - colliderY);
 		const	distTopToBottom = this._topCollisionY - this._bottomCollisionY;
 		const	totalY = distEndToCollider + distStartToCollider + distTopToBottom * (reboundCount - 1);
-		const	sign = "top" ? 1 : -1;
+		const	sign = (firstRebound === "top") ? 1 : -1;
 		const	direction = new Vector3(-terrainWidth, sign * totalY, 0);
 
 		return new Shot(direction, this._paddleRightVector);

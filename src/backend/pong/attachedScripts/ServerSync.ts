@@ -61,7 +61,7 @@ export class ServerSync extends CustomScriptComponent {
 				paddleLeftPos: this.getXYZ(this._paddleLeft.transform.position),
 				ball: {
 					pos: this.getXYZ(this._ball.transform.position),
-					linearVelocity: this.getXYZ(this._ball.getPhysicsBody().getLinearVelocity())
+					linearVelocity: this.getXYZ(this._ball.getLinearVelocity())
 				}
 			}
 		}
