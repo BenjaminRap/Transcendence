@@ -1,1 +1,1 @@
-import { OpponentGUI } from "./pong/OpponentHTMLElement";
+import { TournamentPathGUI } from "./pong/TournamentPathHTMLElement";
