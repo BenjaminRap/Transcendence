@@ -16,6 +16,9 @@ export class	TournamentGUI extends HTMLElement
 	private	_zoomPercent : number = 1;
 	private _wheelZoomAdd : number = 0.01;
 	private _wheelZoomRange = new Range(1, 2);
+	private _dragging : boolean = false;
+	private _left : number = 0;
+	private _top : number = 0;
 
 	constructor(style? : ThemeName, matchesByRound? : Match[][], participants? : Profile[])
 	{
@@ -32,6 +35,16 @@ export class	TournamentGUI extends HTMLElement
 		this.placeMatches();
 		this.placeParticipants();
 		this.addEventListener("wheel", this.zoom.bind(this));
+		this.addEventListener("mousedown", () => this._dragging = true);
+		window.addEventListener("mouseup", () => this._dragging = false);
+		this.addEventListener("mousemove", (mouseEvent : MouseEvent) => {
+			if (!this._dragging)
+				return ;
+			this._left += mouseEvent.movementX;
+			this._top += mouseEvent.movementY;
+			this._container.style.left = this._left.toString() + "px";
+			this._container.style.top = this._top.toString() + "px";
+		});
 
 		this.appendChild(this._container);
 	}
@@ -40,7 +53,7 @@ export class	TournamentGUI extends HTMLElement
 	{
 		const	div = document.createElement("div");
 
-		div.classList.add("absolute", "inset-0", "size-full", "z-10", "flex", "flex-col")
+		div.classList.add("absolute", "inset-0", "size-full", "z-10", "flex", "flex-col", "relative");
 		div.style.minWidth = `calc(${this._participants.length} * 1.1 * 10vw)`;
 
 		return div;
