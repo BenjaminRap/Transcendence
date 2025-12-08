@@ -1,7 +1,9 @@
+import { Clamp } from "@babylonjs/core";
 import type { Match, Profile } from "./FrontendTournament";
 import { MatchGUI } from "./MatchGUI";
 import { type ThemeName } from "./menuStyles";
 import { OpponentGUI } from "./OpponentGUI";
+import { Range } from "@shared/Range";
 
 export class	TournamentGUI extends HTMLElement
 {
@@ -10,6 +12,10 @@ export class	TournamentGUI extends HTMLElement
 	private _matchesByRound : Match[][];
 	private _participants : Profile[];
 	private _style? : ThemeName;
+	private _container! : HTMLDivElement;
+	private	_zoomPercent : number = 1;
+	private _wheelZoomAdd : number = 0.01;
+	private _wheelZoomRange = new Range(1, 2);
 
 	constructor(style? : ThemeName, matchesByRound? : Match[][], participants? : Profile[])
 	{
@@ -21,10 +27,23 @@ export class	TournamentGUI extends HTMLElement
 
 	connectedCallback()
 	{
-		this.classList.add("absolute", "inset-0", "size-full", "z-10", "cursor-default", "select-none", "pointer-events-none", "flex", "flex-col");
-		this.style.minWidth = `calc(${this._participants.length} * 1.1 * 10vw)`;
+		this.classList.add("absolute", "inset-0", "size-full", "z-10", "cursor-default", "select-none");
+		this._container = this.createContainer();
 		this.placeMatches();
 		this.placeParticipants();
+		this.addEventListener("wheel", this.zoom.bind(this));
+
+		this.appendChild(this._container);
+	}
+
+	private	createContainer() : HTMLDivElement
+	{
+		const	div = document.createElement("div");
+
+		div.classList.add("absolute", "inset-0", "size-full", "z-10", "flex", "flex-col")
+		div.style.minWidth = `calc(${this._participants.length} * 1.1 * 10vw)`;
+
+		return div;
 	}
 
 	private	placeMatches()
@@ -42,7 +61,7 @@ export class	TournamentGUI extends HTMLElement
 				
 				div.appendChild(matchGUI);
 			}
-			this.appendChild(div);
+			this._container.appendChild(div);
 		}
 	}
 
@@ -60,7 +79,18 @@ export class	TournamentGUI extends HTMLElement
 			
 			div.appendChild(matchGUI);
 		}
-		this.appendChild(div);
+		this._container.appendChild(div);
+	}
+	
+	private	zoom(event : WheelEvent)
+	{
+		event.preventDefault();
+		if (event.deltaY > 0)
+			this._zoomPercent -= this._wheelZoomAdd;
+		else
+			this._zoomPercent += this._wheelZoomAdd;
+		this._zoomPercent = Clamp(this._zoomPercent, this._wheelZoomRange.min, this._wheelZoomRange.max);
+		this._container.style.transform = `scale(${this._zoomPercent})`;
 	}
 }
 
