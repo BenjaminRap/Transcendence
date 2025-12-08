@@ -1,17 +1,16 @@
+import type { Profile } from "./FrontendTournament";
 import { applyTheme, type ThemeName } from "./menuStyles";
+
+const	defaultProfile : Profile = {
+	name: "unkown",
+	image : "/images/unkown.png"
+}
 
 export class	OpponentGUI extends HTMLElement
 {
-	private static readonly _unkownImageUrl : string = "/images/unkown.png";
-
-	private	_image : string;
-	private	_name : string;
-
-	constructor(style? : ThemeName, name? : string, image? : string)
+	constructor(style? : ThemeName, private _profile : Profile = defaultProfile)
 	{
 		super();
-		this._name = name ?? "unkown";
-		this._image = image ?? OpponentGUI._unkownImageUrl;
 		applyTheme(this, style ?? "basic");
 	}
 
@@ -19,8 +18,8 @@ export class	OpponentGUI extends HTMLElement
 	{
 		this.classList.add("block", "border-solid", "border-black", "border-[0.2vw]", "rounded-3xl", "aspect-2/3");
 		this.innerHTML = `
-			<img src="${this._image}" class="m-auto mt-[5%] w-4/5 aspect-square" />
-			<p class="mt-[10%] text-center text-[3vw]">${this._name}</p>
+			<img src="${this._profile.image}" class="m-auto mt-[5%] w-4/5 aspect-square" />
+			<p class="mt-[10%] text-center text-[3vw]">${this._profile.name}</p>
 		`;
 	}
 }

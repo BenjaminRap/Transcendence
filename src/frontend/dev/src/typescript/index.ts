@@ -1,17 +1,19 @@
-import { FrontendTournament, type Profile } from "./pong/FrontendTournament";
+// import { FrontendTournament, type Profile } from "./pong/FrontendTournament";
+//
+// function	createProfiles(count : number) : Profile[]
+// {
+// 	const	profiles : Profile[] = [];
+//
+// 	for (let index = 0; index < count; index++) {
+// 		profiles.push({
+// 			name : index.toString(),
+// 			image : index.toString()
+// 		})
+// 	}
+// 	return profiles;
+// }
+//
+// const	profiles = createProfiles(32);
+// const	tournament = new FrontendTournament(profiles);
 
-function	createProfiles(count : number) : Profile[]
-{
-	const	profiles : Profile[] = [];
-
-	for (let index = 0; index < count; index++) {
-		profiles.push({
-			name : index.toString(),
-			image : index.toString()
-		})
-	}
-	return profiles;
-}
-
-const	profiles = createProfiles(32);
-const	tournament = new FrontendTournament(profiles);
+import { MatchOpponentsGUI } from "./pong/MatchOpponentsGUI";

@@ -7,8 +7,6 @@ import { Range } from "@shared/Range";
 
 export class	TournamentGUI extends HTMLElement
 {
-	private	_profileWidth : string = "10vw";
-	private _pathHeight : string = "10vw";
 	private _matchesByRound : Match[][];
 	private _participants : Profile[];
 	private _style? : ThemeName;
@@ -85,7 +83,7 @@ export class	TournamentGUI extends HTMLElement
 		div.classList.add("flex", "flex-row", "justify-around");
 		for (let index = 0; index < this._participants.length; index++) {
 			const participant = this._participants[index];
-			const matchGUI = new OpponentGUI(this._style, participant.name);
+			const matchGUI = new OpponentGUI(this._style, participant);
 
 			matchGUI.classList.add("w-[10vw]");
 			matchGUI.style.width = `calc(50% / ${this._participants.length} + 1vw)`;
