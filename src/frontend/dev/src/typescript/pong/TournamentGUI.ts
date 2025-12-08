@@ -1,6 +1,7 @@
 import type { Match, Profile } from "./FrontendTournament";
 import { MatchGUI } from "./MatchGUI";
 import { type ThemeName } from "./menuStyles";
+import { OpponentGUI } from "./OpponentGUI";
 
 export class	TournamentGUI extends HTMLElement
 {
@@ -22,14 +23,20 @@ export class	TournamentGUI extends HTMLElement
 	{
 		this.classList.add("absolute", "inset-0", "size-full", "z-10", "cursor-default", "select-none", "pointer-events-none", "flex", "flex-col");
 		this.style.minWidth = `calc(${this._participants.length} * 1.1 * 10vw)`;
+		this.placeMatches();
+		this.placeParticipants();
+	}
+
+	private	placeMatches()
+	{
 		for (let round = this._matchesByRound.length - 1; round >= 0; round--) {
 			const	matches = this._matchesByRound[round];
 			const	div = document.createElement("div");
 			
 			div.classList.add("flex", "flex-row", "justify-around");
 			for (let index = 0; index < matches.length; index++) {
-				const match = matches[index];
 				const matchGUI = new MatchGUI(this._style);
+
 				matchGUI.classList.add("w-[10vw]");
 				matchGUI.style.width = `calc(50% / ${matches.length} + 1vw)`;
 				
@@ -37,6 +44,23 @@ export class	TournamentGUI extends HTMLElement
 			}
 			this.appendChild(div);
 		}
+	}
+
+	private	placeParticipants()
+	{
+		const	div = document.createElement("div");
+
+		div.classList.add("flex", "flex-row", "justify-around");
+		for (let index = 0; index < this._participants.length; index++) {
+			const participant = this._participants[index];
+			const matchGUI = new OpponentGUI(this._style, participant.name);
+
+			matchGUI.classList.add("w-[10vw]");
+			matchGUI.style.width = `calc(50% / ${this._participants.length} + 1vw)`;
+			
+			div.appendChild(matchGUI);
+		}
+		this.appendChild(div);
 	}
 }
 
