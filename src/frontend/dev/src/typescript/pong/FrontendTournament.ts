@@ -16,13 +16,14 @@ export class	Match
 export class	FrontendTournament
 {
 	private	_matchesRoot : Match;
+	private	_matchesByLevel : Match[][] = [];
 
 	constructor(private _participants : Profile[])
 	{
 		if (_participants.length <= 1 || !isPowerOfTwo(_participants.length))
 			throw new Error(`Invalid participants count : ${_participants.length}, it should be power of two, greater than one !`);
 		this._matchesRoot = this.createMatches(_participants);
-		console.log(this._matchesRoot);
+		console.log(this._matchesByLevel);
 	}
 
 	private	createMatches(profiles : Profile[]) : Match
@@ -31,7 +32,10 @@ export class	FrontendTournament
 
 		if (topMatches.length !== 2)
 			throw new Error("Bug in createMatchesRecursive, it should returns an array of two elements !");
-		return new Match(topMatches[0], topMatches[1]);
+		const	rootMatch = new Match(topMatches[0], topMatches[1]);
+
+		this._matchesByLevel.push([rootMatch]);
+		return rootMatch;
 	}
 
 	private createMatchesRecursive(arr : Profile[] | Match[]) : Profile[] | Match[]
@@ -43,6 +47,7 @@ export class	FrontendTournament
 		for (let index = 0; index < arr.length / 2; index++) {
 			matches.push(new Match(arr[index * 2], arr[index * 2 + 1]))
 		}
+		this._matchesByLevel.push(matches);
 		return this.createMatchesRecursive(matches);
 	}
 }
