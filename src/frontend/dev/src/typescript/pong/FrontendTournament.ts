@@ -1,4 +1,5 @@
 import { isPowerOfTwo } from "@shared/utils";
+import { TournamentGUI } from "./TournamentGUI";
 
 export type Profile = {
 	name : string;
@@ -16,14 +17,15 @@ export class	Match
 export class	FrontendTournament
 {
 	private	_matchesRoot : Match;
-	private	_matchesByLevel : Match[][] = [];
+	private	_matchesByRound : Match[][] = [];
 
 	constructor(private _participants : Profile[])
 	{
 		if (_participants.length <= 1 || !isPowerOfTwo(_participants.length))
 			throw new Error(`Invalid participants count : ${_participants.length}, it should be power of two, greater than one !`);
 		this._matchesRoot = this.createMatches(_participants);
-		console.log(this._matchesByLevel);
+		const	gui = new TournamentGUI("basic", this._matchesByRound, this._participants);
+		document.querySelector("body")?.appendChild(gui);
 	}
 
 	private	createMatches(profiles : Profile[]) : Match
@@ -34,7 +36,7 @@ export class	FrontendTournament
 			throw new Error("Bug in createMatchesRecursive, it should returns an array of two elements !");
 		const	rootMatch = new Match(topMatches[0], topMatches[1]);
 
-		this._matchesByLevel.push([rootMatch]);
+		this._matchesByRound.push([rootMatch]);
 		return rootMatch;
 	}
 
@@ -47,7 +49,7 @@ export class	FrontendTournament
 		for (let index = 0; index < arr.length / 2; index++) {
 			matches.push(new Match(arr[index * 2], arr[index * 2 + 1]))
 		}
-		this._matchesByLevel.push(matches);
+		this._matchesByRound.push(matches);
 		return this.createMatchesRecursive(matches);
 	}
 }

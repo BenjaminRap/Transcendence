@@ -13,5 +13,5 @@ function	createProfiles(count : number) : Profile[]
 	return profiles;
 }
 
-const	profiles = createProfiles(16);
+const	profiles = createProfiles(8);
 const	tournament = new FrontendTournament(profiles);
