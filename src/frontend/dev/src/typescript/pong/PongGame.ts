@@ -18,6 +18,8 @@ import type { GameInfos } from "@shared/ServerMessage";
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
 
+type SceneName = "Magic.gltf" | "Basic.gltf" | "Terminal.gltf";
+
 export class PongGame extends HTMLElement {
 	private _canvas : HTMLCanvasElement;
 	private _engine! : Engine;
@@ -94,12 +96,12 @@ export class PongGame extends HTMLElement {
 			await this.changeScene("Menu.gltf", "Menu", []);
 	}
 
-	public startBotGame(sceneName : "Basic.gltf" | "Magic.gltf")
+	public startBotGame(sceneName : SceneName)
 	{
 		this.startBotGameAsync(sceneName);
 	}
 
-	private async startBotGameAsync(sceneName : "Basic.gltf" | "Magic.gltf")
+	private async startBotGameAsync(sceneName : SceneName)
 	{
 		this._multiplayerHandler.disconnect();
 		const	inputs = [this._settings._playerInputs[0]];
@@ -110,12 +112,12 @@ export class PongGame extends HTMLElement {
 		sceneData.events.getObservable("game-start").notifyObservers();
 	}
 
-	public startLocalGame(sceneName : "Basic.gltf" | "Magic.gltf")
+	public startLocalGame(sceneName : SceneName)
 	{
 		this.startLocalGameAsync(sceneName);
 	}
 
-	private async startLocalGameAsync(sceneName : "Basic.gltf" | "Magic.gltf")
+	private async startLocalGameAsync(sceneName : SceneName)
 	{
 		this._multiplayerHandler.disconnect();
 		await this.changeScene(sceneName, "Local", this._settings._playerInputs);
@@ -125,12 +127,12 @@ export class PongGame extends HTMLElement {
 		sceneData.events.getObservable("game-start").notifyObservers();
 	}
 
-	public startOnlineGame(sceneName : "Basic.gltf" | "Magic.gltf")
+	public startOnlineGame(sceneName : SceneName)
 	{
 		this.startOnlineGameAsync(sceneName);
 	}
 
-	private async startOnlineGameAsync(sceneName : "Basic.gltf" | "Magic.gltf") : Promise<void>
+	private async startOnlineGameAsync(sceneName : SceneName) : Promise<void>
 	{
 		try {
 			await this._multiplayerHandler.joinGame();

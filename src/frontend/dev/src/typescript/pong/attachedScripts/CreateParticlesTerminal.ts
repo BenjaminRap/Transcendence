@@ -2,11 +2,12 @@ import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager } from "@babylonjs-toolkit/next";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
-import { ParticleSystem, Texture, Vector2, Vector3 } from "@babylonjs/core";
+import { Effect, NodeMaterial, ParticleSystem, Texture, Vector2, Vector3 } from "@babylonjs/core";
 import { zodInt, zodNumber } from "@shared/ImportedHelpers";
 import { Imported } from "@shared/ImportedDecorator";
 import { zodRange } from "@shared/Range";
 import { Range } from "@shared/Range";
+import { buildAlphabetTerminalMaterial } from "../shaders/alphabetTerminal";
 
 export class CreateParticlesTerminal extends CustomScriptComponent {
 	@Imported(zodRange) private _particleSizeRange! : Range;
@@ -23,10 +24,21 @@ export class CreateParticlesTerminal extends CustomScriptComponent {
 
 	protected	awake()
 	{
-		this.createParticles();
+		const	material = this.createMaterial();
+		const	terminalParticle = this.createParticles();
+
+		material.createEffectForParticles(terminalParticle);
+		terminalParticle.start();
 	}
 
-	private	createParticles()
+	private	createMaterial() : NodeMaterial
+	{
+		const	[material, _inputs] = buildAlphabetTerminalMaterial("alphabetTerminal", this.scene);
+
+		return material;
+	}
+
+	private	createParticles() : ParticleSystem
 	{
 		const	columnSize = this._particleSizeRange.max + this._particlesDistance;
 		const	columnCount = Math.floor(this._particleRange.x / columnSize);
@@ -56,7 +68,8 @@ export class CreateParticlesTerminal extends CustomScriptComponent {
 		};
 		terminalParticles.spriteCellLoop = false;
 		terminalParticles.spriteCellChangeSpeed = 0;
-		terminalParticles.start();
+
+		return terminalParticles;
 	}
 }
 
