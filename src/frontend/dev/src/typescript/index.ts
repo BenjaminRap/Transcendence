@@ -1,1 +1,1 @@
-import { ProfileCreationGUI } from "./pong/ProfileCreationGUI";
+import { TournamentCreationGUI } from "./pong/TournamentCreationGUI";
