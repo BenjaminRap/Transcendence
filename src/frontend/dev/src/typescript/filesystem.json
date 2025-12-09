@@ -88,7 +88,7 @@
 				{
 					"type": "file",
 					"name": "README.txt",
-					"content": "Bienvenue dans votre dossier personnel."
+					"content": "Bienvenue dans votre dossier personnel.\n\nHelp - Utilisation du terminal\n\nComment exécuter une commande :\n- Tapez une commande, puis appuyez sur Entrée.\n- Le terminal enverra une réponse; chaque réponse commence par le caractère \">\".\n\nStatut actuel :\n- Vous êtes actuellement connecté en tant que \"guest\".\n\nCréer un compte (register) :\n- Tapez: register\n- Appuyez sur Entrée et suivez les instructions affichées pour choisir un nom et un mot de passe.\n\nSe connecter (login) :\n- Tapez login\n- Appuyez sur Entrée et suivez les instructions pour fournir vos identifiants..\n\nVous pouvez tout de meme jouer a pong en tant que guest !\n\nCommandes utiles :\n- help : affiche cette aide\n- clear: vide l'écran\n- login / register: se connecter ou créer un compte\n- pong : jouer a pong en tant que guest"
 				},
 				{
 					"type": "directory",
