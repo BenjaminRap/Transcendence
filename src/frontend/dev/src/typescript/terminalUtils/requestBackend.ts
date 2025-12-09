@@ -10,7 +10,7 @@ export namespace RequestBackendModule {
 	export async function register(args: string[]): Promise<string> 
 	{
 		try {
-			const response = await fetch('https://10.14.5.7:8080/api/auth/register', {
+			const response = await fetch('/api/auth/register', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -39,7 +39,7 @@ export namespace RequestBackendModule {
 
 	export async function login(args: string[]): Promise<string> {
 		try {
-			const response = await fetch('https://10.14.5.7:8080/api/auth/login', {
+			const response = await fetch('/api/auth/login', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -71,7 +71,7 @@ export namespace RequestBackendModule {
 			return false;
 		}
 		try {
-			const response = await fetch('https://10.14.5.7:8080/api/suscriber/profile', {
+			const response = await fetch('/api/suscriber/profile', {
 				method: 'GET',
 				headers: {
 					'Content-Type': 'application/json',
@@ -107,7 +107,7 @@ export namespace RequestBackendModule {
 			return [];
 		}
 		try {
-			const response = await fetch('https://10.14.5.7:8080/api/users/search/username/' + args, {
+			const response = await fetch('/api/users/search/username/' + args, {
 				method: 'GET',
 				headers: {
 					'Content-Type': 'application/json',
@@ -145,7 +145,7 @@ export namespace RequestBackendModule {
 			return false;
 		}
 		try {
-			const response = await fetch('https://10.14.5.7:8080/api/auth/refresh', {
+			const response = await fetch('/api/auth/refresh', {
 				method: 'GET',
 				headers: {
 					'Content-Type': 'application/json',
