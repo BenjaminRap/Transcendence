@@ -42,7 +42,7 @@ export namespace TerminalUserManagement {
 }
 
 export namespace TerminalFileSystem {
-	export let currentDirectory = '/';
+	export let currentDirectory = '/home/user';
 }
 
 export namespace TerminalPromptAndEnv {

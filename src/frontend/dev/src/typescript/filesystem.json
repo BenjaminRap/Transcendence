@@ -85,22 +85,27 @@
 			"type": "directory",
 			"name": "user",
 			"children": [
-			{
-				"type": "file",
-				"name": "README.txt",
-				"content": "Bienvenue dans votre dossier personnel."
-			},
-			{
-				"type": "directory",
-				"name": "Documents",
-				"children": [
 				{
 					"type": "file",
-					"name": "todo.txt",
-					"content": "- Acheter le latte\n- Envoyer l’email\n- Terminer le projet"
+					"name": "README.txt",
+					"content": "Bienvenue dans votre dossier personnel."
+				},
+				{
+					"type": "directory",
+					"name": "Documents",
+					"children": [
+					{
+						"type": "file",
+						"name": "todo.txt",
+						"content": "- Acheter le latte\n- Envoyer l’email\n- Terminer le projet"
+					}
+					]
+				},
+				{
+					"type": "file",
+					"name": "do_help_not_ls.txt",
+					"content": "C'est clair nan ?"
 				}
-				]
-			}
 			]
 		}
 		]
@@ -279,11 +284,6 @@
 				]
 		}
 		]
-	},
-	{
-		"type": "file",
-		"name": "do_help_not_ls.txt",
-		"content": "C'est clair nan ?"
 	}
 	]
 }
