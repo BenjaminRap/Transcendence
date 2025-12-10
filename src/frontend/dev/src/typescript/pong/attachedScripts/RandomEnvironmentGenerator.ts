@@ -22,7 +22,6 @@ export class RandomEnvironmentGenerator extends CustomScriptComponent {
 	@Imported(zodInt) private _dimension! : int;
 	@Imported(zodRandomEnvironmentElement, true) private _envElements! : RandomEnvironmentElement[];
 	@Imported(zodNumber) private _instancesCountFactor! : number;
-	@Imported(zodNumber) private _distanceWithoutElements! : number;
 	@Imported("RandomTerrainGenerator") private _ground! : RandomTerrainGenerator;
 	@ImportedCamera private _camera! : FreeCamera;
 
@@ -61,11 +60,9 @@ export class RandomEnvironmentGenerator extends CustomScriptComponent {
 		const	baseNear = baseForCircleUnit * this._camera.minZ;
 		const	baseFar = baseForCircleUnit * this._dimension / 2;
 		const	height = this._dimension / 2 - this._camera.minZ;
+
 		for (let i = 0; i < instanceCount * this._instancesCountFactor; i++) {
 			const	position = this.getRandomPositionOnGround(baseNear, baseFar, height);
-
-			if (position.length() < this._distanceWithoutElements)
-				continue ;
 
 			const	squaredDistance = Vector3.DistanceSquared(this.transform.position, position);
 			const	lodLevel = lod.getLodLevel(squaredDistance);
