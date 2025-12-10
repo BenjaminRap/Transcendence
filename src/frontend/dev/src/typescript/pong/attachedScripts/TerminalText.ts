@@ -11,7 +11,7 @@ import type { TimerManager } from "@shared/attachedScripts/TimerManager";
 export class TerminalText extends CustomScriptComponent {
 	private static readonly _terminalWelcomeMessage = "> Welcome to Transendence ! Type `help` for instructions.";
 	private static readonly _cursorBlinkingInterval = 500;
-	private static readonly _writeInterval = 50;
+	private static readonly _writeInterval = 25;
 	private static readonly _maxCombinedCommands = 4;
 
 	@Imported("Text") private _text! : Text;
@@ -54,7 +54,7 @@ export class TerminalText extends CustomScriptComponent {
 		this._currentCommandIndex++;
 		if (this._currentCommandIndex === this._currentCommand.length)
 		{
-			this._text.setText(`${newTextWithoutCursor}\n${this._currentOutput}${cursor}${this._commandPrefix}`);
+			this._text.setText(`${newTextWithoutCursor}\n${this._currentOutput}${this._commandPrefix}${cursor}`);
 			this._currentCommandIndex = 0;
 			this._commandCount = 0;
 			this._currentCommand = "";
@@ -114,7 +114,7 @@ export class TerminalText extends CustomScriptComponent {
 	{
 		if (this._commandCount >= TerminalText._maxCombinedCommands)
 			return ;
-		const	formattedOutput = output ? `${output}\n` : "";
+		const	formattedOutput = output ? `> ${output}\n` : "";
 
 		if (this._currentCommand.length !== 0)
 			this._currentCommand += " & ";

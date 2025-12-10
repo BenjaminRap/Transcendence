@@ -72,7 +72,18 @@ export class Text extends CustomScriptComponent {
 
 	public setText(content : string)
 	{
-		this._textBlock.text = content;
+		const	lines = content.split('\n');
+		const	lineOverflow = lines.length - this._maxRow;
+		if (lineOverflow > 0)
+			lines.splice(0, lineOverflow);
+
+		for (let index = 0; index < lines.length; index++) {
+			const line = lines[index];
+			
+			if (line.length > this._maxCharacterInRow)
+				lines[index] = line.slice(0, this._maxCharacterInRow);
+		}
+		this._textBlock.text = lines.join('\n');
 	}
 
 	public getText()
