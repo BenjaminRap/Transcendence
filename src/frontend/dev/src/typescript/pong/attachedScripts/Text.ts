@@ -8,8 +8,11 @@ import { zodInt, zodString } from "@shared/ImportedHelpers";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import zod from "zod";
 
-const	zodAlignment = zod.literal(["left", "middle", "right"]);
-type	Alignment = zod.infer<typeof zodAlignment>;
+const	zodVerticalAlignment = zod.literal(["top", "center", "bottom"]);
+type	VerticalAlignment = zod.infer<typeof zodVerticalAlignment>;
+
+const	zodHorizontalAlignment = zod.literal(["left", "center", "right"]);
+type	HorizontalAlignment = zod.infer<typeof zodHorizontalAlignment>;
 
 export class Text extends CustomScriptComponent {
 	@Imported(zodString) private _text! : string;
@@ -17,7 +20,8 @@ export class Text extends CustomScriptComponent {
 	@Imported(zodInt) private _fontSizeInPixels! : number;
 	@Imported(zodInt) private _maxCharacterInRow! : number;
 	@Imported(zodInt) private _maxRow! : number;
-	@Imported(zodAlignment) private _alignment! : Alignment;
+	@Imported(zodVerticalAlignment) private _verticalAlignment! : VerticalAlignment;
+	@Imported(zodHorizontalAlignment) private _horizontalAlignment! : HorizontalAlignment;
 
 	private _texture! : AdvancedDynamicTexture;
 	private _textBlock! : TextBlock;
@@ -36,25 +40,43 @@ export class Text extends CustomScriptComponent {
 		this._textBlock.fontSizeInPixels = this._fontSizeInPixels;
 		this._textBlock.color = this.colorToString(this._color);
 		this._textBlock.resizeToFit = true;
-		this._textBlock.horizontalAlignment = this.getAlignment();
+		this._textBlock.textHorizontalAlignment = this.getHorizontalAlignment();
+		this._textBlock.verticalAlignment = this.getVerticalAlignment();
 		this._texture.addControl(this._textBlock);
 	}
 
-	private getAlignment() : number
+	private getHorizontalAlignment() : number
 	{
-		switch (this._alignment) {
+		switch (this._horizontalAlignment) {
 			case "left":
 				return Control.HORIZONTAL_ALIGNMENT_LEFT;
-			case "middle":
+			case "center":
 				return Control.HORIZONTAL_ALIGNMENT_CENTER;
 			default:
 				return Control.HORIZONTAL_ALIGNMENT_RIGHT;
 		}
 	}
 
+	private getVerticalAlignment() : number
+	{
+		switch (this._verticalAlignment) {
+			case "top":
+				return Control.VERTICAL_ALIGNMENT_TOP;
+			case "center":
+				return Control.VERTICAL_ALIGNMENT_CENTER;
+			default:
+				return Control.VERTICAL_ALIGNMENT_BOTTOM;
+		}
+	}
+
 	public setText(content : string)
 	{
 		this._textBlock.text = content;
+	}
+
+	public getText()
+	{
+		return this._textBlock.text;
 	}
 
 	private colorToString(color : Color4) : string
