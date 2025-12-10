@@ -6,13 +6,23 @@ import { Imported } from "@shared/ImportedDecorator";
 import { getFrontendSceneData } from "../PongGame";
 import { Text } from "./Text";
 import type { EndData } from "@shared/attachedScripts/GameManager";
+import type { TimerManager } from "@shared/attachedScripts/TimerManager";
+
+type command = {
+	input : string,
+	output : string
+}
 
 export class TerminalText extends CustomScriptComponent {
 	private static readonly _terminalWelcomeMessage = "Welcome to Transendence ! Type `help` for instructions.";
+	private static readonly _cursorBlinkingInterval = 500;
 
 	@Imported("Text") private _text! : Text;
+	@Imported("TimerManager") private _timerManager! : TimerManager;
 
 	private _commandPrefix! : string;
+	private _commands : string[] = [];
+	private _isCursorVisible = false;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "TerminalText") {
         super(transform, scene, properties, alias);
@@ -23,6 +33,19 @@ export class TerminalText extends CustomScriptComponent {
 		this._commandPrefix = "user@terminal:/$ ";
 		this.reset();
 		this.listenToEvents();
+	}
+
+	protected	start()
+	{
+		this._timerManager.setInterval(() => {
+			const	currentText = this._text.getText();
+			const	newText = (this._isCursorVisible)
+				? currentText.slice(0, currentText.length - 1)
+				: currentText + "|";
+
+			this._isCursorVisible = !this._isCursorVisible;
+			this._text.setText(newText);
+		}, TerminalText._cursorBlinkingInterval);
 	}
 
 	private	reset()
@@ -64,8 +87,10 @@ export class TerminalText extends CustomScriptComponent {
 	private	executeCommand(command : string, output? : string)
 	{
 		const	currentText = this._text.getText();
+		const	currentTextWithoutcursor = (this._isCursorVisible) ? currentText.slice(0, currentText.length - 1) : currentText;
 		const	formattedOutput = output ? `${output}\n` : "";
-		const	newText = `${currentText}${command}\n${formattedOutput}${this._commandPrefix}`;
+		const	cursor = (this._isCursorVisible) ? "|" : "";
+		const	newText = `${currentTextWithoutcursor}${command}\n${formattedOutput}${this._commandPrefix}${cursor}`;
 
 		this._text.setText(newText);
 	}
