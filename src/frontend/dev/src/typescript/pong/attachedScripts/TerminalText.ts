@@ -8,21 +8,21 @@ import { Text } from "./Text";
 import type { EndData } from "@shared/attachedScripts/GameManager";
 import type { TimerManager } from "@shared/attachedScripts/TimerManager";
 
-type command = {
-	input : string,
-	output : string
-}
-
 export class TerminalText extends CustomScriptComponent {
-	private static readonly _terminalWelcomeMessage = "Welcome to Transendence ! Type `help` for instructions.";
+	private static readonly _terminalWelcomeMessage = "> Welcome to Transendence ! Type `help` for instructions.";
 	private static readonly _cursorBlinkingInterval = 500;
+	private static readonly _writeInterval = 50;
+	private static readonly _maxCombinedCommands = 4;
 
 	@Imported("Text") private _text! : Text;
 	@Imported("TimerManager") private _timerManager! : TimerManager;
 
 	private _commandPrefix! : string;
-	private _commands : string[] = [];
 	private _isCursorVisible = false;
+	private _currentCommand = "";
+	private _currentOutput = "";
+	private _currentCommandIndex = 0;
+	private _commandCount = 0;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "TerminalText") {
         super(transform, scene, properties, alias);
@@ -37,15 +37,42 @@ export class TerminalText extends CustomScriptComponent {
 
 	protected	start()
 	{
-		this._timerManager.setInterval(() => {
-			const	currentText = this._text.getText();
-			const	newText = (this._isCursorVisible)
-				? currentText.slice(0, currentText.length - 1)
-				: currentText + "|";
+		this._timerManager.setInterval(() => this.updateCursor(), TerminalText._cursorBlinkingInterval);
+		this._timerManager.setInterval(() => this.writeCommand(), TerminalText._writeInterval);
+	}
 
-			this._isCursorVisible = !this._isCursorVisible;
-			this._text.setText(newText);
-		}, TerminalText._cursorBlinkingInterval);
+	private	writeCommand()
+	{
+		if (this._currentCommand.length === 0)
+			return ;
+		const	currentText = this._text.getText();
+		const	currentTextWithoutcursor = this.removeCursor(currentText);
+		const	cursor = (this._isCursorVisible) ? "|" : "";
+		const	newCharacter = this._currentCommand[this._currentCommandIndex];
+		const	newTextWithoutCursor = `${currentTextWithoutcursor}${newCharacter}`;
+
+		this._currentCommandIndex++;
+		if (this._currentCommandIndex === this._currentCommand.length)
+		{
+			this._text.setText(`${newTextWithoutCursor}\n${this._currentOutput}${cursor}${this._commandPrefix}`);
+			this._currentCommandIndex = 0;
+			this._commandCount = 0;
+			this._currentCommand = "";
+			this._currentOutput = "";
+		}
+		else
+			this._text.setText(`${newTextWithoutCursor}${cursor}`);
+	}
+
+	private	updateCursor()
+	{
+		const	currentText = this._text.getText();
+		const	newText = (this._isCursorVisible)
+			? this.removeCursor(currentText)
+			: currentText + "|";
+
+		this._isCursorVisible = !this._isCursorVisible;
+		this._text.setText(newText);
 	}
 
 	private	reset()
@@ -80,19 +107,27 @@ export class TerminalText extends CustomScriptComponent {
 			this.executeCommand("game-start")
 		});
 		sceneData.events.getObservable("forfeit").add(() => this.executeCommand("forfeit"));
-		sceneData.events.getObservable("game-paused").add(() => this.executeCommand("state", "paused"));
 		sceneData.events.getObservable("game-unpaused").add(() => this.executeCommand("state", "unpaused"));
 	}
 
 	private	executeCommand(command : string, output? : string)
 	{
-		const	currentText = this._text.getText();
-		const	currentTextWithoutcursor = (this._isCursorVisible) ? currentText.slice(0, currentText.length - 1) : currentText;
+		if (this._commandCount >= TerminalText._maxCombinedCommands)
+			return ;
 		const	formattedOutput = output ? `${output}\n` : "";
-		const	cursor = (this._isCursorVisible) ? "|" : "";
-		const	newText = `${currentTextWithoutcursor}${command}\n${formattedOutput}${this._commandPrefix}${cursor}`;
 
-		this._text.setText(newText);
+		if (this._currentCommand.length !== 0)
+			this._currentCommand += " & ";
+		this._currentCommand += command;
+		this._currentOutput += formattedOutput;
+		this._commandCount++;
+	}
+
+	private	removeCursor(currentText : string)
+	{
+		if (!this._isCursorVisible)
+			return currentText;
+		return currentText.slice(0, currentText.length - 1);
 	}
 }
 

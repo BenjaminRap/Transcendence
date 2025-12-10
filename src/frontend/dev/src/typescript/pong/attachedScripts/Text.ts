@@ -42,6 +42,7 @@ export class Text extends CustomScriptComponent {
 		this._textBlock.resizeToFit = true;
 		this._textBlock.textHorizontalAlignment = this.getHorizontalAlignment();
 		this._textBlock.verticalAlignment = this.getVerticalAlignment();
+		this._textBlock.textWrapping = true;
 		this._texture.addControl(this._textBlock);
 	}
 
