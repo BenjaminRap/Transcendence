@@ -1,5 +1,3 @@
-import { applyTheme, type ThemeName } from "./menuStyles";
-
 export type	OnItemChange = (currentIndex : number, newIndex : number) => boolean;
 export type OnPlay = (sceneIndex : number, enemyTypeIndex : number, skinIndex : number) => void;
 export interface SwitchButton {
@@ -15,10 +13,9 @@ export class	MenuGUI extends HTMLElement
 	private _skinsSwitch : SwitchButton;
 	private _onPlay : OnPlay | null;
 
-	constructor(sceneSwitch? : SwitchButton, enemyTypeSwitch? : SwitchButton, skinsSwitch? : SwitchButton, onPlay? : OnPlay, theme? : ThemeName)
+	constructor(sceneSwitch? : SwitchButton, enemyTypeSwitch? : SwitchButton, skinsSwitch? : SwitchButton, onPlay? : OnPlay)
 	{
 		super();
-		applyTheme(this, theme ?? "basic");
 		this._sceneSwitch = sceneSwitch ?? {items : [], currentItemIndex: 0, onItemChange: null};
 		this._enemyTypeSwitch = enemyTypeSwitch ?? {items : [], currentItemIndex: 0, onItemChange: null};
 		this._skinsSwitch = skinsSwitch ?? {items : [], currentItemIndex: 0, onItemChange: null};

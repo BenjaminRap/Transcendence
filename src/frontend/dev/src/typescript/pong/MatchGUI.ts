@@ -1,13 +1,10 @@
-import { applyTheme, type ThemeName } from "./menuStyles";
-
 export class	MatchGUI extends HTMLElement
 {
 	private static readonly _matchUrl : string = "/images/fight.png";
 
-	constructor(style? : ThemeName)
+	constructor()
 	{
 		super();
-		applyTheme(this, style ?? "basic");
 	}
 
 	connectedCallback()

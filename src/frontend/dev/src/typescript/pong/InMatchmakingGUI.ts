@@ -1,13 +1,10 @@
-import { applyTheme, type ThemeName } from "./menuStyles";
-
 export class	InMatchmakingGUI extends HTMLElement
 {
 	private	_cancelButton? : HTMLButtonElement;
 
-	constructor(type? : ThemeName)
+	constructor()
 	{
 		super();
-		applyTheme(this, type ?? "basic");
 	}
 
 	public	connectedCallback()

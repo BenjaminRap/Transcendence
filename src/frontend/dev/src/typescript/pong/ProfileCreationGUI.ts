@@ -1,5 +1,3 @@
-import { applyTheme, type ThemeName } from "./menuStyles";
-
 export type	ProfileCreationInputs = {
 	name : HTMLInputElement,
 	image : HTMLInputElement,
@@ -10,10 +8,9 @@ export class	ProfileCreationGUI extends HTMLElement
 {
 	private _inputs? : ProfileCreationInputs;
 
-	constructor(style? : ThemeName)
+	constructor()
 	{
 		super();
-		applyTheme(this, style ?? "basic");
 	}
 
 	connectedCallback()

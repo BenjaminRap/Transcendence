@@ -1,5 +1,3 @@
-import { applyTheme, type ThemeName } from "./menuStyles";
-
 export type EndGUIButtons =
 {
 	restart : HTMLButtonElement,
@@ -13,10 +11,9 @@ export class	EndGUI extends HTMLElement
 	private _mainDiv : HTMLDivElement | undefined;
 	private _winText : HTMLParagraphElement | undefined;
 
-	constructor(type? : ThemeName)
+	constructor()
 	{
 		super();
-		applyTheme(this, type ?? "basic");
 	}
 
 	public	connectedCallback()

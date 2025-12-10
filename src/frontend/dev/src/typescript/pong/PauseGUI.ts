@@ -1,5 +1,3 @@
-import { applyTheme, type ThemeName } from "./menuStyles";
-
 export type PauseGUIButtons =
 {
 	continue : HTMLButtonElement,
@@ -12,10 +10,9 @@ export class	PauseGUI extends HTMLElement
 {
 	private _buttons : PauseGUIButtons | undefined;
 
-	constructor(type? : ThemeName)
+	constructor()
 	{
 		super();
-		applyTheme(this, type ?? "basic");
 	}
 
 	public	connectedCallback()

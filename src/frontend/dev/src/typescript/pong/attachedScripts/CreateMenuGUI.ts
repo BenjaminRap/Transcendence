@@ -35,11 +35,12 @@ export class CreateMenuGUI extends CustomScriptComponent {
 	protected	awake()
 	{
 		this.setScenes();
-		const	style : ThemeName = (this._scenes.length === 0) ? "basic" : this._scenes[0].getStyle();
+		const	theme : ThemeName = (this._scenes.length === 0) ? "basic" : this._scenes[0].getTheme();
 
-		this.createTitleGUI(style);
-		this.createMenuGUI(style);
-		this.createInMatchmakingGUI(style);
+		applyTheme(this._sceneData.pongHTMLElement, theme)
+		this.createTitleGUI();
+		this.createMenuGUI();
+		this.createInMatchmakingGUI();
 	}
 
 	protected	ready()
@@ -62,14 +63,14 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 	}
 
-	private	createTitleGUI(theme : ThemeName)
+	private	createTitleGUI()
 	{
-		this._titleGUI = new TitleGUI(theme);
+		this._titleGUI = new TitleGUI();
 		this._sceneData.pongHTMLElement.appendChild(this._titleGUI);
 		this._titleGUI.classList.add("hidden");
 	}
 
-	private	createMenuGUI(theme : ThemeName)
+	private	createMenuGUI()
 	{
 		const	sceneButtonSwitch : SwitchButton = {
 			items: this._scenes.map((scene) => scene.getSceneName()),
@@ -86,15 +87,15 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			currentItemIndex: 0,
 			onItemChange: this.onSkinChange.bind(this)
 		};
-		this._menuGUI = new MenuGUI(sceneButtonSwitch, enemyTypesButtonSwitch, skinsButtonSwitch, this.onPlay.bind(this), theme);
+		this._menuGUI = new MenuGUI(sceneButtonSwitch, enemyTypesButtonSwitch, skinsButtonSwitch, this.onPlay.bind(this));
 		this._sceneData.pongHTMLElement.appendChild(this._menuGUI);
 		this._menuGUI.classList.add("hidden");
 	}
 
 
-	private	createInMatchmakingGUI(theme : ThemeName)
+	private	createInMatchmakingGUI()
 	{
-		this._inMatchmakingGUI = new InMatchmakingGUI(theme);
+		this._inMatchmakingGUI = new InMatchmakingGUI();
 		this._sceneData.pongHTMLElement.appendChild(this._inMatchmakingGUI);
 		this._inMatchmakingGUI.classList.add("hidden");
 		
@@ -113,11 +114,9 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		newScene.onSceneSwitch("added", 0.5, this._easeFunction);
 		currentScene.onSceneSwitch("removed", 0.5, this._easeFunction);
 
-		const	newStyle = newScene.getStyle();
+		const	newStyle = newScene.getTheme();
 
-		applyTheme(this._menuGUI, newStyle);
-		applyTheme(this._inMatchmakingGUI, newStyle);
-		applyTheme(this._titleGUI, newStyle);
+		applyTheme(this._sceneData.pongHTMLElement, newStyle);
 		const	distance = this._scenes[newIndex].transform.position.subtract(this._scenes[currentIndex].transform.position);
 		const	startPosition = this._scenesParent.position;
 		const	endPosition = this._scenesParent.position.subtract(distance);

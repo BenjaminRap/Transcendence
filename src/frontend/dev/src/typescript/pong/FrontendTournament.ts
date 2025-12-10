@@ -24,7 +24,7 @@ export class	FrontendTournament
 		if (_participants.length <= 1 || !isPowerOfTwo(_participants.length))
 			throw new Error(`Invalid participants count : ${_participants.length}, it should be power of two, greater than one !`);
 		this._matchesRoot = this.createMatches(_participants);
-		const	gui = new TournamentGUI("basic", this._matchesByRound, this._participants);
+		const	gui = new TournamentGUI(this._matchesByRound, this._participants);
 		document.querySelector("body")?.appendChild(gui);
 	}
 

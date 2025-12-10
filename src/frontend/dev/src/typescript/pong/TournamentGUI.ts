@@ -1,7 +1,6 @@
 import { Clamp } from "@babylonjs/core";
 import type { Match, Profile } from "./FrontendTournament";
 import { MatchGUI } from "./MatchGUI";
-import { type ThemeName } from "./menuStyles";
 import { OpponentGUI } from "./OpponentGUI";
 import { Range } from "@shared/Range";
 
@@ -9,7 +8,6 @@ export class	TournamentGUI extends HTMLElement
 {
 	private _matchesByRound : Match[][];
 	private _participants : Profile[];
-	private _style? : ThemeName;
 	private _container! : HTMLDivElement;
 	private	_zoomPercent : number = 1;
 	private _wheelZoomAdd : number = 0.01;
@@ -18,10 +16,9 @@ export class	TournamentGUI extends HTMLElement
 	private _left : number = 0;
 	private _top : number = 0;
 
-	constructor(style? : ThemeName, matchesByRound? : Match[][], participants? : Profile[])
+	constructor(matchesByRound? : Match[][], participants? : Profile[])
 	{
 		super();
-		this._style = style;
 		this._matchesByRound = matchesByRound ?? [];
 		this._participants = participants ?? [];
 	}
@@ -65,7 +62,7 @@ export class	TournamentGUI extends HTMLElement
 			
 			div.classList.add("flex", "flex-row", "justify-around");
 			for (let index = 0; index < matches.length; index++) {
-				const matchGUI = new MatchGUI(this._style);
+				const matchGUI = new MatchGUI();
 
 				matchGUI.classList.add("w-[10vw]");
 				matchGUI.style.width = `calc(50% / ${matches.length} + 1vw)`;
@@ -83,7 +80,7 @@ export class	TournamentGUI extends HTMLElement
 		div.classList.add("flex", "flex-row", "justify-around");
 		for (let index = 0; index < this._participants.length; index++) {
 			const participant = this._participants[index];
-			const matchGUI = new OpponentGUI(this._style, participant);
+			const matchGUI = new OpponentGUI(participant);
 
 			matchGUI.classList.add("w-[10vw]");
 			matchGUI.style.width = `calc(50% / ${this._participants.length} + 1vw)`;

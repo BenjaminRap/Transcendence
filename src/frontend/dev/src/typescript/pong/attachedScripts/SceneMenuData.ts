@@ -12,7 +12,7 @@ import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 export class SceneMenuData extends CustomScriptComponent {
 	@Imported(zodString) private _sceneName! : string;
 	@Imported(zodString) private _sceneFileName! : string;
-	@Imported(zodThemeName) private _style! : ThemeName;
+	@Imported(zodThemeName) private _theme! : ThemeName;
 	@ImportedComponentOptional(CreateSkybox) private _skyboxCreator! : CreateSkybox | null;
 	@Imported(zodBoolean) private _defaultSkybox! : boolean;
 
@@ -66,9 +66,9 @@ export class SceneMenuData extends CustomScriptComponent {
 		return this._sceneFileName;
 	}
 
-	public getStyle()
+	public getTheme()
 	{
-		return this._style;
+		return this._theme;
 	}
 }
 

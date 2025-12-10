@@ -1,5 +1,4 @@
 import type { Profile } from "./FrontendTournament";
-import { applyTheme, type ThemeName } from "./menuStyles";
 
 const	defaultProfile : Profile = {
 	name: "unkown",
@@ -8,10 +7,9 @@ const	defaultProfile : Profile = {
 
 export class	OpponentGUI extends HTMLElement
 {
-	constructor(style? : ThemeName, private _profile : Profile = defaultProfile)
+	constructor(private _profile : Profile = defaultProfile)
 	{
 		super();
-		applyTheme(this, style ?? "basic");
 	}
 
 	connectedCallback()

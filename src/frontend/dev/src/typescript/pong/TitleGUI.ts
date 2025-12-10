@@ -1,11 +1,8 @@
-import { applyTheme, type ThemeName } from "./menuStyles";
-
 export class	TitleGUI extends HTMLElement
 {
-	constructor(style? : ThemeName)
+	constructor()
 	{
 		super();
-		applyTheme(this, style ?? "basic");
 	}
 
 	connectedCallback()

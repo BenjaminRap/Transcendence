@@ -40,7 +40,8 @@ type Theme = {
 
 type Themes = {
 	"colorful": Theme,
-	"basic": Theme
+	"basic": Theme,
+	"terminal" : Theme
 }
 
 const	themes : Themes = {
@@ -87,10 +88,32 @@ const	themes : Themes = {
 		"--title-color": "var(--color-white)",
 		"--title-font": "pixel",
 		"--title-shadow": "none"
+	},
+	"terminal": {
+		"--text-color": "var(--color-white)",
+		"--font-weight": "var(--font-weight-bold)",
+		"--rounded": "var(--radius-lg)",
+		"--border-color": "var(--color-white)",
+		"--border-width": "0.3vw",
+		"--background-image": "unset",
+		"--background-color": "transparent",
+		"--hover-scale": "110%",
+		"--hover-brightness": "100%",
+		"--hover-background-color": "var(--color-white)",
+		"--hover-text-color": "var(--color-black)",
+		"--active-scale": "95%",
+		"--active-brightness": "100%",
+		"--backdrop-blur": "var(--blur-md)",
+		"--switch-button-image": "url(/scenes/assets/project/textures/arrowBasic.png)",
+		"--switch-button-image-hover": "url(/scenes/assets/project/textures/arrowBasicHover.png)",
+		"--title-left": "calc(1/2 * 100%)",
+		"--title-color": "var(--color-white)",
+		"--title-font": "pixel",
+		"--title-shadow": "none"
 	}
 };
 
-export const	zodThemeName = zod.literal(["basic", "colorful"]);
+export const	zodThemeName = zod.literal(["basic", "colorful", "terminal"]);
 export type ThemeName = zod.infer<typeof zodThemeName>
 
 export function	applyTheme(element : HTMLElement, theme : ThemeName)

@@ -1,4 +1,3 @@
-import { applyTheme, type ThemeName } from "./menuStyles";
 import { ProfileCreationGUI } from "./ProfileCreationGUI";
 
 export class	TournamentCreationGUI extends HTMLElement
@@ -6,10 +5,9 @@ export class	TournamentCreationGUI extends HTMLElement
 	private _profileContainer! : HTMLDivElement;
 	private	_profiles : ProfileCreationGUI[] = [];
 
-	constructor(private _style? : ThemeName)
+	constructor()
 	{
 		super();
-		applyTheme(this, _style ?? "basic");
 	}
 
 	connectedCallback()
@@ -39,7 +37,7 @@ export class	TournamentCreationGUI extends HTMLElement
 
 	private	addProfile()
 	{
-		const	newProfile = new ProfileCreationGUI(this._style);
+		const	newProfile = new ProfileCreationGUI();
 		newProfile.classList.add("mb-[1vw]");
 	
 		this._profiles.push(newProfile);

@@ -8,7 +8,7 @@ import { FrontendSceneData } from "../FrontendSceneData";
 import { EndGUI } from "../EndGUI";
 import { getFrontendSceneData } from "../PongGame";
 import { InMatchmakingGUI } from "../InMatchmakingGUI";
-import { zodThemeName } from "../menuStyles";
+import { applyTheme, zodThemeName } from "../menuStyles";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { Imported } from "@shared/ImportedDecorator";
 import type { ThemeName } from "../menuStyles";
@@ -16,7 +16,7 @@ import type { ThemeName } from "../menuStyles";
 export class CreateInGameGUI extends CustomScriptComponent {
 	@Imported("InputManager") private _inputManager! : InputManager;
 	@Imported("GameManager") private _gameManager! : GameManager;
-	@Imported(zodThemeName) private _style! : ThemeName;
+	@Imported(zodThemeName) private _theme! : ThemeName;
 
 	private _pauseGUI! : PauseGUI;
 	private _endGUI! : EndGUI;
@@ -31,9 +31,10 @@ export class CreateInGameGUI extends CustomScriptComponent {
 
 	protected	awake()
 	{
-		this.createPauseGUI(this._style);
-		this.createEndGUI(this._style);
-		this.createInMatchmakingGUI(this._style);
+		applyTheme(this._sceneData.pongHTMLElement, this._theme);
+		this.createPauseGUI();
+		this.createEndGUI();
+		this.createInMatchmakingGUI();
 	}
 
 	protected	start()
@@ -46,9 +47,9 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		this._sceneData.events.getObservable("end").add((endData : EndData) => { this.onGameEnd(endData) });
 	}
 
-	private	createPauseGUI(theme : ThemeName)
+	private	createPauseGUI()
 	{
-		this._pauseGUI = new PauseGUI(theme);
+		this._pauseGUI = new PauseGUI();
 		this._sceneData.pongHTMLElement.appendChild(this._pauseGUI);
 		this.toggleMenu(this._pauseGUI);
 
@@ -60,9 +61,9 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		buttons.quit.addEventListener("click", () => { this.onQuit() });
 	}
 
-	private	createEndGUI(theme : ThemeName)
+	private	createEndGUI()
 	{
-		this._endGUI = new EndGUI(theme);
+		this._endGUI = new EndGUI();
 		this._sceneData.pongHTMLElement.appendChild(this._endGUI);
 		this.toggleMenu(this._endGUI);
 
@@ -73,9 +74,9 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		buttons.quit.addEventListener("click", () => { this.onQuit() });
 	}
 
-	private	createInMatchmakingGUI(theme : ThemeName)
+	private	createInMatchmakingGUI()
 	{
-		this._inMatchmakingGUI = new InMatchmakingGUI(theme);
+		this._inMatchmakingGUI = new InMatchmakingGUI();
 		this._sceneData.pongHTMLElement.appendChild(this._inMatchmakingGUI);
 		this._inMatchmakingGUI.classList.add("hidden");
 		
