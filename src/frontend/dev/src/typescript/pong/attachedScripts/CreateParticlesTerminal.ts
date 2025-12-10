@@ -2,12 +2,13 @@ import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager } from "@babylonjs-toolkit/next";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
-import { Effect, NodeMaterial, ParticleSystem, Texture, Vector2, Vector3 } from "@babylonjs/core";
+import { NodeMaterial, ParticleSystem, Texture, Vector2, Vector3 } from "@babylonjs/core";
 import { zodInt, zodNumber } from "@shared/ImportedHelpers";
 import { Imported } from "@shared/ImportedDecorator";
 import { zodRange } from "@shared/Range";
 import { Range } from "@shared/Range";
 import { buildAlphabetTerminalMaterial } from "../shaders/alphabetTerminal";
+import { zodColorGradiant, type ColorGradiant } from "../ColorGradiant";
 
 export class CreateParticlesTerminal extends CustomScriptComponent {
 	@Imported(zodRange) private _particleSizeRange! : Range;
@@ -17,6 +18,9 @@ export class CreateParticlesTerminal extends CustomScriptComponent {
 	@Imported(Vector2) private _spriteCellDimensions! : Vector2;
 	@Imported(zodInt) private _spriteCount! : number;
 	@Imported(zodNumber) private _speed! : number;
+	@Imported(zodColorGradiant) private _colorGradiant! : ColorGradiant;
+	@Imported(Vector2) private _noiseScale! : Vector2;
+	@Imported(Vector2) private _noiseDisplacement! : Vector2;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "CreateParticlesTerminal") {
         super(transform, scene, properties, alias);
@@ -33,8 +37,10 @@ export class CreateParticlesTerminal extends CustomScriptComponent {
 
 	private	createMaterial() : NodeMaterial
 	{
-		const	[material, _inputs] = buildAlphabetTerminalMaterial("alphabetTerminal", this.scene);
+		const	[material, inputs] = buildAlphabetTerminalMaterial("alphabetTerminal", this.scene, this._colorGradiant);
 
+		inputs.noiseScale.value = this._noiseScale;
+		inputs.noiseDisplacement.value = this._noiseDisplacement;
 		return material;
 	}
 
