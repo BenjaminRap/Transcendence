@@ -1,7 +1,7 @@
 import { Scene } from "@babylonjs/core/scene";
 import { Mesh, TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager } from "@babylonjs-toolkit/next";
-import { Matrix, Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { Matrix, Quaternion, Vector2, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { getRandomCoordinatesInTrapeze } from "../utilities";
 import { RandomTerrainGenerator } from "./RandomTerrainGenerator";
 import { Lod, zodLodLevel, type LodLevel, type LodLevelProcessed } from "../Lod";
@@ -29,6 +29,7 @@ export class GrassGenerator extends CustomScriptComponent {
 	@Imported(zodNumber) private _grassInstanceCount! : number;
 	@Imported(zodNumber) private _grassMaxDistance! : number;
 	@Imported(Texture) private _windTexture! : Texture;
+	@Imported(Vector2) private _shadowRange! : Vector2;
 
 	private	_grassLod! : Lod;
 
@@ -84,6 +85,7 @@ export class GrassGenerator extends CustomScriptComponent {
 		_inputs.windSwayDirection.value = this._windSwayDirection;
 		_inputs.swayColor.value = this._swayColor;
 		_inputs.windTextureSource.texture = this._windTexture;
+		_inputs.shadowRange.value = this._shadowRange;
 	}
 
 	private	placeGrassInFrontOfCamera()

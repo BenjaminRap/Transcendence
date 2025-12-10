@@ -22,6 +22,7 @@ export class TreeFoliage extends CustomScriptComponent {
 	@Imported(Texture) private _leavesTexture! : Texture;
 	@Imported(Texture) private _windTexture! : Texture;
 	@Imported(Material) private _currentLeavesMaterial! : Material;
+	@Imported(Vector2) private _shadowRange! : Vector2;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "TreeFoliage") {
         super(transform, scene, properties, alias);
@@ -52,6 +53,7 @@ export class TreeFoliage extends CustomScriptComponent {
 		inputs.windSwayDirection.value = this._windSwayDirection;
 		inputs.windSwayColor.value = this._windSwayColor;
 		inputs.windTextureSource.texture = this._windTexture;
+		inputs.shadowRange.value = this._shadowRange;
 
 		return material;
 	}

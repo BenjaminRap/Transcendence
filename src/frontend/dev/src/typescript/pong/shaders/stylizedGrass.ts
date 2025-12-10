@@ -1,5 +1,5 @@
-import { Color3, Scene, Vector3 } from "@babylonjs/core";
-import { AddBlock, AnimatedInputBlockTypes, ClampBlock, DistanceBlock, FragmentOutputBlock, ImageSourceBlock, InputBlock, InstancesBlock, LerpBlock, LightBlock, MultiplyBlock, NegateBlock, NodeMaterial, NodeMaterialModes, NodeMaterialSystemValues, NodeMaterialTeleportInBlock, NodeMaterialTeleportOutBlock, SimplexPerlin3DBlock, SmoothStepBlock, SubtractBlock, TextureBlock, TransformBlock, VectorMergerBlock, VectorSplitterBlock, VertexOutputBlock } from "@babylonjs/core/Materials/Node";
+import { Color3, Scene, Vector2, Vector3 } from "@babylonjs/core";
+import { AddBlock, AnimatedInputBlockTypes, ClampBlock, DiscardBlock, DistanceBlock, FragmentOutputBlock, ImageSourceBlock, InputBlock, InstancesBlock, LerpBlock, LightBlock, MultiplyBlock, NegateBlock, NodeMaterial, NodeMaterialModes, NodeMaterialSystemValues, NodeMaterialTeleportInBlock, NodeMaterialTeleportOutBlock, RemapBlock, SimplexPerlin3DBlock, SmoothStepBlock, SubtractBlock, TextureBlock, TransformBlock, VectorMergerBlock, VectorSplitterBlock, VertexOutputBlock } from "@babylonjs/core/Materials/Node";
 
 export type	StylizedGrassMaterialAndInputs = [ NodeMaterial, StylizedGrassMaterialInputsBlocks ];
 
@@ -21,6 +21,7 @@ interface	StylizedGrassMaterialInputsBlocks
 	windSwayDirection: InputBlock,
 	swayColor: InputBlock,
 	windTextureSource: ImageSourceBlock
+	shadowRange : InputBlock
 }
 
 export function	buildStylizedGrassMaterial(name : string, scene : Scene) : StylizedGrassMaterialAndInputs
@@ -519,18 +520,33 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	windTextureSample2.target = 4;
 	windTextureSample.attachToEndpoint(windTextureSample2);
 
-	// InputBlock
-	var View = new InputBlock("View");
-	View.visibleInInspector = false;
-	View.visibleOnFrame = false;
-	View.target = 1;
-	View.setAsSystemValue(NodeMaterialSystemValues.View);
-
 	// MultiplyBlock
 	var litColor = new MultiplyBlock("litColor");
 	litColor.visibleInInspector = false;
 	litColor.visibleOnFrame = false;
 	litColor.target = 4;
+
+	// RemapBlock
+	var Remap = new RemapBlock("Remap");
+	Remap.visibleInInspector = false;
+	Remap.visibleOnFrame = false;
+	Remap.target = 4;
+	Remap.sourceRange = new Vector2(0, 1);
+	Remap.targetRange = new Vector2(0, 1);
+
+	// VectorSplitterBlock
+	var VectorSplitter1 = new VectorSplitterBlock("VectorSplitter");
+	VectorSplitter1.visibleInInspector = false;
+	VectorSplitter1.visibleOnFrame = false;
+	VectorSplitter1.target = 4;
+
+	// InputBlock
+	var shadowRange = new InputBlock("shadowRange");
+	shadowRange.visibleInInspector = false;
+	shadowRange.visibleOnFrame = false;
+	shadowRange.target = 1;
+	shadowRange.value = new Vector2(0, 1);
+	shadowRange.isConstant = false;
 
 	// FragmentOutputBlock
 	var fragmentOutput = new FragmentOutputBlock("fragmentOutput");
@@ -541,27 +557,12 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	fragmentOutput.convertToLinearSpace = false;
 	fragmentOutput.useLogarithmicDepth = false;
 
-	// TextureBlock
-	var mainTexture = new TextureBlock("mainTexture");
-	mainTexture.visibleInInspector = false;
-	mainTexture.visibleOnFrame = false;
-	mainTexture.target = 3;
-	mainTexture.convertToGammaSpace = false;
-	mainTexture.convertToLinearSpace = false;
-	mainTexture.disableLevelMultiplication = false;
-
 	// InputBlock
-	var uv = new InputBlock("uv");
-	uv.visibleInInspector = false;
-	uv.visibleOnFrame = false;
-	uv.target = 1;
-	uv.setAsAttribute("uv");
-
-	// ImageSourceBlock
-	var mainTextureSource = new ImageSourceBlock("mainTextureSource");
-	mainTextureSource.visibleInInspector = false;
-	mainTextureSource.visibleOnFrame = false;
-	mainTextureSource.target = 3;
+	var View = new InputBlock("View");
+	View.visibleInInspector = false;
+	View.visibleOnFrame = false;
+	View.target = 1;
+	View.setAsSystemValue(NodeMaterialSystemValues.View);
 
 	// NodeMaterialTeleportOutBlock
 	var instanceWorld2 = new NodeMaterialTeleportOutBlock("> instanceWorld");
@@ -663,6 +664,47 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	windSwayDirection.value = new Vector3(1, 1, 1);
 	windSwayDirection.isConstant = false;
 
+	// InputBlock
+	var uv = new InputBlock("uv");
+	uv.visibleInInspector = false;
+	uv.visibleOnFrame = false;
+	uv.target = 1;
+	uv.setAsAttribute("uv");
+
+	// TextureBlock
+	var mainTexture = new TextureBlock("mainTexture");
+	mainTexture.visibleInInspector = false;
+	mainTexture.visibleOnFrame = false;
+	mainTexture.target = 3;
+	mainTexture.convertToGammaSpace = false;
+	mainTexture.convertToLinearSpace = false;
+	mainTexture.disableLevelMultiplication = false;
+
+	// ImageSourceBlock
+	var mainTextureSource = new ImageSourceBlock("mainTextureSource");
+	mainTextureSource.visibleInInspector = false;
+	mainTextureSource.visibleOnFrame = false;
+	mainTextureSource.target = 3;
+
+	// DiscardBlock
+	var Discard = new DiscardBlock("Discard");
+	Discard.visibleInInspector = false;
+	Discard.visibleOnFrame = false;
+	Discard.target = 2;
+
+	// InputBlock
+	var Float = new InputBlock("Float");
+	Float.visibleInInspector = false;
+	Float.visibleOnFrame = false;
+	Float.target = 1;
+	Float.value = 0.5;
+	Float.min = 0;
+	Float.max = 0;
+	Float.isBoolean = false;
+	Float.matrixMode = 0;
+	Float.animationType = AnimatedInputBlockTypes.None;
+	Float.isConstant = false;
+
 	// Connections
 	time.output.connectTo(noiseDisplacement.left);
 	windSpeed.output.connectTo(noiseDisplacement.right);
@@ -711,12 +753,6 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	VectorMerger1.xyzw.connectTo(vertexScreenPos.vector);
 	viewProjection.output.connectTo(vertexScreenPos.transform);
 	vertexScreenPos.output.connectTo(vertexOutput.vector);
-	worldPos1.output.connectTo(worldPos2.input);
-	worldPos4.output.connectTo(lights.worldPosition);
-	normal.output.connectTo(worldNormal.vector);
-	instanceWorld1.output.connectTo(worldNormal.transform);
-	worldNormal.output.connectTo(lights.worldNormal);
-	cameraPosition.output.connectTo(lights.cameraPosition);
 	bottomColor.output.connectTo(unlitColor.left);
 	nearColor.output.connectTo(distanceBlendedColor.left);
 	farColor.output.connectTo(distanceBlendedColor.right);
@@ -732,18 +768,30 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	swayColor.output.connectTo(Lerp.right);
 	windTexture.r.connectTo(windTextureSample.input);
 	windTextureSample2.output.connectTo(Lerp.gradient);
+	Lerp.output.connectTo(litColor.left);
+	worldPos1.output.connectTo(worldPos2.input);
+	worldPos4.output.connectTo(lights.worldPosition);
+	normal.output.connectTo(worldNormal.vector);
+	instanceWorld1.output.connectTo(worldNormal.transform);
+	worldNormal.output.connectTo(lights.worldNormal);
+	cameraPosition.output.connectTo(lights.cameraPosition);
 	Lerp.output.connectTo(lights.diffuseColor);
 	View.output.connectTo(lights.view);
-	lights.diffuseOutput.connectTo(litColor.left);
-	lights.shadow.connectTo(litColor.right);
+	lights.shadow.connectTo(Remap.input);
+	shadowRange.output.connectTo(VectorSplitter1.xyIn);
+	VectorSplitter1.x.connectTo(Remap.targetMin);
+	VectorSplitter1.y.connectTo(Remap.targetMax);
+	Remap.output.connectTo(litColor.right);
 	litColor.output.connectTo(fragmentOutput.rgb);
 	uv.output.connectTo(mainTexture.uv);
 	mainTextureSource.source.connectTo(mainTexture.source);
-	mainTexture.a.connectTo(fragmentOutput.a);
+	mainTexture.a.connectTo(Discard.value);
+	Float.output.connectTo(Discard.cutoff);
 
 	// Output nodes
 	nodeMaterial.addOutputNode(vertexOutput);
 	nodeMaterial.addOutputNode(fragmentOutput);
+	nodeMaterial.addOutputNode(Discard);
 	nodeMaterial.build();
 
 	nodeMaterial.backFaceCulling = false;
@@ -765,6 +813,7 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 			windTextureSubtract: windTextureSubtract,
 			windSwayDirection: windSwayDirection,
 			swayColor: swayColor,
-			windTextureSource: windTextureSource
+			windTextureSource: windTextureSource,
+			shadowRange: shadowRange
 		}];
 }

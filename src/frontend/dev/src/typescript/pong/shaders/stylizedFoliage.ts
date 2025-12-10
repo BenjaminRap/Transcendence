@@ -1,5 +1,5 @@
 import { Color3, Color4, Scene, Texture, Vector2, Vector3 } from "@babylonjs/core";
-import { AddBlock, AnimatedInputBlockTypes, ClampBlock, DiscardBlock, DistanceBlock, DivideBlock, FragmentOutputBlock, ImageSourceBlock, InputBlock, InstancesBlock, LengthBlock, LerpBlock, LightBlock, MatrixSplitterBlock, MultiplyBlock, NegateBlock, NodeMaterial, NodeMaterialModes, NodeMaterialSystemValues, NodeMaterialTeleportInBlock, NodeMaterialTeleportOutBlock, RandomNumberBlock, SimplexPerlin3DBlock, SmoothStepBlock, SubtractBlock, TextureBlock, TransformBlock, TrigonometryBlock, TrigonometryBlockOperations, VectorMergerBlock, VectorSplitterBlock, VertexOutputBlock } from "@babylonjs/core/Materials/Node";
+import { AddBlock, AnimatedInputBlockTypes, ClampBlock, DiscardBlock, DistanceBlock, DivideBlock, FragmentOutputBlock, ImageSourceBlock, InputBlock, InstancesBlock, LengthBlock, LerpBlock, LightBlock, MatrixSplitterBlock, MultiplyBlock, NegateBlock, NodeMaterial, NodeMaterialModes, NodeMaterialSystemValues, NodeMaterialTeleportInBlock, NodeMaterialTeleportOutBlock, RandomNumberBlock, RemapBlock, SimplexPerlin3DBlock, SmoothStepBlock, SubtractBlock, TextureBlock, TransformBlock, TrigonometryBlock, TrigonometryBlockOperations, VectorMergerBlock, VectorSplitterBlock, VertexOutputBlock } from "@babylonjs/core/Materials/Node";
 
 export type	StylizedFoliageMaterialAndInputs = [ NodeMaterial, StylizedFoliageMaterialInputsBlocks ];
 
@@ -16,7 +16,8 @@ interface	StylizedFoliageMaterialInputsBlocks
 	windTextureSubtract : InputBlock,
 	windSwayDirection : InputBlock,
 	windSwayColor : InputBlock,
-	windTextureSource : ImageSourceBlock
+	windTextureSource : ImageSourceBlock,
+	shadowRange: InputBlock
 }
 
 export function	buildStylizedFoliageMaterial(name : string, scene : Scene) : StylizedFoliageMaterialAndInputs
@@ -609,18 +610,33 @@ export function	buildStylizedFoliageMaterial(name : string, scene : Scene) : Sty
 	windTextureSource.visibleOnFrame = false;
 	windTextureSource.target = 3;
 
-	// InputBlock
-	var View = new InputBlock("View");
-	View.visibleInInspector = false;
-	View.visibleOnFrame = false;
-	View.target = 1;
-	View.setAsSystemValue(NodeMaterialSystemValues.View);
-
 	// MultiplyBlock
 	var Multiply8 = new MultiplyBlock("Multiply");
 	Multiply8.visibleInInspector = false;
 	Multiply8.visibleOnFrame = false;
 	Multiply8.target = 4;
+
+	// RemapBlock
+	var Remap = new RemapBlock("Remap");
+	Remap.visibleInInspector = false;
+	Remap.visibleOnFrame = false;
+	Remap.target = 4;
+	Remap.sourceRange = new Vector2(0, 1);
+	Remap.targetRange = new Vector2(0, 1);
+
+	// VectorSplitterBlock
+	var VectorSplitter2 = new VectorSplitterBlock("VectorSplitter");
+	VectorSplitter2.visibleInInspector = false;
+	VectorSplitter2.visibleOnFrame = false;
+	VectorSplitter2.target = 4;
+
+	// InputBlock
+	var shadowRange = new InputBlock("shadowRange");
+	shadowRange.visibleInInspector = false;
+	shadowRange.visibleOnFrame = false;
+	shadowRange.target = 1;
+	shadowRange.value = new Vector2(0, 1);
+	shadowRange.isConstant = false;
 
 	// FragmentOutputBlock
 	var FragmentOutput = new FragmentOutputBlock("FragmentOutput");
@@ -630,6 +646,13 @@ export function	buildStylizedFoliageMaterial(name : string, scene : Scene) : Sty
 	FragmentOutput.convertToGammaSpace = false;
 	FragmentOutput.convertToLinearSpace = false;
 	FragmentOutput.useLogarithmicDepth = false;
+
+	// InputBlock
+	var View = new InputBlock("View");
+	View.visibleInInspector = false;
+	View.visibleOnFrame = false;
+	View.target = 1;
+	View.setAsSystemValue(NodeMaterialSystemValues.View);
 
 	// NodeMaterialTeleportOutBlock
 	var instanceWorld2 = new NodeMaterialTeleportOutBlock("> instanceWorld");
@@ -706,21 +729,25 @@ export function	buildStylizedFoliageMaterial(name : string, scene : Scene) : Sty
 	VectorMerger3.xyzw.connectTo(WorldPosViewProjectionTransform.vector);
 	ViewProjection.output.connectTo(WorldPosViewProjectionTransform.transform);
 	WorldPosViewProjectionTransform.output.connectTo(VertexOutput.vector);
+	uv.output.connectTo(mainTexture.uv);
+	mainImageSource.source.connectTo(mainTexture.source);
+	mainTexture.rgb.connectTo(Lerp.left);
+	swayColor.output.connectTo(Lerp.right);
+	windTexture.r.connectTo(Lerp.gradient);
+	Lerp.output.connectTo(Multiply8.left);
 	WorldPos.output.connectTo(worldPos.input);
 	worldPos2.output.connectTo(Lights.worldPosition);
 	normal.output.connectTo(Worldnormal.vector);
 	instanceWorld1.output.connectTo(Worldnormal.transform);
 	Worldnormal.output.connectTo(Lights.worldNormal);
 	cameraPosition.output.connectTo(Lights.cameraPosition);
-	uv.output.connectTo(mainTexture.uv);
-	mainImageSource.source.connectTo(mainTexture.source);
-	mainTexture.rgb.connectTo(Lerp.left);
-	swayColor.output.connectTo(Lerp.right);
-	windTexture.r.connectTo(Lerp.gradient);
 	Lerp.output.connectTo(Lights.diffuseColor);
 	View.output.connectTo(Lights.view);
-	Lights.diffuseOutput.connectTo(Multiply8.left);
-	Lights.shadow.connectTo(Multiply8.right);
+	Lights.shadow.connectTo(Remap.input);
+	shadowRange.output.connectTo(VectorSplitter2.xyIn);
+	VectorSplitter2.x.connectTo(Remap.targetMin);
+	VectorSplitter2.y.connectTo(Remap.targetMax);
+	Remap.output.connectTo(Multiply8.right);
 	Multiply8.output.connectTo(FragmentOutput.rgb);
 	mainTexture.a.connectTo(Discard.value);
 	Float.output.connectTo(Discard.cutoff);
@@ -746,6 +773,7 @@ export function	buildStylizedFoliageMaterial(name : string, scene : Scene) : Sty
 			windTextureSubtract : windTextureSubtract,
 			windSwayDirection : windSwayDirection,
 			windSwayColor: swayColor,
-			windTextureSource : windTextureSource
+			windTextureSource : windTextureSource,
+			shadowRange : shadowRange
 		}];
 }
