@@ -1,4 +1,8 @@
+import type { Scene } from "@babylonjs/core";
+import type { Material } from "@babylonjs/core/Materials/material";
+import { MultiMaterial } from "@babylonjs/core/Materials/multiMaterial";
 import { Vector2 } from "@babylonjs/core/Maths/math.vector";
+import type { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
 import { Range } from "@shared/Range";
 
 export function randomFromRange(range : Range) : number
@@ -42,3 +46,22 @@ export function	getRandomWeightedIndex(weights : number[]) : number
 	}
 	throw new Error("getRandomWeighted isn't working properly !");
 }
+
+export function	replaceMaterial(currentMaterial : Material, newMaterial : Material, scene : Scene)
+{
+
+	scene.meshes.forEach((mesh : AbstractMesh) => {
+		if (mesh.material instanceof MultiMaterial)
+		{
+			const	multiMaterial = mesh.material;
+
+			multiMaterial.subMaterials.forEach((material : Material | null, index : number) => {
+				if (material === currentMaterial)
+					multiMaterial.subMaterials[index] = newMaterial;
+			});
+		}
+		else if (mesh.material === currentMaterial)
+			mesh.material = newMaterial;
+	});
+}
+

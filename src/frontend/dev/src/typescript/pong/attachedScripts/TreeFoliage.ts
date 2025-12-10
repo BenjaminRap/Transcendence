@@ -1,11 +1,12 @@
 import { Scene } from "@babylonjs/core/scene";
-import { AbstractMesh, TransformNode } from "@babylonjs/core/Meshes";
+import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager } from "@babylonjs-toolkit/next";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
-import { Color4, Material, MultiMaterial, Texture, Vector2, Vector3 } from "@babylonjs/core";
+import { Color4, Material, Texture, Vector2, Vector3 } from "@babylonjs/core";
 import { buildStylizedFoliageMaterial } from "../shaders/stylizedFoliage";
 import { zodNumber } from "@shared/ImportedHelpers";
 import { Imported } from "@shared/ImportedDecorator";
+import { replaceMaterial } from "../utilities";
 
 export class TreeFoliage extends CustomScriptComponent {
 	@Imported(zodNumber) private _windSpeed! : number;
@@ -32,25 +33,7 @@ export class TreeFoliage extends CustomScriptComponent {
 		this._windTexture.vScale = -1;
 		const	foliageMaterial = this.getTreeFoliageMaterial();
 
-		this.replaceMaterial(this._currentLeavesMaterial, foliageMaterial);
-	}
-
-	private	replaceMaterial(currentMaterial : Material, newMaterial : Material)
-	{
-
-		this.scene.meshes.forEach((mesh : AbstractMesh) => {
-			if (mesh.material instanceof MultiMaterial)
-			{
-				const	multiMaterial = mesh.material;
-
-				multiMaterial.subMaterials.forEach((material : Material | null, index : number) => {
-					if (material === currentMaterial)
-						multiMaterial.subMaterials[index] = newMaterial;
-				});
-			}
-			else if (mesh.material === currentMaterial)
-				mesh.material = newMaterial;
-		});
+		replaceMaterial(this._currentLeavesMaterial, foliageMaterial, this.scene);
 	}
 
 	private	getTreeFoliageMaterial()
