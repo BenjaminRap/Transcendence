@@ -66,7 +66,7 @@ export class PongGame extends HTMLElement {
         return new Engine(this._canvas, true, {
 			stencil: true,
 			antialias: true,
-			audioEngine: true,
+			audioEngine: false,
 			adaptToDeviceRatio: true,
 			disableWebGL2Support: false,
 			useHighPrecisionFloats: true,
