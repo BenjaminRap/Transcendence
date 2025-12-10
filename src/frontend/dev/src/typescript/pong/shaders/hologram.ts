@@ -1,14 +1,15 @@
 import { Color3, Scene, Vector2, Vector3 } from "@babylonjs/core";
-import { AddBlock, AnimatedInputBlockTypes, ClampBlock, DiscardBlock, DistanceBlock, DivideBlock, FragCoordBlock, FragmentOutputBlock, GradientBlock, GradientBlockColorStep, ImageSourceBlock, InputBlock, InstancesBlock, LerpBlock, LightBlock, ModBlock, MultiplyBlock, NegateBlock, NodeMaterial, NodeMaterialModes, NodeMaterialSystemValues, NodeMaterialTeleportInBlock, NodeMaterialTeleportOutBlock, ParticleTextureBlock, ScreenSizeBlock, SimplexPerlin3DBlock, SmoothStepBlock, SubtractBlock, TextureBlock, TransformBlock, TrigonometryBlock, TrigonometryBlockOperations, VectorMergerBlock, VectorSplitterBlock, VertexOutputBlock } from "@babylonjs/core/Materials/Node";
+import { AddBlock, AnimatedInputBlockTypes, ClampBlock, DiscardBlock, DistanceBlock, DivideBlock, FragCoordBlock, FragmentOutputBlock, GradientBlock, GradientBlockColorStep, ImageSourceBlock, InputBlock, InstancesBlock, LerpBlock, LightBlock, ModBlock, MultiplyBlock, NegateBlock, NodeMaterial, NodeMaterialModes, NodeMaterialSystemValues, NodeMaterialTeleportInBlock, NodeMaterialTeleportOutBlock, ParticleTextureBlock, RemapBlock, ScreenSizeBlock, SimplexPerlin3DBlock, SmoothStepBlock, SubtractBlock, TextureBlock, TransformBlock, TrigonometryBlock, TrigonometryBlockOperations, VectorMergerBlock, VectorSplitterBlock, VertexOutputBlock } from "@babylonjs/core/Materials/Node";
 import type { ColorGradiant } from "../ColorGradiant";
 
 export type	HologramMaterialAndInputs = [ NodeMaterial, HologramMaterialInputsBlocks ];
 
 interface	HologramMaterialInputsBlocks
 {
+	minAlpha : InputBlock,
+	textureScale : InputBlock,
 	textureDisplacement : InputBlock,
-	firstColor : InputBlock,
-	secondColor : InputBlock,
+	color : InputBlock,
 	textureSource : ImageSourceBlock
 }
 
@@ -61,26 +62,29 @@ export function	buildHologramMaterial(name : string, scene : Scene) : HologramMa
 	VertexOutput.target = 1;
 
 	// InputBlock
-	var Color = new InputBlock("Color3");
-	Color.visibleInInspector = false;
-	Color.visibleOnFrame = false;
-	Color.target = 1;
-	Color.value = new Color3(0.10196078431372549, 0.4666666666666667, 0.10196078431372549);
-	Color.isConstant = false;
+	var color = new InputBlock("color");
+	color.visibleInInspector = false;
+	color.visibleOnFrame = false;
+	color.target = 1;
+	color.value = new Color3(0.12549019607843137, 0.6549019607843137, 0.12549019607843137);
+	color.isConstant = false;
 
-	// LerpBlock
-	var Lerp = new LerpBlock("Lerp");
-	Lerp.visibleInInspector = false;
-	Lerp.visibleOnFrame = false;
-	Lerp.target = 4;
+	// FragmentOutputBlock
+	var FragmentOutput = new FragmentOutputBlock("FragmentOutput");
+	FragmentOutput.visibleInInspector = false;
+	FragmentOutput.visibleOnFrame = false;
+	FragmentOutput.target = 2;
+	FragmentOutput.convertToGammaSpace = false;
+	FragmentOutput.convertToLinearSpace = false;
+	FragmentOutput.useLogarithmicDepth = false;
 
-	// InputBlock
-	var Color1 = new InputBlock("Color3");
-	Color1.visibleInInspector = false;
-	Color1.visibleOnFrame = false;
-	Color1.target = 1;
-	Color1.value = new Color3(0.34901960784313724, 0.9058823529411765, 0.49411764705882355);
-	Color1.isConstant = false;
+	// RemapBlock
+	var Remap = new RemapBlock("Remap");
+	Remap.visibleInInspector = false;
+	Remap.visibleOnFrame = false;
+	Remap.target = 4;
+	Remap.sourceRange = new Vector2(0, 1);
+	Remap.targetRange = new Vector2(0.3, 1);
 
 	// TextureBlock
 	var Texture = new TextureBlock("Texture");
@@ -96,6 +100,12 @@ export function	buildHologramMaterial(name : string, scene : Scene) : HologramMa
 	Add.visibleInInspector = false;
 	Add.visibleOnFrame = false;
 	Add.target = 4;
+
+	// MultiplyBlock
+	var Multiply = new MultiplyBlock("Multiply");
+	Multiply.visibleInInspector = false;
+	Multiply.visibleOnFrame = false;
+	Multiply.target = 4;
 
 	// DivideBlock
 	var Divide = new DivideBlock("Divide");
@@ -115,11 +125,24 @@ export function	buildHologramMaterial(name : string, scene : Scene) : HologramMa
 	ScreenSize.visibleOnFrame = false;
 	ScreenSize.target = 2;
 
+	// InputBlock
+	var textureScale = new InputBlock("textureScale");
+	textureScale.visibleInInspector = false;
+	textureScale.visibleOnFrame = false;
+	textureScale.target = 1;
+	textureScale.value = 1;
+	textureScale.min = 0;
+	textureScale.max = 0;
+	textureScale.isBoolean = false;
+	textureScale.matrixMode = 0;
+	textureScale.animationType = AnimatedInputBlockTypes.None;
+	textureScale.isConstant = false;
+
 	// MultiplyBlock
-	var Multiply = new MultiplyBlock("Multiply");
-	Multiply.visibleInInspector = false;
-	Multiply.visibleOnFrame = false;
-	Multiply.target = 4;
+	var Multiply1 = new MultiplyBlock("Multiply");
+	Multiply1.visibleInInspector = false;
+	Multiply1.visibleOnFrame = false;
+	Multiply1.target = 4;
 
 	// InputBlock
 	var textureDisplacement = new InputBlock("textureDisplacement");
@@ -148,14 +171,18 @@ export function	buildHologramMaterial(name : string, scene : Scene) : HologramMa
 	ImageSource.visibleOnFrame = false;
 	ImageSource.target = 3;
 
-	// FragmentOutputBlock
-	var FragmentOutput = new FragmentOutputBlock("FragmentOutput");
-	FragmentOutput.visibleInInspector = false;
-	FragmentOutput.visibleOnFrame = false;
-	FragmentOutput.target = 2;
-	FragmentOutput.convertToGammaSpace = false;
-	FragmentOutput.convertToLinearSpace = false;
-	FragmentOutput.useLogarithmicDepth = false;
+	// InputBlock
+	var minAlpha = new InputBlock("minAlpha");
+	minAlpha.visibleInInspector = false;
+	minAlpha.visibleOnFrame = false;
+	minAlpha.target = 1;
+	minAlpha.value = 0.3;
+	minAlpha.min = 0;
+	minAlpha.max = 0;
+	minAlpha.isBoolean = false;
+	minAlpha.matrixMode = 0;
+	minAlpha.animationType = AnimatedInputBlockTypes.None;
+	minAlpha.isConstant = false;
 
 	// Connections
 	position.output.connectTo(WorldPos.vector);
@@ -163,18 +190,20 @@ export function	buildHologramMaterial(name : string, scene : Scene) : HologramMa
 	WorldPos.output.connectTo(WorldPosViewProjectionTransform.vector);
 	ViewProjection.output.connectTo(WorldPosViewProjectionTransform.transform);
 	WorldPosViewProjectionTransform.output.connectTo(VertexOutput.vector);
-	Color.output.connectTo(Lerp.left);
-	Color1.output.connectTo(Lerp.right);
+	color.output.connectTo(FragmentOutput.rgb);
 	FragCoord.xy.connectTo(Divide.left);
 	ScreenSize.xy.connectTo(Divide.right);
-	Divide.output.connectTo(Add.left);
-	textureDisplacement.output.connectTo(Multiply.left);
-	Time.output.connectTo(Multiply.right);
-	Multiply.output.connectTo(Add.right);
+	Divide.output.connectTo(Multiply.left);
+	textureScale.output.connectTo(Multiply.right);
+	Multiply.output.connectTo(Add.left);
+	textureDisplacement.output.connectTo(Multiply1.left);
+	Time.output.connectTo(Multiply1.right);
+	Multiply1.output.connectTo(Add.right);
 	Add.output.connectTo(Texture.uv);
 	ImageSource.source.connectTo(Texture.source);
-	Texture.r.connectTo(Lerp.gradient);
-	Lerp.output.connectTo(FragmentOutput.rgb);
+	Texture.r.connectTo(Remap.input);
+	minAlpha.output.connectTo(Remap.targetMin);
+	Remap.output.connectTo(FragmentOutput.a);
 
 	// Output nodes
 	nodeMaterial.addOutputNode(VertexOutput);
@@ -184,9 +213,10 @@ export function	buildHologramMaterial(name : string, scene : Scene) : HologramMa
 	return [
 		nodeMaterial,
 		{
+			minAlpha: minAlpha,
+			textureScale: textureScale,
 			textureDisplacement: textureDisplacement,
-			firstColor: Color,
-			secondColor: Color1,
+			color: color,
 			textureSource: ImageSource
 		}];
 }
