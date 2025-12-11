@@ -12,11 +12,13 @@ import { applyTheme, type ThemeName } from "../menuStyles";
 import { TitleGUI } from "../TitleGUI";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { Imported } from "@shared/ImportedDecorator";
+import { TimerManager } from "@shared/attachedScripts/TimerManager";
 
 export class CreateMenuGUI extends CustomScriptComponent {
 	private static readonly _enemyTypes = [ "Local", "Multiplayer", "Bot" ];
 
 	@Imported(TransformNode) private _scenesParent! : TransformNode;
+	@Imported("TimerManager") private _timerManager! : TimerManager;
 
 	private _scenes! : SceneMenuData[];
 	private _animation : Nullable<Animatable> = null;
@@ -109,15 +111,15 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		newScene.onSceneSwitch("added", 0.5, this._easeFunction);
 		currentScene.onSceneSwitch("removed", 0.5, this._easeFunction);
 
-		const	newStyle = newScene.getTheme();
-
-		applyTheme(this._sceneData.pongHTMLElement, newStyle);
 		const	distance = this._scenes[newIndex].transform.position.subtract(this._scenes[currentIndex].transform.position);
 		const	startPosition = this._scenesParent.position;
 		const	endPosition = this._scenesParent.position.subtract(distance);
 
 		this._animation = Animation.CreateAndStartAnimation("menuMapAnim", this._scenesParent, "position", 60, 30, startPosition, endPosition, Animation.ANIMATIONLOOPMODE_CONSTANT, this._easeFunction, () => { this._animation = null });
+
 		this._sceneData.events.getObservable("scene-change").notifyObservers([currentScene.getSceneName(), newScene.getSceneName()]);
+
+		this._timerManager.setTimeout(() => applyTheme(this._sceneData.pongHTMLElement, newScene.getTheme()), 250);
 		return true;
 	}
 
