@@ -60,7 +60,7 @@ export class	MenuGUI extends HTMLElement
 		const	itemsHTML = items.reduce((accumulator : string, item : string, index : number) => {
 			const	left = 50 + index * 100;
 
-			return accumulator + `<p class="absolute -translate-x-1/2" style="left:${left}%">${item}</p>`
+			return accumulator + `<p class="absolute -translate-1/2 top-1/2" style="left:${left}%">${item}</p>`
 		}, "");
 		return `
 			${this.getButtonHTML(`${idBase}ButtonLeft`, "left")}
