@@ -9,6 +9,7 @@ import { zodRange } from "@shared/Range";
 import { Range } from "@shared/Range";
 import { buildAlphabetTerminalMaterial } from "../shaders/alphabetTerminal";
 import { zodColorGradiant, type ColorGradiant } from "../ColorGradiant";
+import { getFrontendSceneData } from "../PongGame";
 
 export class CreateParticlesTerminal extends CustomScriptComponent {
 	@Imported(zodRange) private _particleSizeRange! : Range;
@@ -32,7 +33,23 @@ export class CreateParticlesTerminal extends CustomScriptComponent {
 		const	terminalParticle = this.createParticles();
 
 		material.createEffectForParticles(terminalParticle);
-		terminalParticle.start();
+
+		const	sceneData = getFrontendSceneData(this.scene);
+
+		if (sceneData.gameType === "Menu")
+		{
+			sceneData.events.getObservable("scene-change").add(([currentScene, newScene]) => {
+				if (newScene === "Terminal")
+					terminalParticle.start();
+				else if (currentScene === "Terminal")
+				{
+					terminalParticle.reset();
+					terminalParticle.stop();
+				}
+			});
+		}
+		else
+			terminalParticle.start();
 	}
 
 	private	createMaterial() : NodeMaterial

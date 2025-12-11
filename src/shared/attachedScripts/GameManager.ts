@@ -136,11 +136,6 @@ export class GameManager extends CustomScriptComponent {
 		this._sceneData.events.getObservable("game-unpaused").notifyObservers();
 	}
 
-	public isGamePaused()
-	{
-		return this._isGamePaused;
-	}
-
 	protected	destroy()
 	{
 		this.unPause();

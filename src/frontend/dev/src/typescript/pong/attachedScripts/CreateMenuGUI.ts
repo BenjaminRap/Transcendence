@@ -82,12 +82,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			currentItemIndex: 0,
 			onItemChange: this.onEnemyTypeChange.bind(this)
 		};
-		const	skinsButtonSwitch : SwitchButton = {
-			items: [ "knight", "magician" ],
-			currentItemIndex: 0,
-			onItemChange: this.onSkinChange.bind(this)
-		};
-		this._menuGUI = new MenuGUI(sceneButtonSwitch, enemyTypesButtonSwitch, skinsButtonSwitch, this.onPlay.bind(this));
+		this._menuGUI = new MenuGUI(sceneButtonSwitch, enemyTypesButtonSwitch, this.onPlay.bind(this));
 		this._sceneData.pongHTMLElement.appendChild(this._menuGUI);
 		this._menuGUI.classList.add("hidden");
 	}
@@ -122,6 +117,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		const	endPosition = this._scenesParent.position.subtract(distance);
 
 		this._animation = Animation.CreateAndStartAnimation("menuMapAnim", this._scenesParent, "position", 60, 30, startPosition, endPosition, Animation.ANIMATIONLOOPMODE_CONSTANT, this._easeFunction, () => { this._animation = null });
+		this._sceneData.events.getObservable("scene-change").notifyObservers([currentScene.getSceneName(), newScene.getSceneName()]);
 		return true;
 	}
 
@@ -134,15 +130,15 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 	private	onEnemyTypeChange(_currentIndex : number, _newIndex : number) : boolean
 	{
+		if (_newIndex >= CreateMenuGUI._enemyTypes.length || _newIndex < 0)
+			return false;
+		const	currentType = CreateMenuGUI._enemyTypes[_currentIndex];
+		const	newType = CreateMenuGUI._enemyTypes[_newIndex];
+		this._sceneData.events.getObservable("enemy-type-change").notifyObservers([currentType, newType]);
 		return true;
 	}
 
-	private	onSkinChange(_currentIndex : number, _newIndex : number) : boolean
-	{
-		return true;
-	}
-
-	private onPlay(sceneIndex : number, enemyTypeIndex : number, _skinIndex : number)
+	private onPlay(sceneIndex : number, enemyTypeIndex : number)
 	{
 		const	sceneName = this._scenes[sceneIndex].getSceneFileName();
 

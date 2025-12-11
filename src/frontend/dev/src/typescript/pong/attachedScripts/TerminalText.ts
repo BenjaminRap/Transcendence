@@ -86,6 +86,12 @@ export class TerminalText extends CustomScriptComponent {
 	{
 		const	sceneData = getFrontendSceneData(this.scene);
 
+		if (sceneData.gameType === "Menu")
+		{
+			sceneData.events.getObservable("enemy-type-change").add(([currentType, newType]) => this.executeCommand("update --enemy-type", `from ${currentType} to ${newType}`));
+			sceneData.events.getObservable("scene-change").add(([currentScene, newScene]) => this.executeCommand("update --scene", `from ${currentScene} to ${newScene}`));
+			return ;
+		}
 		sceneData.events.getObservable("updateRightScore").add((newscore : number) => {
 			this.executeCommand("goal --left", `score updated : ${newscore}`);
 		});

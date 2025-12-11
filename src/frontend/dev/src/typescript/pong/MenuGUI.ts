@@ -1,5 +1,5 @@
 export type	OnItemChange = (currentIndex : number, newIndex : number) => boolean;
-export type OnPlay = (sceneIndex : number, enemyTypeIndex : number, skinIndex : number) => void;
+export type OnPlay = (sceneIndex : number, enemyTypeIndex : number) => void;
 export interface SwitchButton {
 	items : string[],
 	currentItemIndex : number,
@@ -10,15 +10,13 @@ export class	MenuGUI extends HTMLElement
 {
 	private _sceneSwitch : SwitchButton;
 	private _enemyTypeSwitch : SwitchButton;
-	private _skinsSwitch : SwitchButton;
 	private _onPlay : OnPlay | null;
 
-	constructor(sceneSwitch? : SwitchButton, enemyTypeSwitch? : SwitchButton, skinsSwitch? : SwitchButton, onPlay? : OnPlay)
+	constructor(sceneSwitch? : SwitchButton, enemyTypeSwitch? : SwitchButton, onPlay? : OnPlay)
 	{
 		super();
 		this._sceneSwitch = sceneSwitch ?? {items : [], currentItemIndex: 0, onItemChange: null};
 		this._enemyTypeSwitch = enemyTypeSwitch ?? {items : [], currentItemIndex: 0, onItemChange: null};
-		this._skinsSwitch = skinsSwitch ?? {items : [], currentItemIndex: 0, onItemChange: null};
 		this._onPlay = onPlay ?? null;
 	}
 
@@ -28,9 +26,6 @@ export class	MenuGUI extends HTMLElement
 		this.innerHTML = `
 				<div class="bottom-1/5 absolute flex flex-row items-center w-full h-1/12 justify-between">
 					<div class="w-1/4 flex flex-row items-center h-full">
-						${this.getItemSwitchElement("menuGUISkinChange", this._skinsSwitch.items)}
-					</div>
-					<div class="w-1/4 flex flex-row items-center h-full translate-y-1/2">
 						${this.getItemSwitchElement("menuGUISceneChange", this._sceneSwitch.items)}
 					</div>
 					<div class="w-1/4 flex flex-row items-center h-full">
@@ -39,11 +34,10 @@ export class	MenuGUI extends HTMLElement
 				</div>
 				${this.getPlayButton("menuGUIPlayButton")}
 		`;
-		this.addSwitchButtonListener("menuGUISkinChange", this._skinsSwitch);
 		this.addSwitchButtonListener("menuGUISceneChange", this._sceneSwitch);
 		this.addSwitchButtonListener("menuGUIEnemyChange", this._enemyTypeSwitch);
 		if (this._onPlay)
-			this.querySelector("button#menuGUIPlayButton")!.addEventListener("click", () => this._onPlay!(this._sceneSwitch.currentItemIndex, this._enemyTypeSwitch.currentItemIndex, this._skinsSwitch.currentItemIndex));
+			this.querySelector("button#menuGUIPlayButton")!.addEventListener("click", () => this._onPlay!(this._sceneSwitch.currentItemIndex, this._enemyTypeSwitch.currentItemIndex));
 	}
 
 	private addSwitchButtonListener(baseId : string, switchButton : SwitchButton)

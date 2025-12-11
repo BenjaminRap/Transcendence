@@ -5,6 +5,7 @@ import { GameManager } from "./GameManager";
 import type { int } from "@babylonjs/core/types";
 import { Imported } from "@shared/ImportedDecorator";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
+import { getSceneData } from "@shared/SceneData";
 
 export interface	Timer
 {
@@ -15,19 +16,26 @@ export interface	Timer
 }
 
 export class TimerManager extends CustomScriptComponent {
-	@Imported("GameManager") private _gameManager! : GameManager;
-
 	private _timers : Map<number, Timer>;
 	private _nextId : number = 0;
+	private _paused = false;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "TimerManager") {
         super(transform, scene, properties, alias);
 		this._timers = new Map<number, Timer>();
     }
 
+	protected	awake()
+	{
+		const	sceneData = getSceneData(this.scene);
+
+		sceneData.events.getObservable("game-paused").add(() => this._paused = true);
+		sceneData.events.getObservable("game-unpaused").add(() => this._paused = false);
+	}
+
 	protected	update()
 	{
-		if (this._gameManager.isGamePaused())
+		if (this._paused)
 			return ;
 		this._timers.forEach((timer : Timer, key : number) => {
 			timer.remainingTime -= this.getDeltaMilliseconds();

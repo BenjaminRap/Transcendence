@@ -100,7 +100,7 @@ const	themes : Themes = {
 		"--border-width": "0.2vw",
 		"--background-image": "unset",
 		"--background-color": "transparent",
-		"--hover-scale": "105%",
+		"--hover-scale": "101%",
 		"--hover-brightness": "100%",
 		"--hover-background-color": "var(--background-color)",
 		"--hover-text-color": "var(--text-color)",
@@ -111,7 +111,7 @@ const	themes : Themes = {
 		"--switch-button-image": "url(/images/terminalArrow.png)",
 		"--switch-button-image-hover": "url(/images/terminalArrow.png)",
 		"--title-left": "calc(1/3 * 100%)",
-		"--title-color": "var(--color-white)",
+		"--title-color": "var(--color-green-500)",
 		"--title-font": "pixel",
 		"--title-shadow": "none"
 	}

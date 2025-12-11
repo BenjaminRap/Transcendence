@@ -15,7 +15,9 @@ export class	EventsManager
 			"forfeit": new Observable<"left" | "right" | "highestScore">,
 			"input-change": new Observable<void>,
 			"game-paused" : new Observable<void>,
-			"game-unpaused": new Observable<void>
+			"game-unpaused": new Observable<void>,
+			"enemy-type-change" : new Observable<[string, string]>,
+			"scene-change" : new Observable<[string, string]>
 		}
 	}
 
