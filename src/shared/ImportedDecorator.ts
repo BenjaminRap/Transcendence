@@ -13,6 +13,7 @@ export function	ImportedCustom<Checker extends zod.ZodType, Return>(zodChecker :
 	return (target : any, key : string) => {
 		if (!(target instanceof CustomScriptComponent))
 			throw new Error("The Imported decorator should only be used in CustomScriptComponent !");
+		updateImportedMetadata(target, key);
 		const	internalKey = `imported__${key}`;
 		Object.defineProperty(target, key, {
 			get() {
@@ -39,6 +40,7 @@ export function	Imported<T extends ToolkitExported>(importedType : ImportedType<
 	return (target : any, key : string) => {
 		if (!(target instanceof CustomScriptComponent))
 			throw new Error("The Imported decorator should only be used in CustomScriptComponent !");
+		updateImportedMetadata(target, key);
 		const	internalKey = `imported__${key}`;
 		Object.defineProperty(target, key, {
 			get() {
@@ -57,6 +59,14 @@ export function	Imported<T extends ToolkitExported>(importedType : ImportedType<
 			enumerable: true
 		});
 	}
+}
+
+function	updateImportedMetadata(target : any, key : string)
+{
+		const	imported = Reflect.getMetadata("custom:imported", target) as string[] ?? [];
+
+		imported.push(key);
+		Reflect.defineMetadata("custom:imported", imported, target);
 }
 
 function	parseValue<T extends ToolkitExported>(importedType : ImportedType<T>, value : any, isArray : boolean)

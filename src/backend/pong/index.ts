@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import Fastify from 'fastify';
 import { fpSqlitePlugin } from 'fastify-sqlite-typed';
 import fastifyStatic from '@fastify/static';

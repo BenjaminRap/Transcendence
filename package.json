@@ -24,7 +24,8 @@
 		"socket.io-client": "~4.8.1",
 		"tsc-alias": "~1.8.16",
 		"zod": "~4.1.12",
-		"@z-code/vite-plugin-swc": "~0.5.2"
+		"@z-code/vite-plugin-swc": "~0.5.2",
+		"reflect-metadata": "~0.2.2"
 	},
 	"scripts": {
 		"build": "make build",
