@@ -16,6 +16,7 @@ function	addImageToPreload(imageUrl : string)
 }
 
 type Theme = {
+	"--font": string,
 	"--text-color": string,
 	"--font-weight": string,
 	"--rounded": string,
@@ -35,7 +36,6 @@ type Theme = {
 	"--switch-button-image-hover": string,
 	"--title-left": string,
 	"--title-color": string,
-	"--title-font": string,
 	"--title-shadow": string,
 }
 
@@ -47,6 +47,7 @@ type Themes = {
 
 const	themes : Themes = {
 	"colorful": {
+		"--font": "JungleAdventurer",
 		"--text-color": "var(--color-white)",
 		"--font-weight": "var(--font-weight-semibold)",
 		"--rounded": "calc(infinity * 1px)",
@@ -66,10 +67,10 @@ const	themes : Themes = {
 		"--switch-button-image-hover": "url(/scenes/assets/project/textures/arrowColorful.png)",
 		"--title-left": "calc(1/3 * 100%)",
 		"--title-color": "var(--color-black)",
-		"--title-font": "pixel",
 		"--title-shadow": "8px 8px 4px rgba(75, 80, 90, 1)"
 	},
 	"basic": {
+		"--font": "pixel",
 		"--text-color": "var(--color-white)",
 		"--font-weight": "var(--font-weight-bold)",
 		"--rounded": "var(--radius-lg)",
@@ -89,10 +90,10 @@ const	themes : Themes = {
 		"--switch-button-image-hover": "url(/scenes/assets/project/textures/arrowBasicHover.png)",
 		"--title-left": "calc(1/2 * 100%)",
 		"--title-color": "var(--color-white)",
-		"--title-font": "pixel",
 		"--title-shadow": "none"
 	},
 	"terminal": {
+		"--font": "VT323",
 		"--text-color": "var(--color-green-300)",
 		"--font-weight": "var(--font-weight-bold)",
 		"--rounded": "var(--radius-md)",
@@ -112,7 +113,6 @@ const	themes : Themes = {
 		"--switch-button-image-hover": "url(/images/terminalArrow.png)",
 		"--title-left": "calc(1/3 * 100%)",
 		"--title-color": "var(--color-green-500)",
-		"--title-font": "pixel",
 		"--title-shadow": "none"
 	}
 };

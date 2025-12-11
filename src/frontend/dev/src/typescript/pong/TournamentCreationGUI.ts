@@ -14,7 +14,7 @@ export class	TournamentCreationGUI extends HTMLElement
 	{
 		this.classList.add("absolute", "inset-0", "size-full", "z-10", "flex", "flex-col");
 		this.innerHTML = `
-			<p class="text-[2vw] w-full text-center mb-[2vh]">Tournament</p>
+			<p class="text-[2vw] w-full text-center mb-[2vh] font-(family-name:--font)">Tournament</p>
 			<div class="w-full" id="tournamentCreationGUIProfiles">
 			</div>
 			<button class="w-[7%] ml-[91%] mt-[3%] bg-green-300 rounded-md aspect-square hover:scale-125 transition-all" id="addProfile">

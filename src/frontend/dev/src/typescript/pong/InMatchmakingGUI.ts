@@ -16,7 +16,7 @@ export class	InMatchmakingGUI extends HTMLElement
 					<svg aria-hidden="true" class="w-1/5 aspect-square text-neutral-tertiary animate-spin fill-brand" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
 						${this.getLoadingLogoHTML()}
 					</svg>
-					<p class="font-bold text-center leading-[normal] text-[3vw] text-black">Waiting For A Match</p>
+					<p class="font-bold text-center leading-[normal] text-[3vw] text-black font-(family-name:--font)">Waiting For A Match</p>
 				</div>
 				<button id="inMatchmakingGUICancel"class="text-center text-[3vw] mt-[20%] pointer-events-auto menu-button">Cancel</button>
 			</div>

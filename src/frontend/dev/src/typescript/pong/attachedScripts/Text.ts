@@ -22,6 +22,7 @@ export class Text extends CustomScriptComponent {
 	@Imported(zodInt) private _maxRow! : number;
 	@Imported(zodVerticalAlignment) private _verticalAlignment! : VerticalAlignment;
 	@Imported(zodHorizontalAlignment) private _horizontalAlignment! : HorizontalAlignment;
+	@Imported(zodString) private _fontFamily! : string;
 
 	private _texture! : AdvancedDynamicTexture;
 	private _textBlock! : TextBlock;
@@ -43,6 +44,7 @@ export class Text extends CustomScriptComponent {
 		this._textBlock.textHorizontalAlignment = this.getHorizontalAlignment();
 		this._textBlock.verticalAlignment = this.getVerticalAlignment();
 		this._textBlock.textWrapping = true;
+		this._textBlock.fontFamily = this._fontFamily;
 		this._texture.addControl(this._textBlock);
 	}
 

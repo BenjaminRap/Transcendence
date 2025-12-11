@@ -60,7 +60,7 @@ export class	EndGUI extends HTMLElement
 
 	private	getButtonHTML(text : string, id : string)
 	{
-		return `<button id="${id}" class="text-[3vw] w-full mt-[10%] pointer-events-auto grow menu-button">${text}</button>`;
+		return `<button id="${id}" class="font-(family-name:--font) text-[3vw] w-full mt-[10%] pointer-events-auto grow menu-button">${text}</button>`;
 	}
 
 	public getButtons() : EndGUIButtons | undefined
