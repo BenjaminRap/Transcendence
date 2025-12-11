@@ -27,6 +27,7 @@ type Theme = {
 	"--hover-brightness": string,
 	"--hover-background-color": string,
 	"--hover-text-color": string,
+	"--hover-animation" : string
 	"--active-scale": string,
 	"--active-brightness": string,
 	"--backdrop-blur": string,
@@ -35,7 +36,7 @@ type Theme = {
 	"--title-left": string,
 	"--title-color": string,
 	"--title-font": string,
-	"--title-shadow": string
+	"--title-shadow": string,
 }
 
 type Themes = {
@@ -57,6 +58,7 @@ const	themes : Themes = {
 		"--hover-brightness": "90%",
 		"--hover-background-color": "unset",
 		"--hover-text-color": "var(--color-white)",
+		"--hover-animation" : "none",
 		"--active-scale": "90%",
 		"--active-brightness": "75%",
 		"--backdrop-blur": "0",
@@ -79,6 +81,7 @@ const	themes : Themes = {
 		"--hover-brightness": "100%",
 		"--hover-background-color": "var(--color-white)",
 		"--hover-text-color": "var(--color-black)",
+		"--hover-animation" : "none",
 		"--active-scale": "95%",
 		"--active-brightness": "100%",
 		"--backdrop-blur": "var(--blur-md)",
@@ -90,23 +93,24 @@ const	themes : Themes = {
 		"--title-shadow": "none"
 	},
 	"terminal": {
-		"--text-color": "var(--color-white)",
+		"--text-color": "var(--color-green-300)",
 		"--font-weight": "var(--font-weight-bold)",
-		"--rounded": "var(--radius-lg)",
-		"--border-color": "var(--color-white)",
-		"--border-width": "0.3vw",
+		"--rounded": "var(--radius-md)",
+		"--border-color": "var(--text-color)",
+		"--border-width": "0.2vw",
 		"--background-image": "unset",
 		"--background-color": "transparent",
-		"--hover-scale": "110%",
+		"--hover-scale": "105%",
 		"--hover-brightness": "100%",
-		"--hover-background-color": "var(--color-white)",
-		"--hover-text-color": "var(--color-black)",
-		"--active-scale": "95%",
+		"--hover-background-color": "var(--background-color)",
+		"--hover-text-color": "var(--text-color)",
+		"--hover-animation" : "blink 0.8s infinite",
+		"--active-scale": "100%",
 		"--active-brightness": "100%",
 		"--backdrop-blur": "var(--blur-md)",
-		"--switch-button-image": "url(/scenes/assets/project/textures/arrowBasic.png)",
-		"--switch-button-image-hover": "url(/scenes/assets/project/textures/arrowBasicHover.png)",
-		"--title-left": "calc(1/2 * 100%)",
+		"--switch-button-image": "url(/images/terminalArrow.png)",
+		"--switch-button-image-hover": "url(/images/terminalArrow.png)",
+		"--title-left": "calc(1/3 * 100%)",
 		"--title-color": "var(--color-white)",
 		"--title-font": "pixel",
 		"--title-shadow": "none"

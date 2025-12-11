@@ -81,9 +81,9 @@ export class	MenuGUI extends HTMLElement
 
 	private	getButtonHTML(id : string, side : "left" | "right") : string
 	{
-		const	rotate = (side == "right") ? "rotate-180" : "";
+		const	rotate = (side == "right") ? "rotate-y-180" : "";
 
-		return  `<button id="${id}" alt="" class="h-full w-[14%] hover:scale-(--hover-scale) hover:brightness-(--hover-brightness) ${rotate} active:scale-(--active-scale) active:brightness-(--active-brightness) pointer-events-auto bg-(image:--switch-button-image) transition-all bg-contain bg-no-repeat bg-center hover:bg-(image:--switch-button-image-hover)">
+		return  `<button id="${id}" alt="" class="h-full w-[14%] hover:scale-(--hover-scale) hover:brightness-(--hover-brightness) ${rotate} active:scale-(--active-scale) active:brightness-(--active-brightness) pointer-events-auto bg-(image:--switch-button-image) transition-all bg-contain bg-no-repeat bg-center hover:bg-(image:--switch-button-image-hover) hover:animate-(--hover-animation)">
 	
 </button>`;
 	}
