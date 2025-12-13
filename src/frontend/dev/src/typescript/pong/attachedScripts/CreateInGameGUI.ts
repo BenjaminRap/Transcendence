@@ -1,13 +1,13 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager } from "@babylonjs-toolkit/next";
-import { PauseGUI } from "../PauseGUI";
+import { PauseGUI } from "../gui/PauseGUI";
 import { InputManager } from "@shared/attachedScripts/InputManager";
 import { type EndData, GameManager } from "@shared/attachedScripts/GameManager";
 import { FrontendSceneData } from "../FrontendSceneData";
-import { EndGUI } from "../EndGUI";
+import { EndGUI } from "../gui/EndGUI";
 import { getFrontendSceneData } from "../PongGame";
-import { InMatchmakingGUI } from "../InMatchmakingGUI";
+import { InMatchmakingGUI } from "../gui/InMatchmakingGUI";
 import { applyTheme, zodThemeName } from "../menuStyles";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { Imported } from "@shared/ImportedDecorator";

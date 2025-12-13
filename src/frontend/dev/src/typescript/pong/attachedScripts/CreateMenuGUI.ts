@@ -2,18 +2,18 @@ import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager } from "@babylonjs-toolkit/next";
 import { FrontendSceneData } from "../FrontendSceneData";
-import { MenuGUI, type SwitchButton } from "../MenuGUI";
+import { MenuGUI, type SwitchButton } from "../gui/MenuGUI";
 import { Animation, EasingFunction, type Nullable, SineEase } from "@babylonjs/core";
 import { Animatable } from "@babylonjs/core/Animations/animatable";
 import { SceneMenuData } from "./SceneMenuData";
-import { InMatchmakingGUI } from "../InMatchmakingGUI";
+import { InMatchmakingGUI } from "../gui/InMatchmakingGUI";
 import { getFrontendSceneData, type SceneFileName } from "../PongGame";
 import { applyTheme } from "../menuStyles";
-import { TitleGUI } from "../TitleGUI";
+import { TitleGUI } from "../gui/TitleGUI";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { Imported } from "@shared/ImportedDecorator";
 import { TimerManager } from "@shared/attachedScripts/TimerManager";
-import { GameTypeChoiceGUI } from "../GameTypeChoiceGUI";
+import { GameTypeChoiceGUI } from "../gui/GameTypeChoiceGUI";
 
 export class CreateMenuGUI extends CustomScriptComponent {
 	private static readonly _enemyTypes = [ "Local", "Multiplayer", "Bot" ];

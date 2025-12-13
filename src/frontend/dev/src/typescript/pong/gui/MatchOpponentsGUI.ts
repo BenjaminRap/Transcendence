@@ -1,4 +1,4 @@
-import type { Profile } from "./FrontendTournament";
+import type { Profile } from "../FrontendTournament";
 import { OpponentGUI } from "./OpponentGUI";
 
 export class	MatchOpponentsGUI extends HTMLElement

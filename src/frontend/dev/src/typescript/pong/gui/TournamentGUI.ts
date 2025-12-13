@@ -1,5 +1,5 @@
 import { Clamp } from "@babylonjs/core";
-import type { Match, Profile } from "./FrontendTournament";
+import type { Match, Profile } from "../FrontendTournament";
 import { MatchGUI } from "./MatchGUI";
 import { OpponentGUI } from "./OpponentGUI";
 import { Range } from "@shared/Range";

@@ -1,5 +1,5 @@
 import { isPowerOfTwo } from "@shared/utils";
-import { TournamentGUI } from "./TournamentGUI";
+import { TournamentGUI } from "./gui/TournamentGUI";
 
 export type Profile = {
 	name : string;

@@ -24,6 +24,10 @@ export class	TournamentCreationGUI extends HTMLElement
 					<div class="w-[13.8%] h-[45%] bg-black m-auto"></div>
 				</div>
 			</button>
+			<div class="flex flex-col size-full h-4/6 w-1/3 left-1/2 -translate-1/2 top-1/2 absolute">
+				${this.getButtonHTML("Start", "start")}
+				${this.getButtonHTML("Cancel", "cancel")}
+			</div>
 		`;
 		this._profileContainer = this.querySelector("div#tournamentCreationGUIProfiles")!;
 		const	addProfileButton = this.querySelector("button#addProfile")!;
@@ -33,6 +37,11 @@ export class	TournamentCreationGUI extends HTMLElement
 		this.addProfile();
 		this.setProperties("var(--color-gray-400)", "100%");
 
+	}
+
+	private	getButtonHTML(text : string, id : string)
+	{
+		return `<button id="${id}"class="font-(family-name:--font) text-[3vw] w-full mt-[10%] pointer-events-auto grow menu-button">${text}</button>`;
 	}
 
 	private	addProfile()
