@@ -63,7 +63,7 @@ export class PongGame extends HTMLElement {
 
 	private createEngine() : Engine
 	{
-        return new Engine(this._canvas, true, {
+		const	engine = new Engine(this._canvas, true, {
 			stencil: true,
 			antialias: true,
 			audioEngine: false,
@@ -75,6 +75,9 @@ export class PongGame extends HTMLElement {
 			deterministicLockstep: true,
 			lockstepMaxSteps: 4
 		});
+
+		engine.renderEvenInBackground = false;
+		return engine;
 	}
 
 	private async changeScene(newSceneName : string, gameType : FrontendGameType, clientInputs : readonly ClientInput[], serverCommunicationHandler? : ServerProxy) : Promise<void>
