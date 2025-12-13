@@ -18,10 +18,10 @@ export class	InMatchmakingGUI extends HTMLElement
 					</svg>
 					<p class="font-bold text-center leading-[normal] text-[3vw] text-black font-(family-name:--font)">Waiting For A Match</p>
 				</div>
-				<button id="inMatchmakingGUICancel"class="text-center text-[3vw] mt-[20%] pointer-events-auto menu-button">Cancel</button>
+				<button class="inMatchmakingGUICancel"class="text-center text-[3vw] mt-[20%] pointer-events-auto menu-button">Cancel</button>
 			</div>
 		`;
-		this._cancelButton = this.querySelector("button#inMatchmakingGUICancel")!;
+		this._cancelButton = this.querySelector("button.inMatchmakingGUICancel")!;
 	}
 
 	private	getLoadingLogoHTML() : string

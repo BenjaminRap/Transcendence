@@ -27,16 +27,16 @@ export class	PauseGUI extends HTMLElement
 			</div>
 		`;
 		this._buttons = {
-			continue: this.querySelector<HTMLButtonElement>("button#pauseGUIContinue")!,
-			forfeit: this.querySelector<HTMLButtonElement>("button#pauseGUIForfeit")!,
-			goToMenu: this.querySelector<HTMLButtonElement>("button#pauseGUIGoToMenu")!,
-			quit: this.querySelector<HTMLButtonElement>("button#pauseGUIQuit")!
+			continue: this.querySelector<HTMLButtonElement>("button.pauseGUIContinue")!,
+			forfeit: this.querySelector<HTMLButtonElement>("button.pauseGUIForfeit")!,
+			goToMenu: this.querySelector<HTMLButtonElement>("button.pauseGUIGoToMenu")!,
+			quit: this.querySelector<HTMLButtonElement>("button.pauseGUIQuit")!
 		}
 	}
 
-	private	getButtonHTML(text : string, id : string)
+	private	getButtonHTML(text : string, className : string)
 	{
-		return `<button id="${id}"class="font-(family-name:--font) text-[3vw] w-full mt-[10%] pointer-events-auto grow menu-button">${text}</button>`;
+		return `<button class="${className} font-(family-name:--font) text-[3vw] w-full mt-[10%] pointer-events-auto grow menu-button">${text}</button>`;
 	}
 
 	public getButtons() : PauseGUIButtons | undefined

@@ -15,9 +15,9 @@ export class	TournamentCreationGUI extends HTMLElement
 		this.classList.add("absolute", "inset-0", "size-full", "z-10", "flex", "flex-col");
 		this.innerHTML = `
 			<p class="text-[2vw] w-full text-center mb-[2vh] font-(family-name:--font)">Tournament</p>
-			<div class="w-full" id="tournamentCreationGUIProfiles">
+			<div class="w-full tournamentCreationGUIProfiles">
 			</div>
-			<button class="w-[7%] ml-[91%] mt-[3%] bg-green-300 rounded-md aspect-square hover:scale-125 transition-all" id="addProfile">
+			<button class="tournamentCreationGUIAddProfile w-[7%] ml-[91%] mt-[3%] bg-green-300 rounded-md aspect-square hover:scale-125 transition-all">
 				<div class="w-3/5 aspect-square m-auto flex flex-col mt-[10%]">
 					<div class="w-[13.8%] h-[45%] bg-black m-auto"></div>
 					<div class="w-full h-[13.8%] bg-black"></div>
@@ -29,8 +29,8 @@ export class	TournamentCreationGUI extends HTMLElement
 				${this.getButtonHTML("Cancel", "cancel")}
 			</div>
 		`;
-		this._profileContainer = this.querySelector("div#tournamentCreationGUIProfiles")!;
-		const	addProfileButton = this.querySelector("button#addProfile")!;
+		this._profileContainer = this.querySelector("div.tournamentCreationGUIProfiles")!;
+		const	addProfileButton = this.querySelector("button.tournamentCreationGUIAddProfile")!;
 
 		addProfileButton.addEventListener("click", () => this.addProfile());
 		this.addProfile();
@@ -39,9 +39,9 @@ export class	TournamentCreationGUI extends HTMLElement
 
 	}
 
-	private	getButtonHTML(text : string, id : string)
+	private	getButtonHTML(text : string, className : string)
 	{
-		return `<button id="${id}"class="font-(family-name:--font) text-[3vw] w-full mt-[10%] pointer-events-auto grow menu-button">${text}</button>`;
+		return `<button class="${className} font-(family-name:--font) text-[3vw] w-full mt-[10%] pointer-events-auto grow menu-button">${text}</button>`;
 	}
 
 	private	addProfile()
