@@ -1,10 +1,8 @@
+import { ExtendedView } from "./extendedView";
+
 export { };
 
-import { Modal } from './modal.ts'
-import { ExtendedView } from './extendedView.ts'
-import { WriteOnTerminal } from './terminalUtils/writeOnTerminal.ts';
-import { TerminalUtils } from './terminalUtils/terminalUtils.ts';
-import { RequestBackendModule } from './terminalUtils/requestBackend.ts';
+
 /*
 	Attente des donnes backend. Penser a sanitize les donnes avant de les afficher https://github.com/cure53/DOMPurify
 */
@@ -151,18 +149,11 @@ function createButtons(profileElement: HTMLElement | null) {
 		return;
 	const buttonContainer = document.createElement('div');
 	buttonContainer.className = "grid grid-cols-2 place-content-stretch gap-2";
-	buttonContainer.innerHTML = `<button id="changeNameButton" class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Change Name</button>
-								<button id="changePasswordButton" class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Change Password</button>
-								<button id="changeAvatarButton" class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Change Avatar</button>
-								<button id="deleteAccountButton" class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Delete Account</button>`
-	const changeNameButton = buttonContainer.querySelector('#changeNameButton');
-	changeNameButton?.addEventListener('click', ChangeName);
-	const changePasswordButton = buttonContainer.querySelector('#changePasswordButton');
-	changePasswordButton?.addEventListener('click', ChangePassword);
-	const changeAvatarButton = buttonContainer.querySelector('#changeAvatarButton');
-	changeAvatarButton?.addEventListener('click', ChangeAvatar);
-	const deleteAccountButton = buttonContainer.querySelector('#deleteAccountButton');
-	deleteAccountButton?.addEventListener('click', DeleteAccount);
+	buttonContainer.innerHTML = `<button class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Add Friend</button>
+								<button class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Block User</button>`
+								// 	<button class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Change Avatar</button>
+								// <button class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Delete Account</button>
+
 	profileElement.appendChild(buttonContainer);
 }
 
@@ -211,81 +202,8 @@ function createMatchHistory(profileElement: HTMLElement | null) {
 	profileElement.appendChild(matchHistory);
 }
 
-function createFriendList(profileElement: HTMLElement | null) {
-	if (!profileElement)
-		return;
-	const friendList = document.createElement('div');
-	friendList.className = "flex flex-col min-h-[25vh]";
-	friendList.innerHTML = `
-		<div class="flex w-full place-content-between">
-			<p class="text-center">Friends</p>
-			<button id="moreFriends" class="cursor-pointer hover:underline hover:underline-offset-2">View More</button>
-		</div>
-	`
-	const moreFriendsButton = friendList.querySelector('#moreFriends');
-	moreFriendsButton?.addEventListener('click', () => {
-		ExtendedView.makeExtendedView('friend', '');
-	});
-	const friendElement = document.createElement('div');
-	friendElement.className = "border border-green-500 py-4 flex flex-col gap-y-4 h-full";
-	for (let i = 0; i < Math.min(friends.length, 4); i++) {
-		const friend = friends[i];
-		const friendDiv = document.createElement('div');
-		friendDiv.className = "flex items-center px-4 gap-x-4";
-		friendDiv.innerHTML = `
-		<img src="${friend.linkofavatar}" alt="Avatar"
-					class="w-10 h-10 border border-green-500"></img>
-				<div class="flex flex-col gap-y-0">
-					<p>${friend.username}</p>
-					<p style="font-size: 10px;">${friend.status}</p>
-				</div>
-		`
-		friendElement.appendChild(friendDiv);
-	}
-
-	friendList.appendChild(friendElement);
-	profileElement.appendChild(friendList);
-}
-
-async function fetchProfileData(user: string): Promise<string> {
-	const token = TerminalUtils.getCookie('accessToken') || '';
-	if (token === '') {
-		return 'You are not logged in.';
-	}
-	try {
-		const response = await fetch('/api/suscriber/profile', {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': 'Bearer ' + token
-			},
-		});
-		const data = await response.json();
-		if (data.success) {
-			profile.username = data.user.username;
-			profile.linkofavatar = data.user.avatar;
-			return "OK";
-		}
-		if (data.message === 'Invalid or expired token') {
-			const refreshed = await RequestBackendModule.tryRefreshToken();
-			if (!refreshed) {
-				return 'You are not logged in.';
-			}
-			return "OK";
-		}
-		console.error("Error fetching profile data:", data.message);
-		return 'Error fetching profile data.';
-	} catch (error) {
-		console.error("Error:", error);
-		return 'Error fetching profile data.';
-	}
-}
-
-export namespace ProfileBuilder {
-	export async function buildProfile(user: string): Promise<string> {
-		const result = await fetchProfileData(user);
-		if (!result || result !== "OK")
-			return result;
+export namespace ExtProfileBuilder {
+	export function buildExtProfile(user: string) {
 		const profileElement = document.createElement('div');
 		profileElement.id = "profile";
 		profileElement.className = "p-4 m-0 terminal-font bg-black border-2 border-collapse border-green-500 flex flex-col gap-y-4"
@@ -294,14 +212,12 @@ export namespace ProfileBuilder {
 		createProfileCard(profileElement);
 		createButtons(profileElement);
 		createMatchHistory(profileElement);
-		createFriendList(profileElement);
 		
 		document.body.appendChild(profileElement);
 		history.pushState({}, '', `/profile/${user}`);
 		isActive = true;
-		return "Profile is now open.";
 	}
-	export function removeProfile() {
+	export function removeExtProfile() {
 		const profileElement = document.getElementById('profile');
 		if (profileElement) {
 			document.body.removeChild(profileElement);
@@ -310,64 +226,4 @@ export namespace ProfileBuilder {
 		}
 	}
 	export let isActive = false;
-}
-
-
-function ChangeName() {
-	if (Modal.isModalActive)
-		return;
-	Modal.makeModal("Change Name", 'text', 'Shadow 0-1',(text: string) => {
-		Modal.closeModal();
-		console.log("New name:", text);
-		// Sanitize
-
-
-
-		// Send Backend
-		// Update 2/3 variable
-		// let args: string[] = ["System Notification (Wall) - Change Name", "You've try to change your name, attempt succesfull, your new name is " + text];
-		// TerminalUtils.notification(args);
-	});
-}
-
-function ChangePassword() {
-	if (Modal.isModalActive)
-		return;
-
-	Modal.makeModal("Actual Password", 'password', '', (text: string) => {
-		Modal.closeModal();
-		console.log("Password:", text);
-		// Send Backend
-		// Si pas bon return
-		// Update 2/3 variable
-		Modal.makeModal("New Password", 'password', '', (newPass: string) => {
-			Modal.closeModal();
-			console.log("New Password:", newPass);
-			// Send Backend
-			// Update 2/3 variable
-		});
-	});
-}
-
-function ChangeAvatar() {
-	if (Modal.isModalActive)
-		return;
-
-	Modal.makeModal("Change Avatar", 'file', '', (text: string) => {
-		Modal.closeModal();
-		console.log("New avatar:", text);
-	});
-}
-
-function DeleteAccount() {
-	if (Modal.isModalActive)
-		return;
-	Modal.makeModal("Are you sure you want to delete your account? Type 'DELETE' to confirm.", 'text', 'DELETE', (text: string) => {
-		Modal.closeModal();
-		if (text === "DELETE") {
-			console.log("Account deleted");
-		}
-		else
-			console.log("Account deletion cancelled");
-	});
 }

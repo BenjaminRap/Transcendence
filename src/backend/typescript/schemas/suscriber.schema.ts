@@ -2,13 +2,14 @@ import { string, z } from 'zod'
 import { CommonSchema } from './common.schema.js'
 
 export const SuscriberSchema = {
-    updateUsername: z.object({ 
-          username: CommonSchema.username 
-        }).strict(),
-
-    updateAvatar: z.object({
-          avatar: CommonSchema.avatar,
-        }).strict(),
+    update: z.object({
+            username: CommonSchema.username.optional(),
+            avatar: CommonSchema.avatar.optional()
+        }).strict()
+          .refine( (data) => data.username !== undefined || data.avatar !== undefined, {
+                message: "At least one of 'username' or 'avatar' must be provided",
+                path: ["username or avatar or both"]
+        }),
 
     updatePassword: z.object({
           currentPassword: CommonSchema.password,

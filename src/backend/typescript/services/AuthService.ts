@@ -49,13 +49,13 @@ export class AuthService {
         // Find the user
         const user = await this.findByEmailOrUsername(identifier, identifier);
         if (!user) {
-            throw new AuthException(AuthError.INVALID_CREDENTIALS, AuthError.INVALID_CREDENTIALS);
+            throw new AuthException(AuthError.INVALID_CREDENTIALS, 'Invalid email or username');
         }
 
         // verify password
         const isValid = await this.passwordHasher.verify(password, user.password);
         if (!isValid) {
-            throw new AuthException(AuthError.INVALID_CREDENTIALS, AuthError.INVALID_CREDENTIALS);
+            throw new AuthException(AuthError.INVALID_CREDENTIALS, 'Invalid password');
         }
 
         // generate JWT tokens for the session

@@ -4,8 +4,7 @@
 	"type": "module",
 	"dependencies": {
 		"@fastify/cors": "11.1.0",
-		"@fastify/websocket": "^11.2.0",
-		"@types/ws": "^8.18.1",
+		"@fastify/multipart": "^9.3.0",
 		"@prisma/client": "^6.19.0",
 		"prisma": "^6.19.0",
 		"@tailwindcss/cli": "^4.1.11",

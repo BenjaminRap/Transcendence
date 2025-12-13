@@ -40,7 +40,7 @@ export class SuscriberController {
     }
 
     // ----------------------------------------------------------------------------- //
-    // PUT /suscriber/update/password
+    // PUT /suscriber/updatepassword
     async updatePassword(request: FastifyRequest<{ Body: UpdatePassword }>, reply: FastifyReply) {
         try {
             // check if the newPassword and the confirmNewPassword are the same
@@ -49,7 +49,7 @@ export class SuscriberController {
                 return reply.status(400).send({
                     success: false,
                     message: validation.error?.issues?.[0]?.message || 'Invalid input',
-                    redirectTo: '/suscriber/update/password'
+                    redirectTo: '/suscriber/updatepassword'
                 });
             }
             
@@ -70,7 +70,7 @@ export class SuscriberController {
                         return reply.status(409).send({
                             success: false,
                             message: error.message,
-                            redirectTo: '/suscriber/update/password'
+                            redirectTo: '/suscriber/updatepassword'
                         });
                 }
             }
@@ -84,21 +84,21 @@ export class SuscriberController {
     }
 
     // ----------------------------------------------------------------------------- //
-    // PUT /suscriber/update/username
-    async updateUsername(request: FastifyRequest<{ Body: { username: string } }>, reply: FastifyReply) {
+    // PUT /suscriber/updateprofile
+    async updateProfile(request: FastifyRequest<{ Body: UpdateData }>, reply: FastifyReply) {
         try {          
             const id = (request as any).user.userId;
-            const validation = SuscriberSchema.updateUsername.safeParse(request.body);
+            const validation = SuscriberSchema.update.safeParse(request.body);
             if (!validation.success) {
                 return reply.status(400).send({
                     success: false,
                     message: validation.error?.issues?.[0]?.message || 'Invalid input',
-                    redirectTo: '/suscriber/update/username'
+                    redirectTo: '/suscriber/updateprofile'
                 });
             }
 
             // check data, user existence, mail and username availability then update and returns user or throw exception
-            const user = await this.suscriberService.updateUsername(id, validation.data.username);
+            const user = await this.suscriberService.updateProfile(id, validation.data);
     
             return reply.status(200).send({
                 success: true,
@@ -115,7 +115,7 @@ export class SuscriberController {
                         return reply.status(409).send({
                             success: false,
                             message: error.message,
-                            redirectTo: '/suscriber/update/username'
+                            redirectTo: '/suscriber/updateprofile'
                         });
                 }
             }

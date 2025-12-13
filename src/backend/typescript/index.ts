@@ -5,7 +5,6 @@ import multipartPlugin from './plugins/multipart.js';
 import staticPlugin from './plugins/static.js';
 import dotenv from 'dotenv';
 import { fpSqlitePlugin } from 'fastify-sqlite-typed';
-
 import { Container } from './container/Container.js';
 import { authRoutes } from './routes/auth.routes.js';
 import { usersRoutes } from './routes/users.routes.js';

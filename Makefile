@@ -56,12 +56,11 @@ clean: stop
 	-docker stop $(docker ps -qa)
 	-docker rm $(docker ps -qa) 2>/dev/null
 	-docker rmi -f $(docker images -qa) 2>/dev/null
+	-docker volume rm $(docker volume ls -q)
 	-docker network rm $(docker network ls -q) 2>/dev/null
 
 fclean: clean
 	$(DOCKER_EXEC) down -v
-	-docker volume rm databases 2>/dev/null || true
-	-docker volume rm uploads 2>/dev/null || true
 	-docker system prune -af --volumes
 	-rm -rf ./dockerFiles/nginx/website/
 	-rm -rf ./src/backend/javascript/*
