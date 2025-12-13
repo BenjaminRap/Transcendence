@@ -107,5 +107,40 @@ export class AuthController {
         }
     }
 
+    // --------------------------------------------------------------------------------- //
+    // GET auth/callback
+	
+	async callback42(request: FastifyRequest<{ Querystring: VerifData }>, reply: FastifyReply) {
+		try {
+            const { code } = request.query;
+
+            if (!code) {
+                return reply.status(400).send({
+                    success: false,
+                    message: 'Authorization code missing',
+                });
+            }
+
+			const result = await this.authService.loginWith42(code);
+
+			return reply.status(200).send({
+				success: true,
+				message: 'Authentication successful',
+                ...result,
+			});
+		} catch (error) {
+			if (error instanceof AuthException) {
+				return reply.status(401).send({ success: false, message: error.message });
+			}
+
+			request.log.error(error);
+			return reply.status(500).send({
+				success: false,
+				message: 'Internal server error',
+			});
+		}
+	}
+
+
 }
 

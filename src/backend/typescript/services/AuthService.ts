@@ -68,6 +68,61 @@ export class AuthService {
     }
 
     // --------------------------------------------------------------------------------- //
+    async loginWith42(code: string): Promise<{ user: SanitizedUser; tokens: TokenPair }> {
+        const tokenResponse = await fetch('https://api.intra.42.fr/oauth/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                grant_type: 'authorization_code',
+                client_id: process.env.FORTY_TWO_UID,
+                client_secret: process.env.FORTY_TWO_SECRET,
+                code,
+                redirect_uri: process.env.FORTY_TWO_CALLBACK_URL,
+            }),
+        });
+
+        if (!tokenResponse.ok) {
+            throw new AuthException(AuthError.INVALID_CREDENTIALS, 'Failed to exchange code for token');
+        }
+
+        const tokenData = await tokenResponse.json() as any;
+        const accessToken = tokenData.access_token;
+
+        const userResponse = await fetch('https://api.intra.42.fr/v2/me', {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+
+        if (!userResponse.ok) {
+            throw new AuthException(AuthError.INVALID_CREDENTIALS, 'Failed to fetch 42 user info');
+        }
+
+        const userData = await userResponse.json() as any;
+
+        let user = await this.findByEmailOrUsername(userData.email, userData.login);
+
+        if (!user) {
+            const randomPassword = Math.random().toString(36).slice(-8);
+            const hashedPassword = await this.passwordHasher.hash(randomPassword);
+
+            user = await this.prisma.user.create({
+                data: {
+                    username: userData.login,
+                    email: userData.email,
+                    password: hashedPassword,
+                    avatar: userData.image?.link,
+                },
+            });
+        }
+
+        const tokens = await this.tokenManager.generatePair(String(user.id), user.email);
+
+        return {
+            user: sanitizeUser(user),
+            tokens,
+        };
+    }
+
+    // --------------------------------------------------------------------------------- //
     async refreshTokens(userId: string, email: string): Promise<TokenPair> {
         // check if user exist
         if ( !await this.findById(Number(userId)) ) {

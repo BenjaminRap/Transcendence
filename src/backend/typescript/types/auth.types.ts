@@ -22,7 +22,7 @@ export interface SanitizedUser
 
 export interface VerifData
 {
-    password:   string
+    code:       string
 }
 
 export function sanitizeUser(user: User): SanitizedUser {
