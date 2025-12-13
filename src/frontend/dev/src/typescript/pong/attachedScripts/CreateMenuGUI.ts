@@ -7,12 +7,13 @@ import { Animation, EasingFunction, type Nullable, SineEase } from "@babylonjs/c
 import { Animatable } from "@babylonjs/core/Animations/animatable";
 import { SceneMenuData } from "./SceneMenuData";
 import { InMatchmakingGUI } from "../InMatchmakingGUI";
-import { getFrontendSceneData } from "../PongGame";
-import { applyTheme, type ThemeName } from "../menuStyles";
+import { getFrontendSceneData, type SceneFileName } from "../PongGame";
+import { applyTheme } from "../menuStyles";
 import { TitleGUI } from "../TitleGUI";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { Imported } from "@shared/ImportedDecorator";
 import { TimerManager } from "@shared/attachedScripts/TimerManager";
+import { GameTypeChoiceGUI } from "../GameTypeChoiceGUI";
 
 export class CreateMenuGUI extends CustomScriptComponent {
 	private static readonly _enemyTypes = [ "Local", "Multiplayer", "Bot" ];
@@ -27,22 +28,34 @@ export class CreateMenuGUI extends CustomScriptComponent {
 	private _menuGUI! : MenuGUI;
 	private _inMatchmakingGUI! : InMatchmakingGUI;
 	private _titleGUI! : TitleGUI;
+	private _localGameTypeChoiceGUI! : GameTypeChoiceGUI;
+	private _onlineGameTypeChoiceGUI! : GameTypeChoiceGUI;
+	private _currentSceneFileName! : SceneFileName;
+	private _menuParent! : HTMLDivElement;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "CreateMenuGUI") {
         super(transform, scene, properties, alias);
 		this._easeFunction.setEasingMode(EasingFunction.EASINGMODE_EASEINOUT);
 		this._sceneData = getFrontendSceneData(this.scene);
+		this._menuParent = document.createElement("div");
+		this._menuParent.classList.add("absolute", "inset-0", "size-full", "z-10", "cursor-default", "select-none", "pointer-events-none");
+		this._sceneData.pongHTMLElement.appendChild(this._menuParent);
     }
 
 	protected	awake()
 	{
 		this.setScenes();
-		const	theme : ThemeName = (this._scenes.length === 0) ? "basic" : this._scenes[0].getTheme();
+		if (this._scenes.length === 0)
+			throw new Error("There is no scene in the menu !");
+		this._currentSceneFileName = this._scenes[0].getSceneFileName();
+		const	theme = this._scenes[0].getTheme();
 
 		applyTheme(this._sceneData.pongHTMLElement, theme)
 		this.createTitleGUI();
 		this.createMenuGUI();
 		this.createInMatchmakingGUI();
+		this.CreateLocalGameTypeChoiceGUI();
+		this.CreateOnlineGameTypeChoiceGUI();
 	}
 
 	protected	ready()
@@ -68,8 +81,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 	private	createTitleGUI()
 	{
 		this._titleGUI = new TitleGUI();
-		this._sceneData.pongHTMLElement.appendChild(this._titleGUI);
-		this._titleGUI.classList.add("hidden");
+		this.addHiddenMenu(this._titleGUI);
 	}
 
 	private	createMenuGUI()
@@ -85,20 +97,61 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			onItemChange: this.onEnemyTypeChange.bind(this)
 		};
 		this._menuGUI = new MenuGUI(sceneButtonSwitch, enemyTypesButtonSwitch, this.onPlay.bind(this));
-		this._sceneData.pongHTMLElement.appendChild(this._menuGUI);
-		this._menuGUI.classList.add("hidden");
+		this.addHiddenMenu(this._menuGUI);
 	}
 
 
 	private	createInMatchmakingGUI()
 	{
 		this._inMatchmakingGUI = new InMatchmakingGUI();
-		this._sceneData.pongHTMLElement.appendChild(this._inMatchmakingGUI);
-		this._inMatchmakingGUI.classList.add("hidden");
+		this.addHiddenMenu(this._inMatchmakingGUI);
 		
 		const	cancelButton = this._inMatchmakingGUI.getCancelButton()!;
 
 		cancelButton.addEventListener("click", () => { this.cancelMatchmaking() });
+	}
+
+	private	CreateLocalGameTypeChoiceGUI()
+	{
+		this._localGameTypeChoiceGUI = new GameTypeChoiceGUI();
+		this.addHiddenMenu(this._localGameTypeChoiceGUI);
+		
+		const	inputs = this._localGameTypeChoiceGUI.getInputs()!;
+
+		inputs.twoVersusTwo.addEventListener("click", () => {
+			this.startGame(this._currentSceneFileName, "Local");
+		});
+		inputs.tournament.addEventListener("click", () => {
+			console.log("tournament !");
+		});
+		inputs.cancel.addEventListener("click", () => {
+			this.switchMenu(this._localGameTypeChoiceGUI, this._menuGUI);
+		});
+	}
+
+	private	CreateOnlineGameTypeChoiceGUI()
+	{
+		this._onlineGameTypeChoiceGUI = new GameTypeChoiceGUI();
+		this.addHiddenMenu(this._onlineGameTypeChoiceGUI);
+		
+		const	inputs = this._onlineGameTypeChoiceGUI.getInputs()!;
+
+		inputs.twoVersusTwo.addEventListener("click", () => {
+			this.switchMenu(this._onlineGameTypeChoiceGUI, this._inMatchmakingGUI);
+			this.startGame(this._currentSceneFileName, "Multiplayer");
+		});
+		inputs.tournament.addEventListener("click", () => {
+			console.log("tournament !");
+		});
+		inputs.cancel.addEventListener("click", () => {
+			this.switchMenu(this._onlineGameTypeChoiceGUI, this._menuGUI);
+		});
+	}
+
+	private	addHiddenMenu(menu : HTMLElement)
+	{
+		this._menuParent.appendChild(menu);
+		menu.classList.add("hidden");
 	}
 
 	private	onSceneChange(currentIndex : number, newIndex : number) : boolean
@@ -132,10 +185,9 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 	private	onEnemyTypeChange(_currentIndex : number, _newIndex : number) : boolean
 	{
-		if (_newIndex >= CreateMenuGUI._enemyTypes.length || _newIndex < 0)
-			return false;
 		const	currentType = CreateMenuGUI._enemyTypes[_currentIndex];
 		const	newType = CreateMenuGUI._enemyTypes[_newIndex];
+
 		this._sceneData.events.getObservable("enemy-type-change").notifyObservers([currentType, newType]);
 		return true;
 	}
@@ -152,26 +204,35 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 		const	enemyType = CreateMenuGUI._enemyTypes[enemyTypeIndex];
 
+		if (enemyType === "Bot")
+			this.startGame(sceneName, enemyType);
+		else if (enemyType === "Local")
+			this.switchMenu(this._menuGUI, this._localGameTypeChoiceGUI);
+		else if (enemyType === "Multiplayer")
+			this.switchMenu(this._menuGUI, this._onlineGameTypeChoiceGUI);
+	}
+
+	private	startGame(sceneName : SceneFileName, enemyType : string)
+	{
 		if (enemyType === "Local")
 			this._sceneData.pongHTMLElement.startLocalGame(sceneName);
 		else if (enemyType === "Multiplayer")
 		{
-			this._inMatchmakingGUI.classList.remove("hidden");
-			this._menuGUI.classList.add("hidden");
 			this._sceneData.pongHTMLElement.startOnlineGame(sceneName);
 		}
 		else if (enemyType === "Bot")
 			this._sceneData.pongHTMLElement.startBotGame(sceneName);
 	}
 
+	private	switchMenu(currentGUI : HTMLElement, newGUI : HTMLElement)
+	{
+		currentGUI.classList.add("hidden");
+		newGUI.classList.remove("hidden")
+	}
+
 	protected destroy()
 	{
-		if (this._menuGUI)
-			this._menuGUI.remove();
-		if (this._inMatchmakingGUI)
-			this._inMatchmakingGUI.remove();
-		if (this._titleGUI)
-			this._titleGUI.remove();
+		this._menuParent.remove();
 	}
 }
 
