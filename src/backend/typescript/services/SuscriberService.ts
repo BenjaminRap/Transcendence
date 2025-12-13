@@ -14,7 +14,7 @@ export class SuscriberService {
         private passwordHasher: PasswordHasher,
         private fileService: FileService
     ) {}
-    private api_url = process.env.API_URL || 'http://localhost:8181';
+    private api_url = process.env.API_URL || 'https://localhost:8181/api';
     private default_avatar_url = process.env.DEFAULT_AVATAR_URL || this.api_url + '/static/public/avatarDefault.png';
 
     // ----------------------------------------------------------------------------- //
@@ -40,23 +40,20 @@ export class SuscriberService {
             ...(user.matchesWons || []),
             ...(user.matchesLoses || []),
         ]
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+		.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, 4);
 
-		// Get friendships
-        const allFriendships = [
+		// Sorted friendships
+        const sortedFriendships = [
             ...(user.sentRequests || []),
             ...(user.receivedRequests || []),
-        ];
-
-		//  and sort by PENDING status first
-        const sortedFriendships = allFriendships
-            .sort((a, b) => {
-                if (a.status === "PENDING" && b.status !== "PENDING") return -1;
-                if (a.status !== "PENDING" && b.status === "PENDING") return 1;
-                return 0;
-            })
-            .slice(0, 4);
+        ]
+		.sort((a, b) => {
+			if (a.status === "PENDING" && b.status !== "PENDING") return -1;
+			if (a.status !== "PENDING" && b.status === "PENDING") return 1;
+			return 0;
+		})
+		.slice(0, 4);
 
         return {
             id: user.id.toString(),
@@ -94,14 +91,15 @@ export class SuscriberService {
     }
 
     // ----------------------------------------------------------------------------- //
-    async updateProfile(id: number, data: UpdateData): Promise<SanitizedUser> {
+    async updateUsername(id: number, data: UpdateData): Promise<SanitizedUser> {
         const user = await this.getById(Number(id));
         if (!user) {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
         }
 
         // throw SuscriberException if data match
-        await this.hasChanged(user, data);
+		if (this.hasChanged(user, data) === false)
+			throw new SuscriberException(SuscriberError.USRNAME_ERROR, SuscriberError.USRNAME_ERROR);
 
         // check username availability
         if (data.username) {
@@ -130,8 +128,6 @@ export class SuscriberService {
         const user = await this.getById(userId);
         if (!user)
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
-        if (!user.avatar)
-            console.warn("User avatar empty, user id: ", user.id);
 
        // upload avatar, never throw but return empty string if an error occured
         const avatarFileName = await this.fileService.uploadAvatarSafe(buffer, String(userId));
@@ -198,14 +194,8 @@ export class SuscriberService {
     }
 
     // ----------------------------------------------------------------------------- //
-    private async isExist(id: number): Promise<boolean> {
-        const user = await this.prisma.user.findFirst({ where: { id: Number(id) }, select: { id: true } });
-        return user ? true : false;
-    }
-    // ----------------------------------------------------------------------------- //
-    private async hasChanged(user: User, data: UpdateData) {
-        if (data.username && user.username === data.username)
-            throw new SuscriberException(SuscriberError.USRNAME_ERROR, SuscriberError.USRNAME_ERROR);
+    private hasChanged(user: User, data: UpdateData) : boolean {
+		return user.username != data.username;
     }
 	
 	// ----------------------------------------------------------------------------- //

@@ -31,8 +31,6 @@ await fastify.register(multipartPlugin);
 
 await fastify.register(staticPlugin);
 
-await fastify.register(require('@fastify/websocket'));
-
 // Instanciation and intialiasation of the dependency injection container
 const container = Container.getInstance(fastify.prisma);
 
