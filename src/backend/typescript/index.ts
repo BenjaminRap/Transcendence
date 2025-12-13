@@ -17,89 +17,83 @@ dotenv.config();
 
 const fastify = Fastify({ logger: true });
 
-fastify.register(cors, {
+await fastify.register(cors, {
     origin: true,
     credentials: true,
 });
 
-fastify.register(fpSqlitePlugin, {
+await fastify.register(fpSqlitePlugin, {
     dbFilename: "./databases/main.db",
 });
 
-fastify.register(prismaPlugin);
+await fastify.register(prismaPlugin);
 
-fastify.register(multipartPlugin);
+await fastify.register(multipartPlugin);
 
-fastify.register(staticPlugin);
+await fastify.register(staticPlugin);
 
-fastify.register(require('@fastify/websocket'));
+await fastify.register(require('@fastify/websocket'));
 
 // Instanciation and intialiasation of the dependency injection container
-fastify.after(async (err) => {
-    if (err)
-        throw err;
+const container = Container.getInstance(fastify.prisma);
 
-    const container = Container.getInstance(fastify.prisma);
-    
-    // auth /register /login - /refresh
-    fastify.register((instance, opts, done) => {
-        authRoutes(
-            instance,
-            Container.getInstance().getService('AuthController'),
-            Container.getInstance().getService('AuthMiddleware')
-        );
-        done();
-    }, { prefix: '/auth' });
-    
-    // users /search/:id - /search/username
-    fastify.register((instance, opts, done) => {
-        usersRoutes(
-            instance,
-            Container.getInstance().getService('UsersController'),
-            Container.getInstance().getService('AuthMiddleware')
-        );
-        done();
-    }, { prefix: '/users' });
-    
-    // suscriber /profile - /update
-    fastify.register((instance, opts, done) => {
-        suscriberRoute(
-            instance,
-            Container.getInstance().getService('SuscriberController'),
-            {
-                auth: Container.getInstance().getService('AuthMiddleware'),
-                header: Container.getInstance().getService('HeaderMiddleware')
-            },
-        );
-        done();
-    }, { prefix: '/suscriber' });
-    
-    /* friend/
-        - request/:id
-        - accept/:id
-        - delete/:id
-        - search/myfriends
-        - search/pendinglist
-    */
-    fastify.register((instance, opts, done) => {
-        friendRoute(
-            instance,
-            Container.getInstance().getService('FriendController'),
-            Container.getInstance().getService('AuthMiddleware')
-        );
-        done();
-    }, { prefix: '/friend' });
+// auth /register /login - /refresh
+await fastify.register((instance, opts, done) => {
+	authRoutes(
+		instance,
+		Container.getInstance().getService('AuthController'),
+		Container.getInstance().getService('AuthMiddleware')
+	);
+	done();
+}, { prefix: '/auth' });
 
-	fastify.register((instance, opts, done) => {
-		matchRoutes(
-			instance,
-			Container.getInstance().getService('MatchController'),
-			Container.getInstance().getService('AuthMiddleware')
-		);
-		done();
-	}, { prefix: '/match' });
+// users /search/:id - /search/username
+await fastify.register((instance, opts, done) => {
+	usersRoutes(
+		instance,
+		Container.getInstance().getService('UsersController'),
+		Container.getInstance().getService('AuthMiddleware')
+	);
+	done();
+}, { prefix: '/users' });
 
-});
+// suscriber /profile - /update
+await fastify.register((instance, opts, done) => {
+	suscriberRoute(
+		instance,
+		Container.getInstance().getService('SuscriberController'),
+		{
+			auth: Container.getInstance().getService('AuthMiddleware'),
+			header: Container.getInstance().getService('HeaderMiddleware')
+		},
+	);
+	done();
+}, { prefix: '/suscriber' });
+
+/* friend/
+	- request/:id
+	- accept/:id
+	- delete/:id
+	- search/myfriends
+	- search/pendinglist
+*/
+await fastify.register((instance, opts, done) => {
+	friendRoute(
+		instance,
+		Container.getInstance().getService('FriendController'),
+		Container.getInstance().getService('AuthMiddleware')
+	);
+	done();
+}, { prefix: '/friend' });
+
+await fastify.register((instance, opts, done) => {
+	matchRoutes(
+		instance,
+		Container.getInstance().getService('MatchController'),
+		Container.getInstance().getService('AuthMiddleware')
+	);
+	done();
+}, { prefix: '/match' });
 
 async function start(): Promise<void> {
     try {
