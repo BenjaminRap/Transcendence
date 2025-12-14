@@ -68,7 +68,7 @@ export class AuthService {
     }
 
     // --------------------------------------------------------------------------------- //
-    async loginWith42(code: string): Promise<{ user: SanitizedUser; tokens: TokenPair }> {
+    async loginWith42(code: string): Promise<{ user: SanitizedUser; tokens: TokenPair; msg: string }> {
         const tokenResponse = await fetch('https://api.intra.42.fr/oauth/token', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -86,7 +86,8 @@ export class AuthService {
         }
 
         const tokenData = await tokenResponse.json() as any;
-        const accessToken = tokenData.access_token;
+        console.log("tokenData: ", tokenData);
+		const accessToken = tokenData.access_token;
 
         const userResponse = await fetch('https://api.intra.42.fr/v2/me', {
             headers: { Authorization: `Bearer ${accessToken}` },
@@ -99,7 +100,7 @@ export class AuthService {
         const userData = await userResponse.json() as any;
 
         let user = await this.findByEmailOrUsername(userData.email, userData.login);
-
+		let msg = '';
         if (!user) {
             const randomPassword = Math.random().toString(36).slice(-8);
             const hashedPassword = await this.passwordHasher.hash(randomPassword);
@@ -112,13 +113,17 @@ export class AuthService {
                     avatar: userData.image?.link,
                 },
             });
+			msg = 'New user created and logged in with 42';
         }
+		if (msg === '')
+			msg = 'User logged in with 42';
 
         const tokens = await this.tokenManager.generatePair(String(user.id), user.email);
 
         return {
             user: sanitizeUser(user),
             tokens,
+			msg,
         };
     }
 

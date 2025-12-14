@@ -11,10 +11,10 @@ export function authRoutes(
     fastify.post<{ Body: RegisterData }>('/register', controller.register.bind(controller));
  
     fastify.post<{ Body: LoginData }>('/login', controller.login.bind(controller));
- 
-    fastify.get('/refresh', {
+	
+	fastify.get('/callback', controller.callback42.bind(controller));
+    
+	fastify.get('/refresh', {
         preHandler: middleware.refreshAuthenticate,
     }, controller.refresh.bind(controller));
-
-	fastify.get('/callback', controller.callback42.bind(controller));
 }

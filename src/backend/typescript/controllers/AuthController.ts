@@ -109,7 +109,6 @@ export class AuthController {
 
     // --------------------------------------------------------------------------------- //
     // GET auth/callback
-	
 	async callback42(request: FastifyRequest<{ Querystring: VerifData }>, reply: FastifyReply) {
 		try {
             const { code } = request.query;
@@ -125,8 +124,9 @@ export class AuthController {
 
 			return reply.status(200).send({
 				success: true,
-				message: 'Authentication successful',
-                ...result,
+				message: result.msg,
+				user: result.user,
+				tokens:	result.tokens,
 			});
 		} catch (error) {
 			if (error instanceof AuthException) {
@@ -140,7 +140,5 @@ export class AuthController {
 			});
 		}
 	}
-
-
 }
 
