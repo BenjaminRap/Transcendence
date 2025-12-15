@@ -93,7 +93,7 @@ export namespace TerminalCommand {
 		new Command('profile', 'Display user profile', 'profile [username]', profileCommand),
 		new Command('kill', 'Terminate a process', 'kill [process_name]', killCommand),
 		new Command('clear', 'Clear the terminal screen', 'clear', clearCommand),
-		new Command('modal', 'Create a modal dialog', 'modal [text]', modalCommand),
+		// new Command('modal', 'Create a modal dialog', 'modal [text]', modalCommand),
 		new Command('register', 'Register a new user', 'register [text]', registerInput),
 		new Command('cd', 'Change the current directory', 'cd [directory]', cdCommand),
 		new Command('ls', 'List directory contents', 'ls', lsCommand),
@@ -102,6 +102,7 @@ export namespace TerminalCommand {
 		new Command('whoami', 'Display the current username', 'whoami', whoamiCommand),
 		new Command('login', 'Login to your account', 'login [email] [password]', loginInput),
 		new Command('logout', 'Logout from your account', 'logout', RequestBackendModule.logout),
+		new Command('42' , 'Authenticate with OAuth 42', '42', OauthCommand),
 	];
 	export let commandHistory: string[] = [];
 	export let indexCommandHistory = -2;
@@ -111,6 +112,10 @@ export namespace TerminalCommand {
 
 
 // ------------------------------------------------------------------------ Command ---------------------------------------------------------------------
+
+function OauthCommand(args: string[], description: string, usage: string): string {
+	return '';
+}
 
 function echoCommand(args: string[], description: string, usage: string): string {
 	let result = '';
