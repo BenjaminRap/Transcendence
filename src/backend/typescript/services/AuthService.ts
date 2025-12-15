@@ -27,22 +27,12 @@ export class AuthService {
 
         const hashedPassword = await this.passwordHasher.hash(data.password);
 
-        if (data.avatar) {
-            /**
-             * appeler le controller et lui laisser assurer la securite vis a vis
-             * gerer la mise a jour de l'avatar suivant le retour du controller
-             * 
-            */
-           
-        }
-
         // create user in the DB
         const user = await this.prisma.user.create({
             data: {
                 username: data.username,
                 email: data.email,
                 password: hashedPassword,
-                avatar: data.avatar,
             },
         });
 
@@ -78,26 +68,72 @@ export class AuthService {
     }
 
     // --------------------------------------------------------------------------------- //
+    async loginWith42(code: string): Promise<{ user: SanitizedUser; tokens: TokenPair; msg: string }> {
+        const tokenResponse = await fetch('https://api.intra.42.fr/oauth/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                grant_type: 'authorization_code',
+                client_id: process.env.FORTY_TWO_UID,
+                client_secret: process.env.FORTY_TWO_SECRET,
+                code,
+                redirect_uri: process.env.FORTY_TWO_CALLBACK_URL,
+            }),
+        });
+
+        if (!tokenResponse.ok) {
+            throw new AuthException(AuthError.INVALID_CREDENTIALS, 'Failed to exchange code for token');
+        }
+
+        const tokenData = await tokenResponse.json() as any;
+        console.log("tokenData: ", tokenData);
+		const accessToken = tokenData.access_token;
+
+        const userResponse = await fetch('https://api.intra.42.fr/v2/me', {
+            headers: { Authorization: `Bearer ${accessToken}` },
+        });
+
+        if (!userResponse.ok) {
+            throw new AuthException(AuthError.INVALID_CREDENTIALS, 'Failed to fetch 42 user info');
+        }
+
+        const userData = await userResponse.json() as any;
+
+        let user = await this.findByEmailOrUsername(userData.email, userData.login);
+		let msg = '';
+        if (!user) {
+            const randomPassword = Math.random().toString(36).slice(-8);
+            const hashedPassword = await this.passwordHasher.hash(randomPassword);
+
+            user = await this.prisma.user.create({
+                data: {
+                    username: userData.login,
+                    email: userData.email,
+                    password: hashedPassword,
+                    avatar: userData.image?.link,
+                },
+            });
+			msg = 'New user created and logged in with 42';
+        }
+		if (msg === '')
+			msg = 'User logged in with 42';
+
+        const tokens = await this.tokenManager.generatePair(String(user.id), user.email);
+
+        return {
+            user: sanitizeUser(user),
+            tokens,
+			msg,
+        };
+    }
+
+    // --------------------------------------------------------------------------------- //
     async refreshTokens(userId: string, email: string): Promise<TokenPair> {
         // check if user exist
         if ( !await this.findById(Number(userId)) ) {
             throw new AuthException(AuthError.USR_NOT_FOUND, AuthError.USR_NOT_FOUND);
         }
         return await this.tokenManager.generatePair(userId, email);
-    }
-
-    // --------------------------------------------------------------------------------- //
-    async verifyPassword(userId: number, password: string): Promise<TokenKey> {
-        const user = await this.findById(Number(userId));
-        if (!user) {
-            throw new AuthException(AuthError.USR_NOT_FOUND, AuthError.USR_NOT_FOUND);
-        }
-        
-        if ( !await this.passwordHasher.verify(password, user.password) ) {
-            throw new AuthException(AuthError.INVALID_CREDENTIALS, 'Invalid password');
-        }
-        
-        return await this.tokenManager.generateUnique(String(user.id), user.email, "5m");
     }
 
     // ==================================== PRIVATE ==================================== //

@@ -1,26 +1,71 @@
 import { PrismaClient, User } from "@prisma/client";
 import { UpdateData, SuscriberStats } from "../types/suscriber.types.js";
 import { PasswordHasher } from "../utils/PasswordHasher.js";
+import { FileService } from "./FileService.js";
 import { sanitizeUser, SanitizedUser } from '../types/auth.types.js'
+import { SuscriberProfile } from "../types/suscriber.types.js";
+import { GameStats } from "../types/match.types.js";
 import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
+import path from "path";
 
 export class SuscriberService {
     constructor(
         private prisma: PrismaClient,
         private passwordHasher: PasswordHasher,
+        private fileService: FileService
     ) {}
+    private api_url = process.env.API_URL || 'https://localhost:8181/api';
+    private default_avatar_url = process.env.DEFAULT_AVATAR_URL || this.api_url + '/static/public/avatarDefault.png';
 
     // ----------------------------------------------------------------------------- //
-    async getProfile(id: number): Promise<SanitizedUser> {
-        const user = await this.getById(Number(id));
+    async getProfile(id: number): Promise<SuscriberProfile> {
+        const user = await this.prisma.user.findUnique({
+            where: { id: Number(id) },
+            include: {
+                matchesWons: true,
+                matchesLoses: true,
+                sentRequests: true,
+                receivedRequests: true,
+            },
+        });
+
         if (!user) {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
         }
-        
-        return sanitizeUser(user);
-    }
 
-    // ----------------------------------------------------------------------------- //
+		const stats: GameStats = this.calculateStats(user);
+
+		// Get last 4 matches
+        const allMatches = [
+            ...(user.matchesWons || []),
+            ...(user.matchesLoses || []),
+        ]
+		.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 4);
+
+		// Sorted friendships
+        const sortedFriendships = [
+            ...(user.sentRequests || []),
+            ...(user.receivedRequests || []),
+        ]
+		.sort((a, b) => {
+			if (a.status === "PENDING" && b.status !== "PENDING") return -1;
+			if (a.status !== "PENDING" && b.status === "PENDING") return 1;
+			return 0;
+		})
+		.slice(0, 4);
+
+        return {
+            id: user.id.toString(),
+            avatar: user.avatar,
+            username: user.username,
+            gameStats: stats,
+            lastMatchs: allMatches,
+            friends: sortedFriendships,
+        };
+    }
+    
+	// ----------------------------------------------------------------------------- //
     async updatePassword(id: number, currentPassword: string, newPassword: string): Promise<void> {
         const user = await this.getById(Number(id));
         if (!user) {
@@ -46,14 +91,15 @@ export class SuscriberService {
     }
 
     // ----------------------------------------------------------------------------- //
-    async updateProfile(id: number, data: UpdateData): Promise<SanitizedUser> {
+    async updateUsername(id: number, data: UpdateData): Promise<SanitizedUser> {
         const user = await this.getById(Number(id));
         if (!user) {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
         }
 
         // throw SuscriberException if data match
-        await this.hasChanged(user, data);
+		if (this.hasChanged(user, data) === false)
+			throw new SuscriberException(SuscriberError.USRNAME_ERROR, SuscriberError.USRNAME_ERROR);
 
         // check username availability
         if (data.username) {
@@ -78,19 +124,54 @@ export class SuscriberService {
     }
 
     // ----------------------------------------------------------------------------- //
-    async updateAvatar(userId: number, buffer: Buffer, origineFilename: string): Promise<SanitizedUser> {
-        const user = await this.getById(Number(userId));
+    async updateAvatar(buffer: Buffer, userId: number): Promise<SanitizedUser> {
+        const user = await this.getById(userId);
         if (!user)
-            throw new SuscriberException(SuscriberError.USER_NOT_FOUND, 'User not found');
+            throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
 
-        /**
-         * a ce niveau j'ai verifie la limite du nombre de fichier
-         * limite de taille
-         * type mime
-         * je dois verifier que le format du fichier correspond a celui indiquer dans le type
-         * analyse du magic number
-        */
-       return sanitizeUser(user);
+       // upload avatar, never throw but return empty string if an error occured
+        const avatarFileName = await this.fileService.uploadAvatarSafe(buffer, String(userId));
+        if (!avatarFileName)
+            throw new SuscriberException(SuscriberError.UPLOAD_ERROR, SuscriberError.UPLOAD_ERROR);
+        
+        const oldAvatarUrl = user.avatar;
+        const newAvatarPath = path.join('/static/avatars/', path.basename(avatarFileName));
+        const newAvatarUrl = this.api_url + newAvatarPath;
+        try {
+            const updatedUser = await this.prisma.user.update({
+                where: { id: userId },
+                data: { avatar: newAvatarUrl },
+            });
+            
+            await this.fileService.deleteAvatar(oldAvatarUrl);
+
+            return sanitizeUser(updatedUser);
+
+        } catch (error) {
+            console.error('Error updating avatar: ', error);
+            
+            await this.fileService.deleteAvatar(newAvatarUrl);
+
+            throw new SuscriberException(SuscriberError.UPLOAD_ERROR, 'Error updating avatar');
+        }
+    }
+
+    // ----------------------------------------------------------------------------- //
+    async deleteAvatar(userId: number): Promise<SanitizedUser> {
+        const user = await this.getById(userId);
+        if (!user)
+            throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
+
+        const oldAvatarUrl = user.avatar;
+
+        const updatedUser = await this.prisma.user.update({
+            where: { id: userId },
+            data: { avatar: this.default_avatar_url },
+        });
+
+        await this.fileService.deleteAvatar(oldAvatarUrl);
+
+        return sanitizeUser(updatedUser);
     }
 
     // ----------------------------------------------------------------------------- //
@@ -105,34 +186,6 @@ export class SuscriberService {
         });
     }
 
-    // ----------------------------------------------------------------------------- //
-    async getStats(id: number): Promise<SuscriberStats>{
-        if (!this.isExist(id)) {
-            throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
-        }
-
-        const gamesPlayed = await this.prisma.match.count({
-            where: {
-                OR: [
-                    { winnerId: id },
-                    { loserId: id }
-                ]
-            }
-        });
-
-        const gamesWon = await this.prisma.match.count({
-            where: { winnerId: id }
-        });
-
-        const winRate = gamesPlayed > 0 ? (gamesWon / gamesPlayed) * 100 : 0;
-
-        return {
-            gamesPlayed,
-            gamesWon,
-            winRate: parseFloat(winRate.toFixed(2))
-        } as SuscriberStats;
-    }
-
     // ================================== PRIVATE ================================== //
 
     // ----------------------------------------------------------------------------- //
@@ -141,16 +194,23 @@ export class SuscriberService {
     }
 
     // ----------------------------------------------------------------------------- //
-    private async isExist(id: number): Promise<boolean> {
-        const user = await this.prisma.user.findFirst({ where: { id: Number(id) }, select: { id: true } });
-        return user ? true : false;
+    private hasChanged(user: User, data: UpdateData) : boolean {
+		return user.username != data.username;
     }
-    // ----------------------------------------------------------------------------- //
-    private async hasChanged(user: User, data: UpdateData) {
-        if (data.username && user.username === data.username)
-            throw new SuscriberException(SuscriberError.USRNAME_ERROR, SuscriberError.USRNAME_ERROR);
+	
+	// ----------------------------------------------------------------------------- //
+	private calculateStats(user: any): GameStats {
+		const matchesWon = user.matchesWons?.length || 0;
+		const matchesLost = user.matchesLoses?.length || 0;
+		const totalMatches = matchesWon + matchesLost;
+		const ratio = totalMatches > 0 ? (matchesWon / totalMatches * 100).toFixed(2) : "0.00";
 
-        if (data.avatar && user.avatar === data.avatar)
-            throw new SuscriberException(SuscriberError.AVATAR_ERROR, SuscriberError.AVATAR_ERROR);
-    }
+		return {
+			wins: matchesWon,
+			losses: matchesLost,
+			total: totalMatches,
+			winRate: parseFloat(ratio),
+		};
+	}
 }
+

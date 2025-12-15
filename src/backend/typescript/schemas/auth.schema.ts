@@ -17,8 +17,4 @@ export const AuthSchema = {
         password: CommonSchema.password
     }).strict(),
 
-    verifyPassword: z.object({
-        password: CommonSchema.password
-    }).strict(),
-
 }

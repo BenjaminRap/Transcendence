@@ -5,17 +5,20 @@ import { UsersService } from '../services/UsersService.js';
 import { SuscriberService } from '../services/SuscriberService.js';
 import { FriendService } from '../services/FriendService.js';
 import { MatchService } from '../services/MatchService.js';
+import { FileService } from '../services/FileService.js';
 
 import { AuthController } from '../controllers/AuthController.js';
 import { UsersController } from '../controllers/UsersController.js';
 import { SuscriberController } from '../controllers/SuscriberController.js';
 import { FriendController } from '../controllers/FriendController.js';
 import { MatchController } from '../controllers/MatchController.js';
+import { FileController } from '../controllers/FileController.js';
 
 import { PasswordHasher } from '../utils/PasswordHasher.js';
 import { TokenManager } from '../utils/TokenManager.js';
 
 import { AuthMiddleware } from '../middleware/AuthMiddleware.js';
+import { HeaderMiddleware } from '../middleware/HeaderMiddleware.js';
 
 import { GameInterface } from '../interfaces/GameInterface.js';
 
@@ -68,6 +71,12 @@ export class Container {
             process.env.JWT_REFRESH_SECRET!
         ));
 
+        this.registerService('FileService', () => new FileService());
+
+        this.registerService('FileController', () => new FileController(
+            this.getService('FileService'),
+        ));
+
         // Services
         this.registerService('AuthService', () => new AuthService(
             prisma,
@@ -81,7 +90,8 @@ export class Container {
 
         this.registerService('SuscriberService', () => new SuscriberService(
             prisma,
-            this.getService('PasswordHasher')
+            this.getService('PasswordHasher'),
+            this.getService('FileService')
         ));
 
         this.registerService('FriendService', () => new FriendService(
@@ -102,7 +112,8 @@ export class Container {
         ));
 
         this.registerService('SuscriberController', () => new SuscriberController(
-            this.getService('SuscriberService')
+            this.getService('SuscriberService'),
+            this.getService('FileController')
         ));
 
         this.registerService('FriendController', () => new FriendController(
@@ -118,7 +129,10 @@ export class Container {
             this.getService('TokenManager')
         ));
 
-        // Facade
+        this.registerService('HeaderMiddleware', () => new HeaderMiddleware(
+        ));
+
+        // Interfaces
         this.registerService('GameService', () => new GameInterface(
             this.getService('MatchController')
         ));

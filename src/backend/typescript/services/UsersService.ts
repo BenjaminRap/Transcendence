@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
-import { PublicProfile } from "../types/users.types.js";
+import { PublicProfile, UserSearchResult } from "../types/users.types.js";
 import { UsersException, UsersError } from "../error_handlers/Users.error.js";
+import { GameStats } from "../types/match.types.js";
 
 export class UsersService {
     constructor(
@@ -14,21 +15,36 @@ export class UsersService {
         }
 
         const user = await this.prisma.user.findFirst({
-            where: { id },
-            select: {
-                id: true,
-                username: true,
-                avatar: true
-            }
+            where: { id: Number(id) },
+			include: {
+				matchesWons: true,
+				matchesLoses: true
+			}
         });
         if (!user) {
             throw new UsersException(UsersError.USER_NOT_FOUND, 'User not found');
         }
-        return user as PublicProfile;
+
+		const gameStats: GameStats = this.calculateStats(user);
+
+		const lastMatchs = [
+			...(user.matchesWons || []),
+			...(user.matchesLoses || [])
+		]
+		.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+		.slice(0, 4);
+
+        return {
+			id: user.id,
+			avatar: user.avatar,
+			username: user.username,
+			stats: gameStats,
+			lastMatchs: lastMatchs
+		}
     }
 
     // ----------------------------------------------------------------------------- //
-    async getByName(username: string, userId: number): Promise<PublicProfile[]> {
+    async getByName(username: string, userId: number): Promise<UserSearchResult[]> {
         if ( !await this.checkIfUserExists(userId) ){
             throw new UsersException(UsersError.USER_NOT_FOUND, 'No suscriber found');
         }
@@ -64,4 +80,19 @@ export class UsersService {
         }
         return true;
     }
+
+	// ----------------------------------------------------------------------------- //
+	private calculateStats(user: any): GameStats {
+		const matchesWon = user.matchesWons?.length || 0;
+		const matchesLost = user.matchesLoses?.length || 0;
+		const totalMatches = matchesWon + matchesLost;
+		const ratio = totalMatches > 0 ? (matchesWon / totalMatches * 100).toFixed(2) : "0.00";
+
+		return {
+			wins: matchesWon,
+			losses: matchesLost,
+			total: totalMatches,
+			winRate: parseFloat(ratio),
+		};
+	}
 }

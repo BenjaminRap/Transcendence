@@ -12,13 +12,13 @@ export class FriendService {
     async createFriendRequest(friendId: number, userId: number) {
         if (friendId == userId)
             throw new FriendException(FriendError.INVALID_ID, 'Impossible to create this bond of friendship')
-
-        // check users account validity
-        if ( !this.checkId(friendId) || !this.checkId(userId) )
+		
+        if ( await this.checkId(friendId) == false || await this.checkId(userId) == false ) {
             throw new FriendException(FriendError.USR_NOT_FOUND, FriendError.USR_NOT_FOUND);
+		}
 
         // throw an error if a link exist between users
-        const friendship = await this.getExistingLink(friendId, userId);
+        const friendship = await this.getExistingLink(Number(friendId), Number(userId));
         if (friendship) {
             if (friendship.status === 'ACCEPTED')
                 throw new FriendException(FriendError.ACCEPTED, FriendError.ACCEPTED);
@@ -26,7 +26,7 @@ export class FriendService {
                 throw new FriendException(FriendError.PENDING, FriendError.PENDING);
         }
 
-        await this.prisma.friendship.create({ data: {requesterId: userId, receiverId: friendId} });        
+        await this.prisma.friendship.create({ data: {requesterId: Number(userId), receiverId: Number(friendId)} });        
     }
 
     // ----------------------------------------------------------------------------- //
@@ -35,7 +35,7 @@ export class FriendService {
             throw new FriendException(FriendError.INVALID_ID, "the user can't accept its own friend request");
 
         // check users account validity
-        if ( !this.checkId(friendId) || !this.checkId(userId) )
+        if ( await this.checkId(friendId) == false || await this.checkId(userId) == false )
             throw new FriendException(FriendError.USR_NOT_FOUND, FriendError.USR_NOT_FOUND);
 
         // check existing link
@@ -57,7 +57,7 @@ export class FriendService {
             throw new FriendException(FriendError.INVALID_ID, FriendError.INVALID_ID);
 
         // check users account validity
-        if ( !this.checkId(friendId) || !this.checkId(userId) )
+        if ( await this.checkId(friendId) == false || await this.checkId(userId) == false )
             throw new FriendException(FriendError.USR_NOT_FOUND, FriendError.USR_NOT_FOUND);
 
         // check existing link
@@ -74,7 +74,7 @@ export class FriendService {
     // ----------------------------------------------------------------------------- //
     async getFriendsList(userId: number): Promise<ListFormat[]> {
         // check user account validity
-        if ( !this.checkId(userId) )
+        if ( await this.checkId(userId) == false )
             throw new FriendException(FriendError.USR_NOT_FOUND, FriendError.USR_NOT_FOUND);
         
         // extract friend list from the DB
@@ -102,7 +102,7 @@ export class FriendService {
     // ----------------------------------------------------------------------------- //
     async getPendingList(userId: number): Promise<ListFormat[]> {
         // check user account validity
-        if ( !this.checkId(userId) )
+        if ( await this.checkId(userId) == false )
             throw new FriendException(FriendError.USR_NOT_FOUND, FriendError.USR_NOT_FOUND);
 
         const pendingList =  await this.prisma.friendship.findMany({

@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { GameStats } from '../types/match.types.js';
+import { GameStats, MatchHistoryEntry } from '../types/match.types.js';
 import { number } from 'zod';
 
 export class MatchService {
@@ -28,7 +28,6 @@ export class MatchService {
 			const lost = losses.find(l => l.loserId === id)?._count ?? 0;
 
 			return {
-				playerId: id,
 				wins: won,
 				losses: lost,
 				total: won + lost,
@@ -39,7 +38,52 @@ export class MatchService {
 	}
 
 	// ----------------------------------------------------------------------------- //
+	async getMatchHistory(playerId: number): Promise<MatchHistoryEntry[] | null> {
+		if (await this.isExisting(playerId) === false)
+			throw new Error('Player does not exist');
 
+		const matches = await this.prisma.match.findMany({
+			where: {
+				OR: [
+					{ winnerId: playerId },
+					{ loserId: playerId }
+				]
+			},
+			select: {
+				id: true,
+				winner: {
+					select: {
+						id: true,
+						username: true,
+						avatar: true,
+					},
+				},
+				loser: {
+					select: {
+						id: true,
+						username: true,
+						avatar: true,
+					},
+				},
+				scoreWinner: true,
+				scoreLoser: true,
+				winnerId: true,
+				createdAt: true
+			},
+			orderBy: {
+				createdAt: 'desc'
+			}
+		});
+
+		const history = matches.map(match => ({
+			matchId: match.id,
+			opponent: match.winnerId === playerId ? match.loser : match.winner,
+			userResult: match.winnerId === playerId ? 'win' : 'loss',
+			date: match.createdAt
+		}) as MatchHistoryEntry);
+
+		return history;
+	}
 
 	// ================================== PRIVATE ================================== //
 
@@ -60,5 +104,11 @@ export class MatchService {
 	}
 
 	// ----------------------------------------------------------------------------- //
-	
+	private async isExisting(id: number): Promise<boolean> {
+		const user = await this.prisma.user.findUnique({
+			where: { id: id },
+			select: { id: true }
+		});
+		return user !== null;
+	}
 }

@@ -5,7 +5,6 @@ export interface RegisterData
     username:   string,
     email:      string,
     password:   string,
-    avatar?:    string
 }
 
 export interface LoginData
@@ -23,7 +22,7 @@ export interface SanitizedUser
 
 export interface VerifData
 {
-    password:   string
+    code:       string
 }
 
 export function sanitizeUser(user: User): SanitizedUser {

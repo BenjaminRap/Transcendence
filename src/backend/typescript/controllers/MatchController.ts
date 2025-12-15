@@ -1,6 +1,7 @@
+import { FastifyRequest, FastifyReply } from 'fastify';
 import { MatchService } from '../services/MatchService.js';
 import { CommonSchema } from '../schemas/common.schema.js';
-import { GameStats } from '../types/match.types.js';
+import { GameStats, MatchHistoryEntry } from '../types/match.types.js';
 
 export class MatchController {
 	constructor(
@@ -45,4 +46,30 @@ export class MatchController {
 		}
 	}
 
+	// ----------------------------------------------------------------------------- //
+	async getMatchHistory(request: FastifyRequest, reply: FastifyReply){
+		try {
+			const id = (request as any).user.userId;
+
+			// verification pathern
+			const zodParsing = CommonSchema.id.safeParse(Number(id));
+			if (!zodParsing.success)
+				return { success: false, message: zodParsing.error?.issues?.[0]?.message || 'Error id format' }
+	
+			// call db 
+			const history = await this.matchService.getMatchHistory(zodParsing.data);
+			if (!history)
+				return { success: false, message: 'Error retrieving match history'}
+	
+			return {
+				success: true,
+				history: history
+			};			
+		} catch (error) {
+			return {
+				success: false,
+				message: 'Error retrieving data from the database: ' + (error instanceof Error ? error.message : '' )
+			}
+		}
+	}
 }

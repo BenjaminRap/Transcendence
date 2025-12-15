@@ -1,11 +1,12 @@
 import fp from "fastify-plugin";
 import multipart from "@fastify/multipart";
+import { MAX_FILE_SIZE } from "../types/file.types.js";
 
 export default fp(async function multipartPlugin(fastify) {
     fastify.register(multipart, {
         limits: {
-            fileSize: 5 * 1024 * 1024, // 2 MB max
-            files: 1,                  // un seul fichier
+            fileSize: MAX_FILE_SIZE,
+            files: 1,
         },
         attachFieldsToBody: false,
     });
