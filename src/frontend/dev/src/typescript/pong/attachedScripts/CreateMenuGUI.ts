@@ -14,6 +14,7 @@ import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { Imported } from "@shared/ImportedDecorator";
 import { TimerManager } from "@shared/attachedScripts/TimerManager";
 import { GameTypeChoiceGUI } from "../gui/GameTypeChoiceGUI";
+import { TournamentCreationGUI } from "../gui/TournamentCreationGUI";
 
 export class CreateMenuGUI extends CustomScriptComponent {
 	private static readonly _enemyTypes = [ "Local", "Multiplayer", "Bot" ];
@@ -30,6 +31,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 	private _titleGUI! : TitleGUI;
 	private _localGameTypeChoiceGUI! : GameTypeChoiceGUI;
 	private _onlineGameTypeChoiceGUI! : GameTypeChoiceGUI;
+	private _tournamentCreationGUI!: TournamentCreationGUI;
 	private _currentSceneFileName! : SceneFileName;
 	private _menuParent! : HTMLDivElement;
 
@@ -56,6 +58,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		this.createInMatchmakingGUI();
 		this.CreateLocalGameTypeChoiceGUI();
 		this.CreateOnlineGameTypeChoiceGUI();
+		this.CreateTournamentCreationGUI();
 	}
 
 	protected	ready()
@@ -122,7 +125,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			this.startGame(this._currentSceneFileName, "Local");
 		});
 		inputs.tournament.addEventListener("click", () => {
-			console.log("tournament !");
+			this.switchMenu(this._localGameTypeChoiceGUI, this._tournamentCreationGUI);
 		});
 		inputs.cancel.addEventListener("click", () => {
 			this.switchMenu(this._localGameTypeChoiceGUI, this._menuGUI);
@@ -146,6 +149,13 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		inputs.cancel.addEventListener("click", () => {
 			this.switchMenu(this._onlineGameTypeChoiceGUI, this._menuGUI);
 		});
+	}
+
+	private	CreateTournamentCreationGUI()
+	{
+		this._tournamentCreationGUI = new TournamentCreationGUI();
+
+		this.addHiddenMenu(this._tournamentCreationGUI);
 	}
 
 	private	addHiddenMenu(menu : HTMLElement)

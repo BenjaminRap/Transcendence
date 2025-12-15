@@ -12,21 +12,26 @@ export class	TournamentCreationGUI extends HTMLElement
 
 	connectedCallback()
 	{
-		this.classList.add("absolute", "inset-0", "size-full", "z-10", "flex", "flex-col");
+		this.classList.add("absolute", "inset-0", "size-full", "z-10");
 		this.innerHTML = `
-			<p class="text-[2vw] w-full text-center mb-[2vh] font-(family-name:--font)">Tournament</p>
-			<div class="w-full tournamentCreationGUIProfiles">
-			</div>
-			<button class="tournamentCreationGUIAddProfile w-[7%] ml-[91%] mt-[3%] bg-green-300 rounded-md aspect-square hover:scale-125 transition-all">
-				<div class="w-3/5 aspect-square m-auto flex flex-col mt-[10%]">
-					<div class="w-[13.8%] h-[45%] bg-black m-auto"></div>
-					<div class="w-full h-[13.8%] bg-black"></div>
-					<div class="w-[13.8%] h-[45%] bg-black m-auto"></div>
+			<div class="w-full h-2/3 top-1/3 relative flex flex-col">
+				<div class="w-full h-1/2 overflow-scroll pointer-events-auto">
+					<div class="w-full tournamentCreationGUIProfiles overflow-y-scroll h-1/3 inline">
+					</div>
+					<button class="tournamentCreationGUIAddProfile ml-[2.5%] w-[3%] bg-green-300 rounded-md aspect-square hover:scale-125 transition-all pointer-events-auto">
+						<div class="aspect-square m-auto flex flex-col h-4/5">
+							<div class="w-[13.8%] h-[45%] bg-black m-auto"></div>
+							<div class="w-full h-[13.8%] bg-black"></div>
+							<div class="w-[13.8%] h-[45%] bg-black m-auto"></div>
+						</div>
+					</button>
 				</div>
-			</button>
-			<div class="flex flex-col size-full h-4/6 w-1/3 left-1/2 -translate-1/2 top-1/2 absolute">
-				${this.getButtonHTML("Start", "start")}
-				${this.getButtonHTML("Cancel", "cancel")}
+				<div class="h-1/3">
+					<div class="flex flex-col w-1/3 left-1/2 -translate-x-1/2 relative">
+						${this.getButtonHTML("Start", "start")}
+						${this.getButtonHTML("Cancel", "cancel")}
+					</div>
+				</div>
 			</div>
 		`;
 		this._profileContainer = this.querySelector("div.tournamentCreationGUIProfiles")!;
@@ -47,7 +52,7 @@ export class	TournamentCreationGUI extends HTMLElement
 	private	addProfile()
 	{
 		const	newProfile = new ProfileCreationGUI();
-		newProfile.classList.add("mb-[1vw]");
+		newProfile.classList.add("mb-[0.5vw]", "w-1/4", "ml-[3%]", "mr-[3%]", "mt-[0.5vw]");
 	
 		this._profiles.push(newProfile);
 		this._profileContainer.appendChild(newProfile);

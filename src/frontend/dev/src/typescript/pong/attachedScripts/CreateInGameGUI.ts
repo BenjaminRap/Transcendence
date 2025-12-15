@@ -55,7 +55,10 @@ export class CreateInGameGUI extends CustomScriptComponent {
 
 		const	buttons = this._pauseGUI.getButtons()!;
 
-		buttons.continue.addEventListener("click", () => { this.toggleMenu(this._pauseGUI) });
+		buttons.continue.addEventListener("click", () => {
+			this._sceneData.pongHTMLElement.focus();
+			this.toggleMenu(this._pauseGUI)
+		});
 		buttons.forfeit.addEventListener("click", () => { this.onForfeit() });
 		buttons.goToMenu.addEventListener("click", () => { this.onGoToMenu() });
 		buttons.quit.addEventListener("click", () => { this.onQuit() });

@@ -29,7 +29,7 @@ export class PongGame extends HTMLElement {
 
     public constructor() {
 		super();
-		this.classList.add("relative", "block");
+		this.classList.add("relative", "block", "overflow-hidden");
 		this._canvas = document.createElement("canvas");
 		this._canvas.className = "w-full aspect-video relative"
 		this._settings = new Settings();
@@ -44,7 +44,6 @@ export class PongGame extends HTMLElement {
 			await SceneManager.InitializeRuntime(this._engine, { showDefaultLoadingScreen: true, hideLoadingUIWithEngine: false });
 			this._scene = await this.getNewScene("Menu.gltf", "Menu", []);
 			this._engine.runRenderLoop(this.renderScene.bind(this));
-			this.addEventListener("click", () => { this._canvas.focus() });
 		} catch (error) {
 			console.error(`Could not initialize the scene : ${error}`)
 		}
@@ -223,6 +222,11 @@ export class PongGame extends HTMLElement {
 		SceneManager.FocusRenderCanvas(scene);
 		scene.activeCameras = scene.cameras;
 		scene.activeCameras[0].attachControl();
+	}
+
+	public focus()
+	{
+		this._canvas.focus();
 	}
 
 	public disconnectedCallback() : void {
