@@ -12,6 +12,7 @@ import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { Imported } from "@shared/ImportedDecorator";
 import { Ball } from "@shared/attachedScripts/Ball";
 import { Paddle } from "@shared/attachedScripts/Paddle";
+import type { Platform } from "@shared/attachedScripts/Platform";
 
 export class ClientSync extends CustomScriptComponent {
 	@Imported("InputManager") private	_inputManager! : InputManager;
@@ -19,6 +20,8 @@ export class ClientSync extends CustomScriptComponent {
 	@Imported("Ball") private _ball! : Ball;
 	@Imported("Paddle") private _paddleRight! : Paddle;
 	@Imported("Paddle") private _paddleLeft! : Paddle;
+	@Imported("Platform") private _top! : Platform;
+	@Imported("Platform") private _bottom! : Platform;
 
 	private _sceneData : FrontendSceneData;
 
@@ -83,6 +86,58 @@ export class ClientSync extends CustomScriptComponent {
 			inputKey.setKeyDown();
 		else
 			inputKey.setKeyUp();
+	}
+
+	private	getNewPosition(startPosition: Vector3, velocity : Vector3, remainingTimeSeconds : number) : Vector3
+	{
+		const	velocityLength = velocity.length();
+		if (velocityLength == 0)
+			return startPosition;
+		const	castVector = velocity.normalize().scale(velocityLength * remainingTimeSeconds);
+		const	endPosition = startPosition.add(castVector);
+		const	hitWorldResult = this._ball.shapeCast(startPosition, endPosition);
+
+		if (!hitWorldResult.hasHit || !hitWorldResult.body)
+			return endPosition;
+		const	newRemainingTime = (1 - hitWorldResult.hitFraction) * remainingTimeSeconds;
+		const	transform = hitWorldResult.body.transformNode;
+		const	hitPoint = startPosition.add(castVector.scale(hitWorldResult.hitFraction));
+		const	platformScript = this.getPlatformScript(transform);
+
+		if (platformScript)
+		{
+			const	newVelocity = platformScript.getNewVelocity(velocity);
+
+			return this.getNewPosition(hitPoint, newVelocity, newRemainingTime);
+		}
+
+		const	paddleScript = this.getPaddleScript(transform);
+
+		if (paddleScript)
+		{
+			const	newVelocity = paddleScript.getNewVelocity(velocity);
+
+			return this.getNewPosition(hitPoint, newVelocity, newRemainingTime);
+		}
+		throw new Error("The getNewPosition raycast hit an unexpected collider !");
+	}
+
+	private	getPlatformScript(transform : TransformNode)
+	{
+		if (transform === this._top.transform)
+			return this._top;
+		if (transform === this._bottom.transform)
+			return this._bottom;
+		return null;
+	}
+
+	private	getPaddleScript(transform : TransformNode)
+	{
+		if (transform === this._paddleLeft.transform)
+			return this._paddleLeft;
+		if (transform === this._paddleRight.transform)
+			return this._paddleRight;
+		return null;
 	}
 }
 

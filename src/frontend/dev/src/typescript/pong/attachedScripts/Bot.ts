@@ -182,6 +182,3 @@ export class Bot extends CustomScriptComponent {
 }
 
 SceneManager.RegisterClass("Bot", Bot);
-function getRandomWeighted(scores: number[]) {
-    throw new Error("Function not implemented.");
-}

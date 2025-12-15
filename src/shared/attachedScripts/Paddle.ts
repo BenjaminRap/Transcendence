@@ -55,12 +55,18 @@ export class Paddle extends CustomScriptComponent {
 			|| collision.collider !== this._physicsBody
 			|| collision.collidedAgainst.transformNode !== this._ball.transform)
 			return ;
+		const	newVelocity = this.getNewVelocity();
+
+		this._ball.setLinearVelocity(newVelocity);
+	}
+
+	public getNewVelocity()
+	{
 		const	currentVelocity = this._ball.getLinearVelocity();
 
 		if (this._ball.isInResetTimeout())
-			this.onBallCollisionY(currentVelocity);
-		else
-			this.onBallCollisionX(currentVelocity);
+			return this.onBallCollisionY(currentVelocity);
+		return this.onBallCollisionX(currentVelocity);
 	}
 
 	private	onBallCollisionY(currentVelocity : Vector3)
@@ -69,8 +75,8 @@ export class Paddle extends CustomScriptComponent {
 		const	newVelocity = currentVelocity.clone();
 
 		newVelocity.y = Paddle._speed * 1.2 * directionSign;
-		this._ball.setLinearVelocity(newVelocity);
-		return ;
+
+		return newVelocity;
 	}
 
 	private	onBallCollisionX(currentVelocity : Vector3)
@@ -82,7 +88,7 @@ export class Paddle extends CustomScriptComponent {
 		const	newSpeed = this.getNewSpeed(currentVelocity, newDirection);
 		const	newVelocity = newDirection.scale(newSpeed);
 
-		this._ball.setLinearVelocity(newVelocity);
+		return newVelocity;
 	}
 
 	public getNewDirection(collidedWorldPos : Vector3) : Vector3
