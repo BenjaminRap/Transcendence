@@ -55,14 +55,14 @@ export class Paddle extends CustomScriptComponent {
 			|| collision.collider !== this._physicsBody
 			|| collision.collidedAgainst.transformNode !== this._ball.transform)
 			return ;
-		const	newVelocity = this.getNewVelocity();
+		const	currentVelocity = this._ball.getLinearVelocity();
+		const	newVelocity = this.getNewVelocity(currentVelocity);
 
 		this._ball.setLinearVelocity(newVelocity);
 	}
 
-	public getNewVelocity()
+	public getNewVelocity(currentVelocity : Vector3)
 	{
-		const	currentVelocity = this._ball.getLinearVelocity();
 
 		if (this._ball.isInResetTimeout())
 			return this.onBallCollisionY(currentVelocity);

@@ -90,10 +90,7 @@ export class ClientSync extends CustomScriptComponent {
 
 	private	getNewPosition(startPosition: Vector3, velocity : Vector3, remainingTimeSeconds : number) : Vector3
 	{
-		const	velocityLength = velocity.length();
-		if (velocityLength == 0)
-			return startPosition;
-		const	castVector = velocity.normalize().scale(velocityLength * remainingTimeSeconds);
+		const	castVector = velocity.scale(remainingTimeSeconds);
 		const	endPosition = startPosition.add(castVector);
 		const	hitWorldResult = this._ball.shapeCast(startPosition, endPosition);
 
@@ -102,24 +99,14 @@ export class ClientSync extends CustomScriptComponent {
 		const	newRemainingTime = (1 - hitWorldResult.hitFraction) * remainingTimeSeconds;
 		const	transform = hitWorldResult.body.transformNode;
 		const	hitPoint = startPosition.add(castVector.scale(hitWorldResult.hitFraction));
-		const	platformScript = this.getPlatformScript(transform);
 
-		if (platformScript)
-		{
-			const	newVelocity = platformScript.getNewVelocity(velocity);
+		const	colliderScript = this.getPlatformScript(transform) ?? this.getPaddleScript(transform);;
 
-			return this.getNewPosition(hitPoint, newVelocity, newRemainingTime);
-		}
+		if (!colliderScript)
+			throw new Error("The getNewPosition raycast hit an unexpected collider !");
+		const	newVelocity = colliderScript.getNewVelocity(velocity);
 
-		const	paddleScript = this.getPaddleScript(transform);
-
-		if (paddleScript)
-		{
-			const	newVelocity = paddleScript.getNewVelocity(velocity);
-
-			return this.getNewPosition(hitPoint, newVelocity, newRemainingTime);
-		}
-		throw new Error("The getNewPosition raycast hit an unexpected collider !");
+		return this.getNewPosition(hitPoint, newVelocity, newRemainingTime);
 	}
 
 	private	getPlatformScript(transform : TransformNode)

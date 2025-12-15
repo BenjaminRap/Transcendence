@@ -20,8 +20,8 @@ export class	EndGUI extends HTMLElement
 	{
 		this.classList.add("absolute", "inset-0", "size-full", "z-10", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm");
 		this.innerHTML = `
-			<div class="pauseGUIMainDiv" class="flex flex-col size-full  h-4/6 w-1/3 -translate-y-1/2 top-1/2 absolute">
-				<p class="pauseGUIWinText" class="font-bold leading-normal text-[7vw] text-white text-center">WIN</p>
+			<div class="pauseGUIMainDiv flex flex-col size-full  h-4/6 w-1/3 -translate-y-1/2 top-1/2 absolute">
+				<p class="pauseGUIWinText font-bold leading-normal text-[7vw] text-white text-center">WIN</p>
 				${this.getButtonHTML("Restart", "pauseGUIRestart")}
 				${this.getButtonHTML("Go To Menu", "pauseGUIGoToMenu")}
 				${this.getButtonHTML("Quit", "pauseGUIQuit")}
