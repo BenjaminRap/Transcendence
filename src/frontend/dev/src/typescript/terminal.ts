@@ -114,6 +114,15 @@ export namespace TerminalCommand {
 // ------------------------------------------------------------------------ Command ---------------------------------------------------------------------
 
 function OauthCommand(args: string[], description: string, usage: string): string {
+
+	const clientId = (import.meta as any).env?.FORTY_TWO_UID;
+	const redirectUri = encodeURIComponent('https://localhost:8080/');
+
+
+    window.location.href = `https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-add813989568aed927d34847da79446b327e2cce154f4c1313b970f9796da37c&redirect_uri=${redirectUri}&response_type=code`;
+	
+	console.log('Env FORTY_TWO_UID:', clientId);
+
 	return '';
 }
 

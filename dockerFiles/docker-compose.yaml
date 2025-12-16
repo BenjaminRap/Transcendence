@@ -9,6 +9,8 @@ services:
     secrets:
       - ssl_key
       - ssl_crt
+    env_file:
+      - ./.env.fastify_example
   vite:
     build: ./vite/
     ports:
@@ -21,6 +23,8 @@ services:
     secrets:
       - ssl_key
       - ssl_crt
+    env_file:
+      - ./.env.fastify_example
   fastify:
     build: ./fastify/
     volumes:
