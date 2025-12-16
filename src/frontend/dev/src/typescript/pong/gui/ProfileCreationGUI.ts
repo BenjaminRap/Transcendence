@@ -1,3 +1,5 @@
+import type { Profile } from "../FrontendTournament";
+
 export type	ProfileCreationInputs = {
 	name : HTMLInputElement,
 	image : HTMLInputElement,
@@ -18,7 +20,7 @@ export class	ProfileCreationGUI extends HTMLElement
 	{
 		this.classList.add("inline-flex", "flex-col");
 		this.innerHTML = `
-			<p class="profileCreationGUIErrorText w-full text-red-900 bg-red-300/25 backdrop-blur-3xl mb-[0.5vw] text-center rounded-md invinsible"></p>
+			<p class="profileCreationGUIErrorText w-full text-red-900 bg-red-300/25 backdrop-blur-3xl mb-[0.5vw] text-center rounded-md invisible">Error</p>
 			<div class="flex flex-row items-center gap-[1vw] aspect-10/1 pointer-events-auto border-solid border-(length:--profile-border-width) border-(--border-color) rounded-(--rounded) p-[0.2vw] bg-(image:--background-image) backdrop-blur-(--backdrop-blur)">
 				<div class="ml-[1vw] p-[0.1vw] w-2/5 border-[0.1vw] border-(--file-color) border-solid">
 					<input type="text" placeholder="pseudo" class="text-[0.75vw] w-full outline-none border-transparent border-solid border-b-[0.2vw] focus:border-blue-400 transition-all duration-75 font-(family-name:--font) text-(--profile-text-color) placeholder-(--profile-text-color) h-11/12">
@@ -34,7 +36,7 @@ export class	ProfileCreationGUI extends HTMLElement
 			image: this.querySelector("input[type='file']")!,
 			remove : this.querySelector("button")!
 		}
-		this._errorText = this.querySelector("p.ProfileCreationGUI")!;
+		this._errorText = this.querySelector("p.profileCreationGUIErrorText")!;
 	}
 
 	public getInputs()
@@ -47,12 +49,20 @@ export class	ProfileCreationGUI extends HTMLElement
 		if (!this._errorText)
 			return ;
 		this._errorText.textContent = `❌${errorText}`;
-		this._errorText.classList.remove("invinsible");
+		this._errorText.classList.remove("invisible");
 	}
 
 	public clearError()
 	{
-		this._errorText?.classList.add("invinsible");
+		this._errorText?.classList.add("invisible");
+	}
+
+	public createProfile() : Profile
+	{
+		return {
+			name: this._inputs!.name.value,
+			image: this._inputs!.image.value
+		}
 	}
 }
 

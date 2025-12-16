@@ -9,6 +9,10 @@ export class	OpponentGUI extends HTMLElement
 {
 	constructor(private _profile : Profile = defaultProfile)
 	{
+		if (_profile.name === "")
+			_profile.name = defaultProfile.name;
+		if (_profile.image === "")
+			_profile.image = defaultProfile.image;
 		super();
 	}
 

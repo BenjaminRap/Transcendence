@@ -159,7 +159,10 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		const	inputs = this._localTournamentCreationGUI.getInputs();
 
 		inputs?.start.addEventListener("click", () => {
-			console.log("start");
+			const	tournament = this._localTournamentCreationGUI.createNewFrontendTournament();
+
+			if (tournament == null)
+				return ;
 		});
 		inputs?.cancel.addEventListener("click", () => {
 			this._localTournamentCreationGUI.reset();

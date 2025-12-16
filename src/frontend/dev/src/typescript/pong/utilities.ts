@@ -64,4 +64,3 @@ export function	replaceMaterial(currentMaterial : Material, newMaterial : Materi
 			mesh.material = newMaterial;
 	});
 }
-

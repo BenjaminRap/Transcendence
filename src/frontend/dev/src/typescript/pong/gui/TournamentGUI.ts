@@ -3,6 +3,7 @@ import type { Match, Profile } from "../FrontendTournament";
 import { MatchGUI } from "./MatchGUI";
 import { OpponentGUI } from "./OpponentGUI";
 import { Range } from "@shared/Range";
+import { isPowerOfTwo } from "@shared/utils";
 
 export class	TournamentGUI extends HTMLElement
 {
@@ -16,8 +17,10 @@ export class	TournamentGUI extends HTMLElement
 	private _left : number = 0;
 	private _top : number = 0;
 
-	constructor(matchesByRound? : Match[][], participants? : Profile[])
+	constructor(matchesByRound : Match[][] = [], participants : Profile[] = [])
 	{
+		if (participants.length <= 1 || !isPowerOfTwo(participants.length))
+			throw new Error(`Invalid participants count : ${participants.length}, it should be power of two, greater than one !`);
 		super();
 		this._matchesByRound = matchesByRound ?? [];
 		this._participants = participants ?? [];

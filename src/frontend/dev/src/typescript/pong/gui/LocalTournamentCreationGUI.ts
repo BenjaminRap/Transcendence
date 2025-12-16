@@ -1,3 +1,4 @@
+import { FrontendTournament } from "../FrontendTournament";
 import { ProfileCreationGUI } from "./ProfileCreationGUI";
 
 export type TournamentCreationGUIInputs = {
@@ -96,6 +97,37 @@ export class	LocalTournamentCreationGUI extends HTMLElement
 		this.addProfile();
 		this.addProfile();
 		this.setProperties("var(--color-gray-400)", "100%");
+	}
+
+	private validate()
+	{
+		let	isValid = true;
+	
+		for (let index = 0; index < this._profiles.length; index++) {
+			const profile = this._profiles[index];
+			const inputs = profile.getInputs()!;
+			
+			if (inputs.name.value === "")
+				profile.setErrorText("A profile name can not be empty !");
+			else if (this._profiles.filter((value) => value.getInputs()!.name.value === inputs.name.value).length > 1)
+				profile.setErrorText("The profile name is duplicated !")
+			else
+			{
+				profile.clearError();
+				continue ;
+			}
+			isValid = false;
+		}
+		return isValid;
+	}
+
+	public createNewFrontendTournament() : FrontendTournament | null
+	{
+		if (!this.validate())
+			return null;
+		const	profiles = this._profiles.map((profileGUI) => profileGUI.createProfile());
+
+		return new FrontendTournament(profiles);
 	}
 
 	public getInputs()
