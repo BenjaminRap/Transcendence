@@ -8,6 +8,8 @@ import { TerminalUserManagement } from './typescript/terminal'
 const url = new URL( window.location.href);
 const path = url.pathname;
 
+let message = '';
+
 const errors404 = ["You are the reason why everthing in your life is miserable", "Your only talent is failling", "The only usefull thing you've ever done is failling"];
 
 
@@ -66,6 +68,10 @@ async function auth42Callback() {
 		}
 		history.pushState({}, '', `/`);
 	}
+	else if (getUrlVar('error')) {
+		message = "Authentication failed. Please try again.";
+		history.pushState({}, '', `/`);
+	}
 }
 
 
@@ -78,7 +84,13 @@ await Terminal.buildTerminal();
 if (path === '/')
 {
 	if (!TerminalUserManagement.isLoggedIn)
-		WriteOnTerminal.printErrorOnTerminal("Welcome to Transencdence ! Type `help` for instructions.");
+	{
+		if (message) {
+			WriteOnTerminal.printErrorOnTerminal(message);
+		} else {
+			WriteOnTerminal.printErrorOnTerminal("Welcome to Transencdence ! Type `help` for instructions.");
+		}
+	}
 	else
 		WriteOnTerminal.printErrorOnTerminal(`Welcome back ${TerminalUserManagement.username} ! Type \`help\` for instructions.`);
 	if (ProfileBuilder.isActive)
