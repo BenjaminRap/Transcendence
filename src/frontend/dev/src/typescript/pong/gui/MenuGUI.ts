@@ -52,7 +52,7 @@ export class	MenuGUI extends HTMLElement
 
 	private	getPlayButton(className : string)
 	{
-		return `<button class="${className} absolute bottom-0 left-1/2 -translate-1/2 h-1/12 w-1/4 text-[3vw] pointer-events-auto menu-button">Play</button>`;
+		return `<button class="${className} absolute bottom-0 left-1/2 -translate-1/2 h-1/12 w-1/4 text-[3cqw] pointer-events-auto menu-button">Play</button>`;
 	}
 
 	private	getItemSwitchElement(classNameBase : string, items : string[])
@@ -64,7 +64,7 @@ export class	MenuGUI extends HTMLElement
 		}, "");
 		return `
 			${this.getButtonHTML(`${classNameBase}ButtonLeft`, "left")}
-			<div class="relative h-2/3 grow-2 text-[2vw] mx-[5%] overflow-hidden menu-button" >
+			<div class="relative h-2/3 grow-2 text-[2cqw] mx-[5%] overflow-hidden menu-button" >
 				<div class="${classNameBase}ItemsContainer size-full absolute transition-all ease-in-out left-0">
 					${itemsHTML}
 				</div>

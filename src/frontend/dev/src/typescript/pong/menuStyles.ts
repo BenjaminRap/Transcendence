@@ -56,7 +56,7 @@ const	themes : Themes = {
 		"--font-weight": "var(--font-weight-semibold)",
 		"--rounded": "calc(infinity * 1px)",
 		"--border-color": "var(--color-blue-300)",
-		"--border-width": "0.3vw",
+		"--border-width": "0.3cqw",
 		"--background-image": "linear-gradient(to bottom, var(--color-cyan-500), var(--color-blue-500))",
 		"--background-color": "unset",
 		"--hover-scale": "115%",
@@ -73,7 +73,7 @@ const	themes : Themes = {
 		"--title-color": "var(--color-black)",
 		"--title-shadow": "8px 8px 4px rgba(75, 80, 90, 1)",
 		"--file-color": "var(--color-blue-700)",
-		"--profile-border-width": "0.2vw",
+		"--profile-border-width": "0.2cqw",
 		"--file-text-color": "var(--color-cyan-500)",
 		"--profile-text-color": "var(--file-color)"
 	},
@@ -83,7 +83,7 @@ const	themes : Themes = {
 		"--font-weight": "var(--font-weight-bold)",
 		"--rounded": "var(--radius-lg)",
 		"--border-color": "var(--color-white)",
-		"--border-width": "0.3vw",
+		"--border-width": "0.3cqw",
 		"--background-image": "unset",
 		"--background-color": "transparent",
 		"--hover-scale": "110%",
@@ -100,7 +100,7 @@ const	themes : Themes = {
 		"--title-color": "var(--color-white)",
 		"--title-shadow": "none",
 		"--file-color": "var(--color-white)",
-		"--profile-border-width": "0.1vw",
+		"--profile-border-width": "0.1cqw",
 		"--file-text-color": "var(--color-black)",
 		"--profile-text-color": "var(--color-white)"
 	},
@@ -110,7 +110,7 @@ const	themes : Themes = {
 		"--font-weight": "var(--font-weight-bold)",
 		"--rounded": "var(--radius-md)",
 		"--border-color": "var(--text-color)",
-		"--border-width": "0.2vw",
+		"--border-width": "0.2cqw",
 		"--background-image": "unset",
 		"--background-color": "transparent",
 		"--hover-scale": "101%",
@@ -127,7 +127,7 @@ const	themes : Themes = {
 		"--title-color": "var(--color-green-500)",
 		"--title-shadow": "none",
 		"--file-color": "var(--color-green-700)",
-		"--profile-border-width": "0.1vw",
+		"--profile-border-width": "0.1cqw",
 		"--file-text-color": "var(--color-black)",
 		"--profile-text-color": "var(--file-color)"
 	}

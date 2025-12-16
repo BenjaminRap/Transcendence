@@ -21,7 +21,7 @@ export class	EndGUI extends HTMLElement
 		this.classList.add("absolute", "inset-0", "size-full", "z-10", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm");
 		this.innerHTML = `
 			<div class="pauseGUIMainDiv flex flex-col size-full  h-4/6 w-1/3 -translate-y-1/2 top-1/2 absolute">
-				<p class="pauseGUIWinText font-bold leading-normal text-[7vw] text-white text-center">WIN</p>
+				<p class="pauseGUIWinText font-bold leading-normal text-[7cqw] text-white text-center">WIN</p>
 				${this.getButtonHTML("Restart", "pauseGUIRestart")}
 				${this.getButtonHTML("Go To Menu", "pauseGUIGoToMenu")}
 				${this.getButtonHTML("Quit", "pauseGUIQuit")}
@@ -60,7 +60,7 @@ export class	EndGUI extends HTMLElement
 
 	private	getButtonHTML(text : string, className : string)
 	{
-		return `<button class="${className} font-(family-name:--font) text-[3vw] w-full mt-[10%] pointer-events-auto grow menu-button">${text}</button>`;
+		return `<button class="${className} font-(family-name:--font) text-[3cqw] w-full mt-[10%] pointer-events-auto grow menu-button">${text}</button>`;
 	}
 
 	public getButtons() : EndGUIButtons | undefined

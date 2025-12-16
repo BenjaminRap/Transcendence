@@ -29,9 +29,9 @@ export class PongGame extends HTMLElement {
 
     public constructor() {
 		super();
-		this.classList.add("relative", "block", "overflow-hidden");
+		this.classList.add("relative", "block", "overflow-hidden", "container-inline", "aspect-video");
 		this._canvas = document.createElement("canvas");
-		this._canvas.className = "w-full aspect-video relative"
+		this._canvas.classList.add("size-full");
 		this._settings = new Settings();
 		this._multiplayerHandler = new MultiplayerHandler();
 		this.appendChild(this._canvas);

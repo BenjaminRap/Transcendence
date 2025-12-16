@@ -54,13 +54,13 @@ export class	LocalTournamentCreationGUI extends HTMLElement
 
 	private	getButtonHTML(text : string, className : string)
 	{
-		return `<button class="${className} font-(family-name:--font) text-[3vw] w-full mb-[10%] pointer-events-auto grow menu-button">${text}</button>`;
+		return `<button class="${className} font-(family-name:--font) text-[3cqw] w-full mb-[10%] pointer-events-auto grow menu-button">${text}</button>`;
 	}
 
 	private	addProfile()
 	{
 		const	newProfile = new ProfileCreationGUI();
-		newProfile.classList.add("mb-[0.5vw]", "w-1/4", "ml-[3%]", "mr-[3%]", "mt-[0.5vw]");
+		newProfile.classList.add("mb-[0.5cqw]", "w-1/4", "ml-[3%]", "mr-[3%]", "mt-[0.5vw]");
 	
 		this._profiles.push(newProfile);
 		this._profileContainer.appendChild(newProfile);

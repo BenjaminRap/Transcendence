@@ -52,7 +52,7 @@ export class	TournamentGUI extends HTMLElement
 		const	div = document.createElement("div");
 
 		div.classList.add("absolute", "inset-0", "size-full", "z-10", "flex", "flex-col", "relative");
-		div.style.minWidth = `calc(${this._participants.length} * 1.1 * 10vw)`;
+		div.style.minWidth = `calc(${this._participants.length} * 1.1 * 10cqw)`;
 
 		return div;
 	}
@@ -67,8 +67,8 @@ export class	TournamentGUI extends HTMLElement
 			for (let index = 0; index < matches.length; index++) {
 				const matchGUI = new MatchGUI();
 
-				matchGUI.classList.add("w-[10vw]");
-				matchGUI.style.width = `calc(50% / ${matches.length} + 1vw)`;
+				matchGUI.classList.add("w-[10cqw]");
+				matchGUI.style.width = `calc(50% / ${matches.length} + 1cqw)`;
 				
 				div.appendChild(matchGUI);
 			}
@@ -85,8 +85,8 @@ export class	TournamentGUI extends HTMLElement
 			const participant = this._participants[index];
 			const matchGUI = new OpponentGUI(participant);
 
-			matchGUI.classList.add("w-[10vw]");
-			matchGUI.style.width = `calc(50% / ${this._participants.length} + 1vw)`;
+			matchGUI.classList.add("w-[10cqw]");
+			matchGUI.style.width = `calc(50% / ${this._participants.length} + 1cqw)`;
 			
 			div.appendChild(matchGUI);
 		}
