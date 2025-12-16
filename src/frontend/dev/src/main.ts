@@ -86,13 +86,13 @@ if (path === '/')
 	if (!TerminalUserManagement.isLoggedIn)
 	{
 		if (message) {
-			WriteOnTerminal.printErrorOnTerminal(message);
+			WriteOnTerminal.printWithAnimation(message, 35);
 		} else {
-			WriteOnTerminal.printErrorOnTerminal("Welcome to Transencdence ! Type `help` for instructions.");
+			WriteOnTerminal.printWithAnimation("Welcome to Transencdence ! Type `help` for instructions.", 35);
 		}
 	}
 	else
-		WriteOnTerminal.printErrorOnTerminal(`Welcome back ${TerminalUserManagement.username} ! Type \`help\` for instructions.`);
+		WriteOnTerminal.printWithAnimation(`Welcome back ${TerminalUserManagement.username} ! Type \`help\` for instructions.`, 35);
 	if (ProfileBuilder.isActive)
 		ProfileBuilder.removeProfile();
 }

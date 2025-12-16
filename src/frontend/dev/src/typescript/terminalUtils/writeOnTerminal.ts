@@ -63,4 +63,25 @@ export namespace WriteOnTerminal {
 		}
 		WriteOnTerminal.displayOnTerminal('╰' + '─'.repeat(innerWidth) + '╯', false);
 	}
+
+	export function printWithAnimation(text: string, delay: number) {
+		return new Promise<void>((resolve) => {
+			let index = 0;
+			const interval = setInterval(() => {
+				if (index < text.length) {
+					if (TerminalElements.output)
+						TerminalElements.output.textContent += text.charAt(index);
+					index++;
+					if (TerminalElements.terminal) {
+						TerminalElements.terminal.scrollTop = TerminalElements.terminal.scrollHeight;
+					}
+				} else {
+					clearInterval(interval);
+					if (TerminalElements.output)
+						TerminalElements.output.textContent += '\n';
+					resolve();
+				}
+			}, delay);
+		});
+	}
 }

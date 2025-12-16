@@ -16,6 +16,8 @@ Se connecter (login) :
 - Tapez login
 - Appuyez sur Entrée et suivez les instructions pour fournir vos identifiants..
 
+Si tu es un edudiant de 42, tu peux egalement te connecter via l'authentification 42 en tapant 42 !
+
 Vous pouvez tout de meme jouer a pong en tant que guest !
 
 Commandes utiles :
@@ -23,6 +25,7 @@ Commandes utiles :
 - clear: vide l'écran
 - login / register: se connecter ou créer un compte
 - pong : jouer a pong en tant que guest
+- 42 : se connecter via l'authentification 42
 `
 
 
