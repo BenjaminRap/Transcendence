@@ -37,6 +37,10 @@ type Theme = {
 	"--title-left": string,
 	"--title-color": string,
 	"--title-shadow": string,
+	"--file-color": string,
+	"--profile-border-width": string,
+	"--file-text-color": string,
+	"--profile-text-color": string
 }
 
 type Themes = {
@@ -67,7 +71,11 @@ const	themes : Themes = {
 		"--switch-button-image-hover": "url(/scenes/assets/project/textures/arrowColorful.png)",
 		"--title-left": "calc(1/3 * 100%)",
 		"--title-color": "var(--color-black)",
-		"--title-shadow": "8px 8px 4px rgba(75, 80, 90, 1)"
+		"--title-shadow": "8px 8px 4px rgba(75, 80, 90, 1)",
+		"--file-color": "var(--color-blue-700)",
+		"--profile-border-width": "0.2vw",
+		"--file-text-color": "var(--color-cyan-500)",
+		"--profile-text-color": "var(--file-color)"
 	},
 	"basic": {
 		"--font": "pixel",
@@ -90,7 +98,11 @@ const	themes : Themes = {
 		"--switch-button-image-hover": "url(/scenes/assets/project/textures/arrowBasicHover.png)",
 		"--title-left": "calc(1/2 * 100%)",
 		"--title-color": "var(--color-white)",
-		"--title-shadow": "none"
+		"--title-shadow": "none",
+		"--file-color": "var(--color-white)",
+		"--profile-border-width": "0.1vw",
+		"--file-text-color": "var(--color-black)",
+		"--profile-text-color": "var(--color-white)"
 	},
 	"terminal": {
 		"--font": "VT323",
@@ -113,7 +125,11 @@ const	themes : Themes = {
 		"--switch-button-image-hover": "url(/images/terminalArrow.png)",
 		"--title-left": "calc(1/3 * 100%)",
 		"--title-color": "var(--color-green-500)",
-		"--title-shadow": "none"
+		"--title-shadow": "none",
+		"--file-color": "var(--color-green-700)",
+		"--profile-border-width": "0.1vw",
+		"--file-text-color": "var(--color-black)",
+		"--profile-text-color": "var(--file-color)"
 	}
 };
 

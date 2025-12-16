@@ -1,9 +1,15 @@
 import { ProfileCreationGUI } from "./ProfileCreationGUI";
 
-export class	TournamentCreationGUI extends HTMLElement
+export type TournamentCreationGUIInputs = {
+	start : HTMLButtonElement,
+	cancel : HTMLButtonElement
+}
+
+export class	LocalTournamentCreationGUI extends HTMLElement
 {
 	private _profileContainer! : HTMLDivElement;
 	private	_profiles : ProfileCreationGUI[] = [];
+	private _inputs? : TournamentCreationGUIInputs;
 
 	constructor()
 	{
@@ -15,7 +21,7 @@ export class	TournamentCreationGUI extends HTMLElement
 		this.classList.add("absolute", "inset-0", "size-full", "z-10");
 		this.innerHTML = `
 			<div class="w-full h-2/3 top-1/3 relative flex flex-col">
-				<div class="w-full h-1/2 overflow-scroll pointer-events-auto">
+				<div class="w-full h-2/3 overflow-scroll pointer-events-auto">
 					<div class="w-full tournamentCreationGUIProfiles overflow-y-scroll h-1/3 inline">
 					</div>
 					<button class="tournamentCreationGUIAddProfile ml-[2.5%] w-[3%] bg-green-300 rounded-md aspect-square hover:scale-125 transition-all pointer-events-auto">
@@ -28,8 +34,8 @@ export class	TournamentCreationGUI extends HTMLElement
 				</div>
 				<div class="h-1/3">
 					<div class="flex flex-col w-1/3 left-1/2 -translate-x-1/2 relative">
-						${this.getButtonHTML("Start", "start")}
-						${this.getButtonHTML("Cancel", "cancel")}
+						${this.getButtonHTML("Start", "tournamentCreationGUIStart")}
+						${this.getButtonHTML("Cancel", "tournamentCreationGUICancel")}
 					</div>
 				</div>
 			</div>
@@ -38,15 +44,16 @@ export class	TournamentCreationGUI extends HTMLElement
 		const	addProfileButton = this.querySelector("button.tournamentCreationGUIAddProfile")!;
 
 		addProfileButton.addEventListener("click", () => this.addProfile());
-		this.addProfile();
-		this.addProfile();
-		this.setProperties("var(--color-gray-400)", "100%");
-
+		this.reset();
+		this._inputs = {
+			start : this.querySelector("button.tournamentCreationGUIStart")!,
+			cancel : this.querySelector("button.tournamentCreationGUICancel")!
+		}
 	}
 
 	private	getButtonHTML(text : string, className : string)
 	{
-		return `<button class="${className} font-(family-name:--font) text-[3vw] w-full mt-[10%] pointer-events-auto grow menu-button">${text}</button>`;
+		return `<button class="${className} font-(family-name:--font) text-[3vw] w-full mb-[10%] pointer-events-auto grow menu-button">${text}</button>`;
 	}
 
 	private	addProfile()
@@ -81,6 +88,20 @@ export class	TournamentCreationGUI extends HTMLElement
 		this.style.setProperty("--remove-button-color", color);
 		this.style.setProperty("--remove-button-hover-scale", hoverScale);
 	}
+
+	public reset()
+	{
+		this._profiles = [];
+		this._profileContainer.replaceChildren();
+		this.addProfile();
+		this.addProfile();
+		this.setProperties("var(--color-gray-400)", "100%");
+	}
+
+	public getInputs()
+	{
+		return this._inputs;
+	}
 }
 
-customElements.define("tournament-creation-gui", TournamentCreationGUI);
+customElements.define("tournament-creation-gui", LocalTournamentCreationGUI);

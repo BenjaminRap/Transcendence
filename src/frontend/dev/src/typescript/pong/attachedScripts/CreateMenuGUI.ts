@@ -14,7 +14,7 @@ import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { Imported } from "@shared/ImportedDecorator";
 import { TimerManager } from "@shared/attachedScripts/TimerManager";
 import { GameTypeChoiceGUI } from "../gui/GameTypeChoiceGUI";
-import { TournamentCreationGUI } from "../gui/TournamentCreationGUI";
+import { LocalTournamentCreationGUI } from "../gui/LocalTournamentCreationGUI";
 
 export class CreateMenuGUI extends CustomScriptComponent {
 	private static readonly _enemyTypes = [ "Local", "Multiplayer", "Bot" ];
@@ -31,7 +31,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 	private _titleGUI! : TitleGUI;
 	private _localGameTypeChoiceGUI! : GameTypeChoiceGUI;
 	private _onlineGameTypeChoiceGUI! : GameTypeChoiceGUI;
-	private _tournamentCreationGUI!: TournamentCreationGUI;
+	private _localTournamentCreationGUI!: LocalTournamentCreationGUI;
 	private _currentSceneFileName! : SceneFileName;
 	private _menuParent! : HTMLDivElement;
 
@@ -58,7 +58,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		this.createInMatchmakingGUI();
 		this.CreateLocalGameTypeChoiceGUI();
 		this.CreateOnlineGameTypeChoiceGUI();
-		this.CreateTournamentCreationGUI();
+		this.CreateLocalTournamentCreationGUI();
 	}
 
 	protected	ready()
@@ -125,7 +125,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			this.startGame(this._currentSceneFileName, "Local");
 		});
 		inputs.tournament.addEventListener("click", () => {
-			this.switchMenu(this._localGameTypeChoiceGUI, this._tournamentCreationGUI);
+			this.switchMenu(this._localGameTypeChoiceGUI, this._localTournamentCreationGUI);
 		});
 		inputs.cancel.addEventListener("click", () => {
 			this.switchMenu(this._localGameTypeChoiceGUI, this._menuGUI);
@@ -151,11 +151,20 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		});
 	}
 
-	private	CreateTournamentCreationGUI()
+	private	CreateLocalTournamentCreationGUI()
 	{
-		this._tournamentCreationGUI = new TournamentCreationGUI();
+		this._localTournamentCreationGUI = new LocalTournamentCreationGUI();
+		this.addHiddenMenu(this._localTournamentCreationGUI);
 
-		this.addHiddenMenu(this._tournamentCreationGUI);
+		const	inputs = this._localTournamentCreationGUI.getInputs();
+
+		inputs?.start.addEventListener("click", () => {
+			console.log("start");
+		});
+		inputs?.cancel.addEventListener("click", () => {
+			this._localTournamentCreationGUI.reset();
+			this.switchMenu(this._localTournamentCreationGUI, this._localGameTypeChoiceGUI);
+		});
 	}
 
 	private	addHiddenMenu(menu : HTMLElement)
