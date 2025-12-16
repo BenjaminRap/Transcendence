@@ -134,7 +134,7 @@ function createProfileCard(profileElement: HTMLElement | null) {
 		return;
 	const profileCard = document.createElement('div');
 	profileCard.className = "flex flex-col px-[2vw] py-[1vh] shadow-lg border border-green-500 items-center h-[19.7%] overflow-hidden";
-	profileCard.innerHTML = `<img src="${profile.linkofavatar}" alt="Avatar" class="w-[12vh] h-[12vh] border border-green-500"></img>
+	profileCard.innerHTML = `<img src="${profile.linkofavatar}" alt="Avatar" class="w-[12vh] h-[12vh] border border-green-500 object-cover"></img>
 							<h1 class="text-center text-[1.5vh]">${profile.username}</h1>
 							<div class="flex gap-[1vw] text-[0.9vh]">
 								<p>MMR: ${profile.mmr}</p>
@@ -209,7 +209,7 @@ function createMatchHistory(profileElement: HTMLElement | null) {
 						<p class="absolute top-[-24px] right-0 hidden group-hover:block border p-1 border-green-500 bg-black">${match.opponent}</p>
 					</div>
 					<img src="${match.profilelinkopponent}" alt="Avatar"
-						class="w-10 h-10 border border-green-500"></img>
+						class="w-10 h-10 border border-green-500 object-cover"></img>
 				</div>
 			`
 		matchElement.appendChild(matchDiv);
@@ -241,7 +241,7 @@ function createFriendList(profileElement: HTMLElement | null) {
 	// 	friendDiv.className = "flex items-center px-4 gap-x-4";
 	// 	friendDiv.innerHTML = `
 	// 	<img src="${friend.linkofavatar}" alt="Avatar"
-	// 				class="w-10 h-10 border border-green-500"></img>
+	// 				class="w-10 h-10 border border-green-500 object-cover"></img>
 	// 			<div class="flex flex-col gap-y-0">
 	// 				<p>${friend.username}</p>
 	// 				<p style="font-size: 10px;">${friend.status}</p>
