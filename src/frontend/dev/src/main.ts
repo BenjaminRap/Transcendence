@@ -77,7 +77,7 @@ if (path === '/')
 			WriteOnTerminal.printWithAnimation(message, 35);
 		} else {
 			await WriteOnTerminal.printWithAnimation("Welcome to Transencdence !", 35);
-			await WriteOnTerminal.printWithAnimation(HELP_MESSAGE_NOT_LOG, 15);
+			await WriteOnTerminal.printWithAnimation(HELP_MESSAGE_NOT_LOG, 25);
 
 		}
 	}

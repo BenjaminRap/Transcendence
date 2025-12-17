@@ -116,9 +116,10 @@ export namespace TerminalCommand {
 
 function OauthCommand(args: string[], description: string, usage: string): string {
 	const redirectUri = encodeURIComponent('https://localhost:8080/');
-
 	const uri = `https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-add813989568aed927d34847da79446b327e2cce154f4c1313b970f9796da37c&redirect_uri=${redirectUri}&response_type=code`;
-	console.log("Redirecting to 42 OAuth:", uri);
+
+	if (TerminalUserManagement.isLoggedIn)
+		return 'You are already logged in.';
 	window.location.href = uri;
 	return '';
 }

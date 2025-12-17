@@ -66,24 +66,53 @@ export namespace WriteOnTerminal {
 
 	export async function printWithAnimation(text: string, delay: number) {
 		TerminalConfigVariables.isPrintingAnimation = true;
+		
+		if (!TerminalElements.output)
+			return;
+
 		return new Promise<void>((resolve) => {
-			let index = 0;
+			let i = 0;
+			const iterationsPerChar = 3; 
+			let currentIteration = 0;
+			const randomChars = "@#$%^&*{}[]()-_=+<>?/|\\`~";
+
 			const interval = setInterval(() => {
-				if (index < text.length) {
-					if (TerminalElements.output)
-						TerminalElements.output.textContent += text.charAt(index);
-					index++;
-					if (TerminalElements.terminal) {
-						TerminalElements.terminal.scrollTop = TerminalElements.terminal.scrollHeight;
-					}
-				} else {
+				if (i >= text.length) {
 					clearInterval(interval);
 					if (TerminalElements.output)
 						TerminalElements.output.textContent += '\n';
-					resolve();
 					TerminalConfigVariables.isPrintingAnimation = false;
+					resolve();
+					return;
 				}
-			}, delay);
+				const targetChar = text[i];
+				if (targetChar === ' ') {
+					if (TerminalElements.output)
+						TerminalElements.output.textContent += targetChar;
+					i++;
+					currentIteration = 0;
+					return;
+				}
+				if (currentIteration < iterationsPerChar) {
+					const randomChar = randomChars[Math.floor(Math.random() * randomChars.length)];
+					if (TerminalElements.output) {
+						if (currentIteration > 0)
+							TerminalElements.output.textContent = TerminalElements.output.textContent.slice(0, -1);
+						TerminalElements.output.textContent += randomChar;
+					}
+					currentIteration++;
+				} else {
+					if (TerminalElements.output) {
+						TerminalElements.output.textContent = TerminalElements.output.textContent.slice(0, -1);
+						TerminalElements.output.textContent += targetChar;
+					}
+					i++;
+					currentIteration = 0;
+				}
+
+				if (TerminalElements.terminal)
+					TerminalElements.terminal.scrollTop = TerminalElements.terminal.scrollHeight;
+			}, delay / 2);
 		});
 	}
 }
