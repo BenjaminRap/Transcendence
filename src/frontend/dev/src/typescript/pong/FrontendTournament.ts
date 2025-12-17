@@ -1,5 +1,6 @@
 import { isPowerOfTwo } from "@shared/utils";
 import { TournamentGUI } from "./gui/TournamentGUI";
+import { Tournament } from "@shared/Tournament";
 
 export type Profile = {
 	name : string;
@@ -14,13 +15,14 @@ export class	Match
 	}
 }
 
-export class	FrontendTournament
+export class	FrontendTournament extends Tournament
 {
 	// private	_matchesRoot : Match;
 	private	_matchesByRound : Match[][] = [];
 
 	constructor(private _participants : Profile[])
 	{
+		super();
 		// this._matchesRoot = this.createMatches(_participants);
 		// const	gui = new TournamentGUI(this._matchesByRound, this._participants);
 		// document.querySelector("body")?.appendChild(gui);

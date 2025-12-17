@@ -14,6 +14,7 @@ import { MultiplayerHandler } from "./MultiplayerHandler";
 import { Settings } from "./Settings";
 import { ServerProxy } from "./ServerProxy";
 import type { GameInfos } from "@shared/ServerMessage";
+import type { Tournament } from "@shared/Tournament";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
@@ -79,11 +80,11 @@ export class PongGame extends HTMLElement {
 		return engine;
 	}
 
-	private async changeScene(newSceneName : string, gameType : FrontendGameType, clientInputs : readonly ClientInput[], serverCommunicationHandler? : ServerProxy) : Promise<void>
+	private async changeScene(newSceneName : string, gameType : FrontendGameType, clientInputs : readonly ClientInput[], serverCommunicationHandler? : ServerProxy, tournament? : Tournament) : Promise<void>
 	{
 		if (this._scene)
 			this._scene.dispose();
-		this._scene = await this.getNewScene(newSceneName, gameType, clientInputs, serverCommunicationHandler);
+		this._scene = await this.getNewScene(newSceneName, gameType, clientInputs, serverCommunicationHandler, tournament);
 	}
 
 	public quit() : void
@@ -114,27 +115,27 @@ export class PongGame extends HTMLElement {
 		sceneData.events.getObservable("game-start").notifyObservers();
 	}
 
-	public startLocalGame(sceneName : SceneFileName)
+	public startLocalGame(sceneName : SceneFileName, tournament? : Tournament)
 	{
-		this.startLocalGameAsync(sceneName);
+		this.startLocalGameAsync(sceneName, tournament);
 	}
 
-	private async startLocalGameAsync(sceneName : SceneFileName)
+	private async startLocalGameAsync(sceneName : SceneFileName, tournament? : Tournament)
 	{
 		this._multiplayerHandler.disconnect();
-		await this.changeScene(sceneName, "Local", this._settings._playerInputs);
+		await this.changeScene(sceneName, "Local", this._settings._playerInputs, undefined, tournament);
 		const	sceneData = getFrontendSceneData(this._scene!);
 
 		await sceneData.readyPromise.promise;
 		sceneData.events.getObservable("game-start").notifyObservers();
 	}
 
-	public startOnlineGame(sceneName : SceneFileName)
+	public startOnlineGame(sceneName : SceneFileName, tournament? : Tournament)
 	{
-		this.startOnlineGameAsync(sceneName);
+		this.startOnlineGameAsync(sceneName, tournament);
 	}
 
-	private async startOnlineGameAsync(sceneName : SceneFileName) : Promise<void>
+	private async startOnlineGameAsync(sceneName : SceneFileName, tournament? : Tournament) : Promise<void>
 	{
 		try {
 			await this._multiplayerHandler.joinGame();
@@ -142,7 +143,7 @@ export class PongGame extends HTMLElement {
 			const	inputs = this._settings._playerInputs.filter((value : ClientInput) => value.index === playerIndex);
 			const	serverProxy = new ServerProxy(this._multiplayerHandler);
 
-			await this.changeScene(sceneName, "Multiplayer", inputs, serverProxy);
+			await this.changeScene(sceneName, "Multiplayer", inputs, serverProxy, tournament);
 			const	sceneData = getFrontendSceneData(this._scene!);
 
 			await sceneData.readyPromise.promise;
@@ -191,14 +192,14 @@ export class PongGame extends HTMLElement {
 		this._multiplayerHandler.disconnect();
 	}
 
-	private	async getNewScene(sceneName : string, gameType : FrontendGameType, clientInputs : readonly ClientInput[], serverCommunicationHandler? : ServerProxy) : Promise<Scene>
+	private	async getNewScene(sceneName : string, gameType : FrontendGameType, clientInputs : readonly ClientInput[], serverCommunicationHandler? : ServerProxy, tournament? : Tournament) : Promise<Scene>
 	{
 		const	scene = new Scene(this._engine);
 
 		if (!scene.metadata)
 			scene.metadata = {};
 		globalThis.HKP = new HavokPlugin(false);
-		scene.metadata.sceneData = new FrontendSceneData(globalThis.HKP, this, gameType, clientInputs, serverCommunicationHandler);
+		scene.metadata.sceneData = new FrontendSceneData(globalThis.HKP, this, gameType, clientInputs, serverCommunicationHandler, tournament);
 		const	cam = new FreeCamera("camera1", Vector3.Zero(), scene);
 		const	assetsManager = new AssetsManager(scene);
 
