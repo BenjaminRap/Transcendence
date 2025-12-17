@@ -24,6 +24,9 @@ model User {
   
   matchesWons       Match[]   @relation("matchWinner")
   matchesLoses      Match[]   @relation("matchLoser")
+
+  tournamentsCreated       Tournament[]     @relation("tournamentCreator")
+  tournamentParticipations TournamentParticipant[]
 }
 
 // -------------------------------------------------------------------------------------------- //
@@ -51,15 +54,54 @@ model Match {
 
   createdAt   DateTime      @default(now())
 
-  winner      User    @relation("matchWinner", fields: [winnerId], references: [id], onDelete: Cascade)
-  winnerId    Int
+  winner      User?    @relation("matchWinner", fields: [winnerId], references: [id], onDelete: Cascade)
+  winnerId    Int?
+  winnerLevel String?  // "Guest_XXX" or "AI_LEVEL" if winnerId is null
 
-  loser       User    @relation("matchLoser", fields: [loserId], references: [id], onDelete: Cascade)
-  loserId     Int
+  loserId     Int?
+  loser       User?    @relation("matchLoser", fields: [loserId], references: [id], onDelete: Cascade)
+  loserLevel  String?
+
+
 
   scoreWinner Int     @default(0)
   scoreLoser  Int     @default(0)
   duration    Int     @default(0)
-}
 
+  tournament   Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  tournamentId Int?
+}
 // -------------------------------------------------------------------------------------------- //
+
+model Tournament {
+  id          Int       @id @default(autoincrement())
+  title       String
+
+  state       String    @default("INGAME")
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  creator     User      @relation("tournamentCreator", fields: [creatorId], references: [id], onDelete: Cascade)
+  creatorId   Int
+
+  participants TournamentParticipant[]
+  matches      Match[]
+}
+// -------------------------------------------------------------------------------------------- //
+
+model TournamentParticipant {
+  id            Int       @id @default(autoincrement())
+  alias         String    // user alias
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        Int
+
+  finalRank     Int?
+
+  tournament    Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  tournamentId  Int
+
+  @@unique([userId, tournamentId]) // no duplicate user
+  @@unique([tournamentId, alias])  // no duplicate alias
+}

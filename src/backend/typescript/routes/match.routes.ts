@@ -7,6 +7,8 @@ export function matchRoutes(
     controller: MatchController,
     middleware: AuthMiddleware
 ) {
+    fastify.post('/start', controller.startMatch.bind(controller));
+
     fastify.get('/history', {
         preHandler: middleware.authenticate,
     }, controller.getMatchHistory.bind(controller));
