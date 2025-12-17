@@ -170,7 +170,7 @@ function createMatchHistory(profileElement: HTMLElement | null) {
 	if (!profileElement)
 		return;
 	const matchHistory = document.createElement('div');
-	matchHistory.className = "flex flex-col border-2 border-collapse border-red-500 h-[31.5%]"; 
+	matchHistory.className = "flex flex-col h-[31.5%]"; 
 	matchHistory.innerHTML = `<div class="flex w-full place-content-between">
 								<p class="text-center">Last match</p>
 								<button id="moreMatch" class="cursor-pointer hover:underline hover:underline-offset-2">View More</button>
@@ -192,26 +192,26 @@ function createMatchHistory(profileElement: HTMLElement | null) {
 		const match = matches[i];
 		const matchDiv = document.createElement('div');
 		matchDiv.className = "flex px-4 shadow-lg place-content-between";
-		matchDiv.innerHTML = `
-				<div class="flex w-1/2 place-content-between pr-4">
-					<div class="flex flex-col gap-y-0">
-						<p class="p-0 m-0">Win</p>
-						<p class="" style="font-size: 10px;">${match.date}</p>
-					</div>
-					<div class="flex flex-col justify-center items-center">
-						<p>${match.score}</p>
-						<p>vs</p>
-					</div>
-				</div>
-				<div class="card flex justify-center items-center gap-2 max-w-1/2 relative ">
-					<div class="group w-full max-w-[80%]">
-						<p class="truncate cursor-pointer">${match.opponent}</p>
-						<p class="absolute top-[-24px] right-0 hidden group-hover:block border p-1 border-green-500 bg-black">${match.opponent}</p>
-					</div>
-					<img src="${match.profilelinkopponent}" alt="Avatar"
-						class="w-10 h-10 border border-green-500 object-cover"></img>
-				</div>
-			`
+        matchDiv.innerHTML = `
+                <div class="flex flex-1 items-center justify-between pr-2 min-w-0">
+                    <div class="flex flex-col gap-y-0 min-w-0">
+                        <p class="p-0 m-0 truncate">${match.result}</p>
+                        <p class="truncate" style="font-size: 10px;">${match.date}</p>
+                    </div>
+                    <div class="flex flex-col justify-center items-center shrink-0 px-1">
+                        <p>${match.score}</p>
+                        <p style="font-size: 10px;">vs</p>
+                    </div>
+                </div>
+                <div class="flex flex-1 justify-end items-center gap-2 min-w-0 relative">
+                    <div class="group relative min-w-0 text-right">
+                        <p class="truncate cursor-pointer">${match.opponent}</p>
+                        <p class="absolute bottom-full right-0 mb-1 hidden group-hover:block border p-1 border-green-500 bg-black z-10 whitespace-nowrap">${match.opponent}</p>
+                    </div>
+                    <img src="${match.profilelinkopponent}" alt="Avatar"
+                        class="w-8 h-8 sm:w-10 sm:h-10 border border-green-500 object-cover shrink-0"></img>
+                </div>
+            `
 		matchElement.appendChild(matchDiv);
 	}
 	matchHistory.appendChild(matchElement);
@@ -222,7 +222,7 @@ function createFriendList(profileElement: HTMLElement | null) {
 	if (!profileElement)
 		return;
 	const friendList = document.createElement('div');
-	friendList.className = "flex flex-col border-2 border-collapse border-red-500 h-[28.6%]";
+	friendList.className = "flex flex-col h-[28.6%]";
 	friendList.innerHTML = `
 		<div class="flex w-full place-content-between">
 			<p class="text-center">Friends</p>
@@ -233,24 +233,24 @@ function createFriendList(profileElement: HTMLElement | null) {
 	moreFriendsButton?.addEventListener('click', () => {
 		ExtendedView.makeExtendedView('friend', '');
 	});
-	// const friendElement = document.createElement('div');
-	// friendElement.className = "border border-green-500 py-4 flex flex-col gap-y-4 h-full";
-	// for (let i = 0; i < Math.min(friends.length, 4); i++) {
-	// 	const friend = friends[i];
-	// 	const friendDiv = document.createElement('div');
-	// 	friendDiv.className = "flex items-center px-4 gap-x-4";
-	// 	friendDiv.innerHTML = `
-	// 	<img src="${friend.linkofavatar}" alt="Avatar"
-	// 				class="w-10 h-10 border border-green-500 object-cover"></img>
-	// 			<div class="flex flex-col gap-y-0">
-	// 				<p>${friend.username}</p>
-	// 				<p style="font-size: 10px;">${friend.status}</p>
-	// 			</div>
-	// 	`
-	// 	friendElement.appendChild(friendDiv);
-	// }
+    const friendElement = document.createElement('div');
+    friendElement.className = "border border-green-500 py-4 flex flex-col gap-y-4 h-full";
+    for (let i = 0; i < Math.min(friends.length, 4); i++) {
+        const friend = friends[i];
+        const friendDiv = document.createElement('div');
+        friendDiv.className = "flex items-center px-4 gap-x-4 min-w-0";
+        friendDiv.innerHTML = `
+        <img src="${friend.linkofavatar}" alt="Avatar"
+                    class="w-8 h-8 sm:w-10 sm:h-10 border border-green-500 object-cover shrink-0"></img>
+                <div class="flex flex-col gap-y-0 min-w-0 flex-1">
+                    <p class="truncate">${friend.username}</p>
+                    <p class="truncate" style="font-size: 10px;">${friend.status}</p>
+                </div>
+        `
+        friendElement.appendChild(friendDiv);
+    }
 
-	// friendList.appendChild(friendElement);
+    friendList.appendChild(friendElement);
 	profileElement.appendChild(friendList);
 }
 

@@ -83,8 +83,7 @@ if (path === '/')
 	}
 	else
 	{
-		await WriteOnTerminal.printWithAnimation(`Welcome back ${TerminalUserManagement.username} !`, 35);
-		await WriteOnTerminal.printWithAnimation(HELP_MESSAGE, 15);
+		await WriteOnTerminal.printWithAnimation(`Welcome back ${TerminalUserManagement.username} ! Type 'help' for instructions.`, 35);
 	}
 	if (ProfileBuilder.isActive)
 		ProfileBuilder.removeProfile();
