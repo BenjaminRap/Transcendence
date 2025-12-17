@@ -60,7 +60,7 @@ export class	LocalTournamentCreationGUI extends HTMLElement
 	private	addProfile()
 	{
 		const	newProfile = new ProfileCreationGUI();
-		newProfile.classList.add("mb-[0.5cqw]", "w-1/4", "ml-[3%]", "mr-[3%]", "mt-[0.5vw]");
+		newProfile.classList.add("mb-[0.5cqw]", "w-1/4", "ml-[3%]", "mr-[3%]", "mt-[0.5cqw]");
 	
 		this._profiles.push(newProfile);
 		this._profileContainer.appendChild(newProfile);

@@ -11,7 +11,7 @@ export class	MatchGUI extends HTMLElement
 	{
 		this.classList.add("flex", "flex-col");
 		this.innerHTML = `
-			<div class="block border-solid border-black border-[0.2cqw] rounded-3xl aspect-2/3 w-[5vw] m-auto">
+			<div class="block border-solid border-black border-[0.2cqw] rounded-3xl aspect-2/3 w-[5cqw] m-auto">
 				<img src="${MatchGUI._matchUrl}" class="m-auto w-4/5 h-auto mt-[46%]" />
 			</div>
 			<div class="w-full aspect-1/2">
