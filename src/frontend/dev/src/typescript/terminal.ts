@@ -34,6 +34,7 @@ export namespace TerminalConfigVariables {
 	export let InputFunction: Function | null = null;
 	export let isTabInProcess = false;
 	export let TabCompletionIndex = -1;
+	export let isPrintingAnimation = false;
 }
 
 export namespace TerminalUserManagement {
@@ -114,15 +115,11 @@ export namespace TerminalCommand {
 // ------------------------------------------------------------------------ Command ---------------------------------------------------------------------
 
 function OauthCommand(args: string[], description: string, usage: string): string {
-
-	const clientId = (import.meta as any).env?.FORTY_TWO_UID;
 	const redirectUri = encodeURIComponent('https://localhost:8080/');
 
-
-    window.location.href = `https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-add813989568aed927d34847da79446b327e2cce154f4c1313b970f9796da37c&redirect_uri=${redirectUri}&response_type=code`;
-	
-	console.log('Env FORTY_TWO_UID:', clientId);
-
+	const uri = `https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-add813989568aed927d34847da79446b327e2cce154f4c1313b970f9796da37c&redirect_uri=${redirectUri}&response_type=code`;
+	console.log("Redirecting to 42 OAuth:", uri);
+	window.location.href = uri;
 	return '';
 }
 
@@ -741,6 +738,8 @@ function setEventListeners() {
 					return;
 				}
 				event.preventDefault();
+				if (TerminalConfigVariables.isPrintingAnimation)
+					return;
 				switch (true) {
 					case (event.key === 'Enter'): enterCase(); break;
 					case (event.ctrlKey && event.key.toLowerCase() === 'c'): sigintCase(); break;

@@ -64,7 +64,8 @@ export namespace WriteOnTerminal {
 		WriteOnTerminal.displayOnTerminal('╰' + '─'.repeat(innerWidth) + '╯', false);
 	}
 
-	export function printWithAnimation(text: string, delay: number) {
+	export async function printWithAnimation(text: string, delay: number) {
+		TerminalConfigVariables.isPrintingAnimation = true;
 		return new Promise<void>((resolve) => {
 			let index = 0;
 			const interval = setInterval(() => {
@@ -80,6 +81,7 @@ export namespace WriteOnTerminal {
 					if (TerminalElements.output)
 						TerminalElements.output.textContent += '\n';
 					resolve();
+					TerminalConfigVariables.isPrintingAnimation = false;
 				}
 			}, delay);
 		});

@@ -4,6 +4,7 @@ import { WriteOnTerminal } from './typescript/terminalUtils/writeOnTerminal'
 import { TerminalUtils } from './typescript/terminalUtils/terminalUtils'
 import { ExtProfileBuilder } from './typescript/extprofile'
 import { TerminalUserManagement } from './typescript/terminal'
+import { HELP_MESSAGE, HELP_MESSAGE_NOT_LOG } from './typescript/terminalUtils/helpText/help'
 
 const url = new URL( window.location.href);
 const path = url.pathname;
@@ -11,18 +12,6 @@ const path = url.pathname;
 let message = '';
 
 const errors404 = ["You are the reason why everthing in your life is miserable", "Your only talent is failling", "The only usefull thing you've ever done is failling"];
-
-
-/*
-	get Var fonction
-	Si var code existe
-		Fetch POST /auth/42/callback avec le code
-		Si reponse OK
-			load user data
-
-
-*/
-
 
 function getUrlVar(varName: string) : string | null {
 	const urlParams = new URLSearchParams(window.location.search);
@@ -40,7 +29,6 @@ function Error404() {
 
 
 async function auth42Callback() {
-	console.log("Checking for 42 auth callback...");
 	const code = getUrlVar('code');
 	if (code) {
 		try {
@@ -88,11 +76,16 @@ if (path === '/')
 		if (message) {
 			WriteOnTerminal.printWithAnimation(message, 35);
 		} else {
-			WriteOnTerminal.printWithAnimation("Welcome to Transencdence ! Type `help` for instructions.", 35);
+			await WriteOnTerminal.printWithAnimation("Welcome to Transencdence !", 35);
+			await WriteOnTerminal.printWithAnimation(HELP_MESSAGE_NOT_LOG, 15);
+
 		}
 	}
 	else
-		WriteOnTerminal.printWithAnimation(`Welcome back ${TerminalUserManagement.username} ! Type \`help\` for instructions.`, 35);
+	{
+		await WriteOnTerminal.printWithAnimation(`Welcome back ${TerminalUserManagement.username} !`, 35);
+		await WriteOnTerminal.printWithAnimation(HELP_MESSAGE, 15);
+	}
 	if (ProfileBuilder.isActive)
 		ProfileBuilder.removeProfile();
 }
