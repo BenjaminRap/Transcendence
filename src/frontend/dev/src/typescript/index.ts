@@ -1,10 +1,9 @@
-import { Terminal, TerminalFileSystem } from './typescript/terminal'
-import { ProfileBuilder } from './typescript/profile'
-import { WriteOnTerminal } from './typescript/terminalUtils/writeOnTerminal'
-import { TerminalUtils } from './typescript/terminalUtils/terminalUtils'
-import { ExtProfileBuilder } from './typescript/extprofile'
-import { TerminalUserManagement } from './typescript/terminal'
-import { HELP_MESSAGE, HELP_MESSAGE_NOT_LOG } from './typescript/terminalUtils/helpText/help'
+import { Terminal, TerminalFileSystem } from './terminal'
+import { ProfileBuilder } from './profile'
+import { WriteOnTerminal } from './terminalUtils/writeOnTerminal'
+import { TerminalUtils } from './terminalUtils/terminalUtils'
+import { TerminalUserManagement } from './terminal'
+import { HELP_MESSAGE_NOT_LOG } from './terminalUtils/helpText/help'
 
 const url = new URL( window.location.href);
 const path = url.pathname;
@@ -104,5 +103,3 @@ else
 	Error404();
 	console.log('404 Not Found');
 }
-
-
