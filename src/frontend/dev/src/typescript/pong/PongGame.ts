@@ -222,7 +222,7 @@ export class PongGame extends HTMLElement {
 		SceneManager.HideLoadingScreen(this._engine);
 		SceneManager.FocusRenderCanvas(scene);
 		scene.activeCameras = scene.cameras;
-		scene.activeCameras[0].attachControl();
+		// scene.activeCameras[0].attachControl();
 	}
 
 	public focus()
