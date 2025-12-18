@@ -1,10 +1,9 @@
-import { PrismaClient, User } from '@prisma/client';
+import { PrismaClient, type User } from '@prisma/client';
 import { PasswordHasher } from '../utils/PasswordHasher.js';
 import { TokenManager } from '../utils/TokenManager.js';
-import { TokenPair, TokenKey } from '../types/tokenManager.types.js';
+import { type TokenPair } from '../types/tokenManager.types.js';
 import { AuthException, AuthError } from '../error_handlers/Auth.error.js';
-import { RegisterData, sanitizeUser, SanitizedUser } from '../types/auth.types.js';
-import { fr } from 'zod/v4/locales';
+import { type RegisterData, sanitizeUser, type SanitizedUser } from '../types/auth.types.js';
 
 export class AuthService {
     constructor(

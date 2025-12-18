@@ -8,8 +8,9 @@ DOCKER_FILE	=	docker-compose.yaml
 DOCKER_EXEC	=	docker compose -f $(DOCKER_DIR)$(DOCKER_FILE) --profile $(PROFILE)
 
 compile:
-	npx tsc -p ./src/backend/tsconfig.backend.json
-	npx tsc --noEmit -p ./src/frontend/tsconfig.frontend.json
+	npx tsc -p ./src/backend/tsconfig.json
+	npx tsc-alias -p ./src/backend/tsconfig.json --resolve-full-paths --resolve-full-extension .js
+	npx tsc --noEmit -p ./src/frontend/tsconfig.json
 	npx @tailwindcss/cli -i ./input.css -o ./src/frontend/dev/public/css/tailwind.css
 
 
@@ -28,24 +29,34 @@ endif
 
 compile-watch:
 	npx concurrently \
-		"tsc -p ./src/backend/tsconfig.backend.json --watch" \
-		"tsc --noEmit -p ./src/frontend/tsconfig.frontend.json --watch" \
-		"tailwindcss -i ./input.css -o ./src/frontend/dev/public/css/tailwind.css --watch"
+		"tsc -p ./src/backend/tsconfig.json --watch" \
+		"npx tsc-alias -p ./src/backend/tsconfig.json --resolve-full-paths --resolve-full-extension .js --watch" \
+		"tsc --noEmit -p ./src/frontend/tsconfig.json --watch" \
+		"tailwindcss/cli -i ./input.css -o ./src/frontend/dev/public/css/tailwind.css --watch"
 
 up:
 	$(DOCKER_EXEC) up -d
 ifeq ($(PROFILE), prod)
-	$(DOCKER_EXEC) logs -f nginx > ./dockerFiles/nginx/nginx.logs &
+	$(DOCKER_EXEC) logs -f nginx &
 else
-	$(DOCKER_EXEC) logs -f vite > ./dockerFiles/vite/vite.logs &
+	$(DOCKER_EXEC) logs -f vite &
 endif
-	$(DOCKER_EXEC) logs -f fastify > ./dockerFiles/fastify/fastify.logs &
+	$(DOCKER_EXEC) logs -f fastify &
+# ifeq ($(PROFILE), prod)
+# 	$(DOCKER_EXEC) logs -f nginx > ./dockerFiles/nginx/nginx.logs &
+# else
+# 	$(DOCKER_EXEC) logs -f vite > ./dockerFiles/vite/vite.logs &
+# endif
+# 	$(DOCKER_EXEC) logs -f fastify > ./dockerFiles/fastify/fastify.logs &
 
 install:
 	npm install
 	npx prisma generate --schema=./dockerFiles/fastify/prisma/schema.prisma
 
-all: install certificates build up
+copy-tsconfig:
+	cp ./src/frontend/tsconfig.json ./dockerFiles/vite/
+
+all: copy-tsconfig install certificates build up
 
 $(NAME): all
 
@@ -53,23 +64,17 @@ stop:
 	$(DOCKER_EXEC) stop
 
 clean: stop
-	-docker stop $(docker ps -qa)
-	-docker rm $(docker ps -qa) 2>/dev/null
-	-docker rmi -f $(docker images -qa) 2>/dev/null
-	-docker volume rm $(docker volume ls -q)
-	-docker network rm $(docker network ls -q) 2>/dev/null
-
-fclean: clean
-	$(DOCKER_EXEC) down -v
-	-docker system prune -af --volumes
 	-rm -rf ./dockerFiles/nginx/website/
 	-rm -rf ./src/backend/javascript/*
+
+fclean: clean
+	-docker rmi -f $(docker images -qa) 2>/dev/null
+	-docker volume rm $(docker volume ls -q) 2>/dev/null
+	-docker network rm $(docker network ls -q) 2>/dev/null
+	-docker system prune -af
+	-rm -rf ./node_modules/
+	-rm ./package-lock.json
 	-rm -r ./dockerFiles/secrets/ssl/*
-
-clean-dep: fclean
-	rm -rf node_modules
-	rm package-lock.json
-
 
 re: clean all
 fre: fclean all

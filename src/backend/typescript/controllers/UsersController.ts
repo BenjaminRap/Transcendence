@@ -1,4 +1,4 @@
-import { FastifyRequest, FastifyReply, FastifyBodyParser } from "fastify";
+import { type FastifyRequest, type FastifyReply } from "fastify";
 import { UsersService} from "../services/UsersService.js";
 import { CommonSchema } from "../schemas/common.schema.js";
 import { UsersSchema } from "../schemas/users.schema.js";

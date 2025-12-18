@@ -8,9 +8,6 @@ RUN [ "rm", "-rf", "/var/lib/apt/lists*" ]
 # copy package files
 COPY ./package.json ./package.json
 
-# install Fastify first
-RUN [ "npm", "install", "fastify@5.4.0" ]
-
 # install dependencies including prisma
 RUN [ "npm", "install" ]
 
@@ -29,6 +26,7 @@ RUN ["npx", "prisma", "generate"]
 # clean cache
 RUN [ "npm", "cache", "clean", "--force" ]
 
+RUN [ "mkdir", "/app/dev/" ]
 # copy entrypoint script
 COPY    ./entrypoint.sh /entrypoint.sh
 RUN     chmod +x /entrypoint.sh

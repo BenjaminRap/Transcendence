@@ -9,5 +9,5 @@ export class AuthException extends Error {
     constructor(public code: AuthError, message?: string) {
         super(message ?? code);
         this.name = 'FriendException';
-}
+    }
 }

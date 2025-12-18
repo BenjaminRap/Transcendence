@@ -1,4 +1,4 @@
-import { z, ZodString } from 'zod'
+import { z } from 'zod'
 
 export const CommonSchema = {
     email: z.email({ message: 'invalid email format' }),

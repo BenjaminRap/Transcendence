@@ -1,5 +1,5 @@
-import { TerminalConfigVariables, TerminalElements, TerminalPromptAndEnv } from "../terminal.ts";
-import { TerminalUtils } from "./terminalUtils.ts";
+import { TerminalConfigVariables, TerminalElements, TerminalPromptAndEnv } from "../terminal";
+import { TerminalUtils } from "./terminalUtils";
 
 
 

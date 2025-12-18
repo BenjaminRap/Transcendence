@@ -16,7 +16,8 @@ services:
     ports:
       - "8080:443"
     volumes:
-      - frontend:/app/public/
+      - frontend:/app/frontend/
+      - shared:/app/shared/
     profiles: [
       "dev"
     ]
@@ -28,7 +29,7 @@ services:
   fastify:
     build: ./fastify/
     volumes:
-      - backend:/app/backend/
+      - backend:/app/dev/
       - databases:/app/databases/
     environment:
       - PROFILE=${PROFILE:-prod} 
@@ -52,7 +53,13 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: ../src/backend/
+      device: ../src/backend/dev/
+      o: bind
+  shared:
+    driver: local
+    driver_opts:
+      type: none
+      device: ../src/shared/
       o: bind
   databases:
     driver: local

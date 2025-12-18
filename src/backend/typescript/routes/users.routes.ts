@@ -1,4 +1,4 @@
-import { FastifyInstance } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import { UsersController } from '../controllers/UsersController.js';
 import { AuthMiddleware } from '../middleware/AuthMiddleware.js';
 

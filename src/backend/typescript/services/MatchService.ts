@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { GameStats, MatchHistoryEntry } from '../types/match.types.js';
+import type { GameStats, MatchHistoryEntry } from '../types/match.types.js';
 import { number } from 'zod';
 
 export class MatchService {

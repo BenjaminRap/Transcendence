@@ -1,10 +1,10 @@
-import { PrismaClient, User } from "@prisma/client";
-import { UpdateData, SuscriberStats } from "../types/suscriber.types.js";
+import { PrismaClient, type User } from "@prisma/client";
+import { type UpdateData } from "../types/suscriber.types.js";
 import { PasswordHasher } from "../utils/PasswordHasher.js";
 import { FileService } from "./FileService.js";
-import { sanitizeUser, SanitizedUser } from '../types/auth.types.js'
-import { SuscriberProfile } from "../types/suscriber.types.js";
-import { GameStats } from "../types/match.types.js";
+import { sanitizeUser, type SanitizedUser } from '../types/auth.types.js'
+import type { SuscriberProfile } from "../types/suscriber.types.js";
+import type { GameStats } from "../types/match.types.js";
 import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
 import path from "path";
 

@@ -1,6 +1,6 @@
 export const content = [
-    "./src/frontend/**/*.html",
-    "./src/frontend/**/*.ts",
+    "./src/**/*.html",
+    "./src/**/*.ts",
 ];
 export const theme = {
     extend: {},

@@ -1,5 +1,5 @@
 import { MatchController } from "../controllers/MatchController.js";
-import { GameStats } from "../types/match.types.js";
+import type { GameStats } from "../types/match.types.js";
 
 export class GameInterface {
 	constructor(
@@ -8,14 +8,14 @@ export class GameInterface {
 	
 	// ----------------------------------------------------------------------------- //
 	async startMatch(ids: number[]): Promise<{ success: boolean, message?: string, matchId?: number}> {
-		if (!this.ddosCheck(ids))
-			return { success: false, message: 'Too much ids' };
+		// if (!this.ddosCheck(ids))
+		// 	return { success: false, message: 'Too much ids' };
 
-		const result = await this.matchController.startMatch(ids);
-		if (!result.success)
-			return { success: false, message: result.message };
+		// const result = await this.matchController.startMatch(ids);
+		// if (!result.success)
+		// 	return { success: false, message: result.message };
 
-		return { success: true, matchId: result.matchId };
+		return { success: true };
 
 	}
 

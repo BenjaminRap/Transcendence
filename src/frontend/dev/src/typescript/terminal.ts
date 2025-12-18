@@ -1,13 +1,13 @@
 export { };
 
-import { ProfileBuilder } from './profile.ts'
-import { Modal } from './modal.ts'
-import { ExtProfileBuilder } from './extprofile.ts'
-import { ExtendedView } from './extendedView.ts';
+import { ProfileBuilder } from './profile'
+import { Modal } from './modal'
+import { ExtProfileBuilder } from './extprofile'
+import { ExtendedView } from './extendedView';
 
-import { RequestBackendModule } from './terminalUtils/requestBackend.ts';
-import { WriteOnTerminal } from './terminalUtils/writeOnTerminal.ts';
-import { TerminalUtils } from './terminalUtils/terminalUtils.ts';
+import { RequestBackendModule } from './terminalUtils/requestBackend';
+import { WriteOnTerminal } from './terminalUtils/writeOnTerminal';
+import { TerminalUtils } from './terminalUtils/terminalUtils';
 
 
 import FileSystem from './filesystem.json' with { type: "json" };

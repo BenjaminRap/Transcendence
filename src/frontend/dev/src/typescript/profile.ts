@@ -1,10 +1,9 @@
 export { };
 
-import { Modal } from './modal.ts'
-import { ExtendedView } from './extendedView.ts'
-import { WriteOnTerminal } from './terminalUtils/writeOnTerminal.ts';
-import { TerminalUtils } from './terminalUtils/terminalUtils.ts';
-import { RequestBackendModule } from './terminalUtils/requestBackend.ts';
+import { Modal } from './modal'
+import { ExtendedView } from './extendedView'
+import { TerminalUtils } from './terminalUtils/terminalUtils';
+import { RequestBackendModule } from './terminalUtils/requestBackend';
 /*
 	Attente des donnes backend. Penser a sanitize les donnes avant de les afficher https://github.com/cure53/DOMPurify
 */
