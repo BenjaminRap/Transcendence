@@ -124,19 +124,19 @@ export class FriendService {
 
         return (await this.formatList(pendingList, userId) as ListFormat[]);
     }
+	
+	// ----------------------------------------------------------------------------- //
+	async getById(id: number): Promise<User | null> {
+		return await this.prisma.user.findUnique({ where: { id } });
+	}
 
-    // ================================== PRIVATE ================================== //
+	// ================================== PRIVATE ================================== //
 
     // ----------------------------------------------------------------------------- //
     private async checkId(id: number): Promise<boolean> {
         if (await this.prisma.user.findFirst({where: { id }, select: { id: true }}))
             return true;
         return false;
-    }
-
-    // ----------------------------------------------------------------------------- //
-    private async getById(id: number): Promise<User | null> {
-        return await this.prisma.user.findUnique({ where: { id } });
     }
 
     // ----------------------------------------------------------------------------- //

@@ -62,8 +62,6 @@ model Match {
   loser       User?    @relation("matchLoser", fields: [loserId], references: [id], onDelete: Cascade)
   loserLevel  String?
 
-
-
   scoreWinner Int     @default(0)
   scoreLoser  Int     @default(0)
   duration    Int     @default(0)

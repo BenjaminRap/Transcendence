@@ -3,45 +3,22 @@ import { MatchService } from '../services/MatchService.js';
 import { CommonSchema } from '../schemas/common.schema.js';
 import { GameStats, MatchData, OPPONENT_LEVEL } from '../types/match.types.js';
 import { MatchException, MatchError } from '../error_handlers/Match.error.js';
+import { FriendService } from '../services/FriendService.js';
+import { TournamentService } from '../services/TournamentService.js';
+import { TournamentException } from '../error_handlers/Tournament.error.js';
 
 export class MatchController {
 	constructor(
 		private matchService: MatchService,
+		private friendService: FriendService,
+		private tournamentService: TournamentService
 	) {}
 
-    // 
 	// ----------------------------------------------------------------------------- //
-	async startMatch(matchData: MatchData): Promise<{ success: boolean, message?: string }> {
-        // proteger cette route pour qu'elle ne soit accessible que par le backend de ben
-
+	async registerMatch(request: FastifyRequest<{ Body: MatchData }>, reply: FastifyReply): Promise<{ success: boolean, message?: string }> {
+        // proteger cette route pour qu'elle ne soit accessible que par le backend de ben		
         try {
-            if (matchData.loserLevel) {
-                matchData.loserId = null;
-                matchData.loserLevel = this.manageOpponent(matchData.loserLevel as OPPONENT_LEVEL);
-            }
-            else {
-                matchData.loserLevel = undefined;
-                /**
-                 * verifier que l'user existe en base de donnees
-                 * leve une erreur si l'user n'existe pas
-                 * assigner le bon id
-                 */
-                
-            }
-            if (this.isOpponentLevel(matchData.winnerId))
-                matchData.winnerId = this.manageOpponent(matchData.winnerId as OPPONENT_LEVEL);
-
-
-            if (matchData.tournamentId) {
-                console.log("");//manage;
-                /**
-                 * mettre a jour les datas dans la table tournois
-                 * leve une erreur si le tournois n'existe pas
-                 *  
-                */ 
-            }
-
-
+			this.register(request.body);
             
             return { success: true };
             
@@ -51,15 +28,13 @@ export class MatchController {
                 switch (error.code)
                 {
                     case MatchError.USR_NOT_FOUND:
-                        console.log("User not found");
-                        break;
-                    case MatchError.INVALID_OPPONENT:
-                        console.log("Invalid opponent");
-                        break;
+						return { success: false, message: error?.message || "User not found" };
+					case MatchError.INVALID_OPPONENT:
+						return { success: false, message: error?.message || "Invalid opponent type" };
                 }
-                return { success: false };
             }
 
+			return { success: false, message: "An error occurred during the recording of the match." }
             
         }
 	}
@@ -120,14 +95,54 @@ export class MatchController {
 			}
 		}
 	}
+	
+	// --------------------------------------------------------------------------------- //
+	async register(matchData: MatchData): Promise<{success: Boolean, message?: string}>
+	{
+		let loser, winner;
+		if (matchData.loserLevel) {
+			matchData.loserId = undefined;
+			matchData.loserLevel = this.manageOpponent(matchData.loserLevel as OPPONENT_LEVEL);
+		}
+		else {
+			matchData.loserLevel = undefined;
+			loser = await this.friendService.getById(Number(matchData.loserId));
+			if (!loser)
+				throw new MatchException(MatchError.USR_NOT_FOUND, 'Loser of the match not found');
+		}
+		if (matchData.winnerLevel) {
+			matchData.winnerId = undefined;
+			matchData.winnerLevel = this.manageOpponent(matchData.winnerLevel as OPPONENT_LEVEL);
+		}
+		else {
+			matchData.winnerLevel = undefined;
+			winner = await this.friendService.getById(Number(matchData.winnerId));
+			if (!winner)
+				throw new MatchException(MatchError.USR_NOT_FOUND, 'winner of the match not found');
+		}
+		const matchId = await this.matchService.registerMatch(matchData);
+
+		if (matchData.tournamentId)
+		{
+			try {
+				await this.tournamentService.updateMatchResult(matchData.tournamentId, matchId);
+				
+			} catch (error) {
+				if (error instanceof TournamentException) {
+					// throw new MatchException(MatchError.INVALID_TOURNAMENT, );
+					return { success: false, message: error.message || "Tournament error" };
+				}
+				return {
+					success: false,
+					message: 'Error updating tournament with match result'
+				};
+			}
+		}
+		return { success: true };
+	}
 
     // ==================================== PRIVATE ==================================== //
-
-    // --------------------------------------------------------------------------------- //
-    private isOpponentLevel(data: any): data is OPPONENT_LEVEL {
-        return Object.values(OPPONENT_LEVEL).includes(data as OPPONENT_LEVEL);
-    }
-
+	
     // --------------------------------------------------------------------------------- //
     private manageOpponent(level: OPPONENT_LEVEL): string
     {
