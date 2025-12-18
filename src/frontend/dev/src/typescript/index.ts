@@ -1,3 +1,4 @@
+import "reflect-metadata"
 import { Terminal, TerminalFileSystem } from './terminal'
 import { ProfileBuilder } from './profile'
 import { WriteOnTerminal } from './terminalUtils/writeOnTerminal'
