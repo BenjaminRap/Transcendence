@@ -16,27 +16,20 @@ export class MatchController {
 
 	// ----------------------------------------------------------------------------- //
 	async registerMatch(request: FastifyRequest<{ Body: MatchData }>, reply: FastifyReply): Promise<{ success: boolean, message?: string }> {
+       
+       
         // proteger cette route pour qu'elle ne soit accessible que par le backend de ben		
-        try {
-			this.register(request.body);
-            
-            return { success: true };
-            
-        } catch (error) {
-            if (error instanceof MatchException)
-            {
-                switch (error.code)
-                {
-                    case MatchError.USR_NOT_FOUND:
-						return { success: false, message: error?.message || "User not found" };
-					case MatchError.INVALID_OPPONENT:
-						return { success: false, message: error?.message || "Invalid opponent type" };
-                }
-            }
+       
+       
+        const ret = await this.register(request.body);
 
-			return { success: false, message: "An error occurred during the recording of the match." }
-            
+        if (!ret.success) {
+            return reply.code(409).send({
+                success: false,
+                message: ret?.message || "An error occurred during the registration of the match.",
+            })
         }
+        return reply.code(201).send({ success: true });
 	}
 
 	// ----------------------------------------------------------------------------- //
@@ -97,52 +90,70 @@ export class MatchController {
 	}
 	
 	// --------------------------------------------------------------------------------- //
+    // ne leve pas d'exception
 	async register(matchData: MatchData): Promise<{success: Boolean, message?: string}>
 	{
-		let loser, winner;
-		if (matchData.loserLevel) {
-			matchData.loserId = undefined;
-			matchData.loserLevel = this.manageOpponent(matchData.loserLevel as OPPONENT_LEVEL);
-		}
-		else {
-			matchData.loserLevel = undefined;
-			loser = await this.friendService.getById(Number(matchData.loserId));
-			if (!loser)
-				throw new MatchException(MatchError.USR_NOT_FOUND, 'Loser of the match not found');
-		}
-		if (matchData.winnerLevel) {
-			matchData.winnerId = undefined;
-			matchData.winnerLevel = this.manageOpponent(matchData.winnerLevel as OPPONENT_LEVEL);
-		}
-		else {
-			matchData.winnerLevel = undefined;
-			winner = await this.friendService.getById(Number(matchData.winnerId));
-			if (!winner)
-				throw new MatchException(MatchError.USR_NOT_FOUND, 'winner of the match not found');
-		}
-		const matchId = await this.matchService.registerMatch(matchData);
+        try {
+            const loser = await this.checkMatchData(matchData.loserLevel, matchData.loserId);
+            matchData.loserId = loser.id;
+            matchData.loserLevel = loser.level;
+    
+            const winner = await this.checkMatchData(matchData.winnerLevel, matchData.winnerId);
+            matchData.winnerId = winner.id;
+            matchData.winnerLevel = winner.level;
+    
+            const matchId = await this.matchService.registerMatch(matchData);
+    
+            if (matchData.tournamentId)
+            {
+                try {
+                    await this.tournamentService.updateMatchResult(matchData.tournamentId, matchId);
+                    await this.matchService.updateMatch(matchId, matchData)
+                }
+                catch (error) {
+                    if (error instanceof TournamentException) {
+                        matchData.tournamentId = undefined;
+                        await this.matchService.updateMatch(matchId, matchData)
+                        throw new MatchException(MatchError.INVALID_TOURNAMENT, error.message || "Error updating tournament with match result");
+                    }
+                    throw error;
+                }
+            }
+            return { success: true };            
+        }
+        catch (error) {
+            if (error instanceof MatchException)
+                return { success: false, message: error?.message || "An error occurred during the recording of the match." };
 
-		if (matchData.tournamentId)
-		{
-			try {
-				await this.tournamentService.updateMatchResult(matchData.tournamentId, matchId);
-				
-			} catch (error) {
-				if (error instanceof TournamentException) {
-					// throw new MatchException(MatchError.INVALID_TOURNAMENT, );
-					return { success: false, message: error.message || "Tournament error" };
-				}
-				return {
-					success: false,
-					message: 'Error updating tournament with match result'
-				};
-			}
-		}
-		return { success: true };
+			return { success: false, message: "An error occurred when fetching the database" };
+        }
 	}
 
     // ==================================== PRIVATE ==================================== //
 	
+    // --------------------------------------------------------------------------------- //
+    private async checkMatchData(level: string | undefined, id: number | undefined): Promise<{ id: number | undefined, level: string | undefined }>
+    {
+		if (level) {
+            return {
+                id: undefined,
+                level: this.manageOpponent(level as OPPONENT_LEVEL),
+            }
+		}
+		else if (id) {
+            const user = await this.friendService.getById(Number(id));
+            if(!user)
+                throw new MatchException(MatchError.USR_NOT_FOUND, 'User with id ' + id.toString() + ' of the match not found');
+            
+            return {
+                id: user.id,
+                level: undefined,
+            }
+		}
+        else
+            throw new MatchException(MatchError.INVALID_OPPONENT, "No opponent define");
+    }
+
     // --------------------------------------------------------------------------------- //
     private manageOpponent(level: OPPONENT_LEVEL): string
     {

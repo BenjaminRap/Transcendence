@@ -19,12 +19,29 @@ export class MatchService {
 				scoreWinner: matchData.scoreWinner,
 				scoreLoser: matchData.scoreLoser,
 				duration: matchData.duration,
-				tournamentId: matchData.tournamentId || undefined,
+				tournamentId: matchData.tournamentId,
 			}
 		});
 
 		return match.id;
 	} 
+
+    // ----------------------------------------------------------------------------- //
+    async updateMatch(matchId: number, matchData: Partial<MatchData>): Promise<void> {
+        await this.prisma.match.update({
+            where: { id: matchId },
+            data: {
+                winnerId: matchData.winnerId,
+                loserId: matchData.loserId,
+                winnerLevel: matchData.winnerLevel,
+                loserLevel: matchData.loserLevel,
+                scoreWinner: matchData.scoreWinner,
+                scoreLoser: matchData.scoreLoser,
+                duration: matchData.duration,
+                tournamentId: matchData.tournamentId,
+            }
+        });
+    }
 
 	// ----------------------------------------------------------------------------- //
 	async getStats(playerIds: number[]): Promise<{stats: GameStats[] | null, message?: string }> {
@@ -111,7 +128,7 @@ export class MatchService {
 			select: { id: true }
 		});
 		return match !== null;
-	
+    }
 
 	// ================================== PRIVATE ================================== //
 
