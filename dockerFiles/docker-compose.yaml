@@ -27,10 +27,16 @@ services:
     volumes:
       - backend:/app/dev/
       - databases:/app/databases/
+    environment:
+      - PROFILE=${PROFILE:-prod} 
     profiles: [
       "prod",
       "dev"
     ]
+    ports:
+      - "8181:8181"
+    env_file:
+      - ./.env.fastify_example
 
 volumes:
   frontend:

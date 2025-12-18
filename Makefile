@@ -1,6 +1,6 @@
 .IGNORE: clean, fclean
 .SILENT: clean, fclean
-.PHONY: restart-nginx, restart-fastify, compile, build, compile-watch, up, all, stop, clean, fclean, re, fre
+.PHONY: compile, build, compile-watch, up, all, stop, clean, fclean, clean-dep, re, fre
 
 PROFILE = prod
 DOCKER_DIR	=	./dockerFiles/
@@ -51,6 +51,7 @@ endif
 
 install:
 	npm install
+	npx prisma generate --schema=./dockerFiles/fastify/prisma/schema.prisma
 
 copy-tsconfig:
 	cp ./src/frontend/tsconfig.json ./dockerFiles/vite/
@@ -63,11 +64,8 @@ stop:
 	$(DOCKER_EXEC) stop
 
 clean: stop
-	-docker stop $(docker ps -qa) 2>/dev/null
-	-docker rm $(docker ps -qa) 2>/dev/null
 	-rm -rf ./dockerFiles/nginx/website/
 	-rm -rf ./src/backend/javascript/*
-	-rm -r ./dockerFiles/secrets/ssl/*
 
 fclean: clean
 	-docker rmi -f $(docker images -qa) 2>/dev/null
@@ -76,6 +74,7 @@ fclean: clean
 	-docker system prune -af
 	-rm -rf ./node_modules/
 	-rm ./package-lock.json
+	-rm -r ./dockerFiles/secrets/ssl/*
 
 re: clean all
 fre: fclean all

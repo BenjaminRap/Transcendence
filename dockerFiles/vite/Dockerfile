@@ -6,7 +6,6 @@ RUN [ "apt-get", "clean" ]
 RUN [ "rm", "-rf", "/var/lib/apt/lists*" ]
 
 COPY ./package.json ./package.json
-RUN [ "npm", "install", "vite@7.0.6" ]
 RUN [ "npm", "install" ]
 RUN [ "npm", "cache", "clean", "--force" ]
 

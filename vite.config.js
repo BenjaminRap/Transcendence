@@ -1,9 +1,11 @@
 import { defineConfig } from 'vite'
 import path from 'path';
 import swc from "@z-code/vite-plugin-swc";
+import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
 	root: './src/frontend/dev/',
+	appType: 'mpa',
 	plugins: [swc({
 		include: /\.ts?$/,
 		exclude: "node_modules",
@@ -22,7 +24,7 @@ export default defineConfig({
 			verbatimModuleSyntax: true
 		  },
 		},
-	})],
+	}), tailwindcss()],
 	build: {
 		outDir: '../../../dockerFiles/nginx/website/',  // IMPORTANT : chemin relatif à root
 		emptyOutDir: true   // vide le dossier prod avant chaque build

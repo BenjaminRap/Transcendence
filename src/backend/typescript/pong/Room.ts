@@ -6,7 +6,7 @@ import { ClientProxy } from "./ClientProxy";
 import { type int, Observable } from "@babylonjs/core";
 import { type DefaultEventsMap, Server } from "socket.io";
 import type { ServerEvents, ServerToClientEvents } from "@shared/MessageType";
-import type { DefaultSocket } from ".";
+import type { DefaultSocket } from "../index";
 
 export type SocketMessage = {
 	socketIndex : int,

@@ -1,0 +1,39 @@
+
+
+// workflow d'enregistrement d'un tournois en backend depuis le jeu
+
+
+// route creation tournois
+creer un nouveau tournois en db lorsque le matchmaking est termine
+(
+    -> tournamentTitle
+    -> userId               (id of the tournament creator)
+    -> participantsList     (include tournament creator if participate)
+        {
+            userId      number (-1 user guest : -2 AI (si elle est autorisee en tournois) )
+            alias       String
+        }
+)
+
+
+// route usuelle pour enregistrer un match
+mettre a jour la db a la fin de chaque match du tournois
+{
+    winnerId            number (-1 user guest : -2 AI)
+    loserId             number ( idem )
+    scoreWinner         number
+    scoreLoser
+    duration            number (seconds)
+    tournamentId        number ( si c'est un tournois )
+}
+
+
+lorsque le tournois est termine:
+// route pour enregister un tournois termine
+{
+    tournamentId        number
+    participantsList {
+        userId
+        finalRank       number
+    }
+}

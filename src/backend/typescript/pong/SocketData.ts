@@ -1,4 +1,4 @@
-import type { DefaultSocket } from ".";
+import type { DefaultSocket } from "../";
 import { Room } from "./Room";
 
 export class	SocketData

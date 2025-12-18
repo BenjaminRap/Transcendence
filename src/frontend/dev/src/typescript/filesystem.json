@@ -1,0 +1,289 @@
+{
+	"type": "directory",
+	"name": "/",
+	"children": [
+	{
+		"type": "directory",
+		"name": "bin",
+		"children": [
+		{
+			"type": "file",
+			"name": "ls",
+			"content": "#!/bin/bash\necho \"Liste des fichiers\""
+		},
+		{
+			"type": "file",
+			"name": "cat",
+			"content": "#!/bin/bash\necho \"$*\""
+		}
+		]
+	},
+	{
+		"type": "directory",
+		"name": "boot",
+		"children": [
+		{
+			"type": "file",
+			"name": "vmlinuz-5.10.0",
+			"content": "--kernel binary blob--"
+		},
+		{
+			"type": "file",
+			"name": "initrd.img-5.10.0",
+			"content": "--initramfs image--"
+		}
+		]
+	},
+	{
+		"type": "directory",
+		"name": "dev",
+		"children": [
+		{
+			"type": "file",
+			"name": "null",
+			"content": "character device /dev/null"
+		},
+		{
+			"type": "file",
+			"name": "tty0",
+			"content": "character device /dev/tty0"
+		}
+		]
+	},
+	{
+		"type": "directory",
+		"name": "etc",
+		"children": [
+		{
+			"type": "file",
+			"name": "passwd",
+			"content": "root:x:0:0:root:/root:/bin/bash\nuser:x:1000:1000:User:/home/user:/bin/bash"
+		},
+		{
+			"type": "file",
+			"name": "hosts",
+			"content": "127.0.0.1 localhost\n::1 localhost"
+		},
+		{
+			"type": "directory",
+			"name": "apt",
+			"children": [
+			{
+				"type": "file",
+				"name": "sources.list",
+				"content": "deb http://deb.debian.org/debian stable main"
+			}
+			]
+		}
+		]
+	},
+	{
+		"type": "directory",
+		"name": "home",
+		"children": [
+		{
+			"type": "directory",
+			"name": "user",
+			"children": [
+				{
+					"type": "file",
+					"name": "README.txt",
+					"content": "Bienvenue dans votre dossier personnel.\n\nHelp - Utilisation du terminal\n\nComment exécuter une commande :\n- Tapez une commande, puis appuyez sur Entrée.\n- Le terminal enverra une réponse; chaque réponse commence par le caractère \">\".\n\nStatut actuel :\n- Vous êtes actuellement connecté en tant que \"guest\".\n\nCréer un compte (register) :\n- Tapez: register\n- Appuyez sur Entrée et suivez les instructions affichées pour choisir un nom et un mot de passe.\n\nSe connecter (login) :\n- Tapez login\n- Appuyez sur Entrée et suivez les instructions pour fournir vos identifiants..\n\nVous pouvez tout de meme jouer a pong en tant que guest !\n\nCommandes utiles :\n- help : affiche cette aide\n- clear: vide l'écran\n- login / register: se connecter ou créer un compte\n- pong : jouer a pong en tant que guest"
+				},
+				{
+					"type": "directory",
+					"name": "Documents",
+					"children": [
+					{
+						"type": "file",
+						"name": "todo.txt",
+						"content": "- Acheter le latte\n- Envoyer l’email\n- Terminer le projet"
+					}
+					]
+				},
+				{
+					"type": "file",
+					"name": "do_help_not_ls.txt",
+					"content": "C'est clair nan ?"
+				}
+			]
+		}
+		]
+	},
+	{
+		"type": "directory",
+		"name": "lib",
+		"children": [
+		{
+			"type": "file",
+			"name": "libc.so.6",
+			"content": "--shared C library binary--"
+		}
+		]
+	},
+	{
+		"type": "directory",
+		"name": "media",
+		"children": [
+		{
+			"type": "directory",
+			"name": "usb",
+			"children": []
+		}
+		]
+	},
+	{
+		"type": "directory",
+		"name": "mnt",
+		"children": []
+	},
+	{
+		"type": "directory",
+		"name": "opt",
+		"children": [
+		{
+			"type": "directory",
+			"name": "myapp",
+			"children": [
+			{
+				"type": "file",
+				"name": "config.yaml",
+				"content": "setting: value\nfeature_enabled: true"
+			}
+			]
+		}
+		]
+	},
+	{
+		"type": "directory",
+		"name": "proc",
+		"children": [
+		{
+			"type": "file",
+			"name": "cpuinfo",
+			"content": "processor : 0\nvendor_id : GenuineIntel"
+		}
+		]
+	},
+	{
+		"type": "directory",
+		"name": "root",
+		"children": [
+		{
+			"type": "file",
+			"name": ".bashrc",
+			"content": "alias ll='ls -alF'"
+		}
+		]
+	},
+	{
+		"type": "directory",
+		"name": "run",
+		"children": []
+	},
+	{
+		"type": "directory",
+		"name": "sbin",
+		"children": [
+		{
+			"type": "file",
+			"name": "fsck",
+			"content": "#!/bin/bash\necho \"File system check\""
+		}
+		]
+	},
+	{
+		"type": "directory",
+		"name": "srv",
+		"children": []
+	},
+	{
+		"type": "directory",
+		"name": "sys",
+		"children": []
+	},
+	{
+		"type": "directory",
+		"name": "tmp",
+		"children": [
+		{
+			"type": "file",
+			"name": "session1234.tmp",
+			"content": "temporary session data"
+		}
+		]
+	},
+	{
+		"type": "directory",
+		"name": "usr",
+		"children": [
+		{
+			"type": "directory",
+			"name": "bin",
+			"children": [
+			{
+				"type": "file",
+				"name": "vim",
+				"content": "#!/usr/bin/env vim"
+			}
+			]
+		},
+		{
+			"type": "directory",
+			"name": "lib",
+			"children": []
+		},
+		{
+			"type": "directory",
+			"name": "sbin",
+			"children": [
+			{
+				"type": "file",
+				"name": "apache2",
+				"content": "#!/bin/bash\necho \"Apache HTTPD\""
+			}
+			]
+		},
+		{
+			"type": "directory",
+			"name": "share",
+			"children": [
+			{
+				"type": "file",
+				"name": "man1",
+				"content": "man page folder"
+			}
+			]
+		}
+		]
+	},
+	{
+		"type": "directory",
+		"name": "var",
+		"children": [
+		{
+			"type": "directory",
+			"name": "log",
+			"children": [
+			{
+				"type": "file",
+				"name": "syslog",
+				"content": "Nov 4 10:00:00 systemd[1]: Started Session 1 of user user."
+			}
+			]
+		},
+		{
+			"type": "directory",
+				"name": "www",
+				"children": [
+				{
+					"type": "file",
+					"name": "index.html",
+					"content": "<html><body><h1>Bienvenue</h1></body></html>"
+				}
+				]
+		}
+		]
+	}
+	]
+}
