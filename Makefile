@@ -52,7 +52,10 @@ endif
 install:
 	npm install
 
-all: install certificates build up
+copy-tsconfig:
+	cp ./src/frontend/tsconfig.json ./dockerFiles/vite/
+
+all: copy-tsconfig install certificates build up
 
 $(NAME): all
 
