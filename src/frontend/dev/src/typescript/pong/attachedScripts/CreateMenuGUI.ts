@@ -195,6 +195,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		this._sceneData.events.getObservable("scene-change").notifyObservers([currentScene.getSceneName(), newScene.getSceneName()]);
 
 		this._timerManager.setTimeout(() => applyTheme(this._sceneData.pongHTMLElement, newScene.getTheme()), 250);
+		this._currentSceneFileName = newScene.getSceneFileName();
 		return true;
 	}
 
