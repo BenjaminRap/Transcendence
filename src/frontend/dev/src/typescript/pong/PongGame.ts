@@ -22,7 +22,7 @@ import.meta.glob("@shared/attachedScripts/*", { eager: true});
 export type SceneFileName = "Magic.gltf" | "Basic.gltf" | "Terminal.gltf";
 
 export class PongGame extends HTMLElement {
-	private _canvas : HTMLCanvasElement;
+	private _canvas! : HTMLCanvasElement;
 	private _engine! : Engine;
 	private _scene : Scene | undefined;
 	private _multiplayerHandler : MultiplayerHandler;
@@ -31,14 +31,14 @@ export class PongGame extends HTMLElement {
     public constructor() {
 		super();
 		this.classList.add("block", "overflow-hidden", "container-inline", "aspect-video");
-		this._canvas = document.createElement("canvas");
-		this._canvas.classList.add("size-full");
 		this._settings = new Settings();
 		this._multiplayerHandler = new MultiplayerHandler();
-		this.appendChild(this._canvas);
 	}
 
 	public async connectedCallback() : Promise<void> {
+		this._canvas = document.createElement("canvas");
+		this._canvas.classList.add("size-full");
+		this.appendChild(this._canvas);
 		try {
 			this._engine = this.createEngine();
 			globalThis.HK = await HavokPhysics();
