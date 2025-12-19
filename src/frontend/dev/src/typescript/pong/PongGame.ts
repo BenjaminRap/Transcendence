@@ -76,7 +76,6 @@ export class PongGame extends HTMLElement {
 			lockstepMaxSteps: 4
 		});
 
-		engine.loadingScreen.loadingUIText
 		engine.renderEvenInBackground = false;
 		return engine;
 	}
