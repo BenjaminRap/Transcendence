@@ -30,7 +30,7 @@ export class PongGame extends HTMLElement {
 
     public constructor() {
 		super();
-		this.classList.add("relative", "block", "overflow-hidden", "container-inline", "aspect-video");
+		this.classList.add("block", "overflow-hidden", "container-inline", "aspect-video");
 		this._canvas = document.createElement("canvas");
 		this._canvas.classList.add("size-full");
 		this._settings = new Settings();

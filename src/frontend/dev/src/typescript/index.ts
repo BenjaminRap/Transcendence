@@ -74,16 +74,16 @@ if (path === '/')
 	if (!TerminalUserManagement.isLoggedIn)
 	{
 		if (message) {
-			WriteOnTerminal.printWithAnimation(message, 35);
+			WriteOnTerminal.printWithAnimation(message, 5);
 		} else {
-			await WriteOnTerminal.printWithAnimation("Welcome to Transencdence !", 35);
-			await WriteOnTerminal.printWithAnimation(HELP_MESSAGE_NOT_LOG, 25);
+			await WriteOnTerminal.printWithAnimation("Welcome to Transencdence !", 5);
+			await WriteOnTerminal.printWithAnimation(HELP_MESSAGE_NOT_LOG, 5);
 
 		}
 	}
 	else
 	{
-		await WriteOnTerminal.printWithAnimation(`Welcome back ${TerminalUserManagement.username} ! Type 'help' for instructions.`, 35);
+		await WriteOnTerminal.printWithAnimation(`Welcome back ${TerminalUserManagement.username} ! Type 'help' for instructions.`, 5);
 	}
 	if (ProfileBuilder.isActive)
 		ProfileBuilder.removeProfile();

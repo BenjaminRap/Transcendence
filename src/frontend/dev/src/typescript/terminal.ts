@@ -104,6 +104,7 @@ export namespace TerminalCommand {
 		new Command('login', 'Login to your account', 'login [email] [password]', loginInput),
 		new Command('logout', 'Logout from your account', 'logout', RequestBackendModule.logout),
 		new Command('42' , 'Authenticate with OAuth 42', '42', OauthCommand),
+		new Command('pong', 'Launch the Pong game', 'pong', pongCommand),
 	];
 	export let commandHistory: string[] = [];
 	export let indexCommandHistory = -2;
@@ -113,6 +114,22 @@ export namespace TerminalCommand {
 
 
 // ------------------------------------------------------------------------ Command ---------------------------------------------------------------------
+
+
+function pongCommand(): string {
+	if (!TerminalElements.terminal)
+	{
+		console.error("Body element not found");
+		return 'Error launching Pong game.';
+	}
+	const element = document.createElement('div');
+	element.className = "fixed top-[50%] left-[50%] border border-green-500 bg-black z-2 flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 ";
+	element.style.width = '80vw';
+	element.innerHTML = `<pong-game class="w-full h-full"></pong-game>`;
+	TerminalElements.terminal.insertAdjacentHTML('beforeend', element.outerHTML);
+	return 'Pong game launched!';
+}
+
 
 function OauthCommand(args: string[], description: string, usage: string): string {
 	const redirectUri = encodeURIComponent('https://localhost:8080/');
