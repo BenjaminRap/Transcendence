@@ -10,7 +10,7 @@ export class	MatchOpponentsGUI extends HTMLElement
 
 	public connectedCallback()
 	{
-		this.classList.add("absolute", "inset-0", "size-full", "z-10", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm", "flex", "flex-row", "justify-around", "items-center");
+		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm", "flex", "flex-row", "justify-around", "items-center");
 		const	rightOpponent = new OpponentGUI(this._rightOpponent);
 		rightOpponent.classList.add("w-1/5");
 

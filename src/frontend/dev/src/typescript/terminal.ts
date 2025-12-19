@@ -123,7 +123,7 @@ function pongCommand(): string {
 		return 'Error launching Pong game.';
 	}
 	TerminalElements.terminal.insertAdjacentHTML('beforeend', `
-	<div class="fixed top-[50%] left-[50%] border border-green-500 bg-black z-2 flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 " style="width: 80vw">
+	<div class="fixed top-[50%] left-[50%] border border-green-500 bg-black flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 " style="width: 80vw">
 		<pong-game class="size-full"></pong-game>
 	</div>
 `);

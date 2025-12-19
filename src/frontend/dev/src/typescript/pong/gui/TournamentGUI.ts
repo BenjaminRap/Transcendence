@@ -28,7 +28,7 @@ export class	TournamentGUI extends HTMLElement
 
 	connectedCallback()
 	{
-		this.classList.add("absolute", "inset-0", "size-full", "z-10", "cursor-default", "select-none");
+		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none");
 		this._container = this.createContainer();
 		this.placeMatches();
 		this.placeParticipants();
@@ -51,7 +51,7 @@ export class	TournamentGUI extends HTMLElement
 	{
 		const	div = document.createElement("div");
 
-		div.classList.add("absolute", "inset-0", "size-full", "z-10", "flex", "flex-col", "relative");
+		div.classList.add("absolute", "inset-0", "size-full", "flex", "flex-col", "relative");
 		div.style.minWidth = `calc(${this._participants.length} * 1.1 * 10cqw)`;
 
 		return div;

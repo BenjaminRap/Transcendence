@@ -22,7 +22,7 @@ export class	MenuGUI extends HTMLElement
 
 	public connectedCallback()
 	{
-		this.classList.add("absolute", "inset-0", "size-full", "z-10", "cursor-default", "select-none", "pointer-events-none");
+		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none");
 		this.innerHTML = `
 				<div class="bottom-1/5 absolute flex flex-row items-center w-full h-1/12 justify-between">
 					<div class="w-1/4 flex flex-row items-center h-full">
