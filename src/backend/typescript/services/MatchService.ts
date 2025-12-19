@@ -1,6 +1,6 @@
 import { PrismaClient, User } from '@prisma/client';
 import { GameStats, MatchHistoryEntry } from '../types/match.types.js';
-import { MatchData } from '../types/match.types.js';
+import { MatchData, UpdateMatch } from '../types/match.types.js';
 import { number } from 'zod';
 
 export class MatchService {
@@ -19,7 +19,7 @@ export class MatchService {
 				scoreWinner: matchData.scoreWinner,
 				scoreLoser: matchData.scoreLoser,
 				duration: matchData.duration,
-				tournamentId: matchData.tournamentId,
+				// tournamentId: matchData.tournamentId,
 			}
 		});
 
@@ -27,7 +27,7 @@ export class MatchService {
 	} 
 
     // ----------------------------------------------------------------------------- //
-    async updateMatch(matchId: number, matchData: Partial<MatchData>): Promise<void> {
+    async updateMatch(matchId: number, matchData: Partial<UpdateMatch>): Promise<void> {
         await this.prisma.match.update({
             where: { id: matchId },
             data: {
@@ -38,9 +38,26 @@ export class MatchService {
                 scoreWinner: matchData.scoreWinner,
                 scoreLoser: matchData.scoreLoser,
                 duration: matchData.duration,
-                tournamentId: matchData.tournamentId,
+                // tournamentId: matchData.tournamentId,
             }
         });
+    }
+
+	// ----------------------------------------------------------------------------- //
+    async registerTournamentMatch(matchData: MatchData, tournamentId: number ): Promise<number>{
+        const match = await this.prisma.match.create({
+            data: {
+                winnerId: matchData.winnerId,
+                loserId: matchData.loserId,
+                winnerLevel: matchData.winnerLevel,
+                loserLevel: matchData.loserLevel,
+                scoreWinner: matchData.scoreWinner,
+                scoreLoser: matchData.scoreLoser,
+                duration: matchData.duration,
+                tournamentId: tournamentId,
+            }
+        });
+        return match.id;
     }
 
 	// ----------------------------------------------------------------------------- //

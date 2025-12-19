@@ -49,6 +49,9 @@ export interface MatchData
     scoreLoser:     number,
     
     duration:       number,
-    
-    tournamentId?:  number | undefined,
+}
+
+export interface MatchTournamentData extends MatchData
+{
+    tournamentId:  number,
 }

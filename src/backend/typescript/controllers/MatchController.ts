@@ -14,13 +14,19 @@ export class MatchController {
 		private tournamentService: TournamentService
 	) {}
 
+    private expectedGameSecret = process.env.GAME_BACKEND_SECRET || '';
+
 	// ----------------------------------------------------------------------------- //
 	async registerMatch(request: FastifyRequest<{ Body: MatchData }>, reply: FastifyReply): Promise<{ success: boolean, message?: string }> {
-       
-       
-        // proteger cette route pour qu'elle ne soit accessible que par le backend de ben		
-       
-       
+
+        const gameSecret = request.headers['x-game-secret'];
+        if (gameSecret !== this.expectedGameSecret) {
+            return reply.code(403).send({
+                success: false,
+                message: 'Forbidden'
+            });
+        }
+
         const ret = await this.register(request.body);
 
         if (!ret.success) {
