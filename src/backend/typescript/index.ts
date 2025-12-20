@@ -31,6 +31,9 @@ await fastify.register(multipartPlugin);
 
 await fastify.register(staticPlugin);
 
+// after registering other plugins
+
+
 // Instanciation and intialiasation of the dependency injection container
 const container = Container.getInstance(fastify.prisma);
 

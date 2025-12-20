@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { TournamentService } from '../services/TournamentService.js';
-import type { MatchData } from '../types/match.types.d.ts';
+import type { MatchData } from '../types/match.types.js';
 import { MatchService } from '../services/MatchService.js';
 import { TournamentException, TournamentError } from '../error_handlers/Tournament.error.js';
 

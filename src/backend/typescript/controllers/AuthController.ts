@@ -14,6 +14,7 @@ export class AuthController {
     // POST auth/register
     async register(request: FastifyRequest<{ Body: RegisterData }>, reply: FastifyReply) {
         try {
+			console.log("HERE");
             const validation = AuthSchema.register.safeParse(request.body);
             if (!validation.success)
                 return reply.status(400).send({

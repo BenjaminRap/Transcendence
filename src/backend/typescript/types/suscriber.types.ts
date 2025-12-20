@@ -1,4 +1,4 @@
-import { GameStats } from "./match.types.d.js"
+import { GameStats } from "./match.types.js"
 import { Match, Friendship } from "@prisma/client";
 
 export interface UpdateData
