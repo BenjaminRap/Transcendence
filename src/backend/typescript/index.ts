@@ -11,10 +11,11 @@ import { usersRoutes } from './routes/users.routes.js';
 import { suscriberRoute } from './routes/suscriber.route.js';
 import { friendRoute } from './routes/friend.routes.js';
 import { matchRoutes } from './routes/match.routes.js';
+import { tournamentRoutes } from './routes/tournament.routes.js';
 
 dotenv.config();
 
-const fastify = Fastify({ logger: true });
+const fastify = await Fastify({ logger: true });
 
 await fastify.register(cors, {
     origin: true,
@@ -98,13 +99,25 @@ await fastify.register((instance, opts, done) => {
 	done();
 }, { prefix: '/match' });
 
+await fastify.register((instance, opts, done) => {
+	tournamentRoutes(
+		instance,
+		Container.getInstance().getService('TournamentController'),
+		{
+			auth: Container.getInstance().getService('AuthMiddleware'),
+			header: Container.getInstance().getService('HeaderMiddleware')
+		}
+	);
+	done();
+}, { prefix: '/tournament' });
+
 async function start(): Promise<void> {
     try {
         const port = Number(process.env.PORT) || 8181;
         const host = process.env.HOST || '0.0.0.0';
 
         await fastify.listen({ port: port, host: host });
-        fastify.log.info(`Server listening at ${ host }:${ port }`);
+        fastify.log.info(`Server listening at ${ host }:${ port } !`);
     } catch (error) {
         fastify.log.error(`Could not launch the server: ${error}`);
         process.exit(1);
