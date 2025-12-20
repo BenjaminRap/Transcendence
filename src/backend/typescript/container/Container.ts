@@ -20,8 +20,6 @@ import { TokenManager } from '../utils/TokenManager.js';
 import { AuthMiddleware } from '../middleware/AuthMiddleware.js';
 import { HeaderMiddleware } from '../middleware/HeaderMiddleware.js';
 
-import { GameInterface } from '../interfaces/GameInterface.js';
-
 export class Container {
     private constructor() {}
     private static instance: Container;
@@ -121,7 +119,9 @@ export class Container {
         ));
 
         this.registerService('MatchController', () => new MatchController(
-            this.getService('MatchService')
+            this.getService('MatchService'),
+			this.getService('FriendService'),
+			this.getService('TournamentService'),
         ));
 
         // Middleware
@@ -132,10 +132,6 @@ export class Container {
         this.registerService('HeaderMiddleware', () => new HeaderMiddleware(
         ));
 
-        // Interfaces
-        this.registerService('GameService', () => new GameInterface(
-            this.getService('MatchController')
-        ));
     }
 }
 

@@ -6,6 +6,7 @@ import { MatchException, MatchError } from '../error_handlers/Match.error.js';
 import { FriendService } from '../services/FriendService.js';
 import { TournamentService } from '../services/TournamentService.js';
 import { TournamentException } from '../error_handlers/Tournament.error.js';
+import { request } from 'http';
 
 export class MatchController {
 	constructor(
@@ -14,28 +15,17 @@ export class MatchController {
 		private tournamentService: TournamentService
 	) {}
 
-    private expectedGameSecret = process.env.GAME_BACKEND_SECRET || '';
-
 	// ----------------------------------------------------------------------------- //
-	async registerMatch(request: FastifyRequest<{ Body: MatchData }>, reply: FastifyReply): Promise<{ success: boolean, message?: string }> {
-
-        const gameSecret = request.headers['x-game-secret'];
-        if (gameSecret !== this.expectedGameSecret) {
-            return reply.code(403).send({
-                success: false,
-                message: 'Forbidden'
-            });
-        }
-
+	async registerMatch(request: FastifyRequest<{ Body: MatchData }>, reply: FastifyReply): Promise<{ message?: string }> {
+		// the middleware checkGameSecret already checks the x-game-secret header
         const ret = await this.register(request.body);
 
         if (!ret.success) {
             return reply.code(409).send({
-                success: false,
                 message: ret?.message || "An error occurred during the registration of the match.",
             })
         }
-        return reply.code(201).send({ success: true });
+        return reply.code(201);
 	}
 
 	// ----------------------------------------------------------------------------- //
@@ -110,26 +100,13 @@ export class MatchController {
     
             const matchId = await this.matchService.registerMatch(matchData);
     
-            if (matchData.tournamentId)
-            {
-                try {
-                    await this.tournamentService.updateMatchResult(matchData.tournamentId, matchId);
-                    await this.matchService.updateMatch(matchId, matchData)
-                }
-                catch (error) {
-                    if (error instanceof TournamentException) {
-                        matchData.tournamentId = undefined;
-                        await this.matchService.updateMatch(matchId, matchData)
-                        throw new MatchException(MatchError.INVALID_TOURNAMENT, error.message || "Error updating tournament with match result");
-                    }
-                    throw error;
-                }
-            }
             return { success: true };            
         }
         catch (error) {
             if (error instanceof MatchException)
                 return { success: false, message: error?.message || "An error occurred during the recording of the match." };
+
+			console.warn(error);
 
 			return { success: false, message: "An error occurred when fetching the database" };
         }

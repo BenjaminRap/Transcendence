@@ -3,20 +3,18 @@ import { MatchController } from '../controllers/MatchController.js'
 import { AuthMiddleware } from '../middleware/AuthMiddleware.js'
 import { HeaderMiddleware } from '../middleware/HeaderMiddleware.js'
 import { MatchData } from '../types/match.types.js';
+import { TournamentController } from '../controllers/TournamentController.js';
 
-export function matchRoutes(
+export function tournamentRoutes(
     fastify: FastifyInstance,
-    controller: MatchController,
+    controller: TournamentController,
     middleware: {
         auth: AuthMiddleware,
         header: HeaderMiddleware
     }
 ) {
-    fastify.post<{ Body: MatchData }>('/register', {
+    fastify.post<{ Body: {tournamentId: number, matchData: MatchData} }>('/update/match', {
         preHandler: middleware.header.checkGameSecret,
-    }, controller.registerMatch.bind(controller));
+    }, controller.updateMatchResult.bind(controller));
 
-    fastify.get('/history', {
-        preHandler: middleware.auth.authenticate,
-    }, controller.getMatchHistory.bind(controller));
 }

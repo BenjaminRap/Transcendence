@@ -87,7 +87,10 @@ await fastify.register((instance, opts, done) => {
 	matchRoutes(
 		instance,
 		Container.getInstance().getService('MatchController'),
-		Container.getInstance().getService('AuthMiddleware')
+		{
+			auth: Container.getInstance().getService('AuthMiddleware'),
+			header: Container.getInstance().getService('HeaderMiddleware')
+		}
 	);
 	done();
 }, { prefix: '/match' });

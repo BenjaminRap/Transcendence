@@ -1,6 +1,6 @@
 import { PrismaClient, User } from '@prisma/client';
 import { GameStats, MatchHistoryEntry } from '../types/match.types.js';
-import { MatchData, UpdateMatch } from '../types/match.types.js';
+import { MatchData } from '../types/match.types.js';
 import { number } from 'zod';
 
 export class MatchService {
@@ -19,29 +19,12 @@ export class MatchService {
 				scoreWinner: matchData.scoreWinner,
 				scoreLoser: matchData.scoreLoser,
 				duration: matchData.duration,
-				// tournamentId: matchData.tournamentId,
+                tournamentId: undefined,
 			}
 		});
 
 		return match.id;
 	} 
-
-    // ----------------------------------------------------------------------------- //
-    async updateMatch(matchId: number, matchData: Partial<UpdateMatch>): Promise<void> {
-        await this.prisma.match.update({
-            where: { id: matchId },
-            data: {
-                winnerId: matchData.winnerId,
-                loserId: matchData.loserId,
-                winnerLevel: matchData.winnerLevel,
-                loserLevel: matchData.loserLevel,
-                scoreWinner: matchData.scoreWinner,
-                scoreLoser: matchData.scoreLoser,
-                duration: matchData.duration,
-                // tournamentId: matchData.tournamentId,
-            }
-        });
-    }
 
 	// ----------------------------------------------------------------------------- //
     async registerTournamentMatch(matchData: MatchData, tournamentId: number ): Promise<number>{
@@ -60,6 +43,18 @@ export class MatchService {
         return match.id;
     }
 
+	// ----------------------------------------------------------------------------- //
+	async thisMatchExists(matchId: number): Promise<boolean> {
+		const match = await this.prisma.match.findUnique({
+			where: { id: matchId },
+			select: { id: true }
+		});
+		return match !== null;
+    }
+
+
+
+	
 	// ----------------------------------------------------------------------------- //
 	async getStats(playerIds: number[]): Promise<{stats: GameStats[] | null, message?: string }> {
 		if (!this.theyExist(playerIds))
@@ -137,15 +132,6 @@ export class MatchService {
 
 		return history;
 	}
-
-	// ----------------------------------------------------------------------------- //
-	async thisMatchExists(matchId: number): Promise<boolean> {
-		const match = await this.prisma.match.findUnique({
-			where: { id: matchId },
-			select: { id: true }
-		});
-		return match !== null;
-    }
 
 	// ================================== PRIVATE ================================== //
 

@@ -1,46 +1,38 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { TournamentService } from '../services/TournamentService.js';
-import type { MatchData } from '../types/match.types';
+import type { MatchData } from '../types/match.types.d.ts';
 import { MatchService } from '../services/MatchService.js';
 import { TournamentException, TournamentError } from '../error_handlers/Tournament.error.js';
-import { success } from 'zod';
 
 
 export class TournamentController {
 	constructor(
         private tournamentService: TournamentService,
 		private matchService: MatchService,
-		// private tournamentService: TournamentService,
 	) {}
-
-    private expectedGameSecret = process.env.GAME_BACKEND_SECRET || '';
 
 	// ----------------------------------------------------------------------------- //
 	async updateMatchResult(request: FastifyRequest<{Body: {tournamentId: number, matchData: MatchData} }>, reply: FastifyReply) {
 
+		// le middleware checkGameSecret verifie deja le header x-game-secret
         try {
-            const gameSecret = request.headers['x-game-secret'];
-            if (gameSecret !== this.expectedGameSecret) {
-                return reply.code(403).send({
-                    success: false,
-                    message: 'Forbidden'
-                });
-            }
-
             const { tournamentId, matchData } = request.body;
-            // voir si le tournois existe
-            if (!(await this.validateTournament(tournamentId)))
+			
+            // does the tournament exist ?
+            if (!(await this.tournamentService.validateTournament(tournamentId)))
                 throw new TournamentException(TournamentError.INVALID_TOURNAMENT_ID, 'Tournament not found');
-            // enregisterle match
+            
+			// register the match
             const matchId = await this.matchService.registerTournamentMatch(matchData, tournamentId);
-            // mettre a jour le match dans le tournois
+            
+			// update the tournament with the match result
             await this.tournamentService.updateMatchResult(tournamentId, matchId);
 
         } catch (error) {
             if (error instanceof TournamentException)
                 return reply.code(400).send({
                         success: false,
-                        message: error?.message || 'An error occurred during the registration of the match.'
+                        message: error?.message || error.code
                     })
             
             request.log.error(error);
@@ -60,10 +52,5 @@ export class TournamentController {
 	// ==================================== PRIVATE ==================================== //
 	
 	// ----------------------------------------------------------------------------- //
-	async validateTournament(tournamentId: number): Promise<boolean> {
-		// verifier si le tournoi est valide
-		const tournemant = await
-		return true;
-	}
 
 }

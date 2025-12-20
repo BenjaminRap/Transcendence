@@ -1,10 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 
 export class HeaderMiddleware {
-    // --------------------------------------------------------------------------------- //
-    logHeaders = async (request: FastifyRequest, reply: FastifyReply) => {
-        console.log('Request Headers:', request.headers);
-    };
+    private expectedGameSecret = process.env.GAME_BACKEND_SECRET || '';
 
     // --------------------------------------------------------------------------------- //
     checkFormData = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -17,4 +14,15 @@ export class HeaderMiddleware {
             });
         }
     };
+
+    // --------------------------------------------------------------------------------- //
+    checkGameSecret = async (request: FastifyRequest, reply: FastifyReply) => {
+        const gameSecret = request.headers['x-game-secret'];
+        if (gameSecret !== this.expectedGameSecret) {
+            return reply.code(403).send({
+                success: false,
+                message: 'Forbidden'
+            });
+        }
+    }
 }
