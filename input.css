@@ -1,1 +1,8 @@
 @import "tailwindcss";
+@utility menu-button {
+	@apply text-center font-(family-name:--font) text-(--text-color) font-(--font-weight) rounded-(--rounded) border-solid border-(--border-color) border-(length:--border-width) leading-[normal] bg-(image:--background-image) bg-(--background-color) hover:scale-(--hover-scale) hover:brightness-(--hover-brightness) hover:bg-(--hover-background-color) hover:text-(--hover-text-color) active:scale-(--active-scale) active:brightness-(--active-brightness) backdrop-blur-(--backdrop-blur) transition-all;
+}
+
+@utility container-inline {
+	container-type: inline-size
+}

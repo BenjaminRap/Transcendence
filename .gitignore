@@ -1,11 +1,12 @@
 *.logs
 node_modules/
 package-lock.json
-/src/backend/javascript/*
+/src/backend/dev/**/*.js
 tailwind.css
 secrets/
 *.key
 *.crt
 .env
 dockerFiles/nginx/website/
+dockerFiles/vite/tsconfig.json
 src/backend/test/.test_tokens

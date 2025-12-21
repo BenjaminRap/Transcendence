@@ -1,7 +1,7 @@
-import { FastifyInstance } from 'fastify'
+import type { FastifyInstance } from 'fastify';
 import { AuthController } from '../controllers/AuthController.js'
 import { AuthMiddleware } from '../middleware/AuthMiddleware.js'
-import { RegisterData, LoginData, VerifData } from '../types/auth.types.js';
+import type { RegisterData, LoginData } from '../types/auth.types.js';
 
 export function authRoutes(
     fastify: FastifyInstance,

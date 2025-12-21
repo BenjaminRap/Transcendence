@@ -1,7 +1,7 @@
-import { FastifyRequest, FastifyReply } from "fastify";
+import type { FastifyRequest, FastifyReply } from "fastify";
 import { SuscriberService } from "../services/SuscriberService.js";
 import { FileController } from "../controllers/FileController.js";
-import { UpdatePassword, UpdateData } from "../types/suscriber.types.js";
+import type { UpdatePassword } from "../types/suscriber.types.js";
 import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
 import { SuscriberSchema } from "../schemas/suscriber.schema.js";
 

@@ -1,0 +1,34 @@
+@font-face {
+    font-family: 'VT323';
+    src: url('/fonts/VT323-Regular.woff2') format('woff2'),
+        url('/fonts/VT323-Regular.woff') format('woff'),
+        url('/fontVT323-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'pixel';
+    src: url('/fonts/PixelGame.woff2') format('woff2'),
+        url('/fonts/PixelGame.woff') format('woff'),
+        url('/fonts/PixelGame.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'JungleAdventurer';
+    src: url('/fonts/JungleAdventurerRegular.woff2') format('woff2'),
+        url('/fonts/JungleAdventurerRegular.woff') format('woff'),
+        url('/fonts/JungleAdventurerRegular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@keyframes blink {
+  0%,49% { opacity: 0; }
+  50%,100% { opacity: 1; }
+}

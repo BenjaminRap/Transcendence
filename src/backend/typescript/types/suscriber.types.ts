@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 import { GameStats } from "./match.types.js"
 import { Match, Friendship } from "@prisma/client";
+=======
+import type { GameStats } from "./match.types"
+import type { Match, Friendship } from "@prisma/client";
+>>>>>>> origin/Tournament
 
 export interface UpdateData
 {

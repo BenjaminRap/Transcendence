@@ -1,13 +1,13 @@
 export { };
 
-import { ProfileBuilder } from './profile.ts'
-import { Modal } from './modal.ts'
-import { ExtProfileBuilder } from './extprofile.ts'
-import { ExtendedView } from './extendedView.ts';
+import { ProfileBuilder } from './profile'
+import { Modal } from './modal'
+import { ExtProfileBuilder } from './extprofile'
+import { ExtendedView } from './extendedView';
 
-import { RequestBackendModule } from './terminalUtils/requestBackend.ts';
-import { WriteOnTerminal } from './terminalUtils/writeOnTerminal.ts';
-import { TerminalUtils } from './terminalUtils/terminalUtils.ts';
+import { RequestBackendModule } from './terminalUtils/requestBackend';
+import { WriteOnTerminal } from './terminalUtils/writeOnTerminal';
+import { TerminalUtils } from './terminalUtils/terminalUtils';
 
 
 import FileSystem from './filesystem.json' with { type: "json" };
@@ -34,6 +34,7 @@ export namespace TerminalConfigVariables {
 	export let InputFunction: Function | null = null;
 	export let isTabInProcess = false;
 	export let TabCompletionIndex = -1;
+	export let isPrintingAnimation = false;
 }
 
 export namespace TerminalUserManagement {
@@ -93,7 +94,7 @@ export namespace TerminalCommand {
 		new Command('profile', 'Display user profile', 'profile [username]', profileCommand),
 		new Command('kill', 'Terminate a process', 'kill [process_name]', killCommand),
 		new Command('clear', 'Clear the terminal screen', 'clear', clearCommand),
-		new Command('modal', 'Create a modal dialog', 'modal [text]', modalCommand),
+		// new Command('modal', 'Create a modal dialog', 'modal [text]', modalCommand),
 		new Command('register', 'Register a new user', 'register [text]', registerInput),
 		new Command('cd', 'Change the current directory', 'cd [directory]', cdCommand),
 		new Command('ls', 'List directory contents', 'ls', lsCommand),
@@ -102,6 +103,8 @@ export namespace TerminalCommand {
 		new Command('whoami', 'Display the current username', 'whoami', whoamiCommand),
 		new Command('login', 'Login to your account', 'login [email] [password]', loginInput),
 		new Command('logout', 'Logout from your account', 'logout', RequestBackendModule.logout),
+		new Command('42' , 'Authenticate with OAuth 42', '42', OauthCommand),
+		new Command('pong', 'Launch the Pong game', 'pong', pongCommand),
 	];
 	export let commandHistory: string[] = [];
 	export let indexCommandHistory = -2;
@@ -111,6 +114,32 @@ export namespace TerminalCommand {
 
 
 // ------------------------------------------------------------------------ Command ---------------------------------------------------------------------
+
+
+function pongCommand(): string {
+	if (!TerminalElements.terminal)
+	{
+		console.error("Body element not found");
+		return 'Error launching Pong game.';
+	}
+	TerminalElements.terminal.insertAdjacentHTML('beforeend', `
+	<div class="fixed top-[50%] left-[50%] border border-green-500 bg-black flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 " style="width: 80vw">
+		<pong-game class="size-full"></pong-game>
+	</div>
+`);
+	return 'Pong game launched!';
+}
+
+
+function OauthCommand(args: string[], description: string, usage: string): string {
+	const redirectUri = encodeURIComponent('https://localhost:8080/');
+	const uri = `https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-add813989568aed927d34847da79446b327e2cce154f4c1313b970f9796da37c&redirect_uri=${redirectUri}&response_type=code`;
+
+	if (TerminalUserManagement.isLoggedIn)
+		return 'You are already logged in.';
+	window.location.href = uri;
+	return '';
+}
 
 function echoCommand(args: string[], description: string, usage: string): string {
 	let result = '';
@@ -727,6 +756,8 @@ function setEventListeners() {
 					return;
 				}
 				event.preventDefault();
+				if (TerminalConfigVariables.isPrintingAnimation)
+					return;
 				switch (true) {
 					case (event.key === 'Enter'): enterCase(); break;
 					case (event.ctrlKey && event.key.toLowerCase() === 'c'): sigintCase(); break;

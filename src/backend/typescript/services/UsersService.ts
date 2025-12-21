@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
-import { PublicProfile, UserSearchResult } from "../types/users.types.js";
+import type { PublicProfile, UserSearchResult } from "../types/users.types.js";
 import { UsersException, UsersError } from "../error_handlers/Users.error.js";
-import { GameStats } from "../types/match.types.js";
+import type { GameStats } from "../types/match.types.js";
 
 export class UsersService {
     constructor(

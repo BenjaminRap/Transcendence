@@ -1,4 +1,4 @@
-import { FastifyRequest, FastifyReply } from 'fastify'
+import type { FastifyRequest, FastifyReply } from 'fastify';
 import { FriendService } from '../services/FriendService.js'
 import { FriendException, FriendError } from '../error_handlers/Friend.error.js';
 import { CommonSchema } from '../schemas/common.schema.js';

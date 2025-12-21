@@ -1,4 +1,4 @@
-import { FastifyInstance } from 'fastify'
+import type { FastifyInstance } from 'fastify';
 import { MatchController } from '../controllers/MatchController.js'
 import { AuthMiddleware } from '../middleware/AuthMiddleware.js'
 import { HeaderMiddleware } from '../middleware/HeaderMiddleware.js'

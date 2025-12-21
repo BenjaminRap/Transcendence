@@ -1,8 +1,8 @@
-import { FastifyInstance } from 'fastify';
+import type { FastifyInstance } from 'fastify';
 import { SuscriberController } from '../controllers/SuscriberController.js';
 import { AuthMiddleware } from '../middleware/AuthMiddleware.js';
 import { HeaderMiddleware } from '../middleware/HeaderMiddleware.js';
-import { UpdatePassword, DeleteAccount } from '../types/suscriber.types.js';
+import type { UpdatePassword } from '../types/suscriber.types.js';
 
 export async function suscriberRoute(
     fastify: FastifyInstance, 

@@ -1,4 +1,4 @@
-import { FastifyRequest } from 'fastify';
+import type { FastifyRequest } from 'fastify';
 import { FileService } from '../services/FileService.js';
 import { FileException, FileError } from '../error_handlers/FileHandler.error.js';
 import { MAX_FILE_SIZE, ALLOWED_FILE_MIMES } from '../types/file.types.js';

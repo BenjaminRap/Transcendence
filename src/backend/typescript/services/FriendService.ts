@@ -1,7 +1,6 @@
-import { PrismaClient, Friendship, User } from "@prisma/client"
+import { PrismaClient, type Friendship, type User } from "@prisma/client"
 import { FriendException, FriendError } from "../error_handlers/Friend.error.js";
-import { ListFormat } from '../types/friend.types.js'
-import { th } from "zod/v4/locales";
+import type { ListFormat } from '../types/friend.types.js';
 
 export class FriendService {
     constructor(

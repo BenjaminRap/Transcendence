@@ -1,7 +1,7 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 import { MatchService } from '../services/MatchService.js';
 import { CommonSchema } from '../schemas/common.schema.js';
-import { GameStats, MatchData, OPPONENT_LEVEL } from '../types/match.types.js';
+import { type GameStats, type MatchData, OPPONENT_LEVEL } from '../types/match.types.js';
 import { MatchException, MatchError } from '../error_handlers/Match.error.js';
 import { FriendService } from '../services/FriendService.js';
 import { TournamentService } from '../services/TournamentService.js';

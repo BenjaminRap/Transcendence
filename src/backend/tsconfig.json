@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+	"rootDir": "../",
+    "outDir": "dev/",
+    "lib": ["ESNext"],
+    "types": ["node"],
+	"experimentalDecorators": true,
+	"useDefineForClassFields": false,
+	"verbatimModuleSyntax": true,
+	"paths": {
+		"@shared/*": ["../shared/*"]
+	}
+  },
+  "include": ["./", "../shared/" ]
+}

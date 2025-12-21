@@ -132,7 +132,7 @@ function createProfileCard(profileElement: HTMLElement | null) {
 		return;
 	const profileCard = document.createElement('div');
 	profileCard.className = "flex flex-col p-4 shadow-lg border border-green-500 align-center justify-center items-center";
-	profileCard.innerHTML = `<img src="${profile.linkofavatar}" alt="Avatar" class="w-24 h-24 border border-green-500"></img>
+	profileCard.innerHTML = `<img src="${profile.linkofavatar}" alt="Avatar" class="w-24 h-24 border border-green-500 object-cover"></img>
 							<h1 class="text-center">${profile.username}</h1>
 							<div class="flex gap-4 text-xs">
 								<p>MMR: ${profile.mmr}</p>
@@ -193,7 +193,7 @@ function createMatchHistory(profileElement: HTMLElement | null) {
 						<p class="absolute top-[-24px] right-0 hidden group-hover:block border p-1 border-green-500 bg-black">${match.opponent}</p>
 					</div>
 					<img src="${match.profilelinkopponent}" alt="Avatar"
-						class="w-10 h-10 border border-green-500"></img>
+						class="w-10 h-10 border border-green-500 object-cover"></img>
 				</div>
 			`
 		matchElement.appendChild(matchDiv);

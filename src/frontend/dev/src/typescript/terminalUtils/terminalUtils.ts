@@ -1,5 +1,5 @@
-import { TerminalPromptAndEnv } from "../terminal.ts";
-import { TerminalElements } from "../terminal.ts";
+import { TerminalPromptAndEnv } from "../terminal";
+import { TerminalElements } from "../terminal";
 
 
 export namespace TerminalUtils {

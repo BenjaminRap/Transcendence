@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+	"rootDir": "../",
+    "lib": ["DOM", "ESNext"],
+    "types": [
+		"node",
+		"vite/client"
+	],
+	"experimentalDecorators": true,
+	"useDefineForClassFields": false,
+	"verbatimModuleSyntax": true,
+	"paths": {
+		"@shared/*": ["../shared/*"]
+	}
+  },
+  "include": ["./dev/src/typescript/", "../shared/"]
+}

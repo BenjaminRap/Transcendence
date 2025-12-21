@@ -1,4 +1,4 @@
-import { FastifyRequest, FastifyReply } from 'fastify';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 
 export class HeaderMiddleware {
     private expectedGameSecret = process.env.GAME_BACKEND_SECRET || '';

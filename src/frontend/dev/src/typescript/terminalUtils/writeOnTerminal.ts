@@ -1,5 +1,5 @@
-import { TerminalConfigVariables, TerminalElements, TerminalPromptAndEnv } from "../terminal.ts";
-import { TerminalUtils } from "./terminalUtils.ts";
+import { TerminalConfigVariables, TerminalElements, TerminalPromptAndEnv } from "../terminal";
+import { TerminalUtils } from "./terminalUtils";
 
 
 
@@ -62,5 +62,57 @@ export namespace WriteOnTerminal {
 			WriteOnTerminal.displayOnTerminal('│ ' + padded + ' │', false);
 		}
 		WriteOnTerminal.displayOnTerminal('╰' + '─'.repeat(innerWidth) + '╯', false);
+	}
+
+	export async function printWithAnimation(text: string, delay: number) {
+		TerminalConfigVariables.isPrintingAnimation = true;
+		
+		if (!TerminalElements.output)
+			return;
+
+		return new Promise<void>((resolve) => {
+			let i = 0;
+			const iterationsPerChar = 3; 
+			let currentIteration = 0;
+			const randomChars = "@#$%^&*{}[]()-_=+<>?/|\\`~";
+
+			const interval = setInterval(() => {
+				if (i >= text.length) {
+					clearInterval(interval);
+					if (TerminalElements.output)
+						TerminalElements.output.textContent += '\n';
+					TerminalConfigVariables.isPrintingAnimation = false;
+					resolve();
+					return;
+				}
+				const targetChar = text[i];
+				if (targetChar === ' ') {
+					if (TerminalElements.output)
+						TerminalElements.output.textContent += targetChar;
+					i++;
+					currentIteration = 0;
+					return;
+				}
+				if (currentIteration < iterationsPerChar) {
+					const randomChar = randomChars[Math.floor(Math.random() * randomChars.length)];
+					if (TerminalElements.output) {
+						if (currentIteration > 0)
+							TerminalElements.output.textContent = TerminalElements.output.textContent.slice(0, -1);
+						TerminalElements.output.textContent += randomChar;
+					}
+					currentIteration++;
+				} else {
+					if (TerminalElements.output) {
+						TerminalElements.output.textContent = TerminalElements.output.textContent.slice(0, -1);
+						TerminalElements.output.textContent += targetChar;
+					}
+					i++;
+					currentIteration = 0;
+				}
+
+				if (TerminalElements.terminal)
+					TerminalElements.terminal.scrollTop = TerminalElements.terminal.scrollHeight;
+			}, delay / 2);
+		});
 	}
 }

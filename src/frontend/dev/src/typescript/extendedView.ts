@@ -343,7 +343,7 @@ function createListMatches() : HTMLDivElement
 						<p class="absolute right-0 z-50 hidden group-hover:block border p-1 border-green-500 bg-black ${i == 0 ? 'top-[34px]' : 'top-[-24px]'}">${match.opponent}</p>
 					</div>
 					<img src="${match.profilelinkopponent}" alt="Avatar"
-						class="w-10 h-10 border border-green-500"></img>
+						class="w-10 h-10 border border-green-500 object-cover"></img>
 				</div>
 			`
 		matchElement.appendChild(matchDiv);
@@ -368,7 +368,7 @@ function createFriendList() : HTMLDivElement
 		friendDiv.className = "flex flex-wrap items-center gap-x-4 place-content-between h-full";
 		friendDiv.innerHTML = `
 				<div class="flex flex-wrap items-center gap-x-4 w-auto border-red-600">
-					<img src="${friend.linkofavatar}" alt="Avatar" class="w-10 h-10 border border-green-500"></img>
+					<img src="${friend.linkofavatar}" alt="Avatar" class="w-10 h-10 border border-green-500 object-cover"></img>
 					<div class="flex flex-col gap-y-0">
 						<div class="flex flex-wrap">
 							<p>${friend.username}</p>
