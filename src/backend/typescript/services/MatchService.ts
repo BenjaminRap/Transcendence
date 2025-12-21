@@ -1,6 +1,6 @@
-import { PrismaClient, User } from '@prisma/client';
-import { GameStats, MatchHistoryEntry } from '../types/match.types.js';
-import { MatchData } from '../types/match.types.js';
+import type { PrismaClient, User } from '@prisma/client';
+import type { GameStats, MatchHistoryEntry } from '../types/match.types.js';
+import type { MatchData } from '../types/match.types.js';
 import { number } from 'zod';
 
 export class MatchService {

@@ -107,11 +107,11 @@ update_avatar_test() {
 			-F "avatar=@./img_test/test_mutant.jpg";
 	echo ; echo
 
-	echo "Upload an invalid image as avatar (xss file)"
+	echo "Upload an invalid image as avatar (trapp file)"
 	curl -X PUT 'http://localhost:8181/suscriber/update/avatar' \
 			-H "Content-Type: multipart/form-data" \
 			-H "Authorization: Bearer ${accessTokens[0]}" \
-			-F "avatar=@./img_test/test_xss.jpg";
+			-F "avatar=@./img_test/test_trapp.jpg";
 	
 	echo ; echo
 
