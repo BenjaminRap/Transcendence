@@ -14,8 +14,8 @@ export class SuscriberService {
         private passwordHasher: PasswordHasher,
         private fileService: FileService
     ) {}
-    private api_url = process.env.API_URL || 'https://localhost:8181/api';
-    private default_avatar_url = process.env.DEFAULT_AVATAR_URL || this.api_url + '/static/public/avatarDefault.png';
+    private api_url = process.env.API_URL || 'https://localhost:8080/api';
+    private default_avatar_url = this.api_url + '/static/public/avatarDefault.webp';
 
     // ----------------------------------------------------------------------------- //
     async getProfile(id: number): Promise<SuscriberProfile> {

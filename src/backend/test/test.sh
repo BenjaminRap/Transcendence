@@ -90,7 +90,7 @@ update_avatar_test() {
 	curl -X PUT 'http://localhost:8181/suscriber/update/avatar' \
 			-H "Content-Type: multipart/form-data" \
 			-H "Authorization: Bearer ${accessTokens[0]}" \
-			-F "avatar=@./img_test/profile.png";
+			-F "avatar=@./img_test/profile.webp";
 	echo ; echo
 
 	echo "Upload an invalid image as avatar (bad magic number)"
@@ -186,3 +186,6 @@ for arg in "$@"; do
             ;;
     esac
 done
+
+# avatar_1_1766311862340_667c2e26-c7e9-4841-b9bd-3b08466b8446.webp
+# avatar_1_1766311862340_667c2e26-c7e9-4841-b9bd-3b08466b8446.webp
