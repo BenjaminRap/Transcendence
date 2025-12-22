@@ -69,6 +69,7 @@ async function start(): Promise<void> {
         const matchMaker = new MatchMaker(io);
 
         await init();
+		
 		io.on('connection', (socket : DefaultSocket) => {
 			console.log("user connected !");
 			socket.data = new SocketData(socket);
