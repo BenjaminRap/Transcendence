@@ -8,8 +8,9 @@ export class	SocketData
 
 	public getState = () => this._state;
 	public isInRoom = (room : Room) => this._room == room;
+	public getUserId = () => this._userId;
 
-	constructor(private readonly _socket : DefaultSocket)
+	constructor(private readonly _socket : DefaultSocket, private readonly _userId : number)
 	{
 	}
 
