@@ -1,5 +1,6 @@
 import { type int, Observable } from "@babylonjs/core";
 import type { EndData } from "./attachedScripts/GameManager";
+import type { Profile } from "./Profile";
 
 export class	EventsManager
 {
@@ -17,7 +18,8 @@ export class	EventsManager
 			"game-paused" : new Observable<void>,
 			"game-unpaused": new Observable<void>,
 			"enemy-type-change" : new Observable<[string, string]>,
-			"scene-change" : new Observable<[string, string]>
+			"scene-change" : new Observable<[string, string]>,
+			"set-participants" : new Observable<[Profile, Profile]>
 		}
 	}
 

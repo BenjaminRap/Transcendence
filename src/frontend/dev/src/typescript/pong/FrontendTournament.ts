@@ -1,55 +1,15 @@
-import { isPowerOfTwo } from "@shared/utils";
-import { TournamentGUI } from "./gui/TournamentGUI";
-import { Tournament } from "@shared/Tournament";
-
-export type Profile = {
-	name : string;
-	image : string;
-}
-
-export class	Match
-{
-	constructor(
-		private _right : Match | Profile,
-		private _left : Match | Profile) {
-	}
-}
+import { Tournament} from "@shared/Tournament";
+import type { EventsManager } from "@shared/EventsManager";
+import type { Profile } from "@shared/Profile";
 
 export class	FrontendTournament extends Tournament
 {
-	// private	_matchesRoot : Match;
-	private	_matchesByRound : Match[][] = [];
-
-	constructor(private _participants : Profile[])
+	constructor(private _participants : Profile[], private _eventManager : EventsManager)
 	{
 		super();
-		// this._matchesRoot = this.createMatches(_participants);
-		// const	gui = new TournamentGUI(this._matchesByRound, this._participants);
-		// document.querySelector("body")?.appendChild(gui);
 	}
 
-	private	createMatches(profiles : Profile[]) : Match
+	public start()
 	{
-		const	topMatches = this.createMatchesRecursive(profiles);
-
-		if (topMatches.length !== 2)
-			throw new Error("Bug in createMatchesRecursive, it should returns an array of two elements !");
-		const	rootMatch = new Match(topMatches[0], topMatches[1]);
-
-		this._matchesByRound.push([rootMatch]);
-		return rootMatch;
-	}
-
-	private createMatchesRecursive(arr : Profile[] | Match[]) : Profile[] | Match[]
-	{
-		if (arr.length <= 2)
-			return arr;
-		const	matches : Match[] = [];
-
-		for (let index = 0; index < arr.length / 2; index++) {
-			matches.push(new Match(arr[index * 2], arr[index * 2 + 1]))
-		}
-		this._matchesByRound.push(matches);
-		return this.createMatchesRecursive(matches);
 	}
 }

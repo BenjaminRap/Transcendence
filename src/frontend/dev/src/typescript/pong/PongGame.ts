@@ -127,7 +127,10 @@ export class PongGame extends HTMLElement {
 		const	sceneData = getFrontendSceneData(this._scene!);
 
 		await sceneData.readyPromise.promise;
-		sceneData.events.getObservable("game-start").notifyObservers();
+		if (tournament)
+			tournament.start();
+		else
+			sceneData.events.getObservable("game-start").notifyObservers();
 	}
 
 	public startOnlineGame(sceneName : SceneFileName, tournament? : Tournament)

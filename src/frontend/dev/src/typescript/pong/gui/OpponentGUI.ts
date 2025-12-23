@@ -1,4 +1,4 @@
-import type { Profile } from "../FrontendTournament";
+import type { Profile } from "@shared/Profile";
 
 const	defaultProfile : Profile = {
 	name: "unkown",

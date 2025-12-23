@@ -1,9 +1,10 @@
 import { Clamp } from "@babylonjs/core";
-import type { Match, Profile } from "../FrontendTournament";
 import { MatchGUI } from "./MatchGUI";
 import { OpponentGUI } from "./OpponentGUI";
 import { Range } from "@shared/Range";
 import { isPowerOfTwo } from "@shared/utils";
+import type { Match } from "@shared/Match";
+import type { Profile } from "@shared/Profile";
 
 export class	TournamentGUI extends HTMLElement
 {

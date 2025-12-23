@@ -1,4 +1,4 @@
-import { FrontendTournament } from "../FrontendTournament";
+import type { Profile } from "@shared/Profile";
 import { ProfileCreationGUI } from "./ProfileCreationGUI";
 
 export type TournamentCreationGUIInputs = {
@@ -121,13 +121,11 @@ export class	LocalTournamentCreationGUI extends HTMLElement
 		return isValid;
 	}
 
-	public createNewFrontendTournament() : FrontendTournament | null
+	public getProfiles() : Profile[] | null
 	{
 		if (!this.validate())
 			return null;
-		const	profiles = this._profiles.map((profileGUI) => profileGUI.createProfile());
-
-		return new FrontendTournament(profiles);
+		return this._profiles.map((profileGUI) => profileGUI.createProfile());
 	}
 
 	public getInputs()
