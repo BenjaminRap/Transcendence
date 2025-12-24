@@ -12,6 +12,7 @@ export class ParticleText extends CustomScriptComponent {
 	@Imported(Mesh) private _scoreLeft! : Mesh;
 	@Imported(Mesh) private _scoreRight! : Mesh;
 	@Imported("TimerManager") private _timerManager! : TimerManager;
+	@Imported(Vector2) private _scale! : Vector2;
 
 	private _sceneData : FrontendSceneData;
 	private _particleExitLifeTimeMs : number = 500;
@@ -25,7 +26,7 @@ export class ParticleText extends CustomScriptComponent {
 	protected	start()
 	{
 		this.createParticleSystemForMesh(this._scoreLeft, "updateLeftScore");
-		this.createParticleSystemForMesh(this._scoreRight, "updateRightScore");
+		// this.createParticleSystemForMesh(this._scoreRight, "updateRightScore");
 	}
 
 	private	createParticleSystemForMesh(mesh : Mesh, event : "updateRightScore" | "updateLeftScore") : ParticleSystem
@@ -35,9 +36,9 @@ export class ParticleText extends CustomScriptComponent {
 		if (material === null)
 			throw new Error("A mesh assigned to the ParticleText CustomScriptComponent doesn't have a material !");
 		const	textures = material.getActiveTextures();
-		// console.log(textures.map((texture) => texture.name));
-		// if (textures.length !== 1)
-		// 	throw new Error("A mesh with multiple texture has been assigned to the ParticleText CustomScriptComponent !");
+		if (textures.length === 0)
+			throw new Error("A mesh with no texture has been assigned to the ParticleText CustomScriptComponent !");
+		mesh.isVisible = false;
 		const	texture = textures[0];
 
 		const	particleSystem = this.createParticleSystemForTexture(texture, mesh.absolutePosition);
@@ -50,7 +51,7 @@ export class ParticleText extends CustomScriptComponent {
 
 	private	createParticleSystemForTexture(texture : BaseTexture, position : Vector3) : ParticleSystem
 	{
-		const	textParticles = new ParticleSystem("textParticle", 1000, this.scene);
+		const	textParticles = new ParticleSystem("textParticle", 1000000, this.scene);
 
 		textParticles.minLifeTime = Infinity;
 		textParticles.maxLifeTime = Infinity;
@@ -90,20 +91,24 @@ export class ParticleText extends CustomScriptComponent {
 
 		if (data === null)
 			throw new Error("Could not read the texture pixels !");
-		const	pixels = new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
+		const	pixels = new Uint32Array(data.buffer, data.byteOffset, data.byteLength / 4);
 		const	opaquePixelCount = this.getOpaquePixelCount(pixels);
 		const	size = texture.getSize();
 		let		particleIndex = 0;
 		let		currentOpaquePixelIndex : number | undefined;
 
-		particleSystem.manualEmitCount = opaquePixelCount;
+		particleSystem.particleTexture = texture;
+		particleSystem.emitRate = opaquePixelCount;
+		particleSystem.manualEmitCount   = opaquePixelCount;
 		particleSystem.startPositionFunction = (_worldMatrix, positionToUpdate, _particle, _isLocal) => {
 			currentOpaquePixelIndex = this.getNextOpaquePixelIndex(pixels, currentOpaquePixelIndex)
 			if (currentOpaquePixelIndex === undefined)
 				throw new Error("Error counting particles !");
 			const	imagePos = new Vector2(currentOpaquePixelIndex % size.width, Math.floor(currentOpaquePixelIndex / size.width));
 			const	localPos = imagePos.multiplyByFloats(1 / size.width, 1 / size.height);
-			const	worldPos = position.addInPlaceFromFloats(localPos.x, localPos.y, 0);
+			localPos.addInPlaceFromFloats(-0.5, -0.5);
+			const	scalePos  = localPos.multiply(this._scale);
+			const	worldPos = position.clone().addInPlaceFromFloats(scalePos.x, scalePos.y, 0);
 
 			positionToUpdate.copyFrom(worldPos);
 			particleIndex++;
@@ -111,31 +116,35 @@ export class ParticleText extends CustomScriptComponent {
 		particleSystem.start();
 	}
 
-	private	getOpaquePixelCount(pixels : Uint8Array)
+	private	getOpaquePixelCount(pixels : Uint32Array)
 	{
-		const	opaqueStep = 100;
-
 		let		opaquePixelCount = 0;
 
-		for (let index = 3; index < pixels.length; index += 4) {
-			if (pixels[index] > opaqueStep)
+		for (let index = 0; index < pixels.length; index++) {
+			if (this.isPixelOpaque(pixels[index]))
 				opaquePixelCount++;
 		}
 		
 		return opaquePixelCount;
 	}
 
-	private	getNextOpaquePixelIndex(pixels : Uint8Array, currentPixelIndex? : number)
+	private	getNextOpaquePixelIndex(pixels : Uint32Array, currentPixelIndex? : number)
 	{
-		const	opaqueStep = 100;
-
 		if (currentPixelIndex === undefined || currentPixelIndex < -1)
 			currentPixelIndex = -1;
-		for (let index = currentPixelIndex + 4; index < pixels.length; index += 4) {
-			if (pixels[index] > opaqueStep)
+		for (let index = currentPixelIndex + 1; index < pixels.length; index++) {
+			if (this.isPixelOpaque(pixels[index]))
 				return index;
 		}
 		return undefined;
+	}
+
+	private	isPixelOpaque(pixel : number)
+	{
+		const	opaqueStep = 100;
+
+		const alpha = pixel & 255;
+		return alpha > opaqueStep;
 	}
 }
 
