@@ -21,14 +21,23 @@ export class ParticleText extends CustomScriptComponent {
 	@Imported(zodRange) private _particleExitLifeTimeMs! : Range;
 	@Imported(zodRange) private _particleExitSpeed! : Range;
 	@Imported(zodNumber) private _alphaStep! : number;
+	@Imported(zodNumber) private _precision! : number;
 
 	private _sceneData : FrontendSceneData;
+	private _pixelSkipCount! : number;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "ParticleText") {
         super(transform, scene, properties, alias);
 
 		this._sceneData = getFrontendSceneData(this.scene);
     }
+
+	protected	awake()
+	{
+		const	pixelPerParticule = Math.floor(1 / this._precision);
+
+		this._pixelSkipCount = Math.max(pixelPerParticule - 1, 0);
+	}
 
 	protected	start()
 	{
@@ -65,7 +74,7 @@ export class ParticleText extends CustomScriptComponent {
 
 		textParticles.minLifeTime = Infinity;
 		textParticles.maxLifeTime = Infinity;
-		textParticles.minSize = this._scale.x / texture.getSize().width;
+		textParticles.minSize = this._scale.x / texture.getSize().width * 1 / this._precision;
 		textParticles.maxSize = textParticles.minSize *  1.3;
 		textParticles.direction1 = Vector3.Zero();
 		textParticles.direction2 = Vector3.Zero();
@@ -104,6 +113,7 @@ export class ParticleText extends CustomScriptComponent {
 		const	opaquePixelCount = this.getOpaquePixelCount(pixels);
 		const	size = texture.getSize();
 		let		particleIndex = 0;
+		console.log(opaquePixelCount);
 		let		currentOpaquePixelIndex : number | undefined;
 
 		particleSystem.emitRate = opaquePixelCount;
@@ -128,10 +138,19 @@ export class ParticleText extends CustomScriptComponent {
 	private	getOpaquePixelCount(pixels : Uint32Array)
 	{
 		let		opaquePixelCount = 0;
+		let		pixelSkiped = 0;
 
 		for (let index = 0; index < pixels.length; index++) {
 			if (this.isPixelOpaque(pixels[index]))
-				opaquePixelCount++;
+			{
+				if (pixelSkiped === this._pixelSkipCount)
+				{
+					pixelSkiped = 0;
+					opaquePixelCount++;
+				}
+				else
+					pixelSkiped++;
+			}
 		}
 		
 		return opaquePixelCount;
@@ -139,11 +158,17 @@ export class ParticleText extends CustomScriptComponent {
 
 	private	getNextOpaquePixelIndex(pixels : Uint32Array, currentPixelIndex? : number)
 	{
+		let		pixelSkiped = 0;
+
 		if (currentPixelIndex === undefined || currentPixelIndex < -1)
 			currentPixelIndex = -1;
 		for (let index = currentPixelIndex + 1; index < pixels.length; index++) {
 			if (this.isPixelOpaque(pixels[index]))
-				return index;
+			{
+				if (pixelSkiped === this._pixelSkipCount)
+					return index;
+				pixelSkiped++;
+			}
 		}
 		return undefined;
 	}
