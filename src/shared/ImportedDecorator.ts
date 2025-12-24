@@ -106,6 +106,8 @@ function	parseCustomScriptComponent(importedType : string, value : any) : Custom
 
 	if (component === null)
 		throw new Error(`The TransformNode ${value} doesn't have the ${importedType} component !`);
+	if (!(component instanceof CustomScriptComponent))
+		throw new Error(`The component ${component.getClassName()} doesn't derive from CustomScriptComponent !`);
 	return component;
 }
 
