@@ -3,7 +3,7 @@ import { Mesh, TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager } from "@babylonjs-toolkit/next";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { Imported } from "@shared/ImportedDecorator";
-import { ParticleSystem, Vector2, Vector3, type BaseTexture } from "@babylonjs/core";
+import { ParticleSystem, Texture, Vector2, Vector3, type BaseTexture } from "@babylonjs/core";
 import { getFrontendSceneData } from "../PongGame";
 import { TimerManager } from "@shared/attachedScripts/TimerManager";
 import type { FrontendSceneData } from "../FrontendSceneData";
@@ -13,6 +13,7 @@ export class ParticleText extends CustomScriptComponent {
 	@Imported(Mesh) private _scoreRight! : Mesh;
 	@Imported("TimerManager") private _timerManager! : TimerManager;
 	@Imported(Vector2) private _scale! : Vector2;
+	@Imported(Texture) private _particleTexture!  : Texture;
 
 	private _sceneData : FrontendSceneData;
 	private _particleExitLifeTimeMs : number = 500;
@@ -26,7 +27,7 @@ export class ParticleText extends CustomScriptComponent {
 	protected	start()
 	{
 		this.createParticleSystemForMesh(this._scoreLeft, "updateLeftScore");
-		// this.createParticleSystemForMesh(this._scoreRight, "updateRightScore");
+		this.createParticleSystemForMesh(this._scoreRight, "updateRightScore");
 	}
 
 	private	createParticleSystemForMesh(mesh : Mesh, event : "updateRightScore" | "updateLeftScore") : ParticleSystem
@@ -46,6 +47,9 @@ export class ParticleText extends CustomScriptComponent {
 		this._sceneData.events.getObservable(event).add(() => {
 			this.updateParticles(particleSystem, mesh.absolutePosition, texture);
 		});
+		this._sceneData.events.getObservable("game-start").add(() => {
+			this.updateParticles(particleSystem, mesh.absolutePosition, texture);
+		});
 		return particleSystem;
 	}
 
@@ -59,6 +63,7 @@ export class ParticleText extends CustomScriptComponent {
 		textParticles.maxSize = 0.1;
 		textParticles.direction1 = Vector3.Zero();
 		textParticles.direction2 = Vector3.Zero();
+		textParticles.particleTexture = this._particleTexture;
 
 		this.spawnNewParticles(textParticles, position, texture);
 		return textParticles;
@@ -97,7 +102,6 @@ export class ParticleText extends CustomScriptComponent {
 		let		particleIndex = 0;
 		let		currentOpaquePixelIndex : number | undefined;
 
-		particleSystem.particleTexture = texture;
 		particleSystem.emitRate = opaquePixelCount;
 		particleSystem.manualEmitCount   = opaquePixelCount;
 		particleSystem.startPositionFunction = (_worldMatrix, positionToUpdate, _particle, _isLocal) => {
@@ -106,6 +110,7 @@ export class ParticleText extends CustomScriptComponent {
 				throw new Error("Error counting particles !");
 			const	imagePos = new Vector2(currentOpaquePixelIndex % size.width, Math.floor(currentOpaquePixelIndex / size.width));
 			const	localPos = imagePos.multiplyByFloats(1 / size.width, 1 / size.height);
+			localPos.y = 1 - localPos.y;
 			localPos.addInPlaceFromFloats(-0.5, -0.5);
 			const	scalePos  = localPos.multiply(this._scale);
 			const	worldPos = position.clone().addInPlaceFromFloats(scalePos.x, scalePos.y, 0);
