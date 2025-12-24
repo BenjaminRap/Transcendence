@@ -7,6 +7,10 @@ import { ParticleSystem, Texture, Vector2, Vector3, type BaseTexture } from "@ba
 import { getFrontendSceneData } from "../PongGame";
 import { TimerManager } from "@shared/attachedScripts/TimerManager";
 import type { FrontendSceneData } from "../FrontendSceneData";
+import { zodNumber } from "@shared/ImportedHelpers";
+import { zodRange } from "@shared/Range";
+import { Range } from "@shared/Range";
+import { randomFromRange } from "../utilities";
 
 export class ParticleText extends CustomScriptComponent {
 	@Imported(Mesh) private _scoreLeft! : Mesh;
@@ -14,9 +18,11 @@ export class ParticleText extends CustomScriptComponent {
 	@Imported("TimerManager") private _timerManager! : TimerManager;
 	@Imported(Vector2) private _scale! : Vector2;
 	@Imported(Texture) private _particleTexture!  : Texture;
+	@Imported(zodRange) private _particleExitLifeTimeMs! : Range;
+	@Imported(zodRange) private _particleExitSpeed! : Range;
+	@Imported(zodNumber) private _alphaStep! : number;
 
 	private _sceneData : FrontendSceneData;
-	private _particleExitLifeTimeMs : number = 500;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "ParticleText") {
         super(transform, scene, properties, alias);
@@ -59,8 +65,8 @@ export class ParticleText extends CustomScriptComponent {
 
 		textParticles.minLifeTime = Infinity;
 		textParticles.maxLifeTime = Infinity;
-		textParticles.minSize = 0.1;
-		textParticles.maxSize = 0.1;
+		textParticles.minSize = this._scale.x / texture.getSize().width;
+		textParticles.maxSize = textParticles.minSize *  1.3;
 		textParticles.direction1 = Vector3.Zero();
 		textParticles.direction2 = Vector3.Zero();
 		textParticles.particleTexture = this._particleTexture;
@@ -74,16 +80,14 @@ export class ParticleText extends CustomScriptComponent {
 		this.exitCurrentParticles(particleSystem, position);
 		this._timerManager.setTimeout(() => {
 			this.spawnNewParticles(particleSystem, position, texture);
-		}, this._particleExitLifeTimeMs);
+		}, this._particleExitLifeTimeMs.max);
 	}
 
 	private	exitCurrentParticles(particleSystem : ParticleSystem, position : Vector3)
 	{
-		const	particleExitSpeed = 10;
-
 		particleSystem.particles.forEach((particle) => {
-			const	newDirection = particle.position.subtract(position).normalize().scale(particleExitSpeed);
-			const	newLifeTime = particle.age + this._particleExitLifeTimeMs;
+			const	newDirection = particle.position.subtract(position).normalize().scale(randomFromRange(this._particleExitSpeed));
+			const	newLifeTime = particle.age + randomFromRange(this._particleExitLifeTimeMs) / 1000;
 
 			particle.direction = newDirection;
 			particle.lifeTime = newLifeTime;
@@ -103,7 +107,7 @@ export class ParticleText extends CustomScriptComponent {
 		let		currentOpaquePixelIndex : number | undefined;
 
 		particleSystem.emitRate = opaquePixelCount;
-		particleSystem.manualEmitCount   = opaquePixelCount;
+		particleSystem.manualEmitCount = opaquePixelCount;
 		particleSystem.startPositionFunction = (_worldMatrix, positionToUpdate, _particle, _isLocal) => {
 			currentOpaquePixelIndex = this.getNextOpaquePixelIndex(pixels, currentOpaquePixelIndex)
 			if (currentOpaquePixelIndex === undefined)
@@ -146,10 +150,8 @@ export class ParticleText extends CustomScriptComponent {
 
 	private	isPixelOpaque(pixel : number)
 	{
-		const	opaqueStep = 100;
-
 		const alpha = pixel & 255;
-		return alpha > opaqueStep;
+		return alpha > this._alphaStep;
 	}
 }
 
