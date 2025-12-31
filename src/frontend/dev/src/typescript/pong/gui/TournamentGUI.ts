@@ -11,8 +11,8 @@ export class	TournamentGUI extends HTMLElement
 	private _participants : Profile[];
 	private _container! : HTMLDivElement;
 	private	_zoomPercent : number = 1;
-	private _wheelZoomAdd : number = 0.01;
-	private _wheelZoomRange = new Range(1, 2);
+	private _wheelZoomAdd : number = 0.025;
+	private _wheelZoomMax : number = 2;
 	private _dragging : boolean = false;
 	private _left : number = 0;
 	private _top : number = 0;
@@ -41,6 +41,7 @@ export class	TournamentGUI extends HTMLElement
 			this._container.style.left = this._left.toString() + "px";
 			this._container.style.top = this._top.toString() + "px";
 		});
+		this._wheelZoomMax = this._matchesByRound.length;
 
 		this.appendChild(this._container);
 	}
@@ -49,7 +50,7 @@ export class	TournamentGUI extends HTMLElement
 	{
 		const	div = document.createElement("div");
 
-		div.classList.add("absolute", "inset-0", "size-full", "flex", "flex-col", "relative");
+		div.classList.add("absolute", "inset-0", "w-full", "flex", "flex-col", "relative");
 
 		return div;
 	}
@@ -95,10 +96,17 @@ export class	TournamentGUI extends HTMLElement
 	{
 		event.preventDefault();
 		if (event.deltaY > 0)
+		{
+			const	frameBounds = this.getBoundingClientRect();
+			const	elementBounds = this._container.getBoundingClientRect();
+
+			if (elementBounds.width < frameBounds.width && elementBounds.height < frameBounds.height)
+				return 
 			this._zoomPercent -= this._wheelZoomAdd;
+		}
 		else
 			this._zoomPercent += this._wheelZoomAdd;
-		this._zoomPercent = Clamp(this._zoomPercent, this._wheelZoomRange.min, this._wheelZoomRange.max);
+		this._zoomPercent = Math.min(this._zoomPercent, this._wheelZoomMax);
 		this._container.style.transform = `scale(${this._zoomPercent})`;
 	}
 }
