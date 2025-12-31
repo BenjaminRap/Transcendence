@@ -33,14 +33,7 @@ export class	TournamentGUI extends HTMLElement
 		this.addEventListener("wheel", this.zoom.bind(this));
 		this.addEventListener("mousedown", () => this._dragging = true);
 		window.addEventListener("mouseup", () => this._dragging = false);
-		this.addEventListener("mousemove", (mouseEvent : MouseEvent) => {
-			if (!this._dragging)
-				return ;
-			this._left += mouseEvent.movementX;
-			this._top += mouseEvent.movementY;
-			this._container.style.left = this._left.toString() + "px";
-			this._container.style.top = this._top.toString() + "px";
-		});
+		this.addEventListener("mousemove", (mouseEvent : MouseEvent) => { if (this._dragging) this.drag(mouseEvent); });
 		this._wheelZoomMax = this._matchesByRound.length;
 
 		this.appendChild(this._container);
@@ -108,6 +101,21 @@ export class	TournamentGUI extends HTMLElement
 			this._zoomPercent += this._wheelZoomAdd;
 		this._zoomPercent = Math.min(this._zoomPercent, this._wheelZoomMax);
 		this._container.style.transform = `scale(${this._zoomPercent})`;
+	}
+
+	private	drag(mouseEvent : MouseEvent)
+	{
+		const	frameBounds = this.getBoundingClientRect();
+		const	elementBounds = this._container.getBoundingClientRect();
+
+		if ((mouseEvent.movementX > 0 && elementBounds.x < frameBounds.x)
+			|| (mouseEvent.movementX < 0 && elementBounds.x + elementBounds.width > frameBounds.x + frameBounds.width))
+			this._left += mouseEvent.movementX;
+		if ((mouseEvent.movementY > 0 && elementBounds.y < frameBounds.y)
+			|| (mouseEvent.movementY < 0 && elementBounds.y + elementBounds.height > frameBounds.y + frameBounds.height))
+			this._top += mouseEvent.movementY;
+		this._container.style.left = this._left.toString() + "px";
+		this._container.style.top = this._top.toString() + "px";
 	}
 }
 
