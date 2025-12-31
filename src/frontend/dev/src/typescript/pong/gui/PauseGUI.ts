@@ -1,7 +1,7 @@
 export type PauseGUIButtons =
 {
 	continue : HTMLButtonElement,
-	forfeit : HTMLButtonElement,
+	forfeit? : HTMLButtonElement,
 	goToMenu : HTMLButtonElement,
 	quit : HTMLButtonElement
 }
@@ -9,10 +9,12 @@ export type PauseGUIButtons =
 export class	PauseGUI extends HTMLElement
 {
 	private _buttons : PauseGUIButtons | undefined;
+	private _forfeitEnabled : boolean;
 
-	constructor()
+	constructor(forfeitEnabled? : boolean)
 	{
 		super();
+		this._forfeitEnabled = forfeitEnabled ?? true;
 	}
 
 	public	connectedCallback()
@@ -21,14 +23,14 @@ export class	PauseGUI extends HTMLElement
 		this.innerHTML = `
 			<div class="flex flex-col size-full h-4/6 w-1/3 left-1/2 -translate-1/2 top-1/2 absolute">
 				${this.getButtonHTML("Continue", "pauseGUIContinue")}
-				${this.getButtonHTML("Forfeit", "pauseGUIForfeit")}
+				${this._forfeitEnabled ? this.getButtonHTML("Forfeit", "pauseGUIForfeit") : ""}
 				${this.getButtonHTML("Go To Menu", "pauseGUIGoToMenu")}
 				${this.getButtonHTML("Quit", "pauseGUIQuit")}
 			</div>
 		`;
 		this._buttons = {
 			continue: this.querySelector<HTMLButtonElement>("button.pauseGUIContinue")!,
-			forfeit: this.querySelector<HTMLButtonElement>("button.pauseGUIForfeit")!,
+			forfeit: this.querySelector<HTMLButtonElement>("button.pauseGUIForfeit") ?? undefined,
 			goToMenu: this.querySelector<HTMLButtonElement>("button.pauseGUIGoToMenu")!,
 			quit: this.querySelector<HTMLButtonElement>("button.pauseGUIQuit")!
 		}

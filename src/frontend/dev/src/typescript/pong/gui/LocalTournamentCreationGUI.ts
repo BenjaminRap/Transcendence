@@ -11,6 +11,7 @@ export class	LocalTournamentCreationGUI extends HTMLElement
 	private _profileContainer! : HTMLDivElement;
 	private	_profiles : ProfileCreationGUI[] = [];
 	private _inputs? : TournamentCreationGUIInputs;
+	private _currentPlayerId = 0;
 
 	constructor()
 	{
@@ -67,6 +68,8 @@ export class	LocalTournamentCreationGUI extends HTMLElement
 
 		const	inputs = newProfile.getInputs()!;
 
+		inputs.name.value = `player${this._currentPlayerId}`;
+		this._currentPlayerId++;
 		inputs.remove.addEventListener("click", () => this.removeProfile(newProfile));
 		if (this._profiles.length === 3)
 			this.setProperties("var(--color-red-300)", "120%");

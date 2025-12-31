@@ -12,6 +12,8 @@ import { applyTheme, zodThemeName } from "../menuStyles";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { Imported } from "@shared/ImportedDecorator";
 import type { ThemeName } from "../menuStyles";
+import { MatchOpponentsGUI } from "../gui/MatchOpponentsGUI";
+import { TournamentWinnerGUI } from "../gui/TournamentWinnerGUI";
 
 export class CreateInGameGUI extends CustomScriptComponent {
 	@Imported("InputManager") private _inputManager! : InputManager;
@@ -20,13 +22,21 @@ export class CreateInGameGUI extends CustomScriptComponent {
 
 	private _pauseGUI! : PauseGUI;
 	private _endGUI! : EndGUI;
-	private _sceneData : FrontendSceneData;
 	private _inMatchmakingGUI! : InMatchmakingGUI;
+	private _tournamentWinnerGUI! : TournamentWinnerGUI;
+	private _matchOpponentsGUI! : MatchOpponentsGUI;
+
+	private _sceneData : FrontendSceneData;
+	private _currentGUI? : HTMLElement;
+	private _menuParent! : HTMLDivElement;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "CreatePauseGUI") {
         super(transform, scene, properties, alias);
 		
 		this._sceneData = getFrontendSceneData(this.scene);
+		this._menuParent = document.createElement("div");
+		this._menuParent.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none");
+		this._sceneData.pongHTMLElement.appendChild(this._menuParent);
     }
 
 	protected	awake()
@@ -35,31 +45,49 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		this.createPauseGUI();
 		this.createEndGUI();
 		this.createInMatchmakingGUI();
+		this.createTournamentWinnerGUI();
+		this.createMatchOpponentsGUI();
 	}
 
 	protected	start()
 	{
 		this._inputManager.getEscapeInput().addKeyObserver((event : "keyDown" | "keyUp") => {
 			if (event == "keyDown" && !this._gameManager.hasEnded())
-				this.toggleMenu(this._pauseGUI);
+				this.togglePause();
 		});
-
 		this._sceneData.events.getObservable("end").add((endData : EndData) => { this.onGameEnd(endData) });
+		this._sceneData.events.getObservable("set-participants").add(([profileLeft, profileRight]) => {
+			this._matchOpponentsGUI.setOpponents(profileLeft, profileRight);
+			this.switchToGUI(this._matchOpponentsGUI);
+		});
+		this._sceneData.events.getObservable("game-start").add(() => {
+			this._sceneData.pongHTMLElement.focusOnCanvas();
+			this.hideCurrentGUI()
+		});
+		this._sceneData.events.getObservable("game-unpaused").add(() => {
+			this._sceneData.pongHTMLElement.focusOnCanvas();
+		})
+		this._sceneData.events.getObservable("show-tournament").add((tournamentGUI) => {
+			if (tournamentGUI.parentNode === null)
+				this._menuParent.appendChild(tournamentGUI);
+			this.switchToGUI(tournamentGUI)
+		});
+		this._sceneData.events.getObservable("tournament-end").add((winner) => { 
+			this._tournamentWinnerGUI.setWinner(winner);
+			this.switchToGUI(this._tournamentWinnerGUI);
+		});
 	}
 
 	private	createPauseGUI()
 	{
-		this._pauseGUI = new PauseGUI();
-		this._sceneData.pongHTMLElement.appendChild(this._pauseGUI);
-		this.toggleMenu(this._pauseGUI);
+		const	forfeitEnabled = this._sceneData.tournament === undefined || this._sceneData.gameType === "Multiplayer";
+		this._pauseGUI = new PauseGUI(forfeitEnabled);
+		this.addHiddenGUI(this._pauseGUI);
 
 		const	buttons = this._pauseGUI.getButtons()!;
 
-		buttons.continue.addEventListener("click", () => {
-			this._sceneData.pongHTMLElement.focus();
-			this.toggleMenu(this._pauseGUI)
-		});
-		buttons.forfeit.addEventListener("click", () => { this.onForfeit() });
+		buttons.continue.addEventListener("click", () => { this.togglePause(); });
+		buttons.forfeit?.addEventListener("click", () => { this.onForfeit() });
 		buttons.goToMenu.addEventListener("click", () => { this.onGoToMenu() });
 		buttons.quit.addEventListener("click", () => { this.onQuit() });
 	}
@@ -67,8 +95,7 @@ export class CreateInGameGUI extends CustomScriptComponent {
 	private	createEndGUI()
 	{
 		this._endGUI = new EndGUI();
-		this._sceneData.pongHTMLElement.appendChild(this._endGUI);
-		this.toggleMenu(this._endGUI);
+		this.addHiddenGUI(this._endGUI);
 
 		const	buttons = this._endGUI.getButtons()!;
 
@@ -80,39 +107,52 @@ export class CreateInGameGUI extends CustomScriptComponent {
 	private	createInMatchmakingGUI()
 	{
 		this._inMatchmakingGUI = new InMatchmakingGUI();
-		this._sceneData.pongHTMLElement.appendChild(this._inMatchmakingGUI);
-		this._inMatchmakingGUI.classList.add("hidden");
+		this.addHiddenGUI(this._inMatchmakingGUI);
 		
 		const	cancelButton = this._inMatchmakingGUI.getCancelButton()!;
 
 		cancelButton.addEventListener("click", () => { this.cancelMatchmaking() });
 	}
 
+	private	createTournamentWinnerGUI()
+	{
+		this._tournamentWinnerGUI = new TournamentWinnerGUI();
+
+		this.addHiddenGUI(this._tournamentWinnerGUI);
+	}
+
+	private	createMatchOpponentsGUI()
+	{
+		this._matchOpponentsGUI = new MatchOpponentsGUI();
+
+		this.addHiddenGUI(this._matchOpponentsGUI);
+	}
+
 	private	onGameEnd(endData : EndData)
 	{
-		this.setMenuVisibility(this._pauseGUI, false);
-		this.setMenuVisibility(this._endGUI, true);
-
-		const	winText = `${(endData.winner === "draw") ? "Draw" : "Win"} ${endData.forfeit ? "By Forfeit" : ""}`;
-		this._endGUI.setWinner(endData.winner, winText);
-	}
-
-	private	toggleMenu(menu : HTMLElement) : void
-	{
-		const	isMenuVisible = !menu.classList.toggle("hidden");
-
-		if (isMenuVisible)
-			this._gameManager.pause();
+		if (this._sceneData.tournament !== undefined)
+			this._sceneData.tournament.onGameEnd(endData);
 		else
-			this._gameManager.unPause();
+		{
+			const	winText = `${(endData.winner === "draw") ? "Draw" : "Win"} ${endData.forfeit ? "By Forfeit" : ""}`;
+
+			this._endGUI.setWinner(endData.winner, winText);
+			this.switchToGUI(this._endGUI);
+		}
 	}
 
-	private	setMenuVisibility(menu : HTMLElement, visible : boolean)
+	private	togglePause() : void
 	{
-		const	isCurrentlyVisible = !menu.classList.contains("hidden");
-
-		if (visible !== isCurrentlyVisible)
-			this.toggleMenu(menu);
+		if (this._currentGUI === this._pauseGUI)
+		{
+			this._gameManager.unPause();
+			this.hideCurrentGUI();
+		}
+		else
+		{
+			this.switchToGUI(this._pauseGUI);
+			this._gameManager.pause();
+		}
 	}
 
 	private	onForfeit()
@@ -153,6 +193,26 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		this._sceneData.pongHTMLElement.cancelMatchmaking();
 	}
 
+	private	switchToGUI(newGUI : HTMLElement)
+	{
+		this.hideCurrentGUI();
+		this._currentGUI = newGUI;
+		newGUI.classList.remove("hidden");
+		newGUI.focus();
+	}
+
+	private	hideCurrentGUI()
+	{
+		this._currentGUI?.classList.add("hidden");
+		this._currentGUI = undefined;
+	}
+
+	private	addHiddenGUI(menu : HTMLElement)
+	{
+		this._menuParent.appendChild(menu);
+		menu.classList.add("hidden");
+	}
+
 	private	onGoToMenu() : void
 	{
 		this._sceneData.pongHTMLElement.goToMenuScene();
@@ -165,12 +225,7 @@ export class CreateInGameGUI extends CustomScriptComponent {
 
 	protected	destroy()
 	{
-		if (this._pauseGUI)
-			this._pauseGUI.remove();
-		if (this._endGUI)
-			this._endGUI.remove();
-		if (this._inMatchmakingGUI)
-			this._inMatchmakingGUI.remove();
+		this._menuParent.remove();
 	}
 }
 

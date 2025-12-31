@@ -5,17 +5,24 @@ export type ServerGameType = "Server";
 export type FrontendGameType = "Local" | "Multiplayer" | "Bot" | "Menu";
 export type GameType = ServerGameType | FrontendGameType;
 
-export class	SceneData
+export abstract class	SceneData
 {
-	public readonly events = new EventsManager();
 	public readonly readyPromise;
 
 	constructor(
 		public readonly havokPlugin : HavokPlugin,
 		public readonly gameType : GameType,
+		protected readonly _events : EventsManager
 	) {
 		this.readyPromise = new Deferred<void>
 	}
+
+	public get events()
+	{
+		return this._events;
+	}
+
+	public abstract dispose() : void;
 }
 
 export function	getSceneData(scene : Scene) : SceneData

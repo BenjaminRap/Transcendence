@@ -15,8 +15,7 @@ import { Imported } from "@shared/ImportedDecorator";
 import { TimerManager } from "@shared/attachedScripts/TimerManager";
 import { GameTypeChoiceGUI } from "../gui/GameTypeChoiceGUI";
 import { LocalTournamentCreationGUI } from "../gui/LocalTournamentCreationGUI";
-import type { Tournament } from "@shared/Tournament";
-import { FrontendTournament } from "../FrontendTournament";
+import { LocalTournament } from "../LocalTournament";
 
 export class CreateMenuGUI extends CustomScriptComponent {
 	private static readonly _enemyTypes = [ "Local", "Multiplayer", "Bot" ];
@@ -164,7 +163,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			const	profiles = this._localTournamentCreationGUI.getProfiles()
 			if (profiles === null)
 				return ;
-			const	tournament = new FrontendTournament(profiles, this._sceneData.events);
+			const	tournament = new LocalTournament(profiles);
 
 			this.startGame(this._currentSceneFileName, "Local", tournament);
 		});
@@ -239,7 +238,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			this.switchMenu(this._menuGUI, this._onlineGameTypeChoiceGUI);
 	}
 
-	private	startGame(sceneName : SceneFileName, enemyType : string, tournament? : Tournament)
+	private	startGame(sceneName : SceneFileName, enemyType : string, tournament? : LocalTournament)
 	{
 		if (enemyType === "Local")
 			this._sceneData.pongHTMLElement.startLocalGame(sceneName, tournament);

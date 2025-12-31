@@ -15,7 +15,7 @@ export type EndData = {
 }
 
 export class GameManager extends CustomScriptComponent {
-	private static readonly _pointsToWin = 5;
+	private static readonly _pointsToWin = 1;
 
 	@Imported(TransformNode) private	_goalLeft! : TransformNode;
 	@Imported(TransformNode) private	_goalRight! : TransformNode;
@@ -120,7 +120,7 @@ export class GameManager extends CustomScriptComponent {
 
 	public pause()
 	{
-		if (this._isGamePaused || this._sceneData.gameType === "Multiplayer")
+		if (this._isGamePaused || this._sceneData.gameType === "Multiplayer" || this._ended)
 			return ;
 		this._isGamePaused = true;
 		this._sceneData.havokPlugin.setTimeStep(0);

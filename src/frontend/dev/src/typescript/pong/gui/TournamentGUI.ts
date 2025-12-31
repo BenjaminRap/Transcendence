@@ -2,7 +2,6 @@ import { Clamp } from "@babylonjs/core";
 import { MatchGUI } from "./MatchGUI";
 import { OpponentGUI } from "./OpponentGUI";
 import { Range } from "@shared/Range";
-import { isPowerOfTwo } from "@shared/utils";
 import type { Match } from "@shared/Match";
 import type { Profile } from "@shared/Profile";
 
@@ -20,8 +19,6 @@ export class	TournamentGUI extends HTMLElement
 
 	constructor(matchesByRound : Match[][] = [], participants : Profile[] = [])
 	{
-		if (participants.length <= 1 || !isPowerOfTwo(participants.length))
-			throw new Error(`Invalid participants count : ${participants.length}, it should be power of two, greater than one !`);
 		super();
 		this._matchesByRound = matchesByRound ?? [];
 		this._participants = participants ?? [];
@@ -29,7 +26,7 @@ export class	TournamentGUI extends HTMLElement
 
 	connectedCallback()
 	{
-		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none");
+		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-auto", "backdrop-blur-sm");
 		this._container = this.createContainer();
 		this.placeMatches();
 		this.placeParticipants();
@@ -53,7 +50,7 @@ export class	TournamentGUI extends HTMLElement
 		const	div = document.createElement("div");
 
 		div.classList.add("absolute", "inset-0", "size-full", "flex", "flex-col", "relative");
-		div.style.minWidth = `calc(${this._participants.length} * 1.1 * 10cqw)`;
+		div.style.width = `calc(${this._participants.length} * 1.1 * 10cqw)`;
 
 		return div;
 	}
@@ -63,13 +60,14 @@ export class	TournamentGUI extends HTMLElement
 		for (let round = this._matchesByRound.length - 1; round >= 0; round--) {
 			const	matches = this._matchesByRound[round];
 			const	div = document.createElement("div");
+			const	width =  `calc(50% / ${matches.length} + 1cqw)`;
+			div.style.setProperty("--match-line-width", `calc(2cqw / ${matches.length})`);
 			
 			div.classList.add("flex", "flex-row", "justify-around");
 			for (let index = 0; index < matches.length; index++) {
 				const matchGUI = new MatchGUI();
 
-				matchGUI.classList.add("w-[10cqw]");
-				matchGUI.style.width = `calc(50% / ${matches.length} + 1cqw)`;
+				matchGUI.style.width = width;
 				
 				div.appendChild(matchGUI);
 			}
@@ -82,11 +80,11 @@ export class	TournamentGUI extends HTMLElement
 		const	div = document.createElement("div");
 
 		div.classList.add("flex", "flex-row", "justify-around");
+		div.style.setProperty("--font-size", `calc(1.5cqw / ${this._participants.length})`);
 		for (let index = 0; index < this._participants.length; index++) {
 			const participant = this._participants[index];
 			const matchGUI = new OpponentGUI(participant);
 
-			matchGUI.classList.add("w-[10cqw]");
 			matchGUI.style.width = `calc(50% / ${this._participants.length} + 1cqw)`;
 			
 			div.appendChild(matchGUI);

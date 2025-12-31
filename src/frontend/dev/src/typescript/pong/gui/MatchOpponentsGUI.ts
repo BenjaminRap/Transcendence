@@ -3,25 +3,32 @@ import { OpponentGUI } from "./OpponentGUI";
 
 export class	MatchOpponentsGUI extends HTMLElement
 {
-	constructor(private _rightOpponent? : Profile, private _leftOpponent? : Profile)
+	private static readonly _fightMask = "url(/images/fight.png)";
+	private _fightElement! : HTMLDivElement;
+
+	constructor()
 	{
 		super();
+		this.style.setProperty("--fight-mask", MatchOpponentsGUI._fightMask);
 	}
 
 	public connectedCallback()
 	{
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm", "flex", "flex-row", "justify-around", "items-center");
-		const	rightOpponent = new OpponentGUI(this._rightOpponent);
-		rightOpponent.classList.add("w-1/5");
 
-		const	fightImg = document.createElement("img");
-		fightImg.classList.add("w-1/5");
-		const	leftOpponent = new OpponentGUI(this._leftOpponent);
-		leftOpponent.classList.add("w-1/5");
+		this._fightElement = document.createElement("div");
+		this._fightElement.classList.add("w-1/5", "aspect-square", "mask-(--fight-mask)", "mask-no-repeat", "mask-contain", "mask-center", "bg-(--border-color)");
+	}
 
-		fightImg.src = "/images/fight.png";
+	public setOpponents(leftOpponent : Profile, rightOpponent : Profile)
+	{
+		const	leftOpponentGUI = new OpponentGUI(leftOpponent);
+		leftOpponentGUI.classList.add("w-1/5");
+		const	rightOpponentGUI = new OpponentGUI(rightOpponent);
+		rightOpponentGUI.classList.add("w-1/5");
 
-		this.append(rightOpponent, fightImg, leftOpponent);
+
+		this.replaceChildren(leftOpponentGUI, this._fightElement, rightOpponentGUI);
 	}
 }
 

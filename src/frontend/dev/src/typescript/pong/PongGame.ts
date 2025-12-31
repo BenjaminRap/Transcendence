@@ -15,6 +15,7 @@ import { Settings } from "./Settings";
 import { ServerProxy } from "./ServerProxy";
 import type { GameInfos } from "@shared/ServerMessage";
 import type { Tournament } from "@shared/Tournament";
+import type { LocalTournament } from "./LocalTournament";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
@@ -82,8 +83,7 @@ export class PongGame extends HTMLElement {
 
 	private async changeScene(newSceneName : string, gameType : FrontendGameType, clientInputs : readonly ClientInput[], serverCommunicationHandler? : ServerProxy, tournament? : Tournament) : Promise<void>
 	{
-		if (this._scene)
-			this._scene.dispose();
+		this.disposeScene();
 		this._scene = await this.getNewScene(newSceneName, gameType, clientInputs, serverCommunicationHandler, tournament);
 	}
 
@@ -115,12 +115,12 @@ export class PongGame extends HTMLElement {
 		sceneData.events.getObservable("game-start").notifyObservers();
 	}
 
-	public startLocalGame(sceneName : SceneFileName, tournament? : Tournament)
+	public startLocalGame(sceneName : SceneFileName, tournament? : LocalTournament)
 	{
 		this.startLocalGameAsync(sceneName, tournament);
 	}
 
-	private async startLocalGameAsync(sceneName : SceneFileName, tournament? : Tournament)
+	private async startLocalGameAsync(sceneName : SceneFileName, tournament? : LocalTournament)
 	{
 		this._multiplayerHandler.disconnect();
 		await this.changeScene(sceneName, "Local", this._settings._playerInputs, undefined, tournament);
@@ -128,7 +128,10 @@ export class PongGame extends HTMLElement {
 
 		await sceneData.readyPromise.promise;
 		if (tournament)
+		{
+			tournament.init(sceneData.events);
 			tournament.start();
+		}
 		else
 			sceneData.events.getObservable("game-start").notifyObservers();
 	}
@@ -228,9 +231,15 @@ export class PongGame extends HTMLElement {
 		// scene.activeCameras[0].attachControl();
 	}
 
-	public focus()
+	private disposeScene()
 	{
-		this._canvas.focus();
+		if (this._scene === undefined)
+			return ;
+		const	sceneData = getFrontendSceneData(this._scene);
+
+		sceneData.dispose();
+		this._scene.dispose();
+		this._scene = undefined;
 	}
 
 	public disconnectedCallback() : void {
@@ -240,7 +249,12 @@ export class PongGame extends HTMLElement {
 		if (globalThis.HKP)
 			delete globalThis.HKP;
 		this._engine.dispose();
-		this._scene?.dispose();
+		this.disposeScene();
+	}
+
+	public focusOnCanvas()
+	{
+		this._canvas.focus();
 	}
 }
 

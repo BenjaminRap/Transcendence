@@ -1,22 +1,23 @@
 export class	MatchGUI extends HTMLElement
 {
-	private static readonly _matchUrl : string = "/images/fight.png";
+	private static readonly _fightMask : string = "url(/images/fight.png)";
 
 	constructor()
 	{
 		super();
+		this.style.setProperty("--fight-mask", MatchGUI._fightMask);
 	}
 
 	connectedCallback()
 	{
 		this.classList.add("flex", "flex-col");
 		this.innerHTML = `
-			<div class="block border-solid border-black border-[0.2cqw] rounded-3xl aspect-2/3 w-[5cqw] m-auto">
-				<img src="${MatchGUI._matchUrl}" class="m-auto w-4/5 h-auto mt-[46%]" />
+			<div class="block border-solid border-(--border-color) border-[0.2cqw] rounded-3xl aspect-2/3 w-1/2 m-auto bg-(--background-color) bg-(image:--background-image)">
+				<div class="m-auto w-4/5 aspect-square mt-[46%] mask-(--fight-mask) mask-no-repeat mask-contain mask-center bg-(--border-color)"></div>
 			</div>
 			<div class="w-full aspect-1/2">
-				<div class="w-[1cqw] bg-black m-auto h-1/2"></div>
-				<div class="w-full border-[1cqw] border-b-0 border-black h-1/2 box-border rounded-t-md"></div>
+				<div class="w-(--match-line-width) bg-(--border-color) m-auto h-1/2"></div>
+				<div class="w-full border-(length:--match-line-width) border-b-0 border-(--border-color) h-1/2 box-border rounded-t-md"></div>
 			</div>
 		`;
 	}

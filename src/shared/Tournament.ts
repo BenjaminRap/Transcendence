@@ -1,3 +1,4 @@
+import type { EndData } from "./attachedScripts/GameManager";
 import { Match } from "./Match";
 import type { Profile } from "./Profile";
 import { isPowerOfTwo } from "./utils";
@@ -38,9 +39,48 @@ export abstract class	Tournament
 		}
 		const	matchesByRounds = this.createMatchesByRoundRecursive(matches);
 
-		matchesByRounds.push(matches);
+		matchesByRounds.unshift(matches);
 		return matchesByRounds;
 	}
 
+	protected static setQualifiedParticipants(qualified : Profile[], participants : Profile[], expectedQualified : number)
+	{
+		if (qualified.length >= expectedQualified)
+			return;
+		const	participantsToQualify = expectedQualified - qualified.length;
+
+		participants.sort((a, b) => b.score - a.score);
+		console.log(JSON.stringify(participants));
+
+		const	lastQualifiedIndex = participantsToQualify - 1;
+		const	lastQualifiedScore = participants[lastQualifiedIndex].score;
+		const	firstWithSameScore = participants.findIndex((value) => value.score === lastQualifiedScore);
+		const	lastWithSameScore = participants.findLastIndex((value) => value.score === lastQualifiedScore);
+
+		if (lastQualifiedIndex === lastWithSameScore)
+		{
+			qualified.push(...participants.splice(0, participantsToQualify))
+			participants = [];
+		}
+		else
+		{
+			qualified.push(...participants.splice(0, firstWithSameScore));
+			participants.splice(lastWithSameScore + 1);
+		}
+	}
+
+	protected static getExpectedQualified(participantCount : number)
+	{
+		let	expectedQualified = 2;
+
+		while (expectedQualified * 2 <= participantCount)
+		{
+			expectedQualified *= 2;
+		}
+		return expectedQualified;
+	}
+
 	public abstract start() : void;
+	public abstract onGameEnd(endData : EndData) : void;
+	public abstract dispose() : void;
 }

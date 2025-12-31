@@ -3,6 +3,7 @@ import { PongGame } from "./PongGame";
 import { type FrontendGameType, SceneData } from "@shared/SceneData";
 import { ServerProxy } from "./ServerProxy";
 import type { Tournament } from "@shared/Tournament";
+import { FrontendEventsManager } from "./FrontendEventsManager";
 
 export interface	ClientInput
 {
@@ -21,6 +22,16 @@ export class FrontendSceneData extends SceneData
 		public readonly serverProxy? : ServerProxy,
 		public readonly tournament? : Tournament
 	) {
-		super(havokPlugin, gameType);
+		super(havokPlugin, gameType, new FrontendEventsManager());
+	}
+
+	public get events()
+	{
+		return this._events as FrontendEventsManager;
+	}
+
+	public dispose()
+	{
+		this.tournament?.dispose();
 	}
 }
