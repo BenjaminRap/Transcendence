@@ -1,7 +1,6 @@
 import { Clamp } from "@babylonjs/core";
 import { MatchGUI } from "./MatchGUI";
 import { OpponentGUI } from "./OpponentGUI";
-import { Range } from "@shared/Range";
 import type { Match } from "@shared/Match";
 import type { Profile } from "@shared/Profile";
 
@@ -43,7 +42,7 @@ export class	TournamentGUI extends HTMLElement
 	{
 		const	div = document.createElement("div");
 
-		div.classList.add("absolute", "inset-0", "w-full", "flex", "flex-col", "relative");
+		div.classList.add("inset-0", "w-full", "flex", "flex-col", "relative");
 
 		return div;
 	}
@@ -100,7 +99,7 @@ export class	TournamentGUI extends HTMLElement
 		else
 			this._zoomPercent += this._wheelZoomAdd;
 		this._zoomPercent = Math.min(this._zoomPercent, this._wheelZoomMax);
-		this._container.style.transform = `scale(${this._zoomPercent})`;
+		this.updateTransform();
 	}
 
 	private	drag(mouseEvent : MouseEvent)
@@ -114,8 +113,12 @@ export class	TournamentGUI extends HTMLElement
 		if ((mouseEvent.movementY > 0 && elementBounds.y < frameBounds.y)
 			|| (mouseEvent.movementY < 0 && elementBounds.y + elementBounds.height > frameBounds.y + frameBounds.height))
 			this._top += mouseEvent.movementY;
-		this._container.style.left = this._left.toString() + "px";
-		this._container.style.top = this._top.toString() + "px";
+		this.updateTransform();
+	}
+
+	private	updateTransform()
+	{
+		this._container.style.transform = `translate(${this._left}px, ${this._top}px) scale(${this._zoomPercent})`;
 	}
 }
 
