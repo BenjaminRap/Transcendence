@@ -79,7 +79,7 @@ export class	TournamentGUI extends HTMLElement
 		const	div = document.createElement("div");
 
 		div.classList.add("flex", "flex-row", "justify-around");
-		div.style.setProperty("--font-size", `calc(1.5cqw / ${this._participants.length})`);
+		div.style.setProperty("--opponent-font-size", `calc(10cqw / ${this._participants.length})`);
 		for (let index = 0; index < this._participants.length; index++) {
 			const participant = this._participants[index];
 			const matchGUI = new OpponentGUI(participant);

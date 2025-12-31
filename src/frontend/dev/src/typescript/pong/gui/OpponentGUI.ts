@@ -22,7 +22,7 @@ export class	OpponentGUI extends HTMLElement
 		this.classList.add("block", "border-solid", "rounded-2xl", "aspect-2/3", "border-(--border-color)", "border-(length:--border-width)", "bg-(image:--background-image)", "bg-(--background-color)");
 		this.innerHTML = `
 			<img src="${this._profile.image}" class="m-auto mt-[5%] w-4/5 aspect-square pointer-events-none" />
-			<p class="mt-[10%] font-(family-name:--font) text-center text-(length:--font-size) text-(--text-color) text-wrap overflow-hidden">${this._profile.name}</p>
+			<p class="mt-[10%] font-(family-name:--font) text-center text-(length:--opponent-font-size) text-(--text-color) text-wrap overflow-hidden">${this._profile.name}</p>
 		`;
 	}
 }

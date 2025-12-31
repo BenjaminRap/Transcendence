@@ -10,6 +10,7 @@ export class	MatchOpponentsGUI extends HTMLElement
 	{
 		super();
 		this.style.setProperty("--fight-mask", MatchOpponentsGUI._fightMask);
+		this.style.setProperty("--opponent-font-size", "3cqw");
 	}
 
 	public connectedCallback()
