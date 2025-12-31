@@ -50,7 +50,6 @@ export class	TournamentGUI extends HTMLElement
 		const	div = document.createElement("div");
 
 		div.classList.add("absolute", "inset-0", "size-full", "flex", "flex-col", "relative");
-		div.style.width = `calc(${this._participants.length} * 1.1 * 10cqw)`;
 
 		return div;
 	}
@@ -63,7 +62,7 @@ export class	TournamentGUI extends HTMLElement
 			const	width =  `calc(50% / ${matches.length} + 1cqw)`;
 			div.style.setProperty("--match-line-width", `calc(2cqw / ${matches.length})`);
 			
-			div.classList.add("flex", "flex-row", "justify-around");
+			div.classList.add("flex", "flex-row", "justify-around", "w-full");
 			for (let index = 0; index < matches.length; index++) {
 				const matchGUI = new MatchGUI();
 

@@ -8,7 +8,7 @@ import { isPowerOfTwo } from "@shared/utils";
 
 export class	LocalTournament extends Tournament
 {
-	private static readonly _showTournamentDurationMs = 5000;
+	private static readonly _showTournamentDurationMs = 5000000;
 	private static readonly _showOpponentsDurationMs = 5000;
 
 	private _round : "qualification" | number = "qualification";
