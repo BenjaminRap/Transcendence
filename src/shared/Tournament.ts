@@ -1,7 +1,7 @@
 import type { EndData } from "./attachedScripts/GameManager";
 import { Match } from "./Match";
 import type { Profile } from "./Profile";
-import { isPowerOfTwo } from "./utils";
+import { isPowerOfTwo, shuffle } from "./utils";
 
 export abstract class	Tournament
 {
@@ -9,6 +9,7 @@ export abstract class	Tournament
 	{
 		if (profiles.length < 2)
 			throw new Error(`The profiles should be greater than 1, got ${profiles.length}`);
+		shuffle(profiles);
 		const	matches = [];
 
 		for (let index = 0; index < profiles.length; index++) {
@@ -25,6 +26,7 @@ export abstract class	Tournament
 	{
 		if (profiles.length < 2 || !isPowerOfTwo(profiles.length))
 			throw new Error(`The profiles should be a power of two, greater than 1, got ${profiles.length}`);
+		shuffle(profiles);
 		return this.createMatchesByRoundRecursive(profiles);
 	}
 
