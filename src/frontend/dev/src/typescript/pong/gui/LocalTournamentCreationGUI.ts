@@ -97,8 +97,11 @@ export class	LocalTournamentCreationGUI extends HTMLElement
 	{
 		this._profiles = [];
 		this._profileContainer.replaceChildren();
-		this.addProfile();
-		this.addProfile();
+		for (let index = 0; index < 32; index++) {
+			this.addProfile();
+		}
+		// this.addProfile();
+		// this.addProfile();
 		this.setProperties("var(--color-gray-400)", "100%");
 	}
 

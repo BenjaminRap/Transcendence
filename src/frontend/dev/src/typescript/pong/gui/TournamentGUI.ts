@@ -1,4 +1,3 @@
-import { Clamp } from "@babylonjs/core";
 import { MatchGUI } from "./MatchGUI";
 import { OpponentGUI } from "./OpponentGUI";
 import type { Match } from "@shared/Match";
@@ -6,6 +5,9 @@ import type { Profile } from "@shared/Profile";
 
 export class	TournamentGUI extends HTMLElement
 {
+	private static readonly _lineWidth = "1.5cqw";
+	private static readonly _rounded = "3cqw";
+
 	private _matchesByRound : Match[][];
 	private _participants : Profile[];
 	private _container! : HTMLDivElement;
@@ -52,8 +54,9 @@ export class	TournamentGUI extends HTMLElement
 		for (let round = this._matchesByRound.length - 1; round >= 0; round--) {
 			const	matches = this._matchesByRound[round];
 			const	div = document.createElement("div");
-			const	width =  `calc(50% / ${matches.length} + 1cqw)`;
-			div.style.setProperty("--match-line-width", `calc(2cqw / ${matches.length})`);
+			const	width =  `calc((50% + ${TournamentGUI._lineWidth}) / ${matches.length})`;
+			div.style.setProperty("--match-line-width", `calc(${TournamentGUI._lineWidth} / ${matches.length})`);
+			div.style.setProperty("--rounded", `calc(${TournamentGUI._rounded} / ${matches.length})`);
 			
 			div.classList.add("flex", "flex-row", "justify-around", "w-full");
 			for (let index = 0; index < matches.length; index++) {
@@ -70,14 +73,17 @@ export class	TournamentGUI extends HTMLElement
 	private	placeParticipants()
 	{
 		const	div = document.createElement("div");
+		const	width =  `calc((50% + ${TournamentGUI._lineWidth}) / ${this._participants.length})`;
 
 		div.classList.add("flex", "flex-row", "justify-around");
 		div.style.setProperty("--opponent-font-size", `calc(10cqw / ${this._participants.length})`);
+		div.style.setProperty("--rounded", `calc(${TournamentGUI._rounded} / ${this._participants.length})`);
+		div.style.setProperty("--border-width", `calc(${TournamentGUI._lineWidth} / ${this._participants.length})`);
 		for (let index = 0; index < this._participants.length; index++) {
 			const participant = this._participants[index];
 			const matchGUI = new OpponentGUI(participant);
 
-			matchGUI.style.width = `calc(50% / ${this._participants.length} + 1cqw)`;
+			matchGUI.style.width = width;
 			
 			div.appendChild(matchGUI);
 		}
