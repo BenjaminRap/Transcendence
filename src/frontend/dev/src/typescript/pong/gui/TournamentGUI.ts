@@ -1,3 +1,4 @@
+import { Clamp } from "@babylonjs/core";
 import { MatchGUI } from "./MatchGUI";
 import { OpponentGUI } from "./OpponentGUI";
 import type { Match } from "@shared/Match";
@@ -93,6 +94,8 @@ export class	TournamentGUI extends HTMLElement
 	private	zoom(event : WheelEvent)
 	{
 		event.preventDefault();
+		let	newZoomPercent = this._zoomPercent;
+
 		if (event.deltaY > 0)
 		{
 			const	frameBounds = this.getBoundingClientRect();
@@ -100,11 +103,24 @@ export class	TournamentGUI extends HTMLElement
 
 			if (elementBounds.width < frameBounds.width && elementBounds.height < frameBounds.height)
 				return 
-			this._zoomPercent -= this._wheelZoomAdd;
+			newZoomPercent -= this._wheelZoomAdd;
 		}
 		else
-			this._zoomPercent += this._wheelZoomAdd;
-		this._zoomPercent = Math.min(this._zoomPercent, this._wheelZoomMax);
+			newZoomPercent += this._wheelZoomAdd;
+		newZoomPercent = Math.min(newZoomPercent, this._wheelZoomMax);
+		const	bounds = this._container.getBoundingClientRect();
+		const center = {
+			x: bounds.width / 2 + bounds.x,
+			y: bounds.height / 2 + bounds.y
+		};
+		const zoomPointDiffToCenter = {
+			x: center.x - event.clientX,
+			y : center.y - event.clientY
+		};
+
+		this._left += zoomPointDiffToCenter.x * (newZoomPercent - this._zoomPercent) / this._zoomPercent;
+		this._top += zoomPointDiffToCenter.y * (newZoomPercent - this._zoomPercent) / this._zoomPercent;
+		this._zoomPercent = newZoomPercent;
 		this.updateTransform();
 	}
 
