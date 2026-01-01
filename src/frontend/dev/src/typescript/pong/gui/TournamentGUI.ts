@@ -28,7 +28,7 @@ export class	TournamentGUI extends HTMLElement
 
 	connectedCallback()
 	{
-		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-auto", "backdrop-blur-sm");
+		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-auto", "backdrop-blur-sm", "flex", "items-center");
 		this._container = this.createContainer();
 		this.placeMatches();
 		this.placeParticipants();
@@ -126,20 +126,17 @@ export class	TournamentGUI extends HTMLElement
 
 	private	drag(mouseEvent : MouseEvent)
 	{
-		const	frameBounds = this.getBoundingClientRect();
-		const	elementBounds = this._container.getBoundingClientRect();
-
-		if ((mouseEvent.movementX > 0 && elementBounds.x < frameBounds.x)
-			|| (mouseEvent.movementX < 0 && elementBounds.x + elementBounds.width > frameBounds.x + frameBounds.width))
-			this._left += mouseEvent.movementX;
-		if ((mouseEvent.movementY > 0 && elementBounds.y < frameBounds.y)
-			|| (mouseEvent.movementY < 0 && elementBounds.y + elementBounds.height > frameBounds.y + frameBounds.height))
-			this._top += mouseEvent.movementY;
+		this._left += mouseEvent.movementX;
+		this._top += mouseEvent.movementY;
 		this.updateTransform();
 	}
 
 	private	updateTransform()
 	{
+		const	bounds = this._container.getBoundingClientRect();
+
+		this._left = Clamp(this._left, -bounds.width / 2, bounds.width / 2);
+		this._top = Clamp(this._top, -bounds.height / 2, bounds.height / 2);
 		this._container.style.transform = `translate(${this._left}px, ${this._top}px) scale(${this._zoomPercent})`;
 	}
 }
