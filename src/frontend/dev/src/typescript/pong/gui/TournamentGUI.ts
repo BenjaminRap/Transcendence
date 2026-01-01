@@ -33,11 +33,18 @@ export class	TournamentGUI extends HTMLElement
 		this.placeMatches();
 		this.placeParticipants();
 		this.addEventListener("wheel", this.zoom.bind(this));
-		this.addEventListener("mousedown", () => this._dragging = true);
-		window.addEventListener("mouseup", () => this._dragging = false);
+		this.addEventListener("mousedown", () => {
+			this.style.cursor = "grabbing";
+			this._dragging = true
+		});
+		window.addEventListener("mouseup", () => {
+			this.style.cursor = "grab";
+			this._dragging = false
+		});
 		this.addEventListener("mousemove", (mouseEvent : MouseEvent) => { if (this._dragging) this.drag(mouseEvent); });
 		this._wheelZoomMax = this._matchesByRound.length;
 
+		this.style.cursor = "grab";
 		this.appendChild(this._container);
 	}
 
