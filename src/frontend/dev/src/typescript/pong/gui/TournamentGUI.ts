@@ -8,9 +8,12 @@ export class	TournamentGUI extends HTMLElement
 {
 	private static readonly _lineWidth = "1.5cqw";
 	private static readonly _rounded = "3cqw";
+	private static readonly _opponentFontSize = "10cqw";
 
 	private _matchesByRound : Match[][];
 	private _participants : Profile[];
+	private _matchesByRoundGuis : MatchGUI[][] = [];
+	private _participantsGuis : OpponentGUI[] = [];
 	private _container! : HTMLDivElement;
 	private	_zoomPercent : number = 1;
 	private _wheelZoomAdd : number = 0.025;
@@ -32,6 +35,12 @@ export class	TournamentGUI extends HTMLElement
 		this._container = this.createContainer();
 		this.placeMatches();
 		this.placeParticipants();
+		this.addZoomAndGrab();
+		this.appendChild(this._container);
+	}
+
+	private	addZoomAndGrab()
+	{
 		this.addEventListener("wheel", this.zoom.bind(this));
 		this.addEventListener("mousedown", () => {
 			this.style.cursor = "grabbing";
@@ -41,11 +50,13 @@ export class	TournamentGUI extends HTMLElement
 			this.style.cursor = "grab";
 			this._dragging = false
 		});
-		this.addEventListener("mousemove", (mouseEvent : MouseEvent) => { if (this._dragging) this.drag(mouseEvent); });
+		this.addEventListener("mousemove", (mouseEvent : MouseEvent) => {
+			if (this._dragging)
+				this.drag(mouseEvent);
+		});
 		this._wheelZoomMax = this._matchesByRound.length;
 
 		this.style.cursor = "grab";
-		this.appendChild(this._container);
 	}
 
 	private	createContainer() : HTMLDivElement
@@ -60,11 +71,14 @@ export class	TournamentGUI extends HTMLElement
 	private	placeMatches()
 	{
 		for (let round = this._matchesByRound.length - 1; round >= 0; round--) {
+			const	matchesGUIs = [];
 			const	matches = this._matchesByRound[round];
 			const	div = document.createElement("div");
 			const	width =  `calc((50% + ${TournamentGUI._lineWidth}) / ${matches.length})`;
+			div.style.setProperty("--opponent-font-size", `calc(${TournamentGUI._opponentFontSize} / ${matches.length})`);
 			div.style.setProperty("--match-line-width", `calc(${TournamentGUI._lineWidth} / ${matches.length})`);
 			div.style.setProperty("--rounded", `calc(${TournamentGUI._rounded} / ${matches.length})`);
+			div.style.setProperty("--border-width", `calc(${TournamentGUI._lineWidth} / ${matches.length})`);
 			
 			div.classList.add("flex", "flex-row", "justify-around", "w-full");
 			for (let index = 0; index < matches.length; index++) {
@@ -72,8 +86,10 @@ export class	TournamentGUI extends HTMLElement
 
 				matchGUI.style.width = width;
 				
+				matchesGUIs.push(matchGUI);
 				div.appendChild(matchGUI);
 			}
+			this._matchesByRoundGuis.unshift(matchesGUIs);
 			this._container.appendChild(div);
 		}
 	}
@@ -84,16 +100,17 @@ export class	TournamentGUI extends HTMLElement
 		const	width =  `calc((50% + ${TournamentGUI._lineWidth}) / ${this._participants.length})`;
 
 		div.classList.add("flex", "flex-row", "justify-around");
-		div.style.setProperty("--opponent-font-size", `calc(10cqw / ${this._participants.length})`);
+		div.style.setProperty("--opponent-font-size", `calc(${TournamentGUI._opponentFontSize} / ${this._participants.length})`);
 		div.style.setProperty("--rounded", `calc(${TournamentGUI._rounded} / ${this._participants.length})`);
 		div.style.setProperty("--border-width", `calc(${TournamentGUI._lineWidth} / ${this._participants.length})`);
 		for (let index = 0; index < this._participants.length; index++) {
 			const participant = this._participants[index];
-			const matchGUI = new OpponentGUI(participant);
+			const opponentGUI = new OpponentGUI(participant);
 
-			matchGUI.style.width = width;
+			opponentGUI.style.width = width;
 			
-			div.appendChild(matchGUI);
+			this._participantsGuis.push(opponentGUI)
+			div.appendChild(opponentGUI);
 		}
 		this._container.appendChild(div);
 	}
@@ -145,6 +162,32 @@ export class	TournamentGUI extends HTMLElement
 		this._left = Clamp(this._left, -bounds.width / 2, bounds.width / 2);
 		this._top = Clamp(this._top, -bounds.height / 2, bounds.height / 2);
 		this._container.style.transform = `translate(${this._left}px, ${this._top}px) scale(${this._zoomPercent})`;
+	}
+	
+	public setWinners(round : number)
+	{
+		if (round < 0 || round >= this._matchesByRound.length)
+			throw new Error("TournamentGUI setWinners called with an invalid round !");
+		const	matchesGuis = this._matchesByRoundGuis[round];
+		const	matches = this._matchesByRound[round];
+		const	opponentsGuis = (round === 0) ? this._participantsGuis : this._matchesByRoundGuis[round - 1];
+		if (matches.length !== matchesGuis.length || opponentsGuis.length !== matches.length * 2)
+			throw new Error("Invalid array length in TournamentGUI setWinners !");
+
+		for (let index = 0; index < matchesGuis.length; index++) {
+			const	matchGui = matchesGuis[index];
+			const	match = matches[index];
+			const	left = opponentsGuis[index * 2];
+			const	right = opponentsGuis[index * 2 + 1];
+			const	winner = match.getWinner();
+			const	winnerSide = match.getWinnerSide();
+
+			if (winner === undefined || winnerSide === undefined)
+				throw new Error("A match hasn't finished but TournamentGUI setWinners has been called !");
+			matchGui.setWinner(winner);
+			left.setHasWon(winnerSide === "left");
+			right.setHasWon(winnerSide === "right");
+		}
 	}
 }
 

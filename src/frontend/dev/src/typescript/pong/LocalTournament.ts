@@ -8,7 +8,7 @@ import { isPowerOfTwo } from "@shared/utils";
 
 export class	LocalTournament extends Tournament
 {
-	private static readonly _showTournamentDurationMs = 5000000;
+	private static readonly _showTournamentDurationMs = 5000;
 	private static readonly _showOpponentsDurationMs = 5000;
 
 	private _round : "qualification" | number = "qualification";
@@ -75,6 +75,7 @@ export class	LocalTournament extends Tournament
 		}
 		else
 		{
+			this._tournamentGUI?.setWinners(this._round);
 			this._round++;
 			if (this._round >= this._tournamentMatches.length)
 				this.endTournament();

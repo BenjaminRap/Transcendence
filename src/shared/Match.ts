@@ -3,6 +3,7 @@ import type { Profile } from "./Profile";
 export class	Match
 {
 	private _winner? : Profile;
+	private _winnerSide? : "left" | "right";
 
 	constructor(
 		private _left : Match | Profile,
@@ -13,6 +14,7 @@ export class	Match
 	{
 		if (this._winner !== undefined)
 			return ;
+		this._winnerSide = side;
 		const	winner = (side === "left") ? this._left : this._right;
 
 		if (winner instanceof Match)
@@ -24,6 +26,11 @@ export class	Match
 	public getWinner()
 	{
 		return this._winner;
+	}
+
+	public getWinnerSide()
+	{
+		return this._winnerSide;
 	}
 
 	public getRight()

@@ -1,6 +1,10 @@
+import type { Profile } from "@shared/Profile";
+import { OpponentGUI } from "./OpponentGUI";
+
 export class	MatchGUI extends HTMLElement
 {
 	private static readonly _fightMask : string = "url(/images/fight.png)";
+	private _matchOrOpponent? : HTMLDivElement | OpponentGUI;
 
 	constructor()
 	{
@@ -12,7 +16,7 @@ export class	MatchGUI extends HTMLElement
 	{
 		this.classList.add("flex", "flex-col");
 		this.innerHTML = `
-			<div class="block border-solid border-(--border-color) border-(length:--match-line-width) rounded-(--rounded) aspect-2/3 w-1/2 m-auto bg-(--background-color) bg-(image:--background-image)">
+			<div class="block border-solid border-(--border-color) border-(length:--match-line-width) rounded-(--rounded) aspect-2/3 w-1/2 m-auto bg-(--background-color) bg-(image:--background-image) MatchGUICard">
 				<div class="m-auto w-4/5 aspect-square mt-[46%] mask-(--fight-mask) mask-no-repeat mask-contain mask-center bg-(--border-color)"></div>
 			</div>
 			<div class="w-full aspect-6/2">
@@ -20,6 +24,26 @@ export class	MatchGUI extends HTMLElement
 				<div class="w-full border-(length:--match-line-width) border-b-0 border-(--border-color) h-1/2 box-border rounded-t-(length:--match-line-width)"></div>
 			</div>
 		`;
+		this._matchOrOpponent = this.querySelector("div.MatchGUICard")!;
+	}
+
+	public setWinner(profile : Profile)
+	{
+		if (this._matchOrOpponent === undefined)
+			throw new Error("MatchGUI setWinner called before the connectedCallback !");
+		if (this._matchOrOpponent instanceof OpponentGUI)
+			throw new Error("MatchGUI setWinner has been called twice !");
+		const	opponentGUI = new OpponentGUI(profile);
+
+		this._matchOrOpponent.replaceWith(opponentGUI);
+		this._matchOrOpponent = opponentGUI;
+	}
+
+	public setHasWon(hasWon : boolean)
+	{
+		if (this._matchOrOpponent === undefined || this._matchOrOpponent instanceof HTMLDivElement)
+			throw new Error("MatchGUI setHasWon has been called before setWinner !");
+		this._matchOrOpponent.setHasWon(hasWon);
 	}
 }
 

@@ -25,6 +25,10 @@ export class	OpponentGUI extends HTMLElement
 			<p class="mt-[10%] font-(family-name:--font) text-center text-(length:--opponent-font-size) text-(--text-color) text-wrap overflow-hidden">${this._profile.name}</p>
 		`;
 	}
+
+	public setHasWon(hasWon : boolean)
+	{
+	}
 }
 
 customElements.define("opponent-gui", OpponentGUI);
