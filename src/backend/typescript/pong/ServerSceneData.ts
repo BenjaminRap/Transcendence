@@ -20,5 +20,6 @@ export class	ServerSceneData extends SceneData
 
 	public dispose()
 	{
+		this._events.dispose();
 	}
 }

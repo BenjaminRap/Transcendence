@@ -130,18 +130,17 @@ async function start(): Promise<void> {
 			console.log("user connected !");
 			socket.data = new SocketData(socket);
 			socket.on("join-matchmaking", () => {
-				console.log("try-join-matchmaking");
 				matchMaker.addUserToMatchMaking(socket);
 			});
+			socket.once("leave-matchmaking", () => {
+				matchMaker.removeUserFromMatchMaking(socket);
+			});
 			socket.once("disconnect", () => {
-				console.log("disconnected !");
 				matchMaker.removeUserFromMatchMaking(socket);
 				socket.data.disconnect();
 			});
 		});
         await fastify.listen({ port: port, host: host });
-        // fastify.log.info(`Server listening at ${ host }:${ port }`);
-
     } catch (error) {
         fastify.log.error(`Could not launch the server: ${error}`);
         process.exit(1);

@@ -45,7 +45,7 @@ export class ClientSync extends CustomScriptComponent {
 	
 		if (!serverProxy)
 			return ;
-		serverProxy.onServerMessage()!.add((gameInfos : GameInfos | "room-closed" | "server-error" | "forfeit") => {
+		serverProxy.onServerMessage().add((gameInfos : GameInfos | "room-closed" | "server-error" | "forfeit") => {
 			if (gameInfos === "room-closed" || gameInfos === "server-error")
 				return ;
 			if (gameInfos === "forfeit")

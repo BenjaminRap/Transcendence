@@ -16,4 +16,11 @@ export class ServerEventsManager extends EventsManager
 	{
 		return this._allEvents[event];
 	}
+
+	public dispose() : void
+	{
+		Object.values(this._allEvents).forEach((observable) => {
+			observable.clear();
+		})
+	}
 }

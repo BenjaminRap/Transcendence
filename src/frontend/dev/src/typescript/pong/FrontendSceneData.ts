@@ -33,5 +33,6 @@ export class FrontendSceneData extends SceneData
 	public dispose()
 	{
 		this.tournament?.dispose();
+		this._events.dispose();
 	}
 }

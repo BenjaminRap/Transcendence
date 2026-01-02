@@ -8,7 +8,7 @@ import { InputKey } from "@shared/InputKey";
 import type { SocketMessage } from "../Room";
 import type { int } from "@babylonjs/core/types";
 import { Vector3 } from "@babylonjs/core";
-import { getSceneData } from "../ServerPongGame";
+import { getServerSceneData } from "../ServerPongGame";
 import { TimerManager } from "@shared/attachedScripts/TimerManager";
 import { Paddle } from "@shared/attachedScripts/Paddle";
 import { Imported } from "@shared/ImportedDecorator";
@@ -29,7 +29,7 @@ export class ServerSync extends CustomScriptComponent {
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "ServerSync") {
         super(transform, scene, properties, alias);
 
-		this._sceneData = getSceneData(this.scene);
+		this._sceneData = getServerSceneData(this.scene);
     }
 
 

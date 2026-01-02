@@ -48,9 +48,7 @@ export class Bot extends CustomScriptComponent {
 	protected	awake()
 	{
 		this._shotFactory = new ShotFactory(this._top, this._bottom, this._goalLeft, this._paddleRight, this._ball);
-		this._sceneData.events.getObservable("game-start").add(() => {
-			this._timerManager.setInterval(this.refreshGameView.bind(this), Bot._refreshIntervalMs);
-		});
+		this._timerManager.setInterval(this.refreshGameView.bind(this), Bot._refreshIntervalMs);
 	}
 
 	protected	start()

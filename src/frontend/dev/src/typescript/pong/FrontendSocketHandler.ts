@@ -1,122 +1,174 @@
-import { type int, Observable } from "@babylonjs/core";
+import { Deferred, type int, Observable } from "@babylonjs/core";
 import type { ClientToServerEvents, ServerToClientEvents } from "@shared/MessageType";
 import { type GameInfos, zodGameInfos, zodGameInit } from "@shared/ServerMessage";
 import { io, Socket } from "socket.io-client";
 
 type ServerInGameMessage = GameInfos | "server-error" | "forfeit" | "room-closed";
+type DefaultSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
+type SocketState = "not-connected" | "connected" | "in-matchmaking" | "in-game";
 
 export class	FrontendSocketHandler
 {
 	private static readonly _apiUrl = "/api/socket.io/";
 
-	private _state : "disconnected" | "connected" = "disconnected";
-	private _socket  : Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
-	private _onServerMessageObservable : Observable<ServerInGameMessage> | null = null;
+	private _state : SocketState;
+	private _socket : DefaultSocket;
+	private _onServerMessageObservable : Observable<ServerInGameMessage>;
 	private _playerIndex : int | undefined;
+	private _currentPromise : Deferred<any> | null = null
 
-	public disconnect()
+	private constructor(socket : DefaultSocket)
 	{
-		if (!(this._socket))
-			return ;
-		this._state = "disconnected";
-		this._socket.disconnect();
-		this._socket = null;
-		this._onServerMessageObservable?.clear();
-		this._onServerMessageObservable = null;
+		this._state = "connected";
+		this._socket = socket;
+		this._onServerMessageObservable = createNewOnServerMessageObservable(socket);
+		socket.on("room-closed", () => {
+			if (this._state === "in-game")
+				this._state = "connected";
+		});
+	}
+
+	public static async createFrontendSocketHandler()
+	{
+		const socket = io("/", {
+			path: FrontendSocketHandler._apiUrl,
+			autoConnect: false
+		});
+
+		const	connectionPromise = new Promise<void>((resolve, reject) => {
+			socket.once("connect", () => {
+				socket.off("connect_error");
+				resolve();
+			});
+			socket!.once("connect_error", (error : Error) => {
+				socket.off("connect");
+				reject(error);
+			});
+		});
+		socket.connect();
+
+		await connectionPromise;
+		const	frontendSocketHandler = new FrontendSocketHandler(socket);
+
+		return frontendSocketHandler;
 	}
 
 	public async joinGame() : Promise<void>
 	{
-		await this.connect();
-		this._socket!.emit("join-matchmaking");
-		return new Promise((resolve, reject) => {
-			this._socket!.once("joined-game", (data : any) => {
-				const	gameInit = zodGameInit.safeParse(data);
+		this.verifyState("connected");
+		this._socket.emit("join-matchmaking");
+		this._state = "in-matchmaking";
+		const	deferred = new Deferred<void>();
 
-				if (!gameInit.success)
-					reject("Server sent wrong data !");
-				else
-				{
-					this._playerIndex = gameInit.data.playerIndex;
-					resolve();
-				}
-			});
-			this._socket!.once("disconnect", (reason) => {
-				reject(reason);
-			});
-		});
-	}
+		this._socket.once("joined-game", (data : any) => {
+			const	gameInit = zodGameInit.safeParse(data);
 
-	private async connect() : Promise<void>
-	{
-		if (this._socket != null)
-			return ;
-		this._socket = io("/", {
-			path:FrontendSocketHandler._apiUrl
-		});
-
-		return new Promise((resolve, reject) => {
-			this._socket!.once("connect", () => {
-				this._socket!.once("disconnect", () => {
-					this.disconnect();
-				});
+			if (!gameInit.success)
+			{
 				this._state = "connected";
-				resolve();
-			});
-			this._socket!.once("connect_error", (error : Error) => {
-				this.disconnect();
-				reject(error);
-			});
+				deferred.reject("Server sent wrong data !");
+			}
+			else
+			{
+				this._state = "in-game";
+				this._playerIndex = gameInit.data.playerIndex;
+				deferred.resolve();
+			}
 		});
+		this._socket.once("disconnect", (reason) => {
+			deferred.reject(reason);
+		});
+		this._currentPromise = deferred;
+		return deferred.promise;
 	}
 
+	public disconnect()
+	{
+		if (this._state === "not-connected")
+			return ;
+		this._state = "not-connected";
+		this._socket.off();
+		this._socket.disconnect();
+		this._onServerMessageObservable.clear();
+		this._currentPromise?.reject("canceled");
+	}
+
+	public leaveGameOrMatchmaking()
+	{
+		this.verifyState("connected", "in-matchmaking", "in-game");
+		this._currentPromise?.reject("canceled");
+		switch (this._state)
+		{
+			case "in-matchmaking":
+				this._socket.emit("leave-matchmaking");
+				break ;
+			case "in-game":
+				this._socket.emit("forfeit");
+				this._onServerMessageObservable.clear();
+				break;
+		}
+		this._state = "connected";
+	}
 
 	public async	onGameReady() : Promise<void>
 	{
-		return new Promise((resolve, reject) => {
-			this._socket!.once("ready", () => {
-				resolve();
-			});
-			this._socket!.once("disconnect", (reason) => {
-				reject(reason);
-			});
+		this.verifyState("in-game");
+		const	deferred = new Deferred<void>();
+
+		this._socket.once("ready", () => {
+			deferred.resolve();
 		});
+		this._socket.once("disconnect", (reason) => {
+			deferred.reject(reason);
+		});
+		this._currentPromise = deferred;
+		return deferred.promise;
 	}
 
-	public onServerMessage() : Observable<ServerInGameMessage> | null
+	public onServerMessage() : Observable<ServerInGameMessage>
 	{
-		if (this._onServerMessageObservable !== null)
-			return (this._onServerMessageObservable);
-		if (this._socket === null)
-			return null;
-		const	observable = new Observable<ServerInGameMessage>();
-
-		this._socket.on("game-infos", (data : any) => {
-			const	gameInfos = zodGameInfos.safeParse(data);
-
-			if (!gameInfos.success)
-				observable.notifyObservers("server-error");
-			else
-				observable.notifyObservers(gameInfos.data);
-		});
-		this._socket.on("forfeit", () => { observable.notifyObservers("forfeit") });
-		this._socket.on("room-closed", () => { observable.notifyObservers("room-closed") });
-		this._onServerMessageObservable = observable;
-		return observable;
+		return (this._onServerMessageObservable);
 	}
 
 	public	setReady()
 	{
-		this._socket?.emit("ready");
+		this.verifyState("in-game");
+		this._socket.emit("ready");
 	}
 
 	public sendServerMessage<T extends keyof ClientToServerEvents>(event : T, ...args: Parameters<ClientToServerEvents[T]>)
 	{
-		this._socket?.emit(event, ...args);
+		if (this._state !== "in-game")
+			return ;
+		this._socket.emit(event, ...args);
 	}
 
 	public getplayerIndex()
 	{
-		return this._playerIndex;
+		this.verifyState("in-game");
+		return this._playerIndex!;
 	}
+
+	private verifyState(...allowedStates : SocketState[])
+	{
+		if (!allowedStates.includes(this._state))
+			throw new Error(`A FrontendSocketHandler method called with an invalid state, current state : ${this._state}, allowed : ${allowedStates}`);
+	}
+}
+
+function	createNewOnServerMessageObservable(socket : DefaultSocket)
+{
+	const	observable = new Observable<ServerInGameMessage>();
+
+	socket.on("game-infos", (data : any) => {
+		const	gameInfos = zodGameInfos.safeParse(data);
+
+		if (!gameInfos.success)
+			observable.notifyObservers("server-error");
+		else
+			observable.notifyObservers(gameInfos.data);
+	});
+	socket.on("forfeit", () => { observable.notifyObservers("forfeit") });
+	socket.on("room-closed", () => { observable.notifyObservers("room-closed") });
+	return observable;
 }

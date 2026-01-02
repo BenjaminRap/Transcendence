@@ -10,12 +10,12 @@ import { NullEngine, NullEngineOptions } from "@babylonjs/core";
 import { importGlob } from "./importUtils";
 import { ServerSceneData } from "./ServerSceneData";
 
-importGlob("dev/backend/pong/attachedScripts/*.js");
+importGlob("dev/backend/typescript/pong/attachedScripts/*.js");
 importGlob("dev/shared/attachedScripts/*.js");
 
 export class ServerPongGame {
 	private _engine! : Engine;
-	private _scene! : Scene;
+	private _scene? : Scene;
 
     constructor(sceneData : ServerSceneData) {
 		this.init(sceneData);
@@ -34,7 +34,7 @@ export class ServerPongGame {
 	private renderScene() : void
 	{
 		try {
-			this._scene.render();
+			this._scene?.render();
 		} catch (error : any) {
 			console.error(`Could not render the scene : ${error}`)
 		}
@@ -82,23 +82,34 @@ export class ServerPongGame {
 		globalThis.HKP = undefined;
 	}
 
+
+	private disposeScene()
+	{
+		if (this._scene === undefined)
+			return ;
+		const	sceneData = getServerSceneData(this._scene);
+
+		sceneData.dispose();
+		this._scene.dispose();
+	}
+
 	public dispose() : void {
 		if (globalThis.HKP)
 			delete globalThis.HKP;
 		if (globalThis.HKP)
 			delete globalThis.HKP;
+		this.disposeScene();
 		this._engine.dispose();
-		this._scene.dispose();
 	}
 }
 
-export function	getSceneData(scene : Scene) : ServerSceneData
+export function	getServerSceneData(scene : Scene) : ServerSceneData
 {
 	if (!scene.metadata)
 		throw new Error("Scene metadata is undefined !");
 
 	const	sceneData = scene.metadata.sceneData;
-	if (!(sceneData instanceof ServerSceneData))
-		throw new Error("Scene is not of the type BackendSceneData !");
+	// if (!(sceneData instanceof ServerSceneData))
+	// 	throw new Error("SceneData is not of the type ServerSceneData !");
 	return sceneData;
 }

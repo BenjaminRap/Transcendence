@@ -24,4 +24,6 @@ export abstract class	EventsManager
 	{
 		return this._events[event];
 	}
+
+	public abstract	dispose() : void;
 }

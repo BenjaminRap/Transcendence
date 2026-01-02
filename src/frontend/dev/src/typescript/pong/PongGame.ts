@@ -10,12 +10,12 @@ import HavokPhysics from "@babylonjs/havok";
 import { type ClientInput, FrontendSceneData } from "./FrontendSceneData";
 import { Color4 } from "@babylonjs/core";
 import { type FrontendGameType, getSceneData } from "@shared/SceneData";
-import { FrontendSocketHandler } from "./FrontendSocketHandler";
 import { Settings } from "./Settings";
 import { ServerProxy } from "./ServerProxy";
 import type { GameInfos } from "@shared/ServerMessage";
 import type { Tournament } from "@shared/Tournament";
 import type { LocalTournament } from "./LocalTournament";
+import { frontendSocketHandler } from "../index";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
@@ -26,14 +26,12 @@ export class PongGame extends HTMLElement {
 	private _canvas! : HTMLCanvasElement;
 	private _engine! : Engine;
 	private _scene : Scene | undefined;
-	private _frontendSocketHandler : FrontendSocketHandler;
 	private _settings : Settings;
 
     public constructor() {
 		super();
 		this.classList.add("block", "overflow-hidden", "container-inline", "aspect-video");
 		this._settings = new Settings();
-		this._frontendSocketHandler = new FrontendSocketHandler();
 	}
 
 	public async connectedCallback() : Promise<void> {
@@ -77,7 +75,7 @@ export class PongGame extends HTMLElement {
 			lockstepMaxSteps: 4
 		});
 
-		engine.renderEvenInBackground = false;
+		// engine.renderEvenInBackground = false;
 		return engine;
 	}
 
@@ -94,7 +92,7 @@ export class PongGame extends HTMLElement {
 
 	public async goToMenuScene()
 	{
-		this._frontendSocketHandler.disconnect();
+		frontendSocketHandler.leaveGameOrMatchmaking();
 		if (!this._scene || getSceneData(this._scene).gameType !== "Menu")
 			await this.changeScene("Menu.gltf", "Menu", []);
 	}
@@ -106,7 +104,6 @@ export class PongGame extends HTMLElement {
 
 	private async startBotGameAsync(sceneName : SceneFileName)
 	{
-		this._frontendSocketHandler.disconnect();
 		const	inputs = [this._settings._playerInputs[0]];
 		await this.changeScene(sceneName, "Bot", inputs);
 		const	sceneData = getFrontendSceneData(this._scene!);
@@ -122,7 +119,6 @@ export class PongGame extends HTMLElement {
 
 	private async startLocalGameAsync(sceneName : SceneFileName, tournament? : LocalTournament)
 	{
-		this._frontendSocketHandler.disconnect();
 		await this.changeScene(sceneName, "Local", this._settings._playerInputs, undefined, tournament);
 		const	sceneData = getFrontendSceneData(this._scene!);
 
@@ -144,19 +140,19 @@ export class PongGame extends HTMLElement {
 	private async startOnlineGameAsync(sceneName : SceneFileName, tournament? : Tournament) : Promise<void>
 	{
 		try {
-			await this._frontendSocketHandler.joinGame();
-			const	playerIndex = this._frontendSocketHandler.getplayerIndex()!;
+			await frontendSocketHandler.joinGame();
+			const	playerIndex = frontendSocketHandler.getplayerIndex();
 			const	inputs = this._settings._playerInputs.filter((value : ClientInput) => value.index === playerIndex);
-			const	serverProxy = new ServerProxy(this._frontendSocketHandler);
+			const	serverProxy = new ServerProxy(frontendSocketHandler);
 
 			await this.changeScene(sceneName, "Multiplayer", inputs, serverProxy, tournament);
 			const	sceneData = getFrontendSceneData(this._scene!);
 
 			await sceneData.readyPromise.promise;
-			this._frontendSocketHandler.setReady();
-			await this._frontendSocketHandler.onGameReady();
+			frontendSocketHandler.setReady();
+			await frontendSocketHandler.onGameReady();
 			sceneData.events.getObservable("game-start").notifyObservers();
-			this._frontendSocketHandler.onServerMessage()!.add((gameInfos : GameInfos | "server-error" | "forfeit" | "room-closed") => {
+			frontendSocketHandler.onServerMessage().add((gameInfos : GameInfos | "server-error" | "forfeit" | "room-closed") => {
 				if (gameInfos === "server-error")
 				{
 					console.log("Server Error !");
@@ -164,7 +160,7 @@ export class PongGame extends HTMLElement {
 				}
 			});
 		} catch (error) {
-			if (error !== "io client disconnect") // meaning we disconnected ourselves
+			if (error !== "canceled")
 				console.error(error);
 			this.goToMenuScene();
 		}
@@ -175,19 +171,19 @@ export class PongGame extends HTMLElement {
 		if (!this._scene)
 			throw new Error("restartOnlineGameAsync called without a scene !");
 		try {
-			await this._frontendSocketHandler.joinGame();
+			await frontendSocketHandler.joinGame();
 
-			const	playerIndex = this._frontendSocketHandler.getplayerIndex()!;
+			const	playerIndex = frontendSocketHandler.getplayerIndex();
 			const	inputs = this._settings._playerInputs.filter((value : ClientInput) => value.index === playerIndex);
 			const	sceneData = getFrontendSceneData(this._scene);
 
 			sceneData.inputs = inputs;
 			sceneData.events.getObservable("input-change").notifyObservers();
 			sceneData.serverProxy?.sendServerMessage("ready");
-			await this._frontendSocketHandler.onGameReady();
+			await frontendSocketHandler.onGameReady();
 			sceneData.events.getObservable("game-start").notifyObservers();
 		} catch (error) {
-			if (error !== "io client disconnect") // meaning we disconnected ourselves
+			if (error !== "canceled")
 				console.error(error);
 			this.goToMenuScene();
 		}
@@ -195,7 +191,7 @@ export class PongGame extends HTMLElement {
 
 	public	cancelMatchmaking()
 	{
-		this._frontendSocketHandler.disconnect();
+		frontendSocketHandler.leaveGameOrMatchmaking();
 	}
 
 	private	async getNewScene(sceneName : string, gameType : FrontendGameType, clientInputs : readonly ClientInput[], serverCommunicationHandler? : ServerProxy, tournament? : Tournament) : Promise<Scene>
@@ -243,7 +239,7 @@ export class PongGame extends HTMLElement {
 	}
 
 	public disconnectedCallback() : void {
-		this._frontendSocketHandler.disconnect();
+		frontendSocketHandler.leaveGameOrMatchmaking();
 		if (globalThis.HKP)
 			delete globalThis.HKP;
 		if (globalThis.HKP)

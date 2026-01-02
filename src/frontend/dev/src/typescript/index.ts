@@ -1,4 +1,9 @@
 import "reflect-metadata"
+import { FrontendSocketHandler } from "./pong/FrontendSocketHandler"
+
+export const	frontendSocketHandler = await FrontendSocketHandler.createFrontendSocketHandler();
+
+
 // import { Terminal, TerminalFileSystem } from './terminal'
 // import { ProfileBuilder } from './profile'
 // import { WriteOnTerminal } from './terminalUtils/writeOnTerminal'

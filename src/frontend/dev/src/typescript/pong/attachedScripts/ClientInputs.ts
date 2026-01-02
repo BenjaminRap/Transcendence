@@ -43,7 +43,7 @@ export class ClientInputs extends CustomScriptComponent {
 		if (this._sceneData.gameType !== "Multiplayer" || !serverProxy)
 			return ;
 
-		this._mainPlayerInput = this._inputManager.getPlayerInput(serverProxy.getPlayerIndex()!);
+		this._mainPlayerInput = this._inputManager.getPlayerInput(serverProxy.getPlayerIndex());
 		this._upCallback = (event : "keyDown" | "keyUp") => {
 			serverProxy!.keyUpdate("up", event);
 		};
