@@ -46,9 +46,14 @@ export class ClientSync extends CustomScriptComponent {
 		if (!serverProxy)
 			return ;
 		serverProxy.onServerMessage().add((gameInfos : GameInfos | "room-closed" | "server-error" | "forfeit") => {
+			const	opponentInputs = this._inputManager.getPlayerInput(serverProxy.getOpponentIndex());
+
 			if (gameInfos === "room-closed" || gameInfos === "server-error")
-				return ;
-			if (gameInfos === "forfeit")
+			{
+				this.updateKey({event: "keyUp"}, opponentInputs.up);
+				this.updateKey({event: "keyUp"}, opponentInputs.up);
+			}
+			else if (gameInfos === "forfeit")
 			{
 				const	winningSide = (serverProxy.getPlayerIndex() === 0) ? "left" : "right";
 
@@ -56,8 +61,6 @@ export class ClientSync extends CustomScriptComponent {
 			}
 			else if (gameInfos.type === "input")
 			{
-				const	opponentInputs = this._inputManager.getPlayerInput(serverProxy.getOpponentIndex());
-
 				this.updateKey(gameInfos.infos.up, opponentInputs.up);
 				this.updateKey(gameInfos.infos.down, opponentInputs.down);
 			}
