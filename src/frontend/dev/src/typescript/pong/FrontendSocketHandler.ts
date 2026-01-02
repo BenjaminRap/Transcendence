@@ -5,7 +5,7 @@ import { io, Socket } from "socket.io-client";
 
 type ServerInGameMessage = GameInfos | "server-error" | "forfeit" | "room-closed";
 
-export class	MultiplayerHandler
+export class	FrontendSocketHandler
 {
 	private static readonly _apiUrl = "/api/socket.io/";
 
@@ -52,7 +52,7 @@ export class	MultiplayerHandler
 		if (this._socket != null)
 			return ;
 		this._socket = io("/", {
-			path:MultiplayerHandler._apiUrl
+			path:FrontendSocketHandler._apiUrl
 		});
 
 		return new Promise((resolve, reject) => {
