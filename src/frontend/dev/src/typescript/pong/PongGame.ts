@@ -248,8 +248,8 @@ export class PongGame extends HTMLElement {
 			delete globalThis.HKP;
 		if (globalThis.HKP)
 			delete globalThis.HKP;
-		this._engine.dispose();
 		this.disposeScene();
+		this._engine.dispose();
 	}
 
 	public focusOnCanvas()

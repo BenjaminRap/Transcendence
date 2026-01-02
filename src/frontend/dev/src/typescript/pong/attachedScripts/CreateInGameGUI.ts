@@ -119,6 +119,11 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		this._tournamentWinnerGUI = new TournamentWinnerGUI();
 
 		this.addHiddenGUI(this._tournamentWinnerGUI);
+
+		const	buttons = this._tournamentWinnerGUI.getButtons()!;
+
+		buttons.goToMenu.addEventListener("click", () => { this.onGoToMenu() });
+		buttons.quit.addEventListener("click", () => { this.onQuit() });
 	}
 
 	private	createMatchOpponentsGUI()
