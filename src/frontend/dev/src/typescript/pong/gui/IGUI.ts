@@ -1,4 +1,4 @@
-export type IGUIInputsType = Record<string, HTMLButtonElement> | void;
+export type IGUIInputsType = Record<string, HTMLButtonElement | undefined> | void;
 
 export interface IGUI<T extends IGUIInputsType>
 {

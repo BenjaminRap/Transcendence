@@ -111,7 +111,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			return menu;
 
 		Object.entries(inputs).forEach(([key, value]) => {
-			value.addEventListener("click", callbacks[key as (keyof T)]);
+			value?.addEventListener("click", callbacks[key as (keyof T)]);
 		});
 
 		return menu;

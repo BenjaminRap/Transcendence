@@ -14,6 +14,7 @@ import { Imported } from "@shared/ImportedDecorator";
 import type { ThemeName } from "../menuStyles";
 import { MatchOpponentsGUI } from "../gui/MatchOpponentsGUI";
 import { TournamentWinnerGUI } from "../gui/TournamentWinnerGUI";
+import type { IGUI, IGUIInputsType } from "../gui/IGUI";
 
 export class CreateInGameGUI extends CustomScriptComponent {
 	@Imported("InputManager") private _inputManager! : InputManager;
@@ -42,11 +43,34 @@ export class CreateInGameGUI extends CustomScriptComponent {
 	protected	awake()
 	{
 		applyTheme(this._sceneData.pongHTMLElement, this._theme);
-		this.createPauseGUI();
-		this.createEndGUI();
-		this.createInMatchmakingGUI();
-		this.createTournamentWinnerGUI();
-		this.createMatchOpponentsGUI();
+
+		this.createMenus();
+	}
+
+	protected	createMenus()
+	{
+		const	forfeitEnabled = this._sceneData.tournament === undefined || this._sceneData.gameType === "Multiplayer";
+
+		this._pauseGUI = this.initMenu(new PauseGUI(forfeitEnabled), {
+			continue: () => this.togglePause(),
+			forfeit: () => this.onForfeit(),
+			goToMenu: () => this.onGoToMenu(),
+			quit: () => this.onQuit()
+		});
+		this._endGUI = this.initMenu(new EndGUI(), {
+			restart: () => this.onRestart(),
+			goToMenu: () => this.onGoToMenu(),
+			quit: () => this.onQuit()
+
+		});
+		this._inMatchmakingGUI = this.initMenu(new InMatchmakingGUI(), {
+			cancelButton: () => this.cancelMatchmaking(),
+		});
+		this._tournamentWinnerGUI = this.initMenu(new TournamentWinnerGUI(), {
+			goToMenu: () => this.onGoToMenu(),
+			quit: () => this.onQuit()
+		});
+		this._matchOpponentsGUI = this.initMenu(new MatchOpponentsGUI(), undefined);
 	}
 
 	protected	start()
@@ -78,59 +102,19 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		});
 	}
 
-	private	createPauseGUI()
+	private	initMenu<K extends HTMLElement, T extends IGUIInputsType>(menu : IGUI<T> & K, callbacks : { [K in keyof T]: () => void }) : K
 	{
-		const	forfeitEnabled = this._sceneData.tournament === undefined || this._sceneData.gameType === "Multiplayer";
-		this._pauseGUI = new PauseGUI(forfeitEnabled);
-		this.addHiddenGUI(this._pauseGUI);
-
-		const	buttons = this._pauseGUI.getInputs()!;
-
-		buttons.continue.addEventListener("click", () => { this.togglePause(); });
-		buttons.forfeit?.addEventListener("click", () => { this.onForfeit() });
-		buttons.goToMenu.addEventListener("click", () => { this.onGoToMenu() });
-		buttons.quit.addEventListener("click", () => { this.onQuit() });
-	}
-
-	private	createEndGUI()
-	{
-		this._endGUI = new EndGUI();
-		this.addHiddenGUI(this._endGUI);
-
-		const	buttons = this._endGUI.getInputs()!;
-
-		buttons.restart.addEventListener("click", () => { this.onRestart() });
-		buttons.goToMenu.addEventListener("click", () => { this.onGoToMenu() });
-		buttons.quit.addEventListener("click", () => { this.onQuit() });
-	}
-
-	private	createInMatchmakingGUI()
-	{
-		this._inMatchmakingGUI = new InMatchmakingGUI();
-		this.addHiddenGUI(this._inMatchmakingGUI);
+		this.addHiddenGUI(menu);
+		const	inputs = menu.getInputs();
 		
-		const	inputs = this._inMatchmakingGUI.getInputs()!;
+		if (typeof inputs !== "object")
+			return menu;
 
-		inputs.cancelButton.addEventListener("click", () => { this.cancelMatchmaking() });
-	}
+		Object.entries(inputs).forEach(([key, value]) => {
+			value?.addEventListener("click", callbacks[key as (keyof T)]);
+		});
 
-	private	createTournamentWinnerGUI()
-	{
-		this._tournamentWinnerGUI = new TournamentWinnerGUI();
-
-		this.addHiddenGUI(this._tournamentWinnerGUI);
-
-		const	buttons = this._tournamentWinnerGUI.getInputs()!;
-
-		buttons.goToMenu.addEventListener("click", () => { this.onGoToMenu() });
-		buttons.quit.addEventListener("click", () => { this.onQuit() });
-	}
-
-	private	createMatchOpponentsGUI()
-	{
-		this._matchOpponentsGUI = new MatchOpponentsGUI();
-
-		this.addHiddenGUI(this._matchOpponentsGUI);
+		return menu;
 	}
 
 	private	onGameEnd(endData : EndData)
