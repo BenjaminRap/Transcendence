@@ -204,8 +204,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 	private	cancelMatchmaking()
 	{
-		this._inMatchmakingGUI.classList.add("hidden");
-		this._menuGUI.classList.remove("hidden");
+		this.switchMenu(this._inMatchmakingGUI, this._menuGUI);
 		this._sceneData.pongHTMLElement.cancelMatchmaking();
 	}
 
