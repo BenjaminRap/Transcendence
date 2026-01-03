@@ -21,9 +21,9 @@ export class	OnlineTournamentCreationGUI extends HTMLElement implements IGUI<Onl
 	{
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm");
 		this.innerHTML = `
-			<fieldset class="text-(--text-color) text-[2.5cqw] h-1/2 w-11/12 border-(--border-color) border-solid border-(length:--border-width) m-auto mt-[1%] mb-[1%]">
-				<legend class="m-auto pr-[2%] pl-[2%]">Tournament's settings</legend>
-				<div class="ml-[30%] flex flex-col pointer-events-auto">
+			<fieldset class="text-(--text-color) font-(family-name:--font) h-1/2 w-11/12 border-(--border-color) border-solid border-(length:--border-width) m-auto mt-[1%] mb-[1%]">
+				<legend class="m-auto pr-[2%] pl-[2%] text-[3.5cqw]">Tournament's settings</legend>
+				<div class="ml-[30%] flex flex-col pointer-events-auto text-[2.5cqw]">
 					<label>
 						Name :
 						<input class="ml-[1%] focus:border-(--border-color) focus:border-b-(length:--border-width) focus:outline-none" type="text" placeholder="Tournament" required>

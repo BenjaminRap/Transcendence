@@ -25,7 +25,7 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 		this.classList.add("absolute", "inset-0", "size-full", "backdrop-blur-sm", "flex", "flex-col");
 		this.innerHTML = `
 			<fieldset class="w-11/12 h-2/3 overflow-y-scroll pointer-events-auto border-solid border-(--border-color) border-(length:--border-width) mt-[1%] m-auto">
-				<legend class="m-auto pr-[2%] pl-[2%] text-(--text-color) text-[2cqw]">Participants</legend>
+				<legend class="m-auto pr-[2%] pl-[2%] text-(--text-color) text-[3.5cqw] font-(family-name:--font)">Participants</legend>
 				<div class="tournamentCreationGUIProfiles inline">
 				</div>
 				<button class="tournamentCreationGUIAddProfile ml-[2.5%] w-[3%] bg-(--add-button-color) rounded-md aspect-square hover:scale-(--add-button-hover-scale) transition-all pointer-events-auto">
