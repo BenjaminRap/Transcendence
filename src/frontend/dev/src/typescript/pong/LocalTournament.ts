@@ -23,6 +23,8 @@ export class	LocalTournament extends Tournament
 
 	constructor(private _participants : Profile[])
 	{
+		if (_participants.length > Tournament.maxTournamentParticipants)
+			throw new Error(`Too many participants ! : max : ${Tournament.maxTournamentParticipants}`);
 		super();
 		this._expectedQualifiedCount = Tournament.getExpectedQualified(this._participants.length);
 	}
