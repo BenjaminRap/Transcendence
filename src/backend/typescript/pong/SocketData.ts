@@ -17,6 +17,10 @@ export class	SocketData
 		this._state = "waiting";
 	}
 
+	public setOutWaitingQueue() {
+		this._state = "unactive";
+	}
+
 	public joinRoom(room : Room) {
 		this._room = room;
 		this._state = "inRoom";

@@ -25,9 +25,10 @@ export class	MatchMaker
 
 	public	removeUserFromMatchMaking(socket : DefaultSocket)
 	{
-		if (socket.data.getState() === "unactive")
+		if (socket.data.getState() !== "waiting")
 			return ;
-		console.log("removing user from matchmaking !");
+		socket.data.setOutWaitingQueue();
+		console.log("user removed from matchmaking !");
 		const	index = this._waitingSockets.indexOf(socket);
 
 		if (index < 0)

@@ -132,10 +132,8 @@ async function start(): Promise<void> {
 			socket.on("join-matchmaking", () => {
 				matchMaker.addUserToMatchMaking(socket);
 			});
-			socket.once("leave-matchmaking", () => {
-				matchMaker.removeUserFromMatchMaking(socket);
-			});
 			socket.once("disconnect", () => {
+				console.log("disconnect");
 				matchMaker.removeUserFromMatchMaking(socket);
 				socket.data.disconnect();
 			});
