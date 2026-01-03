@@ -92,7 +92,7 @@ export class PongGame extends HTMLElement {
 
 	public async goToMenuScene()
 	{
-		frontendSocketHandler.leaveGameOrMatchmaking();
+		frontendSocketHandler.leaveScene();
 		if (!this._scene || getSceneData(this._scene).gameType !== "Menu")
 			await this.changeScene("Menu.gltf", "Menu", []);
 	}
@@ -160,8 +160,9 @@ export class PongGame extends HTMLElement {
 				}
 			});
 		} catch (error) {
-			if (error !== "canceled")
-				console.error(error);
+			if (error === "canceled")
+				return ;
+			console.error(error);
 			this.goToMenuScene();
 		}
 	}
@@ -183,15 +184,16 @@ export class PongGame extends HTMLElement {
 			await frontendSocketHandler.onGameReady();
 			sceneData.events.getObservable("game-start").notifyObservers();
 		} catch (error) {
-			if (error !== "canceled")
-				console.error(error);
+			if (error === "canceled")
+				return ;
+			console.error(error);
 			this.goToMenuScene();
 		}
 	}
 
 	public	cancelMatchmaking()
 	{
-		frontendSocketHandler.leaveGameOrMatchmaking();
+		frontendSocketHandler.leaveMatchmaking();
 	}
 
 	private	async getNewScene(sceneName : string, gameType : FrontendGameType, clientInputs : readonly ClientInput[], serverCommunicationHandler? : ServerProxy, tournament? : Tournament) : Promise<Scene>
@@ -239,7 +241,7 @@ export class PongGame extends HTMLElement {
 	}
 
 	public disconnectedCallback() : void {
-		frontendSocketHandler.leaveGameOrMatchmaking();
+		frontendSocketHandler.leaveScene();
 		if (globalThis.HKP)
 			delete globalThis.HKP;
 		if (globalThis.HKP)

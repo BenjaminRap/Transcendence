@@ -93,21 +93,25 @@ export class	FrontendSocketHandler
 		this._currentPromise?.reject("canceled");
 	}
 
-	public leaveGameOrMatchmaking()
+	public leaveScene()
 	{
 		this.verifyState("connected", "in-matchmaking", "in-game");
-		this._currentPromise?.reject("canceled");
-		switch (this._state)
-		{
-			case "in-matchmaking":
-				this._socket.emit("leave-matchmaking");
-				break ;
-			case "in-game":
-				this._socket.emit("forfeit");
-				this._onServerMessageObservable.clear();
-				break;
-		}
+		this._onServerMessageObservable.clear();
+		if (this._state === "in-matchmaking")
+			this._socket.emit("leave-matchmaking");
+		else if (this._state === "in-game")
+			this._socket.emit("forfeit");
 		this._state = "connected";
+		this._currentPromise?.reject("canceled");
+	}
+
+	public	leaveMatchmaking()
+	{
+		console.log("leave-matchamking");
+		this.verifyState("in-matchmaking");
+		this._socket.emit("leave-matchmaking");
+		this._state = "connected";
+		this._currentPromise?.reject("canceled");
 	}
 
 	public async	onGameReady() : Promise<void>
