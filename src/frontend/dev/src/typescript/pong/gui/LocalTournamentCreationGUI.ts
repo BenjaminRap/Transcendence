@@ -35,7 +35,7 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 					</div>
 				</button>
 			</div>
-			<div class="h-1/3 flex flex-col">
+			<div class="flex flex-col size-full h-1/3 w-1/3 m-auto">
 				${this.getButtonHTML("Start", "tournamentCreationGUIStart")}
 				${this.getButtonHTML("Cancel", "tournamentCreationGUICancel")}
 			</div>
@@ -53,7 +53,7 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 
 	private	getButtonHTML(text : string, className : string)
 	{
-		return `<button class="${className} text-[3cqw] m-auto mt-[2%] w-[30%] h-[30%] menu-button">${text}</button>`;
+		return `<button class="${className} text-[3cqw] m-auto mt-[2%] w-full h-1/3 menu-button">${text}</button>`;
 	}
 
 	private	addProfile()
