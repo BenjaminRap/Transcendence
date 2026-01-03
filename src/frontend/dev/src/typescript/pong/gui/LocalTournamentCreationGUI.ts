@@ -24,7 +24,8 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 	{
 		this.classList.add("absolute", "inset-0", "size-full", "backdrop-blur-sm", "flex", "flex-col");
 		this.innerHTML = `
-			<div class="w-full h-2/3 overflow-y-scroll pointer-events-auto border-solid border-(--border-color) border-b-(length:--border-width)">
+			<fieldset class="w-11/12 h-2/3 overflow-y-scroll pointer-events-auto border-solid border-(--border-color) border-(length:--border-width) mt-[1%] m-auto">
+				<legend class="m-auto pr-[2%] pl-[2%] text-(--text-color) text-[2cqw]">Participants</legend>
 				<div class="tournamentCreationGUIProfiles inline">
 				</div>
 				<button class="tournamentCreationGUIAddProfile ml-[2.5%] w-[3%] bg-(--add-button-color) rounded-md aspect-square hover:scale-(--add-button-hover-scale) transition-all pointer-events-auto">
@@ -34,8 +35,8 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 						<div class="w-[13.8%] h-[45%] bg-black m-auto"></div>
 					</div>
 				</button>
-			</div>
-			<div class="flex flex-col size-full h-1/3 w-1/3 m-auto">
+			</fieldset>
+			<div class="flex flex-col size-full h-1/3 w-1/3 m-auto mt-[1%]">
 				${this.getButtonHTML("Start", "tournamentCreationGUIStart")}
 				${this.getButtonHTML("Cancel", "tournamentCreationGUICancel")}
 			</div>
