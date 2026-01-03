@@ -56,7 +56,6 @@ export class	FrontendSocketHandler
 	public async joinGame() : Promise<void>
 	{
 		this.verifyState("connected");
-		this._socket.emit("join-matchmaking");
 		this._state = "in-matchmaking";
 		const	deferred = new Deferred<void>();
 
@@ -78,6 +77,7 @@ export class	FrontendSocketHandler
 		this._socket.once("disconnect", (reason) => {
 			deferred.reject(reason);
 		});
+		this._socket.emit("join-matchmaking");
 		this._currentPromise = deferred;
 		return deferred.promise;
 	}
