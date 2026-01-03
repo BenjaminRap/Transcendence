@@ -38,7 +38,7 @@ export class	OnlineTournamentChoiceGUI extends HTMLElement implements IGUI<Onlin
 
 	private	getButtonHTML(text : string, className : string)
 	{
-		return `<button class="${className} font-(family-name:--font) text-[3cqw] w-full mt-[10%] pointer-events-auto grow menu-button">${text}</button>`;
+		return `<button class="${className} text-[3cqw] w-full mt-[10%] grow menu-button">${text}</button>`;
 	}
 
 	public getInputs()

@@ -25,8 +25,8 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 		this.classList.add("absolute", "inset-0", "size-full");
 		this.innerHTML = `
 			<div class="w-full h-2/3 top-1/3 relative flex flex-col">
-				<div class="w-full h-2/3 overflow-scroll pointer-events-auto">
-					<div class="w-full tournamentCreationGUIProfiles overflow-y-scroll h-1/3 inline">
+				<div class="w-full h-2/3 overflow-y-scroll pointer-events-auto">
+					<div class="tournamentCreationGUIProfiles inline">
 					</div>
 					<button class="tournamentCreationGUIAddProfile ml-[2.5%] w-[3%] bg-(--add-button-color) rounded-md aspect-square hover:scale-(--add-button-hover-scale) transition-all pointer-events-auto">
 						<div class="aspect-square m-auto flex flex-col h-4/5">
@@ -57,7 +57,7 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 
 	private	getButtonHTML(text : string, className : string)
 	{
-		return `<button class="${className} font-(family-name:--font) text-[3cqw] w-full mb-[10%] pointer-events-auto grow menu-button">${text}</button>`;
+		return `<button class="${className} text-[3cqw] w-full mb-[10%] grow menu-button">${text}</button>`;
 	}
 
 	private	addProfile()
