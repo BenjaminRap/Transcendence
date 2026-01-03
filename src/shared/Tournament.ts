@@ -5,6 +5,8 @@ import { isPowerOfTwo, shuffle } from "./utils";
 
 export abstract class	Tournament
 {
+	public static readonly maxTournamentParticipants = 64;
+
 	protected static createQualificationMatches(profiles : Profile[])
 	{
 		if (profiles.length < 2)

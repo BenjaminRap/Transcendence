@@ -1,6 +1,7 @@
 import type { Profile } from "@shared/Profile";
 import { ProfileCreationGUI } from "./ProfileCreationGUI";
 import type { IGUI } from "./IGUI";
+import { Tournament } from "@shared/Tournament";
 
 export type TournamentCreationGUIInputs = {
 	start : HTMLButtonElement,
@@ -27,7 +28,7 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 				<div class="w-full h-2/3 overflow-scroll pointer-events-auto">
 					<div class="w-full tournamentCreationGUIProfiles overflow-y-scroll h-1/3 inline">
 					</div>
-					<button class="tournamentCreationGUIAddProfile ml-[2.5%] w-[3%] bg-green-300 rounded-md aspect-square hover:scale-125 transition-all pointer-events-auto">
+					<button class="tournamentCreationGUIAddProfile ml-[2.5%] w-[3%] bg-(--add-button-color) rounded-md aspect-square hover:scale-(--add-button-hover-scale) transition-all pointer-events-auto">
 						<div class="aspect-square m-auto flex flex-col h-4/5">
 							<div class="w-[13.8%] h-[45%] bg-black m-auto"></div>
 							<div class="w-full h-[13.8%] bg-black"></div>
@@ -61,6 +62,8 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 
 	private	addProfile()
 	{
+		if (this._profiles.length >= Tournament.maxTournamentParticipants)
+			return ;
 		const	newProfile = new ProfileCreationGUI();
 		newProfile.classList.add("mb-[0.5cqw]", "w-1/4", "ml-[3%]", "mr-[3%]", "mt-[0.5cqw]");
 	
@@ -73,7 +76,9 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 		this._currentPlayerId++;
 		inputs.remove.addEventListener("click", () => this.removeProfile(newProfile));
 		if (this._profiles.length === 3)
-			this.setProperties("var(--color-red-300)", "120%");
+			this.setCanRemove(true);
+		if (this._profiles.length === Tournament.maxTournamentParticipants)
+			this.setCanAdd(false);
 	}
 
 	private	removeProfile(element : ProfileCreationGUI)
@@ -85,13 +90,29 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 			this._profiles.splice(index, 1);
 		element.remove();
 		if (this._profiles.length === 2)
-			this.setProperties("var(--color-gray-400)", "100%");
+			this.setCanRemove(false);
+		else if (this._profiles.length === Tournament.maxTournamentParticipants - 1)
+			this.setCanAdd(true);
 	}
-	
-	private	setProperties(color : string, hoverScale : string)
+
+	private	setCanRemove(canRemove : boolean)
 	{
+		const	color = canRemove ? "var(--color-red-300)" : "var(--color-gray-400)";
+		const	hoverScale = canRemove ? "120%" : "100%";
+
+
 		this.style.setProperty("--remove-button-color", color);
 		this.style.setProperty("--remove-button-hover-scale", hoverScale);
+	}
+
+	private setCanAdd(canAdd : boolean)
+	{
+		const	color = canAdd ? "var(--color-green-300)" : "var(--color-gray-400)";
+		const	hoverScale = canAdd ? "125%" : "100%";
+
+
+		this.style.setProperty("--add-button-color", color);
+		this.style.setProperty("--add-button-hover-scale", hoverScale);
 	}
 
 	public reset()
@@ -100,7 +121,8 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 		this._profileContainer.replaceChildren();
 		this.addProfile();
 		this.addProfile();
-		this.setProperties("var(--color-gray-400)", "100%");
+		this.setCanRemove(false);
+		this.setCanAdd(Tournament.maxTournamentParticipants > 2);
 	}
 
 	private validate()
