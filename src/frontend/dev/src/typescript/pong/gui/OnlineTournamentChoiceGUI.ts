@@ -2,6 +2,10 @@ import type { IGUI } from "./IGUI";
 
 export type OnlineTournamentChoiceGUIInputs =
 {
+	create : HTMLButtonElement,
+	joinPublic : HTMLButtonElement,
+	joinPrivate : HTMLButtonElement,
+	cancel: HTMLButtonElement
 }
 
 export class	OnlineTournamentChoiceGUI extends HTMLElement implements IGUI<OnlineTournamentChoiceGUIInputs>
@@ -15,10 +19,20 @@ export class	OnlineTournamentChoiceGUI extends HTMLElement implements IGUI<Onlin
 
 	public	connectedCallback()
 	{
-		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none");
+		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm");
 		this.innerHTML = `
+			<div class="flex flex-col size-full h-4/6 w-1/3 left-1/2 -translate-1/2 top-1/2 absolute">
+				${this.getButtonHTML("Create Tournament", "OnlineTournamentChoiceCreate")}
+				${this.getButtonHTML("Join Public Tournament", "OnlineTournamentChoiceJoinPublic")}
+				${this.getButtonHTML("Join Private Tournament", "OnlineTournamentChoiceJoinPrivate")}
+				${this.getButtonHTML("Cancel", "OnlineTournamentChoiceCancel")}
+			</div>
 		`;
 		this._buttons = {
+			create : this.querySelector("button.OnlineTournamentChoiceCreate")!,
+			joinPublic : this.querySelector("button.OnlineTournamentChoiceJoinPublic")!,
+			joinPrivate : this.querySelector("button.OnlineTournamentChoiceJoinPrivate")!,
+			cancel : this.querySelector("button.OnlineTournamentChoiceCancel")!,
 		}
 	}
 

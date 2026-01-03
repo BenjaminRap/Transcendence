@@ -17,6 +17,11 @@ import { GameTypeChoiceGUI } from "../gui/GameTypeChoiceGUI";
 import { LocalTournamentCreationGUI } from "../gui/LocalTournamentCreationGUI";
 import { LocalTournament } from "../LocalTournament";
 import type { IGUI, IGUIInputsType } from "../gui/IGUI";
+import { OnlineTournamentCreationGUI } from "../gui/OnlineTournamentCreationGUI";
+import { OnlineTournamentJoinPrivateGUI } from "../gui/OnlineTournamentJoinPrivateGUI";
+import { OnlineTournamentJoinPublicGUI } from "../gui/OnlineTournamentJoinPublicGUI";
+import { ErrorGUI } from "../gui/ErrorGUI";
+import { OnlineTournamentChoiceGUI } from "../gui/OnlineTournamentChoiceGUI";
 
 export class CreateMenuGUI extends CustomScriptComponent {
 	private static readonly _enemyTypes = [ "Local", "Multiplayer", "Bot" ];
@@ -32,8 +37,13 @@ export class CreateMenuGUI extends CustomScriptComponent {
 	private _inMatchmakingGUI! : InMatchmakingGUI;
 	private _titleGUI! : TitleGUI;
 	private _localGameTypeChoiceGUI! : GameTypeChoiceGUI;
-	private _onlineGameTypeChoiceGUI! : GameTypeChoiceGUI;
 	private _localTournamentCreationGUI!: LocalTournamentCreationGUI;
+	private _onlineGameTypeChoiceGUI! : GameTypeChoiceGUI;
+	private _onlineTournamentChoiceGUI! : OnlineTournamentChoiceGUI;
+	private _onlineTournamentCreationGUI! : OnlineTournamentCreationGUI;
+	private _onlineTournamentJoinPrivateGUI! : OnlineTournamentJoinPrivateGUI;
+	private _onlineTournamentJoinPublicGUI! : OnlineTournamentJoinPublicGUI;
+	private _errorGUI! : ErrorGUI;
 	private _currentSceneFileName! : SceneFileName;
 	private _menuParent! : HTMLDivElement;
 
@@ -64,22 +74,32 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 		this._titleGUI = this.initMenu(new TitleGUI(), undefined);
 		this._inMatchmakingGUI = this.initMenu(new InMatchmakingGUI(), {
-			cancelButton: () => { this.cancelMatchmaking() }
+			cancelButton: () => this.cancelMatchmaking()
 		});
 		this._localGameTypeChoiceGUI = this.initMenu(new GameTypeChoiceGUI(), {
-			twoVersusTwo: () => { this.startGame(this._currentSceneFileName, "Local") },
-			tournament: () => { this.switchMenu(this._localGameTypeChoiceGUI, this._localTournamentCreationGUI) },
-			cancel: () => { this.switchMenu(this._localGameTypeChoiceGUI, this._menuGUI) }
+			twoVersusTwo: () => this.startGame(this._currentSceneFileName, "Local"),
+			tournament: () => this.switchMenu(this._localGameTypeChoiceGUI, this._localTournamentCreationGUI),
+			cancel: () => this.switchMenu(this._localGameTypeChoiceGUI, this._menuGUI)
 		});
 		this._onlineGameTypeChoiceGUI = this.initMenu(new GameTypeChoiceGUI(), {
-			twoVersusTwo: () => { this.startGame(this._currentSceneFileName, "Multiplayer"); },
-			tournament: () => { console.log("tournament") },
-			cancel: () => { this.switchMenu(this._onlineGameTypeChoiceGUI, this._menuGUI) }
+			twoVersusTwo: () => this.startGame(this._currentSceneFileName, "Multiplayer"),
+			tournament: () => this.switchMenu(this._onlineGameTypeChoiceGUI, this._onlineTournamentChoiceGUI),
+			cancel: () => this.switchMenu(this._onlineGameTypeChoiceGUI, this._menuGUI)
 		})
 		this._localTournamentCreationGUI = this.initMenu(new LocalTournamentCreationGUI(), {
-			start: () => { this.startLocalTournamentGame() },
-			cancel: () => { this.switchMenu(this._localTournamentCreationGUI, this._localGameTypeChoiceGUI) }
+			start: () => this.startLocalTournamentGame(),
+			cancel: () => this.switchMenu(this._localTournamentCreationGUI, this._localGameTypeChoiceGUI)
 		});
+		this._onlineTournamentChoiceGUI = this.initMenu(new OnlineTournamentChoiceGUI(), {
+			create: () => this.switchMenu(this._onlineTournamentChoiceGUI, this._onlineTournamentCreationGUI),
+			joinPublic: () => this.switchMenu(this._onlineTournamentChoiceGUI, this._onlineTournamentJoinPublicGUI),
+			joinPrivate: () => this.switchMenu(this._onlineTournamentChoiceGUI, this._onlineTournamentJoinPrivateGUI),
+			cancel: () => this.switchMenu(this._onlineTournamentChoiceGUI, this._onlineGameTypeChoiceGUI),
+		});
+		this._onlineTournamentCreationGUI = this.initMenu(new OnlineTournamentCreationGUI(), {});
+		this._onlineTournamentJoinPrivateGUI = this.initMenu(new OnlineTournamentJoinPrivateGUI(), {});
+		this._onlineTournamentJoinPublicGUI = this.initMenu(new OnlineTournamentJoinPublicGUI(), {});
+		this._errorGUI = this.initMenu(new ErrorGUI(), {});
 	}
 
 	protected	ready()
