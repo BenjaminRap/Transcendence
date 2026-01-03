@@ -113,7 +113,7 @@ const	themes : Themes = {
 		"--border-width": "0.2cqw",
 		"--background-image": "unset",
 		"--background-color": "transparent",
-		"--hover-scale": "101%",
+		"--hover-scale": "110%",
 		"--hover-brightness": "100%",
 		"--hover-background-color": "var(--background-color)",
 		"--hover-text-color": "var(--text-color)",

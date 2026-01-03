@@ -22,26 +22,22 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 
 	connectedCallback()
 	{
-		this.classList.add("absolute", "inset-0", "size-full");
+		this.classList.add("absolute", "inset-0", "size-full", "backdrop-blur-sm", "flex", "flex-col");
 		this.innerHTML = `
-			<div class="w-full h-2/3 top-1/3 relative flex flex-col">
-				<div class="w-full h-2/3 overflow-y-scroll pointer-events-auto">
-					<div class="tournamentCreationGUIProfiles inline">
-					</div>
-					<button class="tournamentCreationGUIAddProfile ml-[2.5%] w-[3%] bg-(--add-button-color) rounded-md aspect-square hover:scale-(--add-button-hover-scale) transition-all pointer-events-auto">
-						<div class="aspect-square m-auto flex flex-col h-4/5">
-							<div class="w-[13.8%] h-[45%] bg-black m-auto"></div>
-							<div class="w-full h-[13.8%] bg-black"></div>
-							<div class="w-[13.8%] h-[45%] bg-black m-auto"></div>
-						</div>
-					</button>
+			<div class="w-full h-2/3 overflow-y-scroll pointer-events-auto border-solid border-(--border-color) border-b-(length:--border-width)">
+				<div class="tournamentCreationGUIProfiles inline">
 				</div>
-				<div class="h-1/3">
-					<div class="flex flex-col w-1/3 left-1/2 -translate-x-1/2 relative">
-						${this.getButtonHTML("Start", "tournamentCreationGUIStart")}
-						${this.getButtonHTML("Cancel", "tournamentCreationGUICancel")}
+				<button class="tournamentCreationGUIAddProfile ml-[2.5%] w-[3%] bg-(--add-button-color) rounded-md aspect-square hover:scale-(--add-button-hover-scale) transition-all pointer-events-auto">
+					<div class="aspect-square m-auto flex flex-col h-4/5">
+						<div class="w-[13.8%] h-[45%] bg-black m-auto"></div>
+						<div class="w-full h-[13.8%] bg-black"></div>
+						<div class="w-[13.8%] h-[45%] bg-black m-auto"></div>
 					</div>
-				</div>
+				</button>
+			</div>
+			<div class="h-1/3 flex flex-col">
+				${this.getButtonHTML("Start", "tournamentCreationGUIStart")}
+				${this.getButtonHTML("Cancel", "tournamentCreationGUICancel")}
 			</div>
 		`;
 		this._profileContainer = this.querySelector("div.tournamentCreationGUIProfiles")!;
@@ -57,7 +53,7 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 
 	private	getButtonHTML(text : string, className : string)
 	{
-		return `<button class="${className} text-[3cqw] w-full mb-[10%] grow menu-button">${text}</button>`;
+		return `<button class="${className} text-[3cqw] m-auto mt-[2%] w-[30%] h-[30%] menu-button">${text}</button>`;
 	}
 
 	private	addProfile()
