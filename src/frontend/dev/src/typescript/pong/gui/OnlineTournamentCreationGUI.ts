@@ -34,7 +34,7 @@ export class	OnlineTournamentCreationGUI extends HTMLElement implements IGUI<Onl
 					</label>
 					<label>
 						Max Players Count :
-						<input class="ml-[1%] focus:border-(--border-color) focus:border-b-(length:--border-width) focus:outline-none" type="number" min="2" max="${Tournament.maxTournamentParticipants}" step="1" placeholder="2" required>
+						<input class="ml-[1%] focus:border-(--border-color) focus:border-b-(length:--border-width) focus:outline-none w-1/12" type="number" min="2" max="${Tournament.maxTournamentParticipants}" step="1" placeholder="2" required>
 					</label>
 				</div>
 			</fieldset>
