@@ -1,10 +1,12 @@
+import type { IGUI } from "./IGUI";
+
 export type ErrorGUIInputs =
 {
 }
 
-export class	ErrorGUI extends HTMLElement
+export class	ErrorGUI extends HTMLElement implements IGUI<ErrorGUIInputs>
 {
-	private _buttons : ErrorGUIInputs | undefined;
+	private _inputs : ErrorGUIInputs | undefined;
 
 	constructor()
 	{
@@ -16,7 +18,7 @@ export class	ErrorGUI extends HTMLElement
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none");
 		this.innerHTML = `
 		`;
-		this._buttons = {
+		this._inputs = {
 		}
 	}
 
@@ -25,9 +27,9 @@ export class	ErrorGUI extends HTMLElement
 		return `<button class="${className} font-(family-name:--font) text-[3cqw] w-full mt-[10%] pointer-events-auto grow menu-button">${text}</button>`;
 	}
 
-	public getButtons() : ErrorGUIInputs | undefined
+	public getInputs() : ErrorGUIInputs | undefined
 	{
-		return this._buttons;
+		return this._inputs;
 	}
 }
 

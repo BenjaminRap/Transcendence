@@ -1,10 +1,12 @@
+import type { IGUI } from "./IGUI";
+
 export type OnlineTournamentJoinPrivateGUIInputs =
 {
 }
 
-export class	OnlineTournamentJoinPrivateGUI extends HTMLElement
+export class	OnlineTournamentJoinPrivateGUI extends HTMLElement implements IGUI<OnlineTournamentJoinPrivateGUIInputs>
 {
-	private _buttons : OnlineTournamentJoinPrivateGUIInputs | undefined;
+	private _inputs : OnlineTournamentJoinPrivateGUIInputs | undefined;
 
 	constructor()
 	{
@@ -16,7 +18,7 @@ export class	OnlineTournamentJoinPrivateGUI extends HTMLElement
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none");
 		this.innerHTML = `
 		`;
-		this._buttons = {
+		this._inputs = {
 		}
 	}
 
@@ -25,9 +27,9 @@ export class	OnlineTournamentJoinPrivateGUI extends HTMLElement
 		return `<button class="${className} font-(family-name:--font) text-[3cqw] w-full mt-[10%] pointer-events-auto grow menu-button">${text}</button>`;
 	}
 
-	public getButtons() : OnlineTournamentJoinPrivateGUIInputs | undefined
+	public getInputs()
 	{
-		return this._buttons;
+		return this._inputs;
 	}
 }
 

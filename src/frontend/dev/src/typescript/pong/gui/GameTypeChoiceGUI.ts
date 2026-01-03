@@ -1,10 +1,12 @@
+import type { IGUI } from "./IGUI";
+
 export type GameTypeChoiceGUIInputs = {
 	twoVersusTwo : HTMLButtonElement,
 	tournament : HTMLButtonElement,
 	cancel : HTMLButtonElement
 }
 
-export class	GameTypeChoiceGUI extends HTMLElement
+export class	GameTypeChoiceGUI extends HTMLElement implements IGUI<GameTypeChoiceGUIInputs>
 {
 	private _inputs? : GameTypeChoiceGUIInputs;
 

@@ -1,8 +1,10 @@
+import type { IGUI } from "./IGUI";
+
 export type OnlineTournamentCreationGUIInputs =
 {
 }
 
-export class	OnlineTournamentCreationGUI extends HTMLElement
+export class	OnlineTournamentCreationGUI extends HTMLElement implements IGUI<OnlineTournamentCreationGUIInputs>
 {
 	private _buttons : OnlineTournamentCreationGUIInputs | undefined;
 
@@ -25,7 +27,7 @@ export class	OnlineTournamentCreationGUI extends HTMLElement
 		return `<button class="${className} font-(family-name:--font) text-[3cqw] w-full mt-[10%] pointer-events-auto grow menu-button">${text}</button>`;
 	}
 
-	public getButtons() : OnlineTournamentCreationGUIInputs | undefined
+	public getInputs()
 	{
 		return this._buttons;
 	}

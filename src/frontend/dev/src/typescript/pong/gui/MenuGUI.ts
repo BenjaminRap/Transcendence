@@ -1,5 +1,6 @@
 export type	OnItemChange = (currentIndex : number, newIndex : number) => boolean;
 export type OnPlay = (sceneIndex : number, enemyTypeIndex : number) => void;
+
 export interface SwitchButton {
 	items : string[],
 	currentItemIndex : number,

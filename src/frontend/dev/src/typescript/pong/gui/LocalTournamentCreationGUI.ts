@@ -1,12 +1,13 @@
 import type { Profile } from "@shared/Profile";
 import { ProfileCreationGUI } from "./ProfileCreationGUI";
+import type { IGUI } from "./IGUI";
 
 export type TournamentCreationGUIInputs = {
 	start : HTMLButtonElement,
 	cancel : HTMLButtonElement
 }
 
-export class	LocalTournamentCreationGUI extends HTMLElement
+export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<TournamentCreationGUIInputs>
 {
 	private _profileContainer! : HTMLDivElement;
 	private	_profiles : ProfileCreationGUI[] = [];

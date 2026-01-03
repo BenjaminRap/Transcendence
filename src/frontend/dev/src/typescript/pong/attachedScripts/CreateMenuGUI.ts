@@ -110,9 +110,9 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		this._inMatchmakingGUI = new InMatchmakingGUI();
 		this.addHiddenMenu(this._inMatchmakingGUI);
 		
-		const	cancelButton = this._inMatchmakingGUI.getCancelButton()!;
+		const	inputs = this._inMatchmakingGUI.getInputs()!;
 
-		cancelButton.addEventListener("click", () => { this.cancelMatchmaking() });
+		inputs.cancelButton.addEventListener("click", () => { this.cancelMatchmaking() });
 	}
 
 	private	CreateLocalGameTypeChoiceGUI()

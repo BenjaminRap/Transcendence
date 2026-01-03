@@ -1,5 +1,6 @@
 import type { Profile } from "@shared/Profile";
 import { OpponentGUI } from "./OpponentGUI";
+import type { IGUI } from "./IGUI";
 
 export type TournamentWinnerGUIInputs =
 {
@@ -7,9 +8,9 @@ export type TournamentWinnerGUIInputs =
 	quit : HTMLButtonElement
 }
 
-export class	TournamentWinnerGUI extends HTMLElement
+export class	TournamentWinnerGUI extends HTMLElement implements IGUI<TournamentWinnerGUIInputs>
 {
-	private _buttons : TournamentWinnerGUIInputs | undefined;
+	private _inputs : TournamentWinnerGUIInputs | undefined;
 	private _winText? : HTMLParagraphElement;
 
 	constructor()
@@ -29,7 +30,7 @@ export class	TournamentWinnerGUI extends HTMLElement
 				</div>
 			</div>
 		`;
-		this._buttons = {
+		this._inputs = {
 			goToMenu: this.querySelector<HTMLButtonElement>("button.tournamentWinnerGUIGoToMenu")!,
 			quit: this.querySelector<HTMLButtonElement>("button.tournamentWinnerGUIQuit")!
 		}
@@ -41,9 +42,9 @@ export class	TournamentWinnerGUI extends HTMLElement
 		return `<button class="${className} font-(family-name:--font) text-[3cqw] w-full mt-[10%] pointer-events-auto grow menu-button">${text}</button>`;
 	}
 
-	public getButtons() : TournamentWinnerGUIInputs | undefined
+	public getInputs()
 	{
-		return this._buttons;
+		return this._inputs;
 	}
 
 	public setWinner(profile : Profile)

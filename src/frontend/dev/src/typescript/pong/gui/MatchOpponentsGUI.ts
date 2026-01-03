@@ -1,7 +1,8 @@
 import type { Profile } from "@shared/Profile";
 import { OpponentGUI } from "./OpponentGUI";
+import type { IGUI } from "./IGUI";
 
-export class	MatchOpponentsGUI extends HTMLElement
+export class	MatchOpponentsGUI extends HTMLElement implements IGUI<void>
 {
 	private static readonly _fightMask = "url(/images/fight.png)";
 	private _fightElement! : HTMLDivElement;
@@ -31,6 +32,10 @@ export class	MatchOpponentsGUI extends HTMLElement
 
 
 		this.replaceChildren(leftOpponentGUI, this._fightElement, rightOpponentGUI);
+	}
+
+	public getInputs() {
+		return undefined;
 	}
 }
 

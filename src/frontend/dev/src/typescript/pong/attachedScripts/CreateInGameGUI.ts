@@ -84,7 +84,7 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		this._pauseGUI = new PauseGUI(forfeitEnabled);
 		this.addHiddenGUI(this._pauseGUI);
 
-		const	buttons = this._pauseGUI.getButtons()!;
+		const	buttons = this._pauseGUI.getInputs()!;
 
 		buttons.continue.addEventListener("click", () => { this.togglePause(); });
 		buttons.forfeit?.addEventListener("click", () => { this.onForfeit() });
@@ -97,7 +97,7 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		this._endGUI = new EndGUI();
 		this.addHiddenGUI(this._endGUI);
 
-		const	buttons = this._endGUI.getButtons()!;
+		const	buttons = this._endGUI.getInputs()!;
 
 		buttons.restart.addEventListener("click", () => { this.onRestart() });
 		buttons.goToMenu.addEventListener("click", () => { this.onGoToMenu() });
@@ -109,9 +109,9 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		this._inMatchmakingGUI = new InMatchmakingGUI();
 		this.addHiddenGUI(this._inMatchmakingGUI);
 		
-		const	cancelButton = this._inMatchmakingGUI.getCancelButton()!;
+		const	inputs = this._inMatchmakingGUI.getInputs()!;
 
-		cancelButton.addEventListener("click", () => { this.cancelMatchmaking() });
+		inputs.cancelButton.addEventListener("click", () => { this.cancelMatchmaking() });
 	}
 
 	private	createTournamentWinnerGUI()
@@ -120,7 +120,7 @@ export class CreateInGameGUI extends CustomScriptComponent {
 
 		this.addHiddenGUI(this._tournamentWinnerGUI);
 
-		const	buttons = this._tournamentWinnerGUI.getButtons()!;
+		const	buttons = this._tournamentWinnerGUI.getInputs()!;
 
 		buttons.goToMenu.addEventListener("click", () => { this.onGoToMenu() });
 		buttons.quit.addEventListener("click", () => { this.onQuit() });

@@ -1,13 +1,15 @@
-export type EndGUIButtons =
+import type { IGUI } from "./IGUI";
+
+export type EndGUIInputs =
 {
 	restart : HTMLButtonElement,
 	goToMenu : HTMLButtonElement,
 	quit : HTMLButtonElement
 }
 
-export class	EndGUI extends HTMLElement
+export class	EndGUI extends HTMLElement implements IGUI<EndGUIInputs>
 {
-	private _buttons : EndGUIButtons | undefined;
+	private _inputs : EndGUIInputs | undefined;
 	private _mainDiv : HTMLDivElement | undefined;
 	private _winText : HTMLParagraphElement | undefined;
 
@@ -27,7 +29,7 @@ export class	EndGUI extends HTMLElement
 				${this.getButtonHTML("Quit", "pauseGUIQuit")}
 			</div>
 		`;
-		this._buttons = {
+		this._inputs = {
 			restart: this.querySelector<HTMLButtonElement>("button.pauseGUIRestart")!,
 			goToMenu: this.querySelector<HTMLButtonElement>("button.pauseGUIGoToMenu")!,
 			quit: this.querySelector<HTMLButtonElement>("button.pauseGUIQuit")!
@@ -63,9 +65,9 @@ export class	EndGUI extends HTMLElement
 		return `<button class="${className} font-(family-name:--font) text-[3cqw] w-full mt-[10%] pointer-events-auto grow menu-button">${text}</button>`;
 	}
 
-	public getButtons() : EndGUIButtons | undefined
+	public getInputs() : EndGUIInputs | undefined
 	{
-		return this._buttons;
+		return this._inputs;
 	}
 }
 
