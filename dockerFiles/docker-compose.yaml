@@ -10,6 +10,8 @@ services:
       "prod",
       "dev"
     ]
+    env_file:
+      - ./.env.fastify_example
   nginx:
     build: ./nginx/
     ports:
