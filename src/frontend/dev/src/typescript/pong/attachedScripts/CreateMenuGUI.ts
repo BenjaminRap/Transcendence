@@ -22,6 +22,7 @@ import { OnlineTournamentJoinPrivateGUI } from "../gui/OnlineTournamentJoinPriva
 import { OnlineTournamentJoinPublicGUI } from "../gui/OnlineTournamentJoinPublicGUI";
 import { ErrorGUI } from "../gui/ErrorGUI";
 import { OnlineTournamentChoiceGUI } from "../gui/OnlineTournamentChoiceGUI";
+import { OnlineTournamentStartGUI } from "../gui/OnlineTournamentStartGUI";
 
 export class CreateMenuGUI extends CustomScriptComponent {
 	private static readonly _enemyTypes = [ "Local", "Multiplayer", "Bot" ];
@@ -41,6 +42,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 	private _onlineGameTypeChoiceGUI! : GameTypeChoiceGUI;
 	private _onlineTournamentChoiceGUI! : OnlineTournamentChoiceGUI;
 	private _onlineTournamentCreationGUI! : OnlineTournamentCreationGUI;
+	private _onlineTournamentStartGUI! : OnlineTournamentStartGUI;
 	private _onlineTournamentJoinPrivateGUI! : OnlineTournamentJoinPrivateGUI;
 	private _onlineTournamentJoinPublicGUI! : OnlineTournamentJoinPublicGUI;
 	private _errorGUI! : ErrorGUI;
@@ -97,8 +99,12 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			cancel: () => this.switchMenu(this._onlineTournamentChoiceGUI, this._onlineGameTypeChoiceGUI),
 		});
 		this._onlineTournamentCreationGUI = this.initMenu(new OnlineTournamentCreationGUI(), {
-			start: () => console.log("start"),
+			create: () => this.switchMenu(this._onlineTournamentCreationGUI, this._onlineTournamentStartGUI),
 			cancel: () => this.switchMenu(this._onlineTournamentCreationGUI, this._onlineTournamentChoiceGUI)
+		});
+		this._onlineTournamentStartGUI = this.initMenu(new OnlineTournamentStartGUI(), {
+			start: () => console.log("start"),
+			cancel: () => this.switchMenu(this._onlineTournamentStartGUI, this._onlineTournamentCreationGUI)
 		});
 		this._onlineTournamentJoinPrivateGUI = this.initMenu(new OnlineTournamentJoinPrivateGUI(), {});
 		this._onlineTournamentJoinPublicGUI = this.initMenu(new OnlineTournamentJoinPublicGUI(), {});
