@@ -26,6 +26,7 @@ export class	FrontendSocketHandler
 			if (this._state === "in-game")
 				this._state = "connected";
 		});
+		socket.on("disconnect", () => { this.onDisconnectEvent() });
 	}
 
 	public static async createFrontendSocketHandler()
@@ -74,9 +75,6 @@ export class	FrontendSocketHandler
 				deferred.resolve();
 			}
 		});
-		this._socket.once("disconnect", (reason) => {
-			deferred.reject(reason);
-		});
 		this._socket.emit("join-matchmaking");
 		this._currentPromise = deferred;
 		return deferred.promise;
@@ -91,6 +89,16 @@ export class	FrontendSocketHandler
 		this._socket.disconnect();
 		this._onServerMessageObservable.clear();
 		this._currentPromise?.reject("canceled");
+	}
+
+	private	onDisconnectEvent()
+	{
+		if (this._state === "not-connected")
+			return ;
+		this._state = "not-connected";
+		this._currentPromise?.reject();
+		this._socket.off();
+		this._onServerMessageObservable.clear();
 	}
 
 	public leaveScene()
@@ -121,9 +129,6 @@ export class	FrontendSocketHandler
 
 		this._socket.once("ready", () => {
 			deferred.resolve();
-		});
-		this._socket.once("disconnect", (reason) => {
-			deferred.reject(reason);
 		});
 		this._currentPromise = deferred;
 		return deferred.promise;
