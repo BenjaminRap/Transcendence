@@ -113,7 +113,6 @@ export class ParticleText extends CustomScriptComponent {
 		const	opaquePixelCount = this.getOpaquePixelCount(pixels);
 		const	size = texture.getSize();
 		let		particleIndex = 0;
-		console.log(opaquePixelCount);
 		let		currentOpaquePixelIndex : number | undefined;
 
 		particleSystem.emitRate = opaquePixelCount;
