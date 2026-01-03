@@ -22,9 +22,10 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 			<div class="h-1/5 w-full">
 				<p class="h-1/2 text-(--text-color) text-[4cqw] text-center border-solid border-(length:--border-width) border-(--border-color) m-auto w-fit relative top-1/2 -translate-y-1/2 pr-[5%] pl-[5%] select-text pointer-events-auto leading-[1.1]">xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx</p>
 			</div>
-			<div class="w-full h-1/2 overflow-y-scroll pointer-events-auto border-solid border-(--border-color) border-b-(length:--border-width) border-t-(length:--border-width)">
+			<fieldset class="w-11/12 h-1/2 overflow-y-scroll pointer-events-auto border-solid border-(--border-color) border-(length:--border-width) m-auto">
+				<legend class="m-auto pr-[2%] pl-[2%] text-[2cqw] text-(--text-color)">Participants</legend>
 				<div class="inline"></div>
-			</div>
+			</fieldset>
 			<div class="w-1/3 h-1/3 relative b-1/3 m-auto">
 				${this.getButtonHTML("Start Tournament", "OnlineTournamentStartGUIStart")}
 				${this.getButtonHTML("Cancel Tournament", "OnlineTournamentStartGUICancel")}
