@@ -26,6 +26,7 @@ export class	Room
 	
 	constructor(
 		private readonly _io : Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>,
+		private readonly _onDispose : () => void,
 		firstSocket : DefaultSocket,
 		secondSocket : DefaultSocket
 	) {
@@ -59,6 +60,7 @@ export class	Room
 		this._sockets.forEach((socket : DefaultSocket) => { this.removeSocketFromRoom(socket) });
 		this._serverPongGame?.dispose();
 		this._serverPongGame = undefined;
+		this._onDispose();
 	}
 
 	public onSocketDisconnect(socket : DefaultSocket)

@@ -119,6 +119,8 @@ await fastify.register((instance, opts, done) => {
 	done();
 }, { prefix: '/match' });
 
+const	sockets = new Set<DefaultSocket>();
+
 async function start(): Promise<void> {
     try {
         const port = Number(process.env.PORT) || 8181;
@@ -127,12 +129,14 @@ async function start(): Promise<void> {
 
         await init();
 		io.on('connection', (socket : DefaultSocket) => {
+			sockets.add(socket);
 			console.log("user connected !");
 			socket.data = new SocketData(socket);
 			socket.on("join-matchmaking", () => {
 				matchMaker.addUserToMatchMaking(socket);
 			});
 			socket.once("disconnect", () => {
+				sockets.delete(socket);
 				console.log("disconnect");
 				matchMaker.removeUserFromMatchMaking(socket);
 				socket.data.disconnect();
