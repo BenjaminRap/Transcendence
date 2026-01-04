@@ -187,10 +187,7 @@ export class	Room
 			socket.on(event, (data : any) => {
 				const	keysUpdate = zodKeysUpdate.safeParse(data);
 				if (!keysUpdate.success)
-				{
-					this.removeSocketFromRoom(socket);
 					return ;
-				}
 				const	clientMessage : SocketMessage = {
 					socketIndex : index,
 					data : keysUpdate.data

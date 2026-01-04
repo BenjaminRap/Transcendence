@@ -51,3 +51,10 @@ export const zodGameInit = zod.object({
 	playerIndex: zodPlayerIndex
 })
 export type GameInit = zod.infer<typeof zodGameInit>;
+
+export const	zodTournamentCreationSettings = zod.object({
+	name: zod.string(),
+	isPublic: zod.boolean(),
+	maxPlayerCount: zod.number()
+});
+export type TournamentCreationSettings = zod.infer<typeof zodTournamentCreationSettings>;

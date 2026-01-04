@@ -19,6 +19,8 @@ import { SocketData } from './pong/SocketData';
 import fs from 'fs';
 import HavokPhysics from "@babylonjs/havok";
 import type { ClientToServerEvents, ServerToClientEvents } from '@shared/MessageType';
+import { TournamentMaker } from './pong/TournamentMaker';
+import { zodTournamentCreationSettings } from '@shared/ServerMessage.js';
 
 export type DefaultSocket = Socket<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>;
 
@@ -120,12 +122,13 @@ await fastify.register((instance, opts, done) => {
 }, { prefix: '/match' });
 
 const	sockets = new Set<DefaultSocket>();
+const	matchMaker = new MatchMaker(io);
+const	tournamentMaker = new TournamentMaker();
 
 async function start(): Promise<void> {
     try {
         const port = Number(process.env.PORT) || 8181;
         const host = process.env.HOST || '0.0.0.0';
-        const	matchMaker = new MatchMaker(io);
 
         await init();
 		io.on('connection', (socket : DefaultSocket) => {
@@ -141,6 +144,22 @@ async function start(): Promise<void> {
 				matchMaker.removeUserFromMatchMaking(socket);
 				socket.data.disconnect();
 			});
+			socket.on("create-tournament", (data : any) => {
+				const	parsed = zodTournamentCreationSettings.safeParse(data);
+
+				if (!parsed.success)
+					return ;
+				const	tournament = tournamentMaker.createTournament(parsed.data);
+
+				socket.once("start-tournament", () => {
+					tournament.start();
+					socket.removeAllListeners("cancel-tournament");
+				});
+				socket.once("cancel-tournament", () => {
+					tournament.dispose();
+					socket.removeAllListeners("start-tournament");
+				});
+			})
 		});
         await fastify.listen({ port: port, host: host });
     } catch (error) {

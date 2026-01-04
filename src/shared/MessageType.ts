@@ -1,7 +1,10 @@
-import type { GameInfos, GameInit, KeysUpdate } from "./ServerMessage";
+import type { GameInfos, GameInit, KeysUpdate, TournamentCreationSettings } from "./ServerMessage";
 
-export type ClientMessage = "join-matchmaking" | "ready" | "input-infos" | "forfeit" | "leave-matchmaking"
-export type ClientMessageData<T extends ClientMessage> = T extends "input-infos" ? KeysUpdate : undefined;
+export type ClientMessage = "join-matchmaking" | "ready" | "input-infos" | "forfeit" | "leave-matchmaking" | "create-tournament" | "start-tournament" | "cancel-tournament";
+export type ClientMessageData<T extends ClientMessage> =
+	T extends "input-infos" ? KeysUpdate :
+	T extends "create-tournament" ? TournamentCreationSettings :
+	undefined;
 
 export type ServerEvents = "game-infos" | "joined-game" | "ready" | "forfeit" | "room-closed";
 export type ServerEventsData<T extends ServerEvents> =
