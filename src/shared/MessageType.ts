@@ -2,25 +2,21 @@ import type { GameInfos, GameInit, KeysUpdate, TournamentCreationSettings } from
 
 export type ClientMessage = "join-matchmaking" | "ready" | "input-infos" | "forfeit" | "leave-matchmaking" | "create-tournament" | "start-tournament" | "cancel-tournament";
 export type ClientMessageData<T extends ClientMessage> =
-	T extends "input-infos" ? KeysUpdate :
-	T extends "create-tournament" ? TournamentCreationSettings :
-	undefined;
+	T extends "input-infos" ? [KeysUpdate] :
+	T extends "create-tournament" ? [TournamentCreationSettings] :
+	[];
 
 export type ServerEvents = "game-infos" | "joined-game" | "ready" | "forfeit" | "room-closed";
 export type ServerEventsData<T extends ServerEvents> =
-	T extends "game-infos" ? GameInfos :
-	T extends "joined-game" ? GameInit :
-	undefined
+	T extends "game-infos" ? [GameInfos] :
+	T extends "joined-game" ? [GameInit] :
+	[]
 
 
 export type ClientToServerEvents = {
-    [T in ClientMessage]: ClientMessageData<T> extends undefined ?
-		() => void :
-		(data: ClientMessageData<T>) => void;
+    [T in ClientMessage]: (...data: ClientMessageData<T>) => void;
 };
 
 export type ServerToClientEvents = {
-    [T in ServerEvents]: ServerEventsData<T> extends undefined ?
-		() => void :
-		(data: ServerEventsData<T>) => void;
+    [T in ServerEvents]: (...data: ServerEventsData<T>) => void;
 };
