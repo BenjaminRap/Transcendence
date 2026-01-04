@@ -22,7 +22,7 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 			<div class="h-1/5 w-full">
 				<p class="h-1/2 text-(--text-color) text-[4cqw] font-(family-name:--font) text-center border-solid border-(length:--border-width) border-(--border-color) m-auto w-fit relative top-1/2 -translate-y-1/2 pr-[5%] pl-[5%] select-text pointer-events-auto leading-[1.1]">xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx</p>
 			</div>
-			<fieldset class="w-11/12 h-1/2 overflow-y-scroll pointer-events-auto border-solid border-(--border-color) border-(length:--border-width) m-auto">
+			<fieldset class="w-11/12 h-1/2 overflow-y-scroll pointer-events-auto border-solid border-(--border-color) border-(length:--border-width) m-auto scrollbar-thumb-white scrollbar-track-[transparent] cursor-all-scroll">
 				<legend class="m-auto pr-[2%] pl-[2%] text-[3cqw] text-(--text-color) font-(family-name:--font)">Participants</legend>
 				<div class="inline"></div>
 			</fieldset>
