@@ -131,12 +131,14 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 		for (let index = 0; index < this._profiles.length; index++) {
 			const profile = this._profiles[index];
 			const inputs = profile.getInputs()!;
-			const name = inputs.name.value.trim();
+
+
+			inputs.name.value = inputs.name.value.trim();
 			
-			if (name === "")
+			if (inputs.name.value === "")
 				profile.setErrorText("A profile name can not be empty !");
-			else if (name.length > Tournament.maxCharacterNameLength)
-				profile.setErrorText(`A profile name can not be longer than ${Tournament.maxCharacterNameLength} !`);
+			else if (inputs.name.value.length > Tournament.maxNameLength)
+				profile.setErrorText(`A profile name can not be longer than ${Tournament.maxNameLength} !`);
 			else if (this._profiles.filter((value) => value.getInputs()!.name.value === inputs.name.value).length > 1)
 				profile.setErrorText("The profile name is duplicated !")
 			else
