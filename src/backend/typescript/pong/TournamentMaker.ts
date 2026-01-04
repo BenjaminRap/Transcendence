@@ -18,9 +18,4 @@ export class	TournamentMaker
 
 		return tournament;
 	}
-
-	public cancelTournament(tournament : ServerTournament)
-	{
-		tournaments.delete(tournament);
-	}
 }
