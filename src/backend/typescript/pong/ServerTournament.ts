@@ -7,6 +7,7 @@ export class	ServerTournament extends Tournament
 {
 	private	_disposed = false;
 	private _players : DefaultSocket[] = [];
+	private _tournamentId : string;
 
 	constructor(
 		private _onTournamentDispose : () => void,
@@ -14,6 +15,7 @@ export class	ServerTournament extends Tournament
 	)
 	{
 		super();
+		this._tournamentId = crypto.randomUUID();
 	}
 
 	public start()
@@ -41,7 +43,8 @@ export class	ServerTournament extends Tournament
 		return {
 			name: this._settings.name,
 			currentPlayerCount: this._players.length,
-			maxPlayerCount: this._settings.maxPlayerCount
+			maxPlayerCount: this._settings.maxPlayerCount,
+			id: this._tournamentId
 		}
 	}
 }

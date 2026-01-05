@@ -63,7 +63,8 @@ export type TournamentCreationSettings = zod.infer<typeof zodTournamentCreationS
 export const	zodTournamentDescription = zod.object({
 	name: zod.string().trim().max(Tournament.maxNameLength).nonempty(),
 	currentPlayerCount: zod.number().min(2).max(Tournament.maxTournamentParticipants),
-	maxPlayerCount: zod.number().min(2).max(Tournament.maxTournamentParticipants)
+	maxPlayerCount: zod.number().min(2).max(Tournament.maxTournamentParticipants),
+	id: zod.string().nonempty()
 }).refine((data) => data.currentPlayerCount <= data.maxPlayerCount, {
 	message: "currentPlayerCount should not be greater than maxPlayerCount !",
 	path: [ "currentPlayerCount" ]

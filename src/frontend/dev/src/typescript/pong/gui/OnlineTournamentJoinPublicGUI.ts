@@ -1,5 +1,6 @@
 import type { TournamentDescription } from "@shared/ServerMessage";
 import type { IGUI } from "./IGUI";
+import { TournamentDescriptionGUI } from "./TournamentDescriptionGUI";
 
 export type OnlineTournamentJoinPublicGUIInputs =
 {
@@ -19,11 +20,11 @@ export class	OnlineTournamentJoinPublicGUI extends HTMLElement implements IGUI<O
 
 	public	connectedCallback()
 	{
-		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none");
+		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm");
 		this.innerHTML = `
 			<fieldset class="w-11/12 h-3/5 overflow-y-scroll pointer-events-auto border-solid border-(--border-color) border-(length:--border-width) m-auto mt-[1%] scrollbar-thumb-white scrollbar-track-[transparent] cursor-all-scroll">
 				<legend class="m-auto pr-[2%] pl-[2%] text-[3cqw] text-(--text-color) font-(family-name:--font)">Participants</legend>
-				<div class="OnlineTournamentJoinPublicGUITournamentsDescriptions inline"></div>
+				<div class="OnlineTournamentJoinPublicGUITournamentsDescriptions text-[length:2cqw] w-1/3 m-auto"></div>
 			</fieldset>
 			<div class="flex flex-col size-full h-1/3 w-1/4 m-auto">
 				${this.getButtonHTML("Refresh", "OnlineTournamentJoinPublicGUIRefresh")}
@@ -35,6 +36,26 @@ export class	OnlineTournamentJoinPublicGUI extends HTMLElement implements IGUI<O
 			refresh: this.querySelector<HTMLButtonElement>("button.OnlineTournamentJoinPublicGUIRefresh")!,
 			cancel: this.querySelector<HTMLButtonElement>("button.OnlineTournamentJoinPublicGUICancel")!
 		}
+		this.setTournaments([
+			{
+                name: "firstTournament",
+                currentPlayerCount: 0,
+                maxPlayerCount: 0,
+				id: "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
+            },
+			{
+                name: "s",
+                currentPlayerCount: 4,
+                maxPlayerCount: 16,
+				id: "3f6c2d1a-9c2e-4b3a-8f71-2d0e5f6a9c41"
+            },
+			{
+                name: "azieoaizueiozjzozozozo",
+                currentPlayerCount: 31,
+                maxPlayerCount: 32,
+				id: "3f6c2d1a-9c2e-4b3a-8f71-2d0e5f6a9c41"
+            }
+		])
 	}
 
 	private	getButtonHTML(text : string, className : string)
@@ -49,9 +70,17 @@ export class	OnlineTournamentJoinPublicGUI extends HTMLElement implements IGUI<O
 
 	public setTournaments(descriptions : TournamentDescription[])
 	{
-		descriptions.forEach((description) => {
+		const	nodes : TournamentDescriptionGUI[] = [];
 
+		descriptions.forEach((description) => {
+			const	tournamentDescriptionGUI = new TournamentDescriptionGUI(description);
+
+			tournamentDescriptionGUI.addEventListener("click", () => {
+				console.log("click tournament");
+			})
+			nodes.push(tournamentDescriptionGUI);
 		});
+		this._descriptionsContainer?.replaceChildren(...nodes);
 	}
 }
 
