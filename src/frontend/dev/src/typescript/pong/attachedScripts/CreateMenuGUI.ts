@@ -108,7 +108,10 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			cancel: () => this.switchMenu(this._onlineTournamentStartGUI, this._onlineTournamentCreationGUI)
 		});
 		this._onlineTournamentJoinPrivateGUI = this.initMenu(new OnlineTournamentJoinPrivateGUI(), {});
-		this._onlineTournamentJoinPublicGUI = this.initMenu(new OnlineTournamentJoinPublicGUI(), {});
+		this._onlineTournamentJoinPublicGUI = this.initMenu(new OnlineTournamentJoinPublicGUI(), {
+			refresh: () => console.log("refresh"),
+			cancel: () => this.switchMenu(this._onlineTournamentJoinPublicGUI, this._onlineTournamentChoiceGUI)
+		});
 		this._errorGUI = this.initMenu(new ErrorGUI(), {});
 	}
 
