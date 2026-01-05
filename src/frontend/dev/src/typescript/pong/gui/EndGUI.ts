@@ -3,8 +3,7 @@ import type { IGUI } from "./IGUI";
 export type EndGUIInputs =
 {
 	restart : HTMLButtonElement,
-	goToMenu : HTMLButtonElement,
-	quit : HTMLButtonElement
+	goToMenu : HTMLButtonElement
 }
 
 export class	EndGUI extends HTMLElement implements IGUI<EndGUIInputs>
@@ -26,13 +25,11 @@ export class	EndGUI extends HTMLElement implements IGUI<EndGUIInputs>
 				<p class="pauseGUIWinText font-bold leading-normal text-[7cqw] text-white text-center">WIN</p>
 				${this.getButtonHTML("Restart", "pauseGUIRestart")}
 				${this.getButtonHTML("Go To Menu", "pauseGUIGoToMenu")}
-				${this.getButtonHTML("Quit", "pauseGUIQuit")}
 			</div>
 		`;
 		this._inputs = {
 			restart: this.querySelector<HTMLButtonElement>("button.pauseGUIRestart")!,
-			goToMenu: this.querySelector<HTMLButtonElement>("button.pauseGUIGoToMenu")!,
-			quit: this.querySelector<HTMLButtonElement>("button.pauseGUIQuit")!
+			goToMenu: this.querySelector<HTMLButtonElement>("button.pauseGUIGoToMenu")!
 		}
 		this._mainDiv = this.querySelector<HTMLDivElement>("div.pauseGUIMainDiv")!;
 		this._winText = this.querySelector<HTMLParagraphElement>("p.pauseGUIWinText")!;

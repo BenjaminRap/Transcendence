@@ -4,8 +4,7 @@ import type { IGUI } from "./IGUI";
 
 export type TournamentWinnerGUIInputs =
 {
-	goToMenu : HTMLButtonElement,
-	quit : HTMLButtonElement
+	goToMenu : HTMLButtonElement
 }
 
 export class	TournamentWinnerGUI extends HTMLElement implements IGUI<TournamentWinnerGUIInputs>
@@ -23,23 +22,21 @@ export class	TournamentWinnerGUI extends HTMLElement implements IGUI<TournamentW
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm");
 		this.innerHTML = `
 			<div class="tournamentWinnerGUIMainDiv flex flex-col h-full w-[45%] m-auto items-center">
-				<p class="tournamentWinnerGUIWinText font-bold leading-normal text-[7cqw] text-white text-center">WIN</p>
-				<div class="flex flex-row justify-around w-full gap-[10%]">
+				<p class="tournamentWinnerGUIWinText font-bold leading-normal text-[7cqw] text-white text-center h-1/4">WIN</p>
+				<div class="w-2/3 h-2/5">
 					${this.getButtonHTML("Go To Menu", "tournamentWinnerGUIGoToMenu")}
-					${this.getButtonHTML("Quit", "tournamentWinnerGUIQuit")}
 				</div>
 			</div>
 		`;
 		this._inputs = {
-			goToMenu: this.querySelector<HTMLButtonElement>("button.tournamentWinnerGUIGoToMenu")!,
-			quit: this.querySelector<HTMLButtonElement>("button.tournamentWinnerGUIQuit")!
+			goToMenu: this.querySelector<HTMLButtonElement>("button.tournamentWinnerGUIGoToMenu")!
 		}
 		this._winText = this.querySelector<HTMLDivElement>("p.tournamentWinnerGUIWinText")!;
 	}
 
 	private	getButtonHTML(text : string, className : string)
 	{
-		return `<button class="${className} text-[3cqw] w-full mt-[10%] grow menu-button">${text}</button>`;
+		return `<button class="${className} text-[3cqw] w-full h-2/5 mt-[10%] grow menu-button">${text}</button>`;
 	}
 
 	public getInputs()
@@ -53,7 +50,7 @@ export class	TournamentWinnerGUI extends HTMLElement implements IGUI<TournamentW
 			throw new Error("TournamentWinnerGUI setWinner called before being added to the document !");
 		const	winnerGUI = new OpponentGUI(profile);
 
-		winnerGUI.classList.add("w-1/2")
+		winnerGUI.classList.add("h-1/2")
 		this._winText.insertAdjacentElement("afterend", winnerGUI);
 	}
 }

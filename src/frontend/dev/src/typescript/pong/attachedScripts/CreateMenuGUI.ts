@@ -16,11 +16,10 @@ import { TimerManager } from "@shared/attachedScripts/TimerManager";
 import { GameTypeChoiceGUI } from "../gui/GameTypeChoiceGUI";
 import { LocalTournamentCreationGUI } from "../gui/LocalTournamentCreationGUI";
 import { LocalTournament } from "../LocalTournament";
-import { initMenu, type IGUI, type IGUIInputsType } from "../gui/IGUI";
+import { initMenu } from "../gui/IGUI";
 import { OnlineTournamentCreationGUI } from "../gui/OnlineTournamentCreationGUI";
 import { OnlineTournamentJoinPrivateGUI } from "../gui/OnlineTournamentJoinPrivateGUI";
 import { OnlineTournamentJoinPublicGUI } from "../gui/OnlineTournamentJoinPublicGUI";
-import { ErrorGUI } from "../gui/ErrorGUI";
 import { OnlineTournamentChoiceGUI } from "../gui/OnlineTournamentChoiceGUI";
 import { OnlineTournamentStartGUI } from "../gui/OnlineTournamentStartGUI";
 

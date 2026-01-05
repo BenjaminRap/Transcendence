@@ -18,6 +18,7 @@ import type { LocalTournament } from "./LocalTournament";
 import { frontendSocketHandler } from "../index";
 import { ErrorGUI } from "./gui/ErrorGUI";
 import { initMenu } from "./gui/IGUI";
+import { CloseGUI } from "./gui/CloseGUI";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
@@ -30,7 +31,7 @@ export class PongGame extends HTMLElement {
 	private _scene : Scene | undefined;
 	private _settings : Settings;
 	private _errorGUI! : ErrorGUI;
-	// private _closeGUI! : CloseGUI;
+	private _closeGUI! : CloseGUI;
 
     public constructor() {
 		super();
@@ -44,6 +45,10 @@ export class PongGame extends HTMLElement {
 		this._errorGUI = initMenu(new ErrorGUI(), {
 			close: () => this._errorGUI.classList.add("hidden")
 		}, this);
+		this._closeGUI = initMenu(new CloseGUI(), {
+			close: () => this.remove()
+		}, this);
+		this._closeGUI.classList.remove("hidden");
 
 		this.append(this._canvas);
 		try {
@@ -91,11 +96,6 @@ export class PongGame extends HTMLElement {
 	{
 		this.disposeScene();
 		this._scene = await this.getNewScene(newSceneName, gameType, clientInputs, serverCommunicationHandler, tournament);
-	}
-
-	public quit() : void
-	{
-		this.remove();
 	}
 
 	public async goToMenuScene()

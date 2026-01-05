@@ -4,8 +4,7 @@ export type PauseGUIInputs =
 {
 	continue : HTMLButtonElement,
 	forfeit? : HTMLButtonElement,
-	goToMenu : HTMLButtonElement,
-	quit : HTMLButtonElement
+	goToMenu : HTMLButtonElement
 }
 
 export class	PauseGUI extends HTMLElement implements IGUI<PauseGUIInputs>
@@ -27,14 +26,12 @@ export class	PauseGUI extends HTMLElement implements IGUI<PauseGUIInputs>
 				${this.getButtonHTML("Continue", "pauseGUIContinue")}
 				${this._forfeitEnabled ? this.getButtonHTML("Forfeit", "pauseGUIForfeit") : ""}
 				${this.getButtonHTML("Go To Menu", "pauseGUIGoToMenu")}
-				${this.getButtonHTML("Quit", "pauseGUIQuit")}
 			</div>
 		`;
 		this._inputs = {
 			continue: this.querySelector<HTMLButtonElement>("button.pauseGUIContinue")!,
 			forfeit: this.querySelector<HTMLButtonElement>("button.pauseGUIForfeit") ?? undefined,
-			goToMenu: this.querySelector<HTMLButtonElement>("button.pauseGUIGoToMenu")!,
-			quit: this.querySelector<HTMLButtonElement>("button.pauseGUIQuit")!
+			goToMenu: this.querySelector<HTMLButtonElement>("button.pauseGUIGoToMenu")!
 		}
 	}
 

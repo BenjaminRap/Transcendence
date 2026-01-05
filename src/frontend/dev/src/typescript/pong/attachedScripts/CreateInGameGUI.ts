@@ -54,21 +54,18 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		this._pauseGUI = initMenu(new PauseGUI(forfeitEnabled), {
 			continue: () => this.togglePause(),
 			forfeit: () => this.onForfeit(),
-			goToMenu: () => this.onGoToMenu(),
-			quit: () => this.onQuit()
+			goToMenu: () => this.onGoToMenu()
 		}, this._menuParent);
 		this._endGUI = initMenu(new EndGUI(), {
 			restart: () => this.onRestart(),
-			goToMenu: () => this.onGoToMenu(),
-			quit: () => this.onQuit()
+			goToMenu: () => this.onGoToMenu()
 
 		}, this._menuParent);
 		this._inMatchmakingGUI = initMenu(new InMatchmakingGUI(), {
 			cancelButton: () => this.cancelMatchmaking(),
 		}, this._menuParent);
 		this._tournamentWinnerGUI = initMenu(new TournamentWinnerGUI(), {
-			goToMenu: () => this.onGoToMenu(),
-			quit: () => this.onQuit()
+			goToMenu: () => this.onGoToMenu()
 		}, this._menuParent);
 		this._matchOpponentsGUI = initMenu(new MatchOpponentsGUI(), undefined, this._menuParent);
 	}
@@ -190,11 +187,6 @@ export class CreateInGameGUI extends CustomScriptComponent {
 	private	onGoToMenu() : void
 	{
 		this._sceneData.pongHTMLElement.goToMenuScene();
-	}
-
-	private	onQuit() : void
-	{
-		this._sceneData.pongHTMLElement.quit();
 	}
 
 	protected	destroy()
