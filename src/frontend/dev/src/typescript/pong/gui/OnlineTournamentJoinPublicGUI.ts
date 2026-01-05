@@ -36,26 +36,6 @@ export class	OnlineTournamentJoinPublicGUI extends HTMLElement implements IGUI<O
 			refresh: this.querySelector<HTMLButtonElement>("button.OnlineTournamentJoinPublicGUIRefresh")!,
 			cancel: this.querySelector<HTMLButtonElement>("button.OnlineTournamentJoinPublicGUICancel")!
 		}
-		this.setTournaments([
-			{
-                name: "firstTournament",
-                currentPlayerCount: 0,
-                maxPlayerCount: 0,
-				id: "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
-            },
-			{
-                name: "s",
-                currentPlayerCount: 4,
-                maxPlayerCount: 16,
-				id: "3f6c2d1a-9c2e-4b3a-8f71-2d0e5f6a9c41"
-            },
-			{
-                name: "azieoaizueiozjzozozozo",
-                currentPlayerCount: 31,
-                maxPlayerCount: 32,
-				id: "3f6c2d1a-9c2e-4b3a-8f71-2d0e5f6a9c41"
-            }
-		])
 	}
 
 	private	getButtonHTML(text : string, className : string)
