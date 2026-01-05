@@ -1,11 +1,11 @@
 import { Deferred, type int, Observable } from "@babylonjs/core";
 import type { ClientToServerEvents, ServerToClientEvents } from "@shared/MessageType";
-import { type GameInfos, zodGameInfos, zodGameInit } from "@shared/ServerMessage";
+import { type GameInfos, type TournamentCreationSettings, type TournamentDescription, zodGameInfos, zodGameInit } from "@shared/ServerMessage";
 import { io, Socket } from "socket.io-client";
 
 type ServerInGameMessage = GameInfos | "server-error" | "forfeit" | "room-closed";
 type DefaultSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
-type SocketState = "not-connected" | "connected" | "in-matchmaking" | "in-game";
+type SocketState = "not-connected" | "connected" | "in-matchmaking" | "in-game" | "tournament-creation";
 
 export class	FrontendSocketHandler
 {
@@ -99,6 +99,17 @@ export class	FrontendSocketHandler
 		this._currentPromise?.reject();
 		this._socket.off();
 		this._onServerMessageObservable.clear();
+	}
+
+	public getTournaments()
+	{
+		this.verifyState("connected");
+		const	deferred = new Deferred<TournamentDescription[]>();
+
+		this._socket.emit("get-tournaments", (tournamentDescriptions : TournamentDescription[]) => {
+			deferred.resolve(tournamentDescriptions);
+		});
+		return deferred.promise;
 	}
 
 	public leaveScene()

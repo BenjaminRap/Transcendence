@@ -19,8 +19,8 @@ import { SocketData } from './pong/SocketData';
 import fs from 'fs';
 import HavokPhysics from "@babylonjs/havok";
 import type { ClientToServerEvents, ServerToClientEvents } from '@shared/MessageType';
-import { TournamentMaker } from './pong/TournamentMaker';
-import { zodTournamentCreationSettings } from '@shared/ServerMessage.js';
+import { getPublicTournamentsDescriptions, TournamentMaker } from './pong/TournamentMaker';
+import { zodTournamentCreationSettings, type TournamentDescription } from '@shared/ServerMessage.js';
 
 export type DefaultSocket = Socket<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>;
 
@@ -144,19 +144,32 @@ async function start(): Promise<void> {
 				matchMaker.removeUserFromMatchMaking(socket);
 				socket.data.disconnect();
 			});
-			socket.on("create-tournament", (data : any) => {
+			socket.on("get-tournaments", (ack : (descriptions : TournamentDescription[]) => void) => {
+				const	descriptions = getPublicTournamentsDescriptions();
+
+				ack(descriptions);
+			});
+			socket.on("create-tournament", (data : any, ack : (error? : string) => void) => {
 				const	parsed = zodTournamentCreationSettings.safeParse(data);
 
 				if (!parsed.success)
+				{
+					ack("Invalid Data !");
 					return ;
-				const	tournament = tournamentMaker.createTournament(parsed.data);
+				}
+				const	tournamentOrError = tournamentMaker.createTournament(parsed.data);
 
+				if (typeof tournamentOrError === "string")
+				{
+					ack(tournamentOrError);
+					return ;
+				}
 				socket.once("start-tournament", () => {
-					tournament.start();
+					tournamentOrError.start();
 					socket.removeAllListeners("cancel-tournament");
 				});
 				socket.once("cancel-tournament", () => {
-					tournament.dispose();
+					tournamentOrError.dispose();
 					socket.removeAllListeners("start-tournament");
 				});
 			})
