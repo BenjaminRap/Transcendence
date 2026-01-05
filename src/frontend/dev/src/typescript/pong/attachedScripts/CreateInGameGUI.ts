@@ -101,15 +101,11 @@ export class CreateInGameGUI extends CustomScriptComponent {
 
 	private	onGameEnd(endData : EndData)
 	{
+		this._endGUI.setWinner(endData.winner, endData.forfeit, this._sceneData.serverProxy?.getPlayerIndex());
 		if (this._sceneData.tournament !== undefined)
 			this._sceneData.tournament.onGameEnd(endData);
 		else
-		{
-			const	winText = `${(endData.winner === "draw") ? "Draw" : "Win"} ${endData.forfeit ? "By Forfeit" : ""}`;
-
-			this._endGUI.setWinner(endData.winner, winText);
 			this.switchToGUI(this._endGUI);
-		}
 	}
 
 	private	togglePause() : void

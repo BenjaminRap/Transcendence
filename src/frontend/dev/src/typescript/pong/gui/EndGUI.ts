@@ -1,20 +1,26 @@
 import type { IGUI } from "./IGUI";
+import { getLoadingLogoHTML } from "./utilities";
 
 export type EndGUIInputs =
 {
-	restart : HTMLButtonElement,
+	restart? : HTMLButtonElement,
+	continue? : HTMLButtonElement,
 	goToMenu : HTMLButtonElement
 }
+
+export type	EndGUIType = "Local" | "Online" | "LocalTournament" | "OnlineTournament";
 
 export class	EndGUI extends HTMLElement implements IGUI<EndGUIInputs>
 {
 	private _inputs : EndGUIInputs | undefined;
 	private _mainDiv : HTMLDivElement | undefined;
 	private _winText : HTMLParagraphElement | undefined;
+	private _type : EndGUIType;
 
-	constructor()
+	constructor(type? : EndGUIType)
 	{
 		super();
+		this._type = type ?? "Local";
 	}
 
 	public	connectedCallback()
@@ -23,38 +29,65 @@ export class	EndGUI extends HTMLElement implements IGUI<EndGUIInputs>
 		this.innerHTML = `
 			<div class="pauseGUIMainDiv flex flex-col size-full  h-4/6 w-1/3 -translate-y-1/2 top-1/2 absolute">
 				<p class="pauseGUIWinText font-bold leading-normal text-[7cqw] text-white text-center">WIN</p>
-				${this.getButtonHTML("Restart", "pauseGUIRestart")}
+				${this.getTypeSpecificHTML()}
 				${this.getButtonHTML("Go To Menu", "pauseGUIGoToMenu")}
 			</div>
 		`;
 		this._inputs = {
-			restart: this.querySelector<HTMLButtonElement>("button.pauseGUIRestart")!,
+			restart: this.querySelector<HTMLButtonElement>("button.pauseGUIRestart") ?? undefined,
+			continue: this.querySelector<HTMLButtonElement>("button.pauseGUIContinue") ?? undefined,
 			goToMenu: this.querySelector<HTMLButtonElement>("button.pauseGUIGoToMenu")!
 		}
 		this._mainDiv = this.querySelector<HTMLDivElement>("div.pauseGUIMainDiv")!;
 		this._winText = this.querySelector<HTMLParagraphElement>("p.pauseGUIWinText")!;
 	}
 
-	public setWinner(winner : "left" | "right" | "draw", winText : string)
+	public setWinner(winner : "left" | "right" | "draw", forfeit : boolean, playerIndex? : number)
 	{
-		if (!this._mainDiv || !this._winText)
+		if (!this._winText || !this._mainDiv)
 			return ;
-		if (winner === "left")
-		{
-			this._mainDiv.classList.remove("left-1/2", "-translate-x-1/2", "right-1/12");
-			this._mainDiv.classList.add("left-1/12");
-		}
-		else if (winner === "right")
-		{
-			this._mainDiv.classList.remove("left-1/2", "-translate-x-1/2", "left-1/12");
-			this._mainDiv.classList.add("right-1/12");
-		}
+		let		winText = "";
+		const	winnerIndex = (winner === "left") ? 0 : 1;
+		const	isOnline = (this._type === "Online" || this._type === "OnlineTournament");
+
+		if (winner === "draw")
+			winText += "Draw";
+		else if (isOnline && winnerIndex !== playerIndex)
+			winText += "Lose";
 		else
-		{
-			this._mainDiv.classList.remove("right-1/12", "left-1/12");
-			this._mainDiv.classList.add("left-1/2", "-translate-x-1/2");
-		}
-		this._winText.innerText = winText;
+			winText += "Win";
+		if (forfeit)
+			winText += " By Forfeit";
+		this._winText.textContent = winText;
+		if (isOnline || winner === "draw")
+			this.setWinTextSide("middle");
+		else
+			this.setWinTextSide(winner);
+	}
+
+	private	setWinTextSide(side : "left" | "right" | "middle")
+	{
+		this._mainDiv?.classList.remove("left-1/2", "left-1/12", "-translate-x-1/2", "right-1/12");
+		if (side === "left")
+			this._mainDiv?.classList.add("left-1/12")
+		else if (side === "right")
+			this._mainDiv?.classList.add("right-1/12")
+		else
+			this._mainDiv?.classList.add("left-1/2", "-translate-x-1/2")
+	}
+
+	private	getTypeSpecificHTML()
+	{
+		if (this._type === "Online" || this._type === "Local")
+			return `${this.getButtonHTML("Restart", "pauseGUIRestart")}`;
+		else if (this._type === "LocalTournament")
+			return `${this.getButtonHTML("Continue", "pauseGUIContinue")}`;
+		return `
+			<div class="flex flex-row">
+				${getLoadingLogoHTML("w-[10%] mr-[10%]")}
+				<p class="font-bold text-center leading-[normal] text-[3cqw] text-(--text-color) font-(family-name:--font)">Waiting For Next Match</p>
+			</div>
+		`;
 	}
 
 	private	getButtonHTML(text : string, className : string)

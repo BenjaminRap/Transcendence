@@ -14,7 +14,7 @@ export class	FrontendSocketHandler
 	private _state : SocketState;
 	private _socket : DefaultSocket;
 	private _onServerMessageObservable : Observable<ServerInGameMessage>;
-	private _playerIndex : int | undefined;
+	private _playerIndex : int = 0;
 	private _currentPromise : Deferred<any> | null = null
 
 	private constructor(socket : DefaultSocket)
@@ -106,6 +106,7 @@ export class	FrontendSocketHandler
 		this.verifyState("connected");
 		const	deferred = new Deferred<TournamentDescription[]>();
 
+		this._currentPromise = deferred;
 		this._socket.emit("get-tournaments", (tournamentDescriptions : TournamentDescription[]) => {
 			deferred.resolve(tournamentDescriptions);
 		});
@@ -165,8 +166,7 @@ export class	FrontendSocketHandler
 
 	public getplayerIndex()
 	{
-		this.verifyState("in-game");
-		return this._playerIndex!;
+		return this._playerIndex;
 	}
 
 	private verifyState(...allowedStates : SocketState[])
