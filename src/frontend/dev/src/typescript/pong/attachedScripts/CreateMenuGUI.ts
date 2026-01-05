@@ -16,7 +16,7 @@ import { TimerManager } from "@shared/attachedScripts/TimerManager";
 import { GameTypeChoiceGUI } from "../gui/GameTypeChoiceGUI";
 import { LocalTournamentCreationGUI } from "../gui/LocalTournamentCreationGUI";
 import { LocalTournament } from "../LocalTournament";
-import type { IGUI, IGUIInputsType } from "../gui/IGUI";
+import { initMenu, type IGUI, type IGUIInputsType } from "../gui/IGUI";
 import { OnlineTournamentCreationGUI } from "../gui/OnlineTournamentCreationGUI";
 import { OnlineTournamentJoinPrivateGUI } from "../gui/OnlineTournamentJoinPrivateGUI";
 import { OnlineTournamentJoinPublicGUI } from "../gui/OnlineTournamentJoinPublicGUI";
@@ -45,7 +45,6 @@ export class CreateMenuGUI extends CustomScriptComponent {
 	private _onlineTournamentStartGUI! : OnlineTournamentStartGUI;
 	private _onlineTournamentJoinPrivateGUI! : OnlineTournamentJoinPrivateGUI;
 	private _onlineTournamentJoinPublicGUI! : OnlineTournamentJoinPublicGUI;
-	private _errorGUI! : ErrorGUI;
 	private _currentSceneFileName! : SceneFileName;
 	private _menuParent! : HTMLDivElement;
 
@@ -74,48 +73,47 @@ export class CreateMenuGUI extends CustomScriptComponent {
 	{
 		this.createMenuGUI();
 
-		this._titleGUI = this.initMenu(new TitleGUI(), undefined);
-		this._inMatchmakingGUI = this.initMenu(new InMatchmakingGUI(), {
+		this._titleGUI = initMenu(new TitleGUI(), undefined, this._menuParent);
+		this._inMatchmakingGUI = initMenu(new InMatchmakingGUI(), {
 			cancelButton: () => this.cancelMatchmaking()
-		});
-		this._localGameTypeChoiceGUI = this.initMenu(new GameTypeChoiceGUI(), {
+		}, this._menuParent);
+		this._localGameTypeChoiceGUI = initMenu(new GameTypeChoiceGUI(), {
 			twoVersusTwo: () => this.startGame(this._currentSceneFileName, "Local"),
 			tournament: () => this.switchMenu(this._localGameTypeChoiceGUI, this._localTournamentCreationGUI),
 			cancel: () => this.switchMenu(this._localGameTypeChoiceGUI, this._menuGUI)
-		});
-		this._onlineGameTypeChoiceGUI = this.initMenu(new GameTypeChoiceGUI(), {
+		}, this._menuParent);
+		this._onlineGameTypeChoiceGUI = initMenu(new GameTypeChoiceGUI(), {
 			twoVersusTwo: () => this.startGame(this._currentSceneFileName, "Multiplayer"),
 			tournament: () => this.switchMenu(this._onlineGameTypeChoiceGUI, this._onlineTournamentChoiceGUI),
 			cancel: () => this.switchMenu(this._onlineGameTypeChoiceGUI, this._menuGUI)
-		})
-		this._localTournamentCreationGUI = this.initMenu(new LocalTournamentCreationGUI(), {
+		}, this._menuParent)
+		this._localTournamentCreationGUI = initMenu(new LocalTournamentCreationGUI(), {
 			start: () => this.startLocalTournamentGame(),
 			cancel: () => this.switchMenu(this._localTournamentCreationGUI, this._localGameTypeChoiceGUI)
-		});
-		this._onlineTournamentChoiceGUI = this.initMenu(new OnlineTournamentChoiceGUI(), {
+		}, this._menuParent);
+		this._onlineTournamentChoiceGUI = initMenu(new OnlineTournamentChoiceGUI(), {
 			create: () => this.switchMenu(this._onlineTournamentChoiceGUI, this._onlineTournamentCreationGUI),
 			joinPublic: () => this.switchMenu(this._onlineTournamentChoiceGUI, this._onlineTournamentJoinPublicGUI),
 			joinPrivate: () => this.switchMenu(this._onlineTournamentChoiceGUI, this._onlineTournamentJoinPrivateGUI),
 			cancel: () => this.switchMenu(this._onlineTournamentChoiceGUI, this._onlineGameTypeChoiceGUI),
-		});
-		this._onlineTournamentCreationGUI = this.initMenu(new OnlineTournamentCreationGUI(), {
+		}, this._menuParent);
+		this._onlineTournamentCreationGUI = initMenu(new OnlineTournamentCreationGUI(), {
 			create: () => this.switchMenu(this._onlineTournamentCreationGUI, this._onlineTournamentStartGUI),
 			createAndJoin: () => this.switchMenu(this._onlineTournamentCreationGUI, this._onlineTournamentStartGUI),
 			cancel: () => this.switchMenu(this._onlineTournamentCreationGUI, this._onlineTournamentChoiceGUI)
-		});
-		this._onlineTournamentStartGUI = this.initMenu(new OnlineTournamentStartGUI(), {
+		}, this._menuParent);
+		this._onlineTournamentStartGUI = initMenu(new OnlineTournamentStartGUI(), {
 			start: () => console.log("start"),
 			cancel: () => this.switchMenu(this._onlineTournamentStartGUI, this._onlineTournamentCreationGUI)
-		});
-		this._onlineTournamentJoinPrivateGUI = this.initMenu(new OnlineTournamentJoinPrivateGUI(), {
+		}, this._menuParent);
+		this._onlineTournamentJoinPrivateGUI = initMenu(new OnlineTournamentJoinPrivateGUI(), {
 			join: () => console.log("join"),
 			cancel: () => this.switchMenu(this._onlineTournamentJoinPrivateGUI, this._onlineTournamentChoiceGUI)
-		});
-		this._onlineTournamentJoinPublicGUI = this.initMenu(new OnlineTournamentJoinPublicGUI(), {
+		}, this._menuParent);
+		this._onlineTournamentJoinPublicGUI = initMenu(new OnlineTournamentJoinPublicGUI(), {
 			refresh: () => console.log("refresh"),
 			cancel: () => this.switchMenu(this._onlineTournamentJoinPublicGUI, this._onlineTournamentChoiceGUI)
-		});
-		this._errorGUI = this.initMenu(new ErrorGUI(), {});
+		}, this._menuParent);
 	}
 
 	protected	ready()
@@ -136,21 +134,6 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			return accumulator;
 		}, []);
 
-	}
-
-	private	initMenu<K extends HTMLElement, T extends IGUIInputsType>(menu : IGUI<T> & K, callbacks : { [K in keyof T]: () => void }) : K
-	{
-		this.addHiddenMenu(menu);
-		const	inputs = menu.getInputs();
-		
-		if (typeof inputs !== "object")
-			return menu;
-
-		Object.entries(inputs).forEach(([key, value]) => {
-			value?.addEventListener("click", callbacks[key as (keyof T)]);
-		});
-
-		return menu;
 	}
 
 	private	createMenuGUI()

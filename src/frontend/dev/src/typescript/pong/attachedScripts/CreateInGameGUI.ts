@@ -14,7 +14,7 @@ import { Imported } from "@shared/ImportedDecorator";
 import type { ThemeName } from "../menuStyles";
 import { MatchOpponentsGUI } from "../gui/MatchOpponentsGUI";
 import { TournamentWinnerGUI } from "../gui/TournamentWinnerGUI";
-import type { IGUI, IGUIInputsType } from "../gui/IGUI";
+import { initMenu, type IGUI, type IGUIInputsType } from "../gui/IGUI";
 
 export class CreateInGameGUI extends CustomScriptComponent {
 	@Imported("InputManager") private _inputManager! : InputManager;
@@ -51,26 +51,26 @@ export class CreateInGameGUI extends CustomScriptComponent {
 	{
 		const	forfeitEnabled = this._sceneData.tournament === undefined || this._sceneData.gameType === "Multiplayer";
 
-		this._pauseGUI = this.initMenu(new PauseGUI(forfeitEnabled), {
+		this._pauseGUI = initMenu(new PauseGUI(forfeitEnabled), {
 			continue: () => this.togglePause(),
 			forfeit: () => this.onForfeit(),
 			goToMenu: () => this.onGoToMenu(),
 			quit: () => this.onQuit()
-		});
-		this._endGUI = this.initMenu(new EndGUI(), {
+		}, this._menuParent);
+		this._endGUI = initMenu(new EndGUI(), {
 			restart: () => this.onRestart(),
 			goToMenu: () => this.onGoToMenu(),
 			quit: () => this.onQuit()
 
-		});
-		this._inMatchmakingGUI = this.initMenu(new InMatchmakingGUI(), {
+		}, this._menuParent);
+		this._inMatchmakingGUI = initMenu(new InMatchmakingGUI(), {
 			cancelButton: () => this.cancelMatchmaking(),
-		});
-		this._tournamentWinnerGUI = this.initMenu(new TournamentWinnerGUI(), {
+		}, this._menuParent);
+		this._tournamentWinnerGUI = initMenu(new TournamentWinnerGUI(), {
 			goToMenu: () => this.onGoToMenu(),
 			quit: () => this.onQuit()
-		});
-		this._matchOpponentsGUI = this.initMenu(new MatchOpponentsGUI(), undefined);
+		}, this._menuParent);
+		this._matchOpponentsGUI = initMenu(new MatchOpponentsGUI(), undefined, this._menuParent);
 	}
 
 	protected	start()
@@ -100,21 +100,6 @@ export class CreateInGameGUI extends CustomScriptComponent {
 			this._tournamentWinnerGUI.setWinner(winner);
 			this.switchToGUI(this._tournamentWinnerGUI);
 		});
-	}
-
-	private	initMenu<K extends HTMLElement, T extends IGUIInputsType>(menu : IGUI<T> & K, callbacks : { [K in keyof T]: () => void }) : K
-	{
-		this.addHiddenGUI(menu);
-		const	inputs = menu.getInputs();
-		
-		if (typeof inputs !== "object")
-			return menu;
-
-		Object.entries(inputs).forEach(([key, value]) => {
-			value?.addEventListener("click", callbacks[key as (keyof T)]);
-		});
-
-		return menu;
 	}
 
 	private	onGameEnd(endData : EndData)

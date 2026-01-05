@@ -16,6 +16,8 @@ import type { GameInfos } from "@shared/ServerMessage";
 import type { Tournament } from "@shared/Tournament";
 import type { LocalTournament } from "./LocalTournament";
 import { frontendSocketHandler } from "../index";
+import { ErrorGUI } from "./gui/ErrorGUI";
+import { initMenu } from "./gui/IGUI";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
@@ -27,6 +29,8 @@ export class PongGame extends HTMLElement {
 	private _engine! : Engine;
 	private _scene : Scene | undefined;
 	private _settings : Settings;
+	private _errorGUI! : ErrorGUI;
+	// private _closeGUI! : CloseGUI;
 
     public constructor() {
 		super();
@@ -37,7 +41,11 @@ export class PongGame extends HTMLElement {
 	public async connectedCallback() : Promise<void> {
 		this._canvas = document.createElement("canvas");
 		this._canvas.classList.add("size-full");
-		this.appendChild(this._canvas);
+		this._errorGUI = initMenu(new ErrorGUI(), {
+			close: () => this._errorGUI.classList.add("hidden")
+		}, this);
+
+		this.append(this._canvas);
 		try {
 			this._engine = this.createEngine();
 			globalThis.HK = await HavokPhysics();
