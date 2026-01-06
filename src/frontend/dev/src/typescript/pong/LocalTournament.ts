@@ -1,4 +1,4 @@
-import { Tournament} from "@shared/Tournament";
+import { TournamentHelper} from "@shared/Tournament";
 import type { Profile } from "@shared/Profile";
 import type { Match } from "@shared/Match";
 import { TournamentGUI } from "./gui/TournamentGUI";
@@ -6,7 +6,7 @@ import type { EndData } from "@shared/attachedScripts/GameManager";
 import type { FrontendEventsManager } from "./FrontendEventsManager";
 import { isPowerOfTwo } from "@shared/utils";
 
-export class	LocalTournament extends Tournament
+export class	LocalTournament
 {
 	private static readonly _showTournamentDurationMs = 5000;
 	private static readonly _showOpponentsDurationMs = 2000;
@@ -23,10 +23,9 @@ export class	LocalTournament extends Tournament
 
 	constructor(private _participants : Profile[])
 	{
-		if (_participants.length > Tournament.maxTournamentParticipants)
-			throw new Error(`Too many participants ! : max : ${Tournament.maxTournamentParticipants}`);
-		super();
-		this._expectedQualifiedCount = Tournament.getExpectedQualified(this._participants.length);
+		if (_participants.length > TournamentHelper.maxTournamentParticipants)
+			throw new Error(`Too many participants ! : max : ${TournamentHelper.maxTournamentParticipants}`);
+		this._expectedQualifiedCount = TournamentHelper.getExpectedQualified(this._participants.length);
 	}
 
 	private	getMatchList()
@@ -59,11 +58,11 @@ export class	LocalTournament extends Tournament
 		this._currentMatchIndex = 0;
 		if (this._round === "qualification")
 		{
-			Tournament.setQualifiedParticipants(this._qualified, this._participants, this._expectedQualifiedCount);
+			TournamentHelper.setQualifiedParticipants(this._qualified, this._participants, this._expectedQualifiedCount);
 			if (this._qualified.length === this._expectedQualifiedCount)
 			{
 				this._round = 0;
-				this._tournamentMatches = Tournament.createTournamentMatches(this._qualified);
+				this._tournamentMatches = TournamentHelper.createTournamentMatches(this._qualified);
 				this._tournamentGUI = new TournamentGUI(this._tournamentMatches, this._qualified);
 				this._events.getObservable("show-tournament").notifyObservers(this._tournamentGUI);
 				await this.delay(LocalTournament._showTournamentDurationMs);
@@ -71,7 +70,7 @@ export class	LocalTournament extends Tournament
 			}
 			else
 			{
-				this._qualificationMatches = Tournament.createQualificationMatches(this._participants);
+				this._qualificationMatches = TournamentHelper.createQualificationMatches(this._participants);
 				this.startCurrentMatch();
 			}
 		}
@@ -126,13 +125,9 @@ export class	LocalTournament extends Tournament
 		})
 	}
 
-	public init(events : FrontendEventsManager)
+	public start(events : FrontendEventsManager)
 	{
 		this._events = events;
-	}
-
-	public start()
-	{
 		if (isPowerOfTwo(this._participants.length))
 		{
 			this._qualified = this._participants;

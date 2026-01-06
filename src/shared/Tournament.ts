@@ -1,15 +1,14 @@
-import type { EndData } from "./attachedScripts/GameManager";
 import { Match } from "./Match";
 import type { Profile } from "./Profile";
 import { isPowerOfTwo, shuffle } from "./utils";
 
-export abstract class	Tournament
+export abstract class	TournamentHelper
 {
 	public static readonly maxTournamentParticipants = 64;
 	public static readonly maxNameLength = 20;
 
 
-	protected static createQualificationMatches(profiles : Profile[])
+	public static createQualificationMatches(profiles : Profile[])
 	{
 		if (profiles.length < 2)
 			throw new Error(`The profiles should be greater than 1, got ${profiles.length}`);
@@ -26,7 +25,7 @@ export abstract class	Tournament
 		return matches;
 	}
 
-	protected static	createTournamentMatches(profiles : Profile[]) : Match[][]
+	public static	createTournamentMatches(profiles : Profile[]) : Match[][]
 	{
 		if (profiles.length < 2 || !isPowerOfTwo(profiles.length))
 			throw new Error(`The profiles should be a power of two, greater than 1, got ${profiles.length}`);
@@ -34,7 +33,7 @@ export abstract class	Tournament
 		return this.createMatchesByRoundRecursive(profiles);
 	}
 
-	protected static createMatchesByRoundRecursive(participants : Profile[] | Match[]) : Match[][]
+	public static createMatchesByRoundRecursive(participants : Profile[] | Match[]) : Match[][]
 	{
 		if (participants.length === 1)
 			return [];
@@ -49,7 +48,7 @@ export abstract class	Tournament
 		return matchesByRounds;
 	}
 
-	protected static setQualifiedParticipants(qualified : Profile[], participants : Profile[], expectedQualified : number)
+	public static setQualifiedParticipants(qualified : Profile[], participants : Profile[], expectedQualified : number)
 	{
 		if (qualified.length >= expectedQualified)
 			return;
@@ -75,7 +74,7 @@ export abstract class	Tournament
 		}
 	}
 
-	protected static getExpectedQualified(participantCount : number)
+	public static getExpectedQualified(participantCount : number)
 	{
 		let	expectedQualified = 2;
 
@@ -85,9 +84,4 @@ export abstract class	Tournament
 		}
 		return expectedQualified;
 	}
-
-	public abstract start() : void;
-	public abstract onGameEnd(endData : EndData) : void;
-	public abstract startNextGame() : void;
-	public abstract dispose() : void;
 }

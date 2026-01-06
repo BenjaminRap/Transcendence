@@ -23,6 +23,8 @@ import { OnlineTournamentJoinPublicGUI } from "../gui/OnlineTournamentJoinPublic
 import { OnlineTournamentChoiceGUI } from "../gui/OnlineTournamentChoiceGUI";
 import { OnlineTournamentStartGUI } from "../gui/OnlineTournamentStartGUI";
 
+type EnemyType = "Local" | "Multiplayer" | "Bot";
+
 export class CreateMenuGUI extends CustomScriptComponent {
 	private static readonly _enemyTypes = [ "Local", "Multiplayer", "Bot" ];
 
@@ -77,12 +79,12 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			cancelButton: () => this.cancelMatchmaking()
 		}, this._menuParent);
 		this._localGameTypeChoiceGUI = initMenu(new GameTypeChoiceGUI(), {
-			twoVersusTwo: () => this.startGame(this._currentSceneFileName, "Local"),
+			twoVersusTwo: () => this.startGame(this._currentSceneFileName, "Local", undefined),
 			tournament: () => this.switchMenu(this._localGameTypeChoiceGUI, this._localTournamentCreationGUI),
 			cancel: () => this.switchMenu(this._localGameTypeChoiceGUI, this._menuGUI)
 		}, this._menuParent);
 		this._onlineGameTypeChoiceGUI = initMenu(new GameTypeChoiceGUI(), {
-			twoVersusTwo: () => this.startGame(this._currentSceneFileName, "Multiplayer"),
+			twoVersusTwo: () => this.startGame(this._currentSceneFileName, "Multiplayer", undefined),
 			tournament: () => this.switchMenu(this._onlineGameTypeChoiceGUI, this._onlineTournamentChoiceGUI),
 			cancel: () => this.switchMenu(this._onlineGameTypeChoiceGUI, this._menuGUI)
 		}, this._menuParent)
@@ -208,7 +210,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		const	enemyType = CreateMenuGUI._enemyTypes[enemyTypeIndex];
 
 		if (enemyType === "Bot")
-			this.startGame(sceneName, enemyType);
+			this.startGame(sceneName, enemyType, undefined);
 		else if (enemyType === "Local")
 			this.switchMenu(this._menuGUI, this._localGameTypeChoiceGUI);
 		else if (enemyType === "Multiplayer")
@@ -225,14 +227,17 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		this.startGame(this._currentSceneFileName, "Local", tournament);
 	}
 
-	private	startGame(sceneName : SceneFileName, enemyType : string, tournament? : LocalTournament)
+	private	startGame<T extends EnemyType>(
+		sceneName : SceneFileName,
+		enemyType : T,
+		tournament : T extends "Local" ? LocalTournament | undefined : undefined)
 	{
 		if (enemyType === "Local")
 			this._sceneData.pongHTMLElement.startLocalGame(sceneName, tournament);
 		else if (enemyType === "Multiplayer")
 		{
 			this.switchMenu(this._onlineGameTypeChoiceGUI, this._inMatchmakingGUI);
-			this._sceneData.pongHTMLElement.startOnlineGame(sceneName, tournament);
+			this._sceneData.pongHTMLElement.startOnlineGame(sceneName);
 		}
 		else if (enemyType === "Bot")
 			this._sceneData.pongHTMLElement.startBotGame(sceneName);

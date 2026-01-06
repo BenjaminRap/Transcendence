@@ -1,4 +1,4 @@
-import { Tournament } from "@shared/Tournament";
+import { TournamentHelper } from "@shared/Tournament";
 import type { IGUI } from "./IGUI";
 import type { TournamentCreationSettings } from "@shared/ServerMessage";
 
@@ -39,7 +39,7 @@ export class	OnlineTournamentCreationGUI extends HTMLElement implements IGUI<Onl
 					<p class="OnlineTournamentCreationGUINameErrorText w-full text-red-900 bg-red-300/25 backdrop-blur-3xl mb-[0.5cqw] text-center rounded-md invisible">Error</p>
 					<label>
 						Name :
-						<input class="ml-[1%] focus:border-(--border-color) focus:border-b-(length:--border-width) focus:outline-none OnlineTournamentCreationGUIName" type="text" placeholder="Tournament" maxlength="${Tournament.maxNameLength}" required>
+						<input class="ml-[1%] focus:border-(--border-color) focus:border-b-(length:--border-width) focus:outline-none OnlineTournamentCreationGUIName" type="text" placeholder="Tournament" maxlength="${TournamentHelper.maxNameLength}" required>
 					</label>
 					<p class="OnlineTournamentCreationGUIIsPublicErrorText w-full text-red-900 bg-red-300/25 backdrop-blur-3xl mb-[0.5cqw] text-center rounded-md invisible">Error</p>
 					<label>
@@ -49,7 +49,7 @@ export class	OnlineTournamentCreationGUI extends HTMLElement implements IGUI<Onl
 					<p class="OnlineTournamentCreationGUIMaxPlayersCountErrorText w-full text-red-900 bg-red-300/25 backdrop-blur-3xl mb-[0.5cqw] text-center rounded-md invisible">Error</p>
 					<label>
 						Max Players Count :
-						<input class="ml-[1%] focus:border-(--border-color) focus:border-b-(length:--border-width) focus:outline-none w-1/12 OnlineTournamentCreationGUIMaxPlayersCount" type="number" min="2" max="${Tournament.maxTournamentParticipants}" step="1" placeholder="2" required>
+						<input class="ml-[1%] focus:border-(--border-color) focus:border-b-(length:--border-width) focus:outline-none w-1/12 OnlineTournamentCreationGUIMaxPlayersCount" type="number" min="2" max="${TournamentHelper.maxTournamentParticipants}" step="1" placeholder="2" required>
 					</label>
 				</div>
 			</fieldset>

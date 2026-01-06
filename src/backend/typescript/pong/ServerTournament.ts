@@ -1,9 +1,7 @@
-import type { EndData } from "@shared/attachedScripts/GameManager";
 import type { TournamentCreationSettings, TournamentDescription } from "@shared/ServerMessage";
-import { Tournament } from "@shared/Tournament"
 import type { DefaultSocket } from "..";
 
-export class	ServerTournament extends Tournament
+export class	ServerTournament
 {
 	private	_disposed = false;
 	private _players : DefaultSocket[] = [];
@@ -14,16 +12,10 @@ export class	ServerTournament extends Tournament
 		private readonly _settings : TournamentCreationSettings
 	)
 	{
-		super();
 		this._tournamentId = crypto.randomUUID();
 	}
 
 	public start()
-	{
-		throw new Error("Method not implemented.");
-	}
-
-	public onGameEnd(endData: EndData)
 	{
 		throw new Error("Method not implemented.");
 	}

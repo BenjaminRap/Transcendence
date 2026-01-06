@@ -13,7 +13,6 @@ import { type FrontendGameType, getSceneData } from "@shared/SceneData";
 import { Settings } from "./Settings";
 import { ServerProxy } from "./ServerProxy";
 import type { GameInfos } from "@shared/ServerMessage";
-import type { Tournament } from "@shared/Tournament";
 import type { LocalTournament } from "./LocalTournament";
 import { frontendSocketHandler } from "../index";
 import { ErrorGUI } from "./gui/ErrorGUI";
@@ -32,9 +31,11 @@ export class PongGame extends HTMLElement {
 	private _settings : Settings;
 	private _errorGUI! : ErrorGUI;
 	private _closeGUI! : CloseGUI;
+	private _serverProxy : ServerProxy;
 
     public constructor() {
 		super();
+		this._serverProxy = new ServerProxy(frontendSocketHandler);
 		this.classList.add("block", "overflow-hidden", "container-inline", "aspect-video");
 		this._settings = new Settings();
 	}
@@ -92,17 +93,21 @@ export class PongGame extends HTMLElement {
 		return engine;
 	}
 
-	private async changeScene(newSceneName : string, gameType : FrontendGameType, clientInputs : readonly ClientInput[], serverCommunicationHandler? : ServerProxy, tournament? : Tournament) : Promise<void>
+	private async changeScene<T extends FrontendGameType>(
+		newSceneName : string,
+		gameType : T,
+		clientInputs : readonly ClientInput[],
+		tournament : T extends "Local" ? LocalTournament | undefined : undefined) : Promise<void>
 	{
 		this.disposeScene();
-		this._scene = await this.getNewScene(newSceneName, gameType, clientInputs, serverCommunicationHandler, tournament);
+		this._scene = await this.getNewScene(newSceneName, gameType, clientInputs, tournament);
 	}
 
 	public async goToMenuScene()
 	{
 		frontendSocketHandler.leaveScene();
 		if (!this._scene || getSceneData(this._scene).gameType !== "Menu")
-			await this.changeScene("Menu.gltf", "Menu", []);
+			await this.changeScene("Menu.gltf", "Menu", [], undefined);
 	}
 
 	public startBotGame(sceneName : SceneFileName)
@@ -113,7 +118,7 @@ export class PongGame extends HTMLElement {
 	private async startBotGameAsync(sceneName : SceneFileName)
 	{
 		const	inputs = [this._settings._playerInputs[0]];
-		await this.changeScene(sceneName, "Bot", inputs);
+		await this.changeScene(sceneName, "Bot", inputs, undefined);
 		const	sceneData = getFrontendSceneData(this._scene!);
 
 		await sceneData.readyPromise.promise;
@@ -127,33 +132,29 @@ export class PongGame extends HTMLElement {
 
 	private async startLocalGameAsync(sceneName : SceneFileName, tournament? : LocalTournament)
 	{
-		await this.changeScene(sceneName, "Local", this._settings._playerInputs, undefined, tournament);
+		await this.changeScene(sceneName, "Local", this._settings._playerInputs, tournament);
 		const	sceneData = getFrontendSceneData(this._scene!);
 
 		await sceneData.readyPromise.promise;
 		if (tournament)
-		{
-			tournament.init(sceneData.events);
-			tournament.start();
-		}
+			tournament.start(sceneData.events);
 		else
 			sceneData.events.getObservable("game-start").notifyObservers();
 	}
 
-	public startOnlineGame(sceneName : SceneFileName, tournament? : Tournament)
+	public startOnlineGame(sceneName : SceneFileName)
 	{
-		this.startOnlineGameAsync(sceneName, tournament);
+		this.startOnlineGameAsync(sceneName);
 	}
 
-	private async startOnlineGameAsync(sceneName : SceneFileName, tournament? : Tournament) : Promise<void>
+	private async startOnlineGameAsync(sceneName : SceneFileName) : Promise<void>
 	{
 		try {
 			await frontendSocketHandler.joinGame();
 			const	playerIndex = frontendSocketHandler.getplayerIndex();
 			const	inputs = this._settings._playerInputs.filter((value : ClientInput) => value.index === playerIndex);
-			const	serverProxy = new ServerProxy(frontendSocketHandler);
 
-			await this.changeScene(sceneName, "Multiplayer", inputs, serverProxy, tournament);
+			await this.changeScene(sceneName, "Multiplayer", inputs, undefined);
 			const	sceneData = getFrontendSceneData(this._scene!);
 
 			await sceneData.readyPromise.promise;
@@ -204,14 +205,18 @@ export class PongGame extends HTMLElement {
 		frontendSocketHandler.leaveMatchmaking();
 	}
 
-	private	async getNewScene(sceneName : string, gameType : FrontendGameType, clientInputs : readonly ClientInput[], serverCommunicationHandler? : ServerProxy, tournament? : Tournament) : Promise<Scene>
+	private	async getNewScene(
+		sceneName : string,
+		gameType : FrontendGameType,
+		clientInputs : readonly ClientInput[],
+		tournament? : LocalTournament) : Promise<Scene>
 	{
 		const	scene = new Scene(this._engine);
 
 		if (!scene.metadata)
 			scene.metadata = {};
 		globalThis.HKP = new HavokPlugin(false);
-		scene.metadata.sceneData = new FrontendSceneData(globalThis.HKP, this, gameType, clientInputs, serverCommunicationHandler, tournament);
+		scene.metadata.sceneData = new FrontendSceneData(globalThis.HKP, this, gameType, clientInputs, this._serverProxy, tournament);
 		const	cam = new FreeCamera("camera1", Vector3.Zero(), scene);
 		const	assetsManager = new AssetsManager(scene);
 

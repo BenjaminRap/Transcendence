@@ -1,7 +1,7 @@
 import type { Profile } from "@shared/Profile";
 import { ProfileCreationGUI } from "./ProfileCreationGUI";
 import type { IGUI } from "./IGUI";
-import { Tournament } from "@shared/Tournament";
+import { TournamentHelper } from "@shared/Tournament";
 
 export type TournamentCreationGUIInputs = {
 	start : HTMLButtonElement,
@@ -60,7 +60,7 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 
 	private	addProfile()
 	{
-		if (this._profiles.length >= Tournament.maxTournamentParticipants)
+		if (this._profiles.length >= TournamentHelper.maxTournamentParticipants)
 			return ;
 		const	newProfile = new ProfileCreationGUI();
 		newProfile.classList.add("mb-[0.5cqw]", "w-1/4", "ml-[3%]", "mr-[3%]", "mt-[0.5cqw]");
@@ -75,7 +75,7 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 		inputs.remove.addEventListener("click", () => this.removeProfile(newProfile));
 		if (this._profiles.length === 3)
 			this.setCanRemove(true);
-		if (this._profiles.length === Tournament.maxTournamentParticipants)
+		if (this._profiles.length === TournamentHelper.maxTournamentParticipants)
 			this.setCanAdd(false);
 	}
 
@@ -89,7 +89,7 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 		element.remove();
 		if (this._profiles.length === 2)
 			this.setCanRemove(false);
-		else if (this._profiles.length === Tournament.maxTournamentParticipants - 1)
+		else if (this._profiles.length === TournamentHelper.maxTournamentParticipants - 1)
 			this.setCanAdd(true);
 	}
 
@@ -121,7 +121,7 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 			this.addProfile();
 		}
 		this.setCanRemove(false);
-		this.setCanAdd(Tournament.maxTournamentParticipants > 2);
+		this.setCanAdd(TournamentHelper.maxTournamentParticipants > 2);
 	}
 
 	private validate()
@@ -137,8 +137,8 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 			
 			if (inputs.name.value === "")
 				profile.setErrorText("A profile name can not be empty !");
-			else if (inputs.name.value.length > Tournament.maxNameLength)
-				profile.setErrorText(`A profile name can not be longer than ${Tournament.maxNameLength} !`);
+			else if (inputs.name.value.length > TournamentHelper.maxNameLength)
+				profile.setErrorText(`A profile name can not be longer than ${TournamentHelper.maxNameLength} !`);
 			else if (this._profiles.filter((value) => value.getInputs()!.name.value === inputs.name.value).length > 1)
 				profile.setErrorText("The profile name is duplicated !")
 			else
