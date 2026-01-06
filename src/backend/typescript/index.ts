@@ -23,6 +23,7 @@ import { getPublicTournamentsDescriptions, TournamentMaker } from './pong/Tourna
 import { zodTournamentCreationSettings, type TournamentDescription } from '@shared/ServerMessage.js';
 
 export type DefaultSocket = Socket<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>;
+export type DefaultServer = Server<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>;
 
 const fastify = Fastify({
 	logger: true
@@ -32,7 +33,7 @@ async function	init() : Promise<void>
 {
 	loadHavokPhysics();
 }
-const	io = new Server(fastify.server);
+const	io = new Server<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>(fastify.server);
 
 async function	loadHavokPhysics()
 {

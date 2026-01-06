@@ -1,5 +1,5 @@
 import type { Profile } from "@shared/Profile";
-import { TournamentHelper } from "@shared/Tournament";
+import { TournamentHelper } from "@shared/TournamentHelper";
 
 export type	ProfileCreationInputs = {
 	name : HTMLInputElement,

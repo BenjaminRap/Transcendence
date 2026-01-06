@@ -1,7 +1,7 @@
 import type { Profile } from "@shared/Profile";
 import { ProfileCreationGUI } from "./ProfileCreationGUI";
 import type { IGUI } from "./IGUI";
-import { TournamentHelper } from "@shared/Tournament";
+import { TournamentHelper } from "@shared/TournamentHelper";
 
 export type TournamentCreationGUIInputs = {
 	start : HTMLButtonElement,

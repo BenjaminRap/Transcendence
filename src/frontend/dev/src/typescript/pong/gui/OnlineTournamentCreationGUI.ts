@@ -1,4 +1,4 @@
-import { TournamentHelper } from "@shared/Tournament";
+import { TournamentHelper } from "@shared/TournamentHelper";
 import type { IGUI } from "./IGUI";
 import type { TournamentCreationSettings } from "@shared/ServerMessage";
 

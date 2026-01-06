@@ -1,4 +1,4 @@
-import { TournamentHelper} from "@shared/Tournament";
+import { TournamentHelper} from "@shared/TournamentHelper";
 import type { Profile } from "@shared/Profile";
 import type { Match } from "@shared/Match";
 import { TournamentGUI } from "./gui/TournamentGUI";

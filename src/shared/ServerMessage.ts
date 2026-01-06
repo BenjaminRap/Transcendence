@@ -1,5 +1,5 @@
 import * as zod from "zod";
-import { TournamentHelper } from "./Tournament";
+import { TournamentHelper } from "./TournamentHelper";
 
 export const zodVector3 = zod.object({
 	x: zod.number(),
@@ -32,7 +32,7 @@ export type KeysUpdate = zod.infer<typeof zodKeysUpdate>;
 
 export const zodGameInfos = zod.discriminatedUnion("type", [
 	zod.object({
-type: zod.literal("itemsUpdate"),
+		type: zod.literal("itemsUpdate"),
 		infos: zodItemsUpdate,
 	}),
 	zod.object({
@@ -60,11 +60,14 @@ export const	zodTournamentCreationSettings = zod.object({
 });
 export type TournamentCreationSettings = zod.infer<typeof zodTournamentCreationSettings>;
 
+export const	zodTournamentId = zod.string().nonempty();
+export type TournamentId = zod.infer<typeof zodTournamentId>;
+
 export const	zodTournamentDescription = zod.object({
 	name: zod.string().trim().max(TournamentHelper.maxNameLength).nonempty(),
 	currentPlayerCount: zod.number().min(2).max(TournamentHelper.maxTournamentParticipants),
 	maxPlayerCount: zod.number().min(2).max(TournamentHelper.maxTournamentParticipants),
-	id: zod.string().nonempty()
+	id: zodTournamentId
 }).refine((data) => data.currentPlayerCount <= data.maxPlayerCount, {
 	message: "currentPlayerCount should not be greater than maxPlayerCount !",
 	path: [ "currentPlayerCount" ]

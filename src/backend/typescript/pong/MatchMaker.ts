@@ -1,6 +1,5 @@
-import { type DefaultEventsMap, Server } from "socket.io";
 import { Room } from "./Room";
-import type { DefaultSocket } from "../index";
+import type { DefaultServer, DefaultSocket } from "../index";
 
 const	rooms = new Set<Room>();
 
@@ -10,7 +9,7 @@ export class	MatchMaker
 
 
 	constructor(
-		private readonly _io : Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>
+		private readonly _io : DefaultServer
 	) {
 	}
 

@@ -4,3 +4,9 @@ export type Profile = {
 	score : number
 }
 
+export const	defaultProfile : Profile = {
+	name: "unkown",
+	image : "/images/unkown.png",
+	score: 0
+}
+

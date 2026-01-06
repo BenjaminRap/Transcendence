@@ -4,9 +4,8 @@ import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
 import { type GameInit, type KeysUpdate, zodKeysUpdate } from "@shared/ServerMessage"
 import { ClientProxy } from "./ClientProxy";
 import { type int, Observable } from "@babylonjs/core";
-import { type DefaultEventsMap, Server } from "socket.io";
 import type { ServerEvents, ServerToClientEvents } from "@shared/MessageType";
-import type { DefaultSocket } from "../index";
+import type { DefaultServer, DefaultSocket } from "../index";
 
 export type SocketMessage = {
 	socketIndex : int,
@@ -25,7 +24,7 @@ export class	Room
 	private _ended : boolean = false;
 	
 	constructor(
-		private readonly _io : Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>,
+		private readonly _io : DefaultServer,
 		private readonly _onDispose : () => void,
 		firstSocket : DefaultSocket,
 		secondSocket : DefaultSocket

@@ -1,10 +1,4 @@
-import type { Profile } from "@shared/Profile";
-
-const	defaultProfile : Profile = {
-	name: "unkown",
-	image : "/images/unkown.png",
-	score: 0
-}
+import { defaultProfile, type Profile } from "@shared/Profile";
 
 export class	OpponentGUI extends HTMLElement
 {
