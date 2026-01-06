@@ -18,11 +18,16 @@ import { frontendSocketHandler } from "../index";
 import { ErrorGUI } from "./gui/ErrorGUI";
 import { initMenu } from "./gui/IGUI";
 import { CloseGUI } from "./gui/CloseGUI";
+import type { FrontendTournament } from "./FrontendTournament";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
 
 export type SceneFileName = "Magic.gltf" | "Basic.gltf" | "Terminal.gltf";
+export type TournamentType<T extends FrontendGameType> =
+	T extends "Local" ? LocalTournament :
+	T extends "Multiplayer" ? FrontendTournament :
+	undefined
 
 export class PongGame extends HTMLElement {
 	private _canvas! : HTMLCanvasElement;
@@ -97,7 +102,7 @@ export class PongGame extends HTMLElement {
 		newSceneName : string,
 		gameType : T,
 		clientInputs : readonly ClientInput[],
-		tournament : T extends "Local" ? LocalTournament | undefined : undefined) : Promise<void>
+		tournament? : TournamentType<T>) : Promise<void>
 	{
 		this.disposeScene();
 		this._scene = await this.getNewScene(newSceneName, gameType, clientInputs, tournament);
@@ -205,11 +210,11 @@ export class PongGame extends HTMLElement {
 		frontendSocketHandler.leaveMatchmaking();
 	}
 
-	private	async getNewScene(
+	private	async getNewScene<T extends FrontendGameType>(
 		sceneName : string,
-		gameType : FrontendGameType,
+		gameType : T,
 		clientInputs : readonly ClientInput[],
-		tournament? : LocalTournament) : Promise<Scene>
+		tournament? : TournamentType<T>) : Promise<Scene>
 	{
 		const	scene = new Scene(this._engine);
 
