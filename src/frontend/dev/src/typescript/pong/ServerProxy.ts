@@ -21,7 +21,7 @@ export class	ServerProxy
 		this._frontendSocketHandler.sendServerMessage("input-infos", keysUpdate);
 	}
 
-	public onServerMessage() : Observable<GameInfos | "room-closed" | "server-error" | "forfeit">
+	public onServerMessage() : Observable<GameInfos | "room-closed" | "forfeit">
 	{
 		return this._frontendSocketHandler.onServerMessage();
 	}

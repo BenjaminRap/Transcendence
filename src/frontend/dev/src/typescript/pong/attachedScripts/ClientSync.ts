@@ -45,10 +45,10 @@ export class ClientSync extends CustomScriptComponent {
 	
 		if (!serverProxy)
 			return ;
-		serverProxy.onServerMessage().add((gameInfos : GameInfos | "room-closed" | "server-error" | "forfeit") => {
+		serverProxy.onServerMessage().add((gameInfos : GameInfos | "room-closed" | "forfeit") => {
 			const	opponentInputs = this._inputManager.getPlayerInput(serverProxy.getOpponentIndex());
 
-			if (gameInfos === "room-closed" || gameInfos === "server-error")
+			if (gameInfos === "room-closed")
 			{
 				this.updateKey({event: "keyUp"}, opponentInputs.up);
 				this.updateKey({event: "keyUp"}, opponentInputs.up);

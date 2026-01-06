@@ -3,7 +3,7 @@ import type { ClientToServerEvents, ServerToClientEvents } from "@shared/Message
 import { type GameInfos, type TournamentCreationSettings, type TournamentDescription, zodGameInfos, zodGameInit } from "@shared/ServerMessage";
 import { io, Socket } from "socket.io-client";
 
-type ServerInGameMessage = GameInfos | "server-error" | "forfeit" | "room-closed";
+type ServerInGameMessage = GameInfos | "forfeit" | "room-closed";
 type DefaultSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 type SocketState = "not-connected" | "connected" | "in-matchmaking" | "in-game" | "tournament-creation";
 

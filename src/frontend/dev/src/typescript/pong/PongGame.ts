@@ -26,7 +26,7 @@ import.meta.glob("@shared/attachedScripts/*", { eager: true});
 export type SceneFileName = "Magic.gltf" | "Basic.gltf" | "Terminal.gltf";
 export type TournamentType<T extends FrontendGameType> =
 	T extends "Local" ? LocalTournament :
-	T extends "Multiplayer" ? FrontendTournament :
+	T extends "Online" ? FrontendTournament :
 	undefined
 
 export class PongGame extends HTMLElement {
@@ -166,13 +166,6 @@ export class PongGame extends HTMLElement {
 			frontendSocketHandler.setReady();
 			await frontendSocketHandler.onGameReady();
 			sceneData.events.getObservable("game-start").notifyObservers();
-			frontendSocketHandler.onServerMessage().add((gameInfos : GameInfos | "server-error" | "forfeit" | "room-closed") => {
-				if (gameInfos === "server-error")
-				{
-					console.log("Server Error !");
-					this.goToMenuScene();
-				}
-			});
 		} catch (error) {
 			if (error === "canceled")
 				return ;
