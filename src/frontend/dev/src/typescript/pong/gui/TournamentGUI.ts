@@ -76,7 +76,7 @@ export class	TournamentGUI extends HTMLElement implements IGUI<void>
 			const	matches = this._matchesByRound[round];
 			const	div = document.createElement("div");
 			const	width =  `calc((50% + ${TournamentGUI._lineWidth}) / ${matches.length})`;
-			div.style.setProperty("--opponent-font-size", `calc(${TournamentGUI._opponentFontSize} / ${matches.length})`);
+			div.style.setProperty("--opponent-font-size", `calc(${TournamentGUI._opponentFontSize} / 2 / ${matches.length})`);
 			div.style.setProperty("--match-line-width", `calc(${TournamentGUI._lineWidth} / ${matches.length})`);
 			div.style.setProperty("--rounded", `calc(${TournamentGUI._rounded} / ${matches.length})`);
 			div.style.setProperty("--border-width", `calc(${TournamentGUI._lineWidth} / ${matches.length})`);

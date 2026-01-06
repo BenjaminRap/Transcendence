@@ -35,6 +35,8 @@ export class	MatchGUI extends HTMLElement
 			throw new Error("MatchGUI setWinner has been called twice !");
 		const	opponentGUI = new OpponentGUI(profile);
 
+		opponentGUI.classList.add("w-1/2", "m-auto");
+
 		this._matchOrOpponent.replaceWith(opponentGUI);
 		this._matchOrOpponent = opponentGUI;
 	}
