@@ -8,19 +8,19 @@ export type EndGUIInputs =
 	goToMenu : HTMLButtonElement
 }
 
-export type	EndGUIType = "Local" | "Online" | "LocalTournament" | "OnlineTournament";
-
 export class	EndGUI extends HTMLElement implements IGUI<EndGUIInputs>
 {
 	private _inputs : EndGUIInputs | undefined;
 	private _mainDiv : HTMLDivElement | undefined;
 	private _winText : HTMLParagraphElement | undefined;
-	private _type : EndGUIType;
+	private _isOnline : boolean;
+	private _isTournament : boolean;
 
-	constructor(type? : EndGUIType)
+	constructor(isOnline? : boolean, isTournament? : boolean)
 	{
 		super();
-		this._type = type ?? "Local";
+		this._isOnline = isOnline ?? false;
+		this._isTournament = isTournament ?? false;
 	}
 
 	public	connectedCallback()
@@ -48,18 +48,17 @@ export class	EndGUI extends HTMLElement implements IGUI<EndGUIInputs>
 			return ;
 		let		winText = "";
 		const	winnerIndex = (winner === "left") ? 0 : 1;
-		const	isOnline = (this._type === "Online" || this._type === "OnlineTournament");
 
 		if (winner === "draw")
 			winText += "Draw";
-		else if (isOnline && winnerIndex !== playerIndex)
+		else if (this._isOnline && winnerIndex !== playerIndex)
 			winText += "Lose";
 		else
 			winText += "Win";
 		if (forfeit)
 			winText += " By Forfeit";
 		this._winText.textContent = winText;
-		if (isOnline || winner === "draw")
+		if (this._isOnline || winner === "draw")
 			this.setWinTextSide("middle");
 		else
 			this.setWinTextSide(winner);
@@ -78,9 +77,9 @@ export class	EndGUI extends HTMLElement implements IGUI<EndGUIInputs>
 
 	private	getTypeSpecificHTML()
 	{
-		if (this._type === "Online" || this._type === "Local")
+		if (!this._isTournament)
 			return `${this.getButtonHTML("Restart", "pauseGUIRestart")}`;
-		else if (this._type === "LocalTournament")
+		else if (!this._isOnline)
 			return `${this.getButtonHTML("Continue", "pauseGUIContinue")}`;
 		return `
 			<div class="flex flex-row">

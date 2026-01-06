@@ -88,5 +88,6 @@ export abstract class	Tournament
 
 	public abstract start() : void;
 	public abstract onGameEnd(endData : EndData) : void;
+	public abstract startNextGame() : void;
 	public abstract dispose() : void;
 }

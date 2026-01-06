@@ -50,14 +50,17 @@ export class CreateInGameGUI extends CustomScriptComponent {
 	protected	createMenus()
 	{
 		const	forfeitEnabled = this._sceneData.tournament === undefined || this._sceneData.gameType === "Multiplayer";
+		const	isOnline = this._sceneData.gameType === "Multiplayer";
+		const	isTournament = this._sceneData.tournament !== undefined;
 
 		this._pauseGUI = initMenu(new PauseGUI(forfeitEnabled), {
 			continue: () => this.togglePause(),
 			forfeit: () => this.onForfeit(),
 			goToMenu: () => this.onGoToMenu()
 		}, this._menuParent);
-		this._endGUI = initMenu(new EndGUI(), {
+		this._endGUI = initMenu(new EndGUI(isOnline, isTournament), {
 			restart: () => this.onRestart(),
+			continue: () => this._sceneData.tournament?.startNextGame(),
 			goToMenu: () => this.onGoToMenu()
 
 		}, this._menuParent);
@@ -102,10 +105,8 @@ export class CreateInGameGUI extends CustomScriptComponent {
 	private	onGameEnd(endData : EndData)
 	{
 		this._endGUI.setWinner(endData.winner, endData.forfeit, this._sceneData.serverProxy?.getPlayerIndex());
-		if (this._sceneData.tournament !== undefined)
-			this._sceneData.tournament.onGameEnd(endData);
-		else
-			this.switchToGUI(this._endGUI);
+		this.switchToGUI(this._endGUI);
+		this._sceneData.tournament?.onGameEnd(endData);
 	}
 
 	private	togglePause() : void
@@ -172,12 +173,6 @@ export class CreateInGameGUI extends CustomScriptComponent {
 	{
 		this._currentGUI?.classList.add("hidden");
 		this._currentGUI = undefined;
-	}
-
-	private	addHiddenGUI(menu : HTMLElement)
-	{
-		this._menuParent.appendChild(menu);
-		menu.classList.add("hidden");
 	}
 
 	private	onGoToMenu() : void

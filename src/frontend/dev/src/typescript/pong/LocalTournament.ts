@@ -9,7 +9,7 @@ import { isPowerOfTwo } from "@shared/utils";
 export class	LocalTournament extends Tournament
 {
 	private static readonly _showTournamentDurationMs = 5000;
-	private static readonly _showOpponentsDurationMs = 5000;
+	private static readonly _showOpponentsDurationMs = 2000;
 
 	private _round : "qualification" | number = "qualification";
 	private _tournamentMatches : Match[][] = [];
@@ -154,14 +154,20 @@ export class	LocalTournament extends Tournament
 		const	winner = match.getWinner()!;
 
 		winner.score += 1;
+	}
+
+	public startNextGame()
+	{
 		this._currentMatchIndex++;
 
+		const	matches = this.getMatchList();
+		if (matches === null)
+			throw new Error("Current match list is null in LocalTournament !");
 		if (this._currentMatchIndex >= matches.length)
 			this.endRound();
 		else
 			this.startCurrentMatch();
 	}
-
 
 	public dispose()
 	{
