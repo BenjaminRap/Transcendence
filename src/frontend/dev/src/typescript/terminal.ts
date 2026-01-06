@@ -57,10 +57,15 @@ export namespace TerminalPromptAndEnv {
 }
 
 export namespace PongUtils {
+	export let isPongLaunched = false;
+	export let pongGameInstance: HTMLDivElement | null = null;
+
 	export function removePongDiv() {
 		const pongContainer = document.getElementById('pong-game-container');
 		if (pongContainer) {
 			pongContainer.remove();
+			isPongLaunched = false;
+			pongGameInstance = null;
 		}
 	}
 }
@@ -132,15 +137,14 @@ function rmCommand(): string {
 
 function pongCommand(): string {
 	if (!TerminalElements.terminal)
-	{
-		console.error("Body element not found");
 		return 'Error launching Pong game.';
-	}
 	TerminalElements.terminal.insertAdjacentHTML('beforeend', `
 	<div id="pong-game-container" class="fixed top-[50%] left-[50%] border border-green-500 bg-black flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 " style="width: 80vw">
-		<pong-game class="size-full"></pong-game>
+		<pong-game id="pong-game" class="size-full"></pong-game>
 	</div>
 `);
+	PongUtils.isPongLaunched = true;
+	PongUtils.pongGameInstance = document.getElementById('pong-game') as HTMLDivElement;
 	return 'Pong game launched!';
 }
 
@@ -755,9 +759,13 @@ function setEventListeners() {
 
 	if (TerminalElements.terminal) {
 		TerminalElements.terminal.addEventListener('click', () => {
-			if (TerminalElements.currentInput && !Modal.isModalActive && !ExtendedView.isExtendedViewIsActive) {
-				TerminalElements.currentInput.focus();
+			if (PongUtils.isPongLaunched)
+			{
+				PongUtils.pongGameInstance?.focus();
+				return;
 			}
+			if (TerminalElements.currentInput && !Modal.isModalActive && !ExtendedView.isExtendedViewIsActive)
+				TerminalElements.currentInput.focus();
 		});
 		window.addEventListener('resize', (e) => {
 			if (TerminalElements.currentInput)
