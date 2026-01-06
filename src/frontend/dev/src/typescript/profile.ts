@@ -205,7 +205,7 @@ function createMatchHistory(profileElement: HTMLElement | null) {
                 <div class="flex flex-1 justify-end items-center gap-2 min-w-0 relative">
                     <div class="group relative min-w-0 text-right">
                         <p class="truncate cursor-pointer">${match.opponent}</p>
-                        <p class="absolute bottom-full right-0 mb-1 hidden group-hover:block border p-1 border-green-500 bg-black z-10 whitespace-nowrap">${match.opponent}</p>
+                        <p class="absolute bottom-full right-0 mb-1 hidden group-hover:block border p-1 border-green-500 bg-black whitespace-nowrap">${match.opponent}</p>
                     </div>
                     <img src="${match.profilelinkopponent}" alt="Avatar"
                         class="w-8 h-8 sm:w-10 sm:h-10 border border-green-500 object-cover shrink-0"></img>

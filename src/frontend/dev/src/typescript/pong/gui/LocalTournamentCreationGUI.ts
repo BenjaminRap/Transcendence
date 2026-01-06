@@ -19,7 +19,7 @@ export class	LocalTournamentCreationGUI extends HTMLElement
 
 	connectedCallback()
 	{
-		this.classList.add("absolute", "inset-0", "size-full", "z-10");
+		this.classList.add("absolute", "inset-0", "size-full");
 		this.innerHTML = `
 			<div class="w-full h-2/3 top-1/3 relative flex flex-col">
 				<div class="w-full h-2/3 overflow-scroll pointer-events-auto">

@@ -18,7 +18,7 @@ export class	EndGUI extends HTMLElement
 
 	public	connectedCallback()
 	{
-		this.classList.add("absolute", "inset-0", "size-full", "z-10", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm");
+		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm");
 		this.innerHTML = `
 			<div class="pauseGUIMainDiv flex flex-col size-full  h-4/6 w-1/3 -translate-y-1/2 top-1/2 absolute">
 				<p class="pauseGUIWinText font-bold leading-normal text-[7cqw] text-white text-center">WIN</p>

@@ -1,4 +1,3 @@
-import { Matrix } from "@babylonjs/core";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { Scene } from "@babylonjs/core/scene";
 import zod from "zod";
@@ -12,13 +11,8 @@ export type LodLevel = zod.infer<typeof zodLodLevel>;
 
 export interface	LodLevelProcessed
 {
-	mesh : LodMesh | null;
+	mesh : Mesh | null;
 	squaredDistance : number;
-}
-
-export interface	LodMesh extends Mesh
-{
-	inverseWorldMatrix : Matrix;
 }
 
 export class	Lod
@@ -44,16 +38,15 @@ export class	Lod
 		});
 	}
 
-	private	findMesh(scene : Scene, name : string) : LodMesh
+	private	findMesh(scene : Scene, name : string) : Mesh
 	{
-		const	mesh = scene.getMeshByName(name) as LodMesh;
+		const	mesh = scene.getMeshByName(name);
 
 		if (mesh === null)
 			throw new Error(`Can't find an lod mesh, id : ${name}!`);
 		if (!(mesh instanceof Mesh))
 			throw new Error(`The lod AbstractMesh is not a Mesh, id :  ${name}`);
 
-		mesh.inverseWorldMatrix = Matrix.Invert(mesh.getWorldMatrix());
 		return mesh;
 	}
 
@@ -62,7 +55,7 @@ export class	Lod
 		return this._levels;
 	}
 
-	public	getLodLevel(squaredDistance : number) : LodMesh | null
+	public	getLodLevel(squaredDistance : number) : Mesh | null
 	{
 		for (let index = 0; index < this._levels.length; index++) {
 			const lodLevel = this._levels[index];

@@ -40,7 +40,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		this._easeFunction.setEasingMode(EasingFunction.EASINGMODE_EASEINOUT);
 		this._sceneData = getFrontendSceneData(this.scene);
 		this._menuParent = document.createElement("div");
-		this._menuParent.classList.add("absolute", "inset-0", "size-full", "z-10", "cursor-default", "select-none", "pointer-events-none");
+		this._menuParent.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none");
 		this._sceneData.pongHTMLElement.appendChild(this._menuParent);
     }
 

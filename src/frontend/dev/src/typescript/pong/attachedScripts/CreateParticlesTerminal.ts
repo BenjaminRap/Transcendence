@@ -3,7 +3,7 @@ import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager } from "@babylonjs-toolkit/next";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { NodeMaterial, ParticleSystem, Texture, Vector2, Vector3 } from "@babylonjs/core";
-import { zodInt, zodNumber } from "@shared/ImportedHelpers";
+import { zodBoolean, zodInt, zodNumber } from "@shared/ImportedHelpers";
 import { Imported } from "@shared/ImportedDecorator";
 import { zodRange } from "@shared/Range";
 import { Range } from "@shared/Range";
@@ -22,6 +22,7 @@ export class CreateParticlesTerminal extends CustomScriptComponent {
 	@Imported(zodColorGradiant) private _colorGradiant! : ColorGradiant;
 	@Imported(Vector2) private _noiseScale! : Vector2;
 	@Imported(Vector2) private _noiseDisplacement! : Vector2;
+	@Imported(zodBoolean) private _autoStartParticle! : boolean;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "CreateParticlesTerminal") {
         super(transform, scene, properties, alias);
@@ -36,6 +37,8 @@ export class CreateParticlesTerminal extends CustomScriptComponent {
 
 		const	sceneData = getFrontendSceneData(this.scene);
 
+		if (this._autoStartParticle)
+			terminalParticle.start();
 		if (sceneData.gameType === "Menu")
 		{
 			sceneData.events.getObservable("scene-change").add(([currentScene, newScene]) => {
@@ -48,8 +51,6 @@ export class CreateParticlesTerminal extends CustomScriptComponent {
 				}
 			});
 		}
-		else
-			terminalParticle.start();
 	}
 
 	private	createMaterial() : NodeMaterial

@@ -117,16 +117,16 @@ export class RandomTerrainGenerator extends CustomScriptComponent {
 		return newValue;
 	}
 
-	public	getHeightAtCoordinates(x : number, y : number) : number
+	public	getHeightAtCoordinates(x : number, z : number) : number
 	{
 		if (this._ground === undefined)
 			return 0;
 		if (Math.abs(x) > this._dimension / 2
-			|| Math.abs(y) > this._dimension / 2)
+			|| Math.abs(z) > this._dimension / 2)
 		{
 			return 0;
 		}
-		return this._ground.getHeightAtCoordinates(x, y);
+		return this._ground.getHeightAtCoordinates(this._ground.absolutePosition.x + x, this._ground.absolutePosition.z + z);
 	}
 }
 

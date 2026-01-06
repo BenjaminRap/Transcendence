@@ -63,17 +63,18 @@ export class RandomEnvironmentGenerator extends CustomScriptComponent {
 
 		for (let i = 0; i < instanceCount * this._instancesCountFactor; i++) {
 			const	position = this.getRandomPositionOnGround(baseNear, baseFar, height);
+			const	worldPosition = this.transform.position.add(position);
+			worldPosition.y += 100;
 
-			const	squaredDistance = Vector3.DistanceSquared(this.transform.position, position);
+			const	squaredDistance = Vector3.DistanceSquared(this.transform.position, worldPosition);
 			const	lodLevel = lod.getLodLevel(squaredDistance);
 			if (!lodLevel)
 				continue ;
 			const	scale = lodLevel?.scaling ?? Vector3.OneReadOnly;
 			const	rotation = Quaternion.RotationAxis(Vector3.UpReadOnly, Math.random() * 2 * Math.PI);
-			const	matrix = Matrix.Compose(scale, rotation, position);
-			const	invertedMatrix = matrix.multiply(lodLevel.inverseWorldMatrix);
+			const	matrix = Matrix.Compose(scale, rotation, worldPosition);
 
-			lodLevel.thinInstanceAdd(invertedMatrix, true)
+			lodLevel.thinInstanceAdd(matrix, true)
 		}
 		this.syncThinInstancesBuffer(lod);
 	}
@@ -92,14 +93,12 @@ export class RandomEnvironmentGenerator extends CustomScriptComponent {
 
 	private getRandomPositionOnGround(baseNear : number, baseFar : number, height : number) : Vector3
 	{
-
 		const	localPos2D = getRandomCoordinatesInTrapeze(baseNear, baseFar, height);
-		const	localPos3D = new Vector3(localPos2D.x, -5, localPos2D.y + this._camera.minZ);
-		const	globalPos3D = Vector3.TransformCoordinates(localPos3D, this._camera.worldMatrixFromCache);
+		const	localPos3D = new Vector3(localPos2D.x, 0, localPos2D.y + this._camera.minZ);
 
-		globalPos3D.y = this._ground.getHeightAtCoordinates(globalPos3D.x, globalPos3D.z);
+		localPos3D.y = this._ground.getHeightAtCoordinates(localPos3D.x, localPos3D.z);
 
-		return globalPos3D;
+		return localPos3D;
 	}
 }
 
