@@ -64,19 +64,45 @@ export namespace WriteOnTerminal {
 		WriteOnTerminal.displayOnTerminal('╰' + '─'.repeat(innerWidth) + '╯', false);
 	}
 
+	export let skipAnimation = false;
+
 	export async function printWithAnimation(text: string, delay: number) {
 		TerminalConfigVariables.isPrintingAnimation = true;
 		
-		if (!TerminalElements.output)
-			return;
-
+		
 		return new Promise<void>((resolve) => {
+			if (!TerminalElements.output)
+				return;
+
 			let i = 0;
 			const iterationsPerChar = 3; 
 			let currentIteration = 0;
 			const randomChars = "@#$%^&*{}[]()-_=+<>?/|\\`~";
+			
+			if (skipAnimation) {
+				TerminalElements.output.textContent += text + '\n';
+				TerminalConfigVariables.isPrintingAnimation = false;
+				resolve();
+				return;
+			}
 
 			const interval = setInterval(() => {
+				if (skipAnimation) {
+					clearInterval(interval);
+					if (!TerminalElements.output)
+						return;
+					if (currentIteration > 0 && currentIteration < iterationsPerChar) {
+						TerminalElements.output.textContent = TerminalElements.output.textContent.slice(0, -1);
+					}
+					TerminalElements.output.textContent += text.slice(i) + '\n';
+					if (TerminalElements.terminal) {
+						TerminalElements.terminal.scrollTop = TerminalElements.terminal.scrollHeight;
+					}
+					TerminalConfigVariables.isPrintingAnimation = false;
+					resolve();
+					return;
+				}
+
 				if (i >= text.length) {
 					clearInterval(interval);
 					if (TerminalElements.output)

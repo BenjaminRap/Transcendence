@@ -105,6 +105,7 @@ export namespace TerminalCommand {
 		new Command('logout', 'Logout from your account', 'logout', RequestBackendModule.logout),
 		new Command('42' , 'Authenticate with OAuth 42', '42', OauthCommand),
 		new Command('pong', 'Launch the Pong game', 'pong', pongCommand),
+		new Command('rm', 'Remove files or directories', 'rm [file]', rmCommand),
 	];
 	export let commandHistory: string[] = [];
 	export let indexCommandHistory = -2;
@@ -114,6 +115,10 @@ export namespace TerminalCommand {
 
 
 // ------------------------------------------------------------------------ Command ---------------------------------------------------------------------
+
+function rmCommand(): string {
+	return 'Chef ? Laisse mes fichiers tranquilles !';
+}
 
 
 function pongCommand(): string {
@@ -204,6 +209,10 @@ function killCommand(args: string[]): string {
 		ExtProfileBuilder.removeExtProfile();
 		return 'kill profile';
 	}
+	if (args[1].toLowerCase() === 'me') {
+		return 'No, I love you too much to let you go that easily.';
+	}
+
 	return `No such process: ${args[1]}`;
 }
 
@@ -757,7 +766,7 @@ function setEventListeners() {
 				}
 				event.preventDefault();
 				if (TerminalConfigVariables.isPrintingAnimation)
-					return;
+					WriteOnTerminal.skipAnimation = true;
 				switch (true) {
 					case (event.key === 'Enter'): enterCase(); break;
 					case (event.ctrlKey && event.key.toLowerCase() === 'c'): sigintCase(); break;
