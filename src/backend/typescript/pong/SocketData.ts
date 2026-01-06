@@ -1,3 +1,4 @@
+import { defaultProfile, type Profile } from "@shared/Profile";
 import type { DefaultSocket } from "../";
 import { Room } from "./Room";
 
@@ -5,6 +6,7 @@ export class	SocketData
 {
 	private _state : "unactive" | "waiting" | "inRoom" | "ready" = "unactive";
 	private _room : Room | null = null;
+	private _profile : Profile = defaultProfile;
 
 	public getState = () => this._state;
 	public isInRoom = (room : Room) => this._room == room;
@@ -40,5 +42,9 @@ export class	SocketData
 
 	public disconnect() {
 		this._room?.onSocketDisconnect(this._socket);
+	}
+
+	public getProfile() {
+		return this._profile;
 	}
 }
