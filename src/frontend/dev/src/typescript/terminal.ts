@@ -56,6 +56,16 @@ export namespace TerminalPromptAndEnv {
 	};
 }
 
+export namespace PongUtils {
+	export function removePongDiv() {
+		const pongContainer = document.getElementById('pong-game-container');
+		if (pongContainer) {
+			pongContainer.remove();
+		}
+	}
+}
+
+
 type FileNode = {
 	type: "file";
 	name: string;
@@ -120,7 +130,6 @@ function rmCommand(): string {
 	return 'Chef ? Laisse mes fichiers tranquilles !';
 }
 
-
 function pongCommand(): string {
 	if (!TerminalElements.terminal)
 	{
@@ -128,7 +137,7 @@ function pongCommand(): string {
 		return 'Error launching Pong game.';
 	}
 	TerminalElements.terminal.insertAdjacentHTML('beforeend', `
-	<div class="fixed top-[50%] left-[50%] border border-green-500 bg-black flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 " style="width: 80vw">
+	<div id="pong-game-container" class="fixed top-[50%] left-[50%] border border-green-500 bg-black flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 " style="width: 80vw">
 		<pong-game class="size-full"></pong-game>
 	</div>
 `);
@@ -766,7 +775,11 @@ function setEventListeners() {
 				}
 				event.preventDefault();
 				if (TerminalConfigVariables.isPrintingAnimation)
+				{
 					WriteOnTerminal.skipAnimation = true;
+					if (event.key !== 'Enter')
+						return;
+				}
 				switch (true) {
 					case (event.key === 'Enter'): enterCase(); break;
 					case (event.ctrlKey && event.key.toLowerCase() === 'c'): sigintCase(); break;

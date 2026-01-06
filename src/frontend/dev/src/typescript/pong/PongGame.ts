@@ -16,6 +16,8 @@ import { ServerProxy } from "./ServerProxy";
 import type { GameInfos } from "@shared/ServerMessage";
 import type { Tournament } from "@shared/Tournament";
 
+import { PongUtils } from '../terminal'
+
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
 
@@ -28,7 +30,7 @@ export class PongGame extends HTMLElement {
 	private _multiplayerHandler : MultiplayerHandler;
 	private _settings : Settings;
 
-    public constructor() {
+	public constructor() {
 		super();
 		this.classList.add("block", "overflow-hidden", "container-inline", "aspect-video");
 		this._settings = new Settings();
@@ -48,7 +50,7 @@ export class PongGame extends HTMLElement {
 		} catch (error) {
 			console.error(`Could not initialize the scene : ${error}`)
 		}
-    }
+	}
 
 	private renderScene() : void
 	{
@@ -90,6 +92,7 @@ export class PongGame extends HTMLElement {
 	public quit() : void
 	{
 		this.remove();
+		PongUtils.removePongDiv();
 	}
 
 	public async goToMenuScene()
