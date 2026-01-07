@@ -4,6 +4,8 @@ import { Modal } from './modal'
 import { ExtendedView } from './extendedView'
 import { TerminalUtils } from './terminalUtils/terminalUtils';
 import { RequestBackendModule } from './terminalUtils/requestBackend';
+import { PongUtils } from './terminal'
+
 /*
 	Attente des donnes backend. Penser a sanitize les donnes avant de les afficher https://github.com/cure53/DOMPurify
 */
@@ -182,10 +184,6 @@ function createMatchHistory(profileElement: HTMLElement | null) {
 	matchElement.className = "border py-4 border-green-500 flex flex-col gap-y-4 h-full";
 
 	profileElement.appendChild(matchHistory);
-	const viewportHeight = window.innerHeight;
-    const matchHistoryHeightPx = matchHistory.clientHeight;
-	console.log("Match History Height in px:", matchHistoryHeightPx);
-
 
 	for (let i = 0; i < Math.min(matches.length, 4); i++) {
 		const match = matches[i];
@@ -256,7 +254,7 @@ function createFriendList(profileElement: HTMLElement | null) {
 async function fetchProfileData(user: string): Promise<string> {
 	const token = TerminalUtils.getCookie('accessToken') || '';
 	if (token === '') {
-		return 'You are not logged in.';
+		return `Vous n'êtes pas connecté.`;
 	}
 	try {
 		const response = await fetch('/api/suscriber/profile', {
@@ -275,15 +273,15 @@ async function fetchProfileData(user: string): Promise<string> {
 		if (data.message === 'Invalid or expired token') {
 			const refreshed = await RequestBackendModule.tryRefreshToken();
 			if (!refreshed) {
-				return 'You are not logged in.';
+				return `Vous n'êtes pas connecté.`;
 			}
 			return "OK";
 		}
 		console.error("Error fetching profile data:", data.message);
-		return 'Error fetching profile data.';
+		return 'Erreur lors de la récupération des données du profil.';
 	} catch (error) {
 		console.error("Error:", error);
-		return 'Error fetching profile data.';
+		return 'Erreur lors de la récupération des données du profil.';
 	}
 }
 
@@ -305,7 +303,7 @@ export namespace ProfileBuilder {
 		document.body.appendChild(profileElement);
 		history.pushState({}, '', `/profile/${user}`);
 		isActive = true;
-		return "Profile is now open.";
+		return 'Profil ouvert. Tapez "kill profile" pour le fermer.';
 	}
 	export function removeProfile() {
 		const profileElement = document.getElementById('profile');
@@ -320,7 +318,7 @@ export namespace ProfileBuilder {
 
 
 function ChangeName() {
-	if (Modal.isModalActive)
+	if (Modal.isModalActive || PongUtils.isPongLaunched )
 		return;
 	Modal.makeModal("Change Name", 'text', 'Shadow 0-1',(text: string) => {
 		Modal.closeModal();
@@ -337,7 +335,7 @@ function ChangeName() {
 }
 
 function ChangePassword() {
-	if (Modal.isModalActive)
+	if (Modal.isModalActive || PongUtils.isPongLaunched)
 		return;
 
 	Modal.makeModal("Actual Password", 'password', '', (text: string) => {
@@ -356,7 +354,7 @@ function ChangePassword() {
 }
 
 function ChangeAvatar() {
-	if (Modal.isModalActive)
+	if (Modal.isModalActive || PongUtils.isPongLaunched )
 		return;
 
 	Modal.makeModal("Change Avatar", 'file', '', (text: string) => {
@@ -366,7 +364,7 @@ function ChangeAvatar() {
 }
 
 function DeleteAccount() {
-	if (Modal.isModalActive)
+	if (Modal.isModalActive || PongUtils.isPongLaunched )
 		return;
 	Modal.makeModal("Are you sure you want to delete your account? Type 'DELETE' to confirm.", 'text', 'DELETE', (text: string) => {
 		Modal.closeModal();

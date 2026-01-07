@@ -11,8 +11,7 @@ import { TerminalUtils } from './terminalUtils/terminalUtils';
 
 
 import FileSystem from './filesystem.json' with { type: "json" };
-import { HELP_MESSAGE_NOT_LOG, HELP_MESSAGE } from './terminalUtils/helpText/help';
-
+import { HELP_MESSAGE_NOT_LOG, HELP_MESSAGE, CommandHelpMessage } from './terminalUtils/helpText/help';
 
 export namespace TerminalElements {
 	export let terminal: HTMLDivElement | null = null;
@@ -104,12 +103,11 @@ export namespace TerminalCommand {
 
 	export let commandAvailable =
 	[
-		new Command('echo', 'Display a line of text', 'echo [text]', echoCommand),
+		new Command('echo', CommandHelpMessage.HELP_ECHO, 'echo [text]', echoCommand),
 		new Command('help', 'Display this help message', 'help', helpCommand),
-		new Command('profile', 'Display user profile', 'profile [username]', profileCommand),
+		new Command('profile', CommandHelpMessage.HELP_PROFILE, 'profile [username]', profileCommand),
 		new Command('kill', 'Terminate a process', 'kill [process_name]', killCommand),
-		new Command('clear', 'Clear the terminal screen', 'clear', clearCommand),
-		// new Command('modal', 'Create a modal dialog', 'modal [text]', modalCommand),
+		new Command('clear', CommandHelpMessage.HELP_CLEAR, 'clear', clearCommand),
 		new Command('register', 'Register a new user', 'register [text]', registerInput),
 		new Command('cd', 'Change the current directory', 'cd [directory]', cdCommand),
 		new Command('ls', 'List directory contents', 'ls', lsCommand),
@@ -137,7 +135,7 @@ function rmCommand(): string {
 
 function pongCommand(): string {
 	if (!TerminalElements.terminal)
-		return 'Error launching Pong game.';
+		return 'Erreur lors du lancement du jeu Pong.';
 	TerminalElements.terminal.insertAdjacentHTML('beforeend', `
 	<div id="pong-game-container" class="fixed top-[50%] left-[50%] border border-green-500 bg-black flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 " style="width: 80vw">
 		<pong-game id="pong-game" class="size-full"></pong-game>
@@ -145,7 +143,7 @@ function pongCommand(): string {
 `);
 	PongUtils.isPongLaunched = true;
 	PongUtils.pongGameInstance = document.getElementById('pong-game') as HTMLDivElement;
-	return 'Pong game launched!';
+	return 'Pong lancé !';
 }
 
 
@@ -154,7 +152,7 @@ function OauthCommand(args: string[], description: string, usage: string): strin
 	const uri = `https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-add813989568aed927d34847da79446b327e2cce154f4c1313b970f9796da37c&redirect_uri=${redirectUri}&response_type=code`;
 
 	if (TerminalUserManagement.isLoggedIn)
-		return 'You are already logged in.';
+		return 'Vous êtes déjà connecté.';
 	window.location.href = uri;
 	return '';
 }
@@ -163,7 +161,7 @@ function echoCommand(args: string[], description: string, usage: string): string
 	let result = '';
 
 	if (args[1] === '-h' || args[1] === '--help') {
-		return `${description}\n> Usage: ${usage}`;
+		return description;
 	}
 
 	for (let i = 1; i < args.length; i++) {
@@ -193,20 +191,20 @@ function whoamiCommand(): string {
 	return TerminalUserManagement.username;
 }
 
-async function profileCommand(args: string[]): Promise<string> {
+async function profileCommand(args: string[], description: string, usage: string): Promise<string> {
 	let result: string = '';
-	if (args.length > 2) {
-		return 'Usage: profile to see your profile or profile [username] to see another user\'s profile.';
+	if (args.length > 2 || (args.length === 2 && args[1] === '--help' )) {
+		return description;
 	}
 	if (ProfileBuilder.isActive || ExtProfileBuilder.isActive)
-		return 'Profile is already open. Type "kill profile" to close it.';
+		return 'Le profil est déjà ouvert. Tapez "kill profile" pour le fermer.';
 	if (args.length === 1)
 		result = await ProfileBuilder.buildProfile('');
 	else
 	{
 		// result = await ExtProfileBuilder.buildExtProfile(args[1]);
 		ExtProfileBuilder.buildExtProfile(args[1]);
-		result = "Profile is now open.";
+		result = 'Profil ouvert. Tapez "kill profile" pour le fermer.';
 	}
 	return result;
 }
@@ -223,27 +221,18 @@ function killCommand(args: string[]): string {
 		return 'kill profile';
 	}
 	if (args[1].toLowerCase() === 'me') {
-		return 'No, I love you too much to let you go that easily.';
+		return `Non, je t'aime trop pour te laisser partir si facilement.`;
 	}
 
-	return `No such process: ${args[1]}`;
+	return `Aucun processus de ce type : ${args[1]}`;
 }
 
-function clearCommand(): string
+function clearCommand(args: string[], description: string, usage: string): string
 {
+	if (args.length > 1)
+		return description
 	clearOutput();
 	return ''
-}
-
-function modalCommand(args: string[]): string {
-	if (args.length < 2) {
-		return 'Usage: modal [text]';
-	}
-	Modal.makeModal(args.slice(1).join(' '),'text', '', (text: string) => {
-		console.log(`Modal input: ${text}`);
-		Modal.closeModal();
-	});
-	return `Modal created with text: ${args.slice(1).join(' ')}`;
 }
 
 function cdCommand(args: string[], description: string, usage: string): string {
@@ -265,7 +254,7 @@ function cdCommand(args: string[], description: string, usage: string): string {
 	}
 	const node = getNode(targetPath);
 	if (!node || node.type !== 'directory') {
-		return `cd: no such file or directory: ${targetPath}`;
+		return `cd : aucun fichier ou dossier de ce type : ${targetPath}`;
 	}
 	TerminalFileSystem.currentDirectory = targetPath;
 	TerminalUtils.updatePromptText(TerminalUserManagement.username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ ");
@@ -287,7 +276,7 @@ function lsCommand(args: string[], description: string, usage: string): string {
 	else 
 		return `Usage: ${usage}`;
 	if (!node || node.type !== 'directory') {
-		return `ls: cannot access '${targetPath}': No such directory`;
+		return `ls : impossible d'accéder à '${targetPath}' : Aucun dossier de ce type`;
 	}
 	return node.children.map(child => (child.type === 'directory' ? child.name + '/' : child.name)).join('\n> ');
 }
@@ -303,7 +292,7 @@ function catCommand(args: string[], description: string, usage: string): string 
 	const targetPath = normalizePath(TerminalFileSystem.currentDirectory + '/' + args[1]);
 	const fileNode = getNode(targetPath);
 	if (!fileNode || fileNode.type !== 'file') {
-		return `cat: ${args[1]}: No such file`;
+		return `cat : ${args[1]} : Aucun fichier de ce type`;
 	}
 	return fileNode.content;
 }
@@ -503,7 +492,7 @@ async function exec(command: string) {
 			return '> ' + result;
 		}
 	}
-	return `> Unknown command: ${args[0]}`;
+	return `> Commande inconnue : ${args[0]}`;
 }
 
 async function getInputCase(command: string)
@@ -858,7 +847,7 @@ export namespace Terminal {
 
 function loginInput(args: string[]): string {
 	if (TerminalUserManagement.isLoggedIn)
-		return 'You are already logged in.';
+		return 'Vous êtes déjà connecté.';
 	let argsTest = ["Identifier", "Password"];
 	AskInput(argsTest, [2], RequestBackendModule.login);
 	return '';
@@ -866,7 +855,7 @@ function loginInput(args: string[]): string {
 
 function registerInput(args: string[]): string {
 	if (TerminalUserManagement.isLoggedIn)
-		return 'You are already logged in.';
+		return 'Vous êtes déjà connecté.';
 	let argsTest = ["Mail", "Username", "Password"];
 	AskInput(argsTest, [3], RequestBackendModule.register);
 	return '';
