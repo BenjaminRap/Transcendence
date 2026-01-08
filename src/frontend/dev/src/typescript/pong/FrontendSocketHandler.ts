@@ -1,11 +1,13 @@
 import { Deferred, type int, Observable } from "@babylonjs/core";
 import type { ClientToServerEvents, ServerToClientEvents } from "@shared/MessageType";
-import { type GameInfos, type TournamentCreationSettings, type TournamentDescription, zodGameInfos, zodGameInit } from "@shared/ServerMessage";
+import type { Profile } from "@shared/Profile";
+import { type GameInfos, type TournamentCreationSettings, type TournamentDescription, type TournamentId, zodGameInit } from "@shared/ServerMessage";
+import type { Result } from "@shared/utils";
 import { io, Socket } from "socket.io-client";
 
 type ServerInGameMessage = GameInfos | "forfeit" | "room-closed";
 type DefaultSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
-type SocketState = "not-connected" | "connected" | "in-matchmaking" | "in-game" | "tournament-creation";
+type SocketState = "not-connected" | "connected" | "in-matchmaking" | "in-game" | "tournament-creator" | "tournament-player" | "tournament-creator-player" | "in-tournament";
 
 export class	FrontendSocketHandler
 {
@@ -106,7 +108,7 @@ export class	FrontendSocketHandler
 		this.verifyState("connected");
 		const	deferred = new Deferred<TournamentDescription[]>();
 
-		this._currentPromise = deferred;
+		this.replaceCurrentPromise(deferred);
 		this._socket.emit("get-tournaments", (tournamentDescriptions : TournamentDescription[]) => {
 			deferred.resolve(tournamentDescriptions);
 		});
@@ -115,12 +117,14 @@ export class	FrontendSocketHandler
 
 	public leaveScene()
 	{
-		this.verifyState("connected", "in-matchmaking", "in-game");
+		this.verifyState("connected", "in-matchmaking", "in-game", "in-tournament");
 		this._onServerMessageObservable.clear();
 		if (this._state === "in-matchmaking")
 			this._socket.emit("leave-matchmaking");
 		else if (this._state === "in-game")
 			this._socket.emit("forfeit");
+		else if (this._state === "in-tournament")
+			this._socket.emit("leave-tournament");
 		this._state = "connected";
 		this._currentPromise?.reject("canceled");
 	}
@@ -174,20 +178,90 @@ export class	FrontendSocketHandler
 		if (!allowedStates.includes(this._state))
 			throw new Error(`A FrontendSocketHandler method called with an invalid state, current state : ${this._state}, allowed : ${allowedStates}`);
 	}
+
+	public createTournament(settings : TournamentCreationSettings)
+	{
+		this.verifyState("connected");
+		this._state = "tournament-creator";
+		const	deferred = new Deferred<TournamentId>();
+		this.replaceCurrentPromise(deferred);
+		this._socket.emit("create-tournament", settings, (tournamentId : Result<string>) => {
+			if (tournamentId.success)
+				deferred.resolve(tournamentId.value);
+			else
+			{
+				this._state = "connected";
+				deferred.reject(tournamentId.error);
+			}
+		});
+		return deferred.promise;
+	}
+
+	public cancelTournament()
+	{
+		this.verifyState("tournament-creator", "tournament-creator-player");
+		this._currentPromise?.reject();
+		this._state = "connected";
+		this._socket.emit("cancel-tournament");
+	}
+
+	public startTournament()
+	{
+		this.verifyState("tournament-creator", "tournament-creator-player");
+		const	previousState = this._state;
+		this._state = "in-tournament";
+		const	deferred = new Deferred<void>();
+		this.replaceCurrentPromise(deferred);
+		this._socket.emit("start-tournament", (result : Result<null>) => {
+			if (result.success)
+				deferred.resolve();
+			else
+			{
+				this._state = previousState;
+				deferred.reject(result.error);
+			}
+		});
+		return deferred.promise;
+	}
+
+	public joinTournament(tournamentId : TournamentId)
+	{
+		this.verifyState("connected", "tournament-creator");
+		const	previousState = this._state;
+		if (this._state === "connected")
+			this._state = "tournament-player";
+		else
+			this._state = "tournament-creator-player"
+		const	deferred = new Deferred<Profile[]>();
+		this.replaceCurrentPromise(deferred);
+		this._socket.emit("join-tournament", tournamentId, (participants : Result<Profile[]>) => {
+			if (participants.success)
+				deferred.resolve(participants.value);
+			else
+			{
+				this._state = previousState;
+				deferred.reject(participants.error);
+			}
+		});
+		return deferred.promise;
+	}
+
+	public leaveTournament()
+	{
+		this.verifyState("tournament-player", "tournament-creator-player", "in-tournament");
+		if (this._state === "tournament-player" || this._state === "in-tournament")
+			this._state = "connected";
+		else
+			this._state = "tournament-creator"
+		this._socket.emit("leave-tournament");
+	}
 }
 
 function	createNewOnServerMessageObservable(socket : DefaultSocket)
 {
 	const	observable = new Observable<ServerInGameMessage>();
 
-	socket.on("game-infos", (data : any) => {
-		const	gameInfos = zodGameInfos.safeParse(data);
-
-		if (!gameInfos.success)
-			observable.notifyObservers("server-error");
-		else
-			observable.notifyObservers(gameInfos.data);
-	});
+	socket.on("game-infos", (gameInfos : GameInfos) => { observable.notifyObservers(gameInfos) });
 	socket.on("forfeit", () => { observable.notifyObservers("forfeit") });
 	socket.on("room-closed", () => { observable.notifyObservers("room-closed") });
 	return observable;
