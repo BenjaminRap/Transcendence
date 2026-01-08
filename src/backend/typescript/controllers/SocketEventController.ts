@@ -81,6 +81,7 @@ export class SocketEventController {
 		const userId = (socket.data as any).userId;
 
 		socket.data = new SocketData(socket, userId);
+		socket.join('user-' + userId);
 
 		const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
 		const newCount = currentCount + 1;
@@ -133,6 +134,14 @@ export class SocketEventController {
 				// update count
 				SocketEventController.connectedUsers.set(userId, newCount);
 			}
+		}
+	}
+
+	// ----------------------------------------------------------------------------- //
+	static sendToUser(userId: number, event: string, data: any): void
+	{
+		if (SocketEventController.socketInstance) {
+			SocketEventController.socketInstance.io.to('user-' + userId).emit(event as any, data);
 		}
 	}
 }

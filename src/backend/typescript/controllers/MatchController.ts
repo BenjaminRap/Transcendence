@@ -7,6 +7,7 @@ import { FriendService } from '../services/FriendService.js';
 import { TournamentService } from '../services/TournamentService.js';
 import { TournamentException } from '../error_handlers/Tournament.error.js';
 import { request } from 'http';
+import { SocketEventController } from './SocketEventController.js';
 
 export class MatchController {
 	constructor(
@@ -25,6 +26,21 @@ export class MatchController {
                 message: ret?.message || "An error occurred during the registration of the match.",
             })
         }
+
+		if (request.body.winnerId) {
+			const winnerStats = await this.matchService.getStats([request.body.winnerId]);
+			if (winnerStats.stats && winnerStats.stats[0]) {
+				SocketEventController.sendToUser(request.body.winnerId, 'game-stats-update', { stats: winnerStats.stats[0] });
+			}
+		}
+
+		if (request.body.loserId) {
+			const loserStats = await this.matchService.getStats([request.body.loserId]);
+			if (loserStats.stats && loserStats.stats[0]) {
+				SocketEventController.sendToUser(request.body.loserId, 'game-stats-update', { stats: loserStats.stats[0] });
+			}		
+		}
+
         return reply.code(201);
 	}
 
@@ -86,7 +102,6 @@ export class MatchController {
 	}
 	
 	// --------------------------------------------------------------------------------- //
-    // ne leve pas d'exception
 	async register(matchData: MatchData): Promise<{success: Boolean, message?: string}>
 	{
         try {

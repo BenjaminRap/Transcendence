@@ -3,14 +3,29 @@ import type { GameInfos, GameInit, KeysUpdate } from "./ServerMessage";
 export type ClientMessage = "join-matchmaking" | "ready" | "input-infos" | "forfeit" | "leave-matchmaking"
 export type ClientMessageData<T extends ClientMessage> = T extends "input-infos" ? KeysUpdate : undefined;
 
-export type ServerEvents = "game-infos" | "joined-game" | "ready" | "forfeit" | "room-closed" | "user-status-change";
+export type ServerEvents = "game-infos" | "joined-game" | "ready" | "forfeit" | "room-closed" | "user-status-change" | "profile-update" | "game-stats-update";
 
 export type UserStatusChange = { userId: number, status: 'online' | 'offline' };
+
+export interface SharedUser {
+    id: string;
+    username: string;
+    avatar: string;
+}
+
+export interface SharedGameStats {
+	wins:		number,
+	losses:    	number,
+	total:     	number,
+	winRate:	number,
+}
 
 export type ServerEventsData<T extends ServerEvents> =
     T extends "game-infos" ? GameInfos :
     T extends "joined-game" ? GameInit :
     T extends "user-status-change" ? UserStatusChange :
+    T extends "profile-update" ? { user: SharedUser } :
+    T extends "game-stats-update" ? { stats: SharedGameStats } :
     undefined
 
 
