@@ -59,7 +59,6 @@ export class	FrontendSocketHandler
 	public async joinGame() : Promise<void>
 	{
 		this.verifyState("connected");
-		this._state = "in-matchmaking";
 		const	deferred = new Deferred<void>();
 
 		this._socket.once("joined-game", (data : any) => {
@@ -77,8 +76,9 @@ export class	FrontendSocketHandler
 				deferred.resolve();
 			}
 		});
+		this.replaceCurrentPromise(deferred);
+		this._state = "in-matchmaking";
 		this._socket.emit("join-matchmaking");
-		this._currentPromise = deferred;
 		return deferred.promise;
 	}
 
@@ -138,6 +138,12 @@ export class	FrontendSocketHandler
 		this._currentPromise?.reject("canceled");
 	}
 
+	private	replaceCurrentPromise(newPromise : Deferred<any>)
+	{
+		this._currentPromise?.reject("canceled");
+		this._currentPromise = newPromise;
+	}
+
 	public async	onGameReady() : Promise<void>
 	{
 		this.verifyState("in-game");
@@ -146,7 +152,7 @@ export class	FrontendSocketHandler
 		this._socket.once("ready", () => {
 			deferred.resolve();
 		});
-		this._currentPromise = deferred;
+		this.replaceCurrentPromise(deferred);
 		return deferred.promise;
 	}
 
@@ -182,9 +188,9 @@ export class	FrontendSocketHandler
 	public createTournament(settings : TournamentCreationSettings)
 	{
 		this.verifyState("connected");
-		this._state = "tournament-creator";
 		const	deferred = new Deferred<TournamentId>();
 		this.replaceCurrentPromise(deferred);
+		this._state = "tournament-creator";
 		this._socket.emit("create-tournament", settings, (tournamentId : Result<string>) => {
 			if (tournamentId.success)
 				deferred.resolve(tournamentId.value);
@@ -209,9 +215,10 @@ export class	FrontendSocketHandler
 	{
 		this.verifyState("tournament-creator", "tournament-creator-player");
 		const	previousState = this._state;
-		this._state = "in-tournament";
 		const	deferred = new Deferred<void>();
+
 		this.replaceCurrentPromise(deferred);
+		this._state = "in-tournament";
 		this._socket.emit("start-tournament", (result : Result<null>) => {
 			if (result.success)
 				deferred.resolve();
@@ -228,12 +235,13 @@ export class	FrontendSocketHandler
 	{
 		this.verifyState("connected", "tournament-creator");
 		const	previousState = this._state;
+		const	deferred = new Deferred<Profile[]>();
+
+		this.replaceCurrentPromise(deferred);
 		if (this._state === "connected")
 			this._state = "tournament-player";
-		else
+			else
 			this._state = "tournament-creator-player"
-		const	deferred = new Deferred<Profile[]>();
-		this.replaceCurrentPromise(deferred);
 		this._socket.emit("join-tournament", tournamentId, (participants : Result<Profile[]>) => {
 			if (participants.success)
 				deferred.resolve(participants.value);
