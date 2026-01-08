@@ -1,7 +1,7 @@
 import { TerminalUtils } from "./terminalUtils";
 import { WriteOnTerminal } from "./writeOnTerminal";
 import { TerminalFileSystem, TerminalUserManagement } from "../terminal";
-
+import { CommandHelpMessage } from './helpText/help';
 
 
 export namespace RequestBackendModule {
@@ -26,14 +26,14 @@ export namespace RequestBackendModule {
 				document.cookie = `accessToken=${data.tokens.accessToken}; path=/;`;
 				document.cookie = `refreshToken=${data.tokens.refreshToken}; path=/;`;
 				await loadUser();
-				return 'Registration successful!';
+				return 'Le compte a été créé avec succès.';
 			} else {
 				let message = data.message || "Unknown error";
-				return 'Login failed: ' + message;
+				return 'Échec de l\'inscription : ' + message;
 			}
 		} catch (error) {
 			console.error("Error:", error);
-			return 'Login failed due to an error.';
+			return 'Échec de l\'inscription en raison d\'une erreur.';
 		}
 	}
 
@@ -54,14 +54,14 @@ export namespace RequestBackendModule {
 				document.cookie = `accessToken=${data.tokens.accessToken}; path=/;`;
 				document.cookie = `refreshToken=${data.tokens.refreshToken}; path=/;`;
 				await loadUser();
-				return 'Login successful! Type **help** for new instructions.';
+				return 'Connexion réussie ! Tapez **help** pour de nouvelles instructions.';
 			} else {
-				let message = data.message || "Unknown error";
-				return 'Login failed: ' + message;
+				let message = data.message || "Erreur inconnue";
+				return 'Échec de la connexion : ' + message;
 			}
 		} catch (error) {
 			console.error("Error:", error);
-			return 'Login failed due to an error.';
+			return 'Échec de la connexion en raison d\'une erreur.';
 		}
 	}
 
@@ -88,7 +88,7 @@ export namespace RequestBackendModule {
 			if (data.message === 'Invalid or expired token') {
 				const refreshed = await tryRefreshToken();
 				if (!refreshed) {
-					WriteOnTerminal.printErrorOnTerminal("Please log in.");
+					WriteOnTerminal.printErrorOnTerminal("Veuillez vous connecter.");
 					return false;
 				}
 				return await loadUser();
@@ -125,7 +125,7 @@ export namespace RequestBackendModule {
 			if (data.message === 'Invalid or expired token') {
 				const refreshed = await tryRefreshToken();
 				if (!refreshed) {
-					WriteOnTerminal.printErrorOnTerminal("Please log in.");
+					WriteOnTerminal.printErrorOnTerminal("Veuillez vous connecter.");
 					return [];
 				}
 				return await getTenUsers(args);
@@ -166,15 +166,17 @@ export namespace RequestBackendModule {
 		}
 	}
 
-	export function logout(): string
+	export function logout(args: string[], description: string, usage: string): string
 	{
 		if (!TerminalUserManagement.isLoggedIn)
 			return 'You are not logged in.';
+		if (args.length > 1)
+			return description;
 		document.cookie = 'accessToken=; path=/;';
 		document.cookie = 'refreshToken=; path=/;';
 		TerminalUserManagement.isLoggedIn = false;
 		TerminalUserManagement.username = 'usah';
 		TerminalUtils.updatePromptText( TerminalUserManagement.username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ " );
-		return 'Logged out successfully.';
+		return 'Déconnexion réussie.';
 	}
 }

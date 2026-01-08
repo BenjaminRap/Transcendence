@@ -1,32 +1,30 @@
 export let HELP_MESSAGE_NOT_LOG = `
-Help - Utilisation du terminal
+=== Help - Utilisation du terminal ===
 
 Comment exécuter une commande :
 - Tapez une commande, puis appuyez sur Entrée.
 - Le terminal enverra une réponse; chaque réponse commence par le caractère ">".
 
 Statut actuel :
-- Vous êtes actuellement connecté en tant que "guest".
+- Vous êtes actuellement pas connecté.
 
 Créer un compte (register) :
 - Tapez: register
-- Appuyez sur Entrée et suivez les instructions affichées pour choisir un nom et un mot de passe.
+- Appuyez sur Entrée et suivez les instructions affichées.
 
 Se connecter (login) :
 - Tapez login
-- Appuyez sur Entrée et suivez les instructions pour fournir vos identifiants..
+- Appuyez sur Entrée et suivez les instructions.
 
-Si tu es un edudiant de 42, tu peux egalement te connecter via l'authentification 42 en tapant 42 !
+Si vous êtes un étudiant de 42, vous pouvez également vous connecter via l'authentification 42 en tapant 42 !
 
-Vous pouvez tout de meme jouer a pong en tant que guest !
+Vous pouvez tout de même jouer à pong avec la commande 'pong' en tant que guest !
 
 Commandes utiles :
 - help : affiche cette aide
-- clear: vide l'écran
-- login / register: se connecter ou créer un compte
-- pong : jouer a pong en tant que guest
-- 42 : se connecter via l'authentification 42
-`
+
+Astuces : 
+	Chaque commande suivie de '--help' affichera une aide contextuelle.`
 
 
 export let HELP_MESSAGE = `
@@ -42,29 +40,16 @@ Vous pouvez profiter de votre compte sur pong ainsi qu'acceder aux fonctionnalit
 - profile : afficher votre profil (ex: profile)
 - profile <username> : afficher le profil d'un autre utilisateur (ex: profile sben-rho)
 
-Vous disposez egalement d'une environnement de fichiers virtuel avec les commandes suivantes :
-- ls : lister les fichiers et dossiers dans le répertoire courant
-	- un dossier fini toujours par un '/' (ex: documents/)
-- cd <dossier> : changer de répertoire (ex: cd documents)
-- cat <fichier> : afficher le contenu d'un fichier (ex: cat readme.txt)
+Vous pouvez vous deconnecter avec la commande 'logout'
 `
 
 /*
-		new Command('kill', 'Terminate a process', 'kill [process_name]', killCommand),
-
-		new Command('register', 'Register a new user', 'register [text]', registerInput),
-		new Command('login', 'Login to your account', 'login [email] [password]', loginInput),
-		new Command('42' , 'Authenticate with OAuth 42', '42', OauthCommand),
-
-
 
 		new Command('cd', 'Change the current directory', 'cd [directory]', cdCommand),
 		new Command('ls', 'List directory contents', 'ls', lsCommand),
 		new Command('pwd', 'Print working directory', 'pwd', pwdCommand),
 		new Command('cat', 'Concatenate and display file content', 'cat [file]', catCommand),
 		new Command('whoami', 'Display the current username', 'whoami', whoamiCommand),
-		new Command('logout', 'Logout from your account', 'logout', RequestBackendModule.logout),
-		new Command('pong', 'Launch the Pong game', 'pong', pongCommand),
 		new Command('rm', 'Remove files or directories', 'rm [file]', rmCommand),
 
 */
@@ -96,5 +81,56 @@ export namespace CommandHelpMessage {
 > Utilisation :
 	> clear
 > Exemple : 
-	> "user@terminal:/home/user$ clear"`	
-} 
+	> "user@terminal:/home/user$ clear"`
+
+	export let HELP_REGISTER =
+	`register - Crée un nouveau compte
+> Utilisation :
+	> register
+> Exemple :
+	> "user@terminal:/home/user$ register"
+	> "Mail :"
+		- Entrer votre adresse e-mail puis appuyer sur Entrée
+	> "Nom d'utilisateur :"
+		- Entrer votre nom d'utilisateur puis appuyer sur Entrée
+	> "Mot de passe :"
+		- Entrer votre mot de passe puis appuyer sur Entrée
+	> "Le compte a été créé avec succès."
+> Vous serez connecté automatiquement.`
+
+	export let HELP_LOGIN =
+	`login - Se connecter à votre compte
+> Utilisation :
+	> login
+> Exemple :
+	> "user@terminal:/home/user$ login"
+	> "Identifiant :"
+		- Entrer votre adresse e-mail ou nom d'utilisateur puis appuyer sur Entrée
+	> "Mot de passe :"
+		- Entrer votre mot de passe puis appuyer sur Entrée
+	> "Connexion réussie ! Tapez **help** pour de nouvelles instructions."`
+
+	export let HELP_42 = 
+	`> 42 - Authentification via OAuth 42
+> Utilisation :
+	> 42
+> Exemple :
+	> "user@terminal:/home/user$ 42"
+	> "Vous serez redirigé vers la page de connexion 42."`
+
+	export let HELP_LOGOUT = 
+	`> logout - Se déconnecter de votre compte
+> Utilisation :
+	> logout
+> Exemple :
+	> "user@terminal:/home/user$ logout"
+	> "Déconnexion réussie !"`
+
+	export let HELP_PONG =
+	`> pong - Lancer le jeu Pong
+> Utilisation :
+	> pong
+> Exemple :
+	> "user@terminal:/home/user$ pong"
+	> "Pong lancé !"`
+}

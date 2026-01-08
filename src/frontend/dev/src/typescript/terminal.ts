@@ -12,6 +12,7 @@ import { TerminalUtils } from './terminalUtils/terminalUtils';
 
 import FileSystem from './filesystem.json' with { type: "json" };
 import { HELP_MESSAGE_NOT_LOG, HELP_MESSAGE, CommandHelpMessage } from './terminalUtils/helpText/help';
+import { de } from 'zod/v4/locales';
 
 export namespace TerminalElements {
 	export let terminal: HTMLDivElement | null = null;
@@ -108,16 +109,16 @@ export namespace TerminalCommand {
 		new Command('profile', CommandHelpMessage.HELP_PROFILE, 'profile [username]', profileCommand),
 		new Command('kill', 'Terminate a process', 'kill [process_name]', killCommand),
 		new Command('clear', CommandHelpMessage.HELP_CLEAR, 'clear', clearCommand),
-		new Command('register', 'Register a new user', 'register [text]', registerInput),
+		new Command('register', CommandHelpMessage.HELP_REGISTER, 'register [text]', registerInput),
 		new Command('cd', 'Change the current directory', 'cd [directory]', cdCommand),
 		new Command('ls', 'List directory contents', 'ls', lsCommand),
 		new Command('pwd', 'Print working directory', 'pwd', pwdCommand),
 		new Command('cat', 'Concatenate and display file content', 'cat [file]', catCommand),
 		new Command('whoami', 'Display the current username', 'whoami', whoamiCommand),
-		new Command('login', 'Login to your account', 'login [email] [password]', loginInput),
-		new Command('logout', 'Logout from your account', 'logout', RequestBackendModule.logout),
-		new Command('42' , 'Authenticate with OAuth 42', '42', OauthCommand),
-		new Command('pong', 'Launch the Pong game', 'pong', pongCommand),
+		new Command('login', CommandHelpMessage.HELP_LOGIN, 'login [email] [password]', loginInput),
+		new Command('logout', CommandHelpMessage.HELP_LOGOUT, 'logout', RequestBackendModule.logout),
+		new Command('42' , CommandHelpMessage.HELP_42, '42', OauthCommand),
+		new Command('pong', CommandHelpMessage.HELP_PONG, 'pong', pongCommand),
 		new Command('rm', 'Remove files or directories', 'rm [file]', rmCommand),
 	];
 	export let commandHistory: string[] = [];
@@ -133,9 +134,12 @@ function rmCommand(): string {
 	return 'Chef ? Laisse mes fichiers tranquilles !';
 }
 
-function pongCommand(): string {
+function pongCommand(args: string[], description: string): string {
 	if (!TerminalElements.terminal)
 		return 'Erreur lors du lancement du jeu Pong.';
+	if (args.length > 1)
+		return description;
+
 	TerminalElements.terminal.insertAdjacentHTML('beforeend', `
 	<div id="pong-game-container" class="fixed top-[50%] left-[50%] border border-green-500 bg-black flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 " style="width: 80vw">
 		<pong-game id="pong-game" class="size-full"></pong-game>
@@ -147,17 +151,19 @@ function pongCommand(): string {
 }
 
 
-function OauthCommand(args: string[], description: string, usage: string): string {
+function OauthCommand(args: string[], description: string): string {
 	const redirectUri = encodeURIComponent('https://localhost:8080/');
 	const uri = `https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-add813989568aed927d34847da79446b327e2cce154f4c1313b970f9796da37c&redirect_uri=${redirectUri}&response_type=code`;
 
 	if (TerminalUserManagement.isLoggedIn)
 		return 'Vous êtes déjà connecté.';
+	if (args.length != 1)
+		return description;
 	window.location.href = uri;
 	return '';
 }
 
-function echoCommand(args: string[], description: string, usage: string): string {
+function echoCommand(args: string[], description: string): string {
 	let result = '';
 
 	if (args[1] === '-h' || args[1] === '--help') {
@@ -187,11 +193,13 @@ function helpCommand(): string {
 	return result;
 }
 
-function whoamiCommand(): string {
+function whoamiCommand(args: string[], description: string): string {
+	if (args.length > 1)
+		return description;
 	return TerminalUserManagement.username;
 }
 
-async function profileCommand(args: string[], description: string, usage: string): Promise<string> {
+async function profileCommand(args: string[], description: string): Promise<string> {
 	let result: string = '';
 	if (args.length > 2 || (args.length === 2 && args[1] === '--help' )) {
 		return description;
@@ -209,9 +217,9 @@ async function profileCommand(args: string[], description: string, usage: string
 	return result;
 }
 
-function killCommand(args: string[]): string {
+function killCommand(args: string[], description: string): string {
 	if (args.length !== 2)
-		return 'Usage: kill [process_name]';
+		return description;
 	if (args[1] === 'profile' && ProfileBuilder.isActive) {
 		ProfileBuilder.removeProfile();
 		return 'kill profile';
@@ -227,7 +235,7 @@ function killCommand(args: string[]): string {
 	return `Aucun processus de ce type : ${args[1]}`;
 }
 
-function clearCommand(args: string[], description: string, usage: string): string
+function clearCommand(args: string[], description: string): string
 {
 	if (args.length > 1)
 		return description
@@ -235,11 +243,14 @@ function clearCommand(args: string[], description: string, usage: string): strin
 	return ''
 }
 
-function cdCommand(args: string[], description: string, usage: string): string {
+function cdCommand(args: string[], description: string): string {
 	if (args.length !== 2) {
 		TerminalFileSystem.currentDirectory = '/';
 		TerminalUtils.updatePromptText(TerminalUserManagement.username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ ");
 		return '';
+	}
+	if (args[1] === '--help') {
+		return description;
 	}
 	let targetPath = '';
 	if (TerminalFileSystem.currentDirectory === '/')
@@ -261,7 +272,7 @@ function cdCommand(args: string[], description: string, usage: string): string {
 	return '';
 }
 
-function lsCommand(args: string[], description: string, usage: string): string {
+function lsCommand(args: string[], description: string): string {
 	let node: Node | null;
 	let targetPath: string;
 
@@ -274,20 +285,22 @@ function lsCommand(args: string[], description: string, usage: string): string {
 		node = getNode(targetPath);
 	}
 	else 
-		return `Usage: ${usage}`;
+		return description;
 	if (!node || node.type !== 'directory') {
 		return `ls : impossible d'accéder à '${targetPath}' : Aucun dossier de ce type`;
 	}
 	return node.children.map(child => (child.type === 'directory' ? child.name + '/' : child.name)).join('\n> ');
 }
 
-function pwdCommand(args: string[], description: string, usage: string): string {
+function pwdCommand(args: string[], description: string): string {
+	if (args.length > 1)
+		return description;
 	return TerminalFileSystem.currentDirectory;
 }
 
-function catCommand(args: string[], description: string, usage: string): string {
+function catCommand(args: string[], description: string): string {
 	if (args.length !== 2) {
-		return `Usage: ${usage}`;
+		return description;
 	}
 	const targetPath = normalizePath(TerminalFileSystem.currentDirectory + '/' + args[1]);
 	const fileNode = getNode(targetPath);
@@ -454,13 +467,13 @@ async function getListOfElementTabCompletion(command: string, cursorPosition: nu
 				let filePart = path.slice(path.lastIndexOf('/') + 1);
 				if (!clearedPath.startsWith('/'))
 					clearedPath = '/' + clearedPath;
-				result = lsCommand(['ls', clearedPath], '', '').split('\n> ').filter(item => item !== '');
+				result = lsCommand(['ls', clearedPath], '').split('\n> ').filter(item => item !== '');
 				if (filePart !== '')
 					result = getStartWithList(filePart, result);
 			}
 			else
 			{
-				result = lsCommand(['ls'], '', '').split('\n> ').filter(item => item !== '');
+				result = lsCommand(['ls'], '').split('\n> ').filter(item => item !== '');
 				if (path !== '')
 					result = getStartWithList(path, result);
 			}
@@ -848,15 +861,17 @@ export namespace Terminal {
 function loginInput(args: string[]): string {
 	if (TerminalUserManagement.isLoggedIn)
 		return 'Vous êtes déjà connecté.';
-	let argsTest = ["Identifier", "Password"];
+	let argsTest = ["Identifiant", "Mot de passe"];
 	AskInput(argsTest, [2], RequestBackendModule.login);
 	return '';
 }
 
-function registerInput(args: string[]): string {
+function registerInput(args: string[], description: string): string {
 	if (TerminalUserManagement.isLoggedIn)
 		return 'Vous êtes déjà connecté.';
-	let argsTest = ["Mail", "Username", "Password"];
+	if (args.length != 1)
+		return description;
+	let argsTest = ["Mail", "Nom d'utilisateur", "Mot de passe"];
 	AskInput(argsTest, [3], RequestBackendModule.register);
 	return '';
 }
