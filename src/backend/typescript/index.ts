@@ -20,7 +20,9 @@ import fs from 'fs';
 import HavokPhysics from "@babylonjs/havok";
 import type { ClientToServerEvents, ServerToClientEvents } from '@shared/MessageType';
 import { getPublicTournamentsDescriptions, TournamentMaker } from './pong/TournamentMaker';
-import { zodTournamentCreationSettings, type TournamentDescription } from '@shared/ServerMessage.js';
+import { zodTournamentCreationSettings, type TournamentDescription, type TournamentId } from '@shared/ServerMessage.js';
+import { error, success, type Result } from '@shared/utils.js';
+import type { Profile } from '@shared/Profile.js';
 
 export type DefaultSocket = Socket<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>;
 export type DefaultServer = Server<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>;
@@ -124,7 +126,7 @@ await fastify.register((instance, opts, done) => {
 
 const	sockets = new Set<DefaultSocket>();
 const	matchMaker = new MatchMaker(io);
-const	tournamentMaker = new TournamentMaker();
+const	tournamentMaker = new TournamentMaker(io);
 
 async function start(): Promise<void> {
     try {
@@ -150,29 +152,32 @@ async function start(): Promise<void> {
 
 				ack(descriptions);
 			});
-			socket.on("create-tournament", (data : any, ack : (error? : string) => void) => {
+			socket.on("join-tournament", (tournamentId : TournamentId, ack: (participants : Result<Profile[]>) => void) => {
+				const	tournament = tournamentMaker.joinTournament(tournamentId, socket);
+
+				if (!tournament.success)
+				{
+					ack(tournament);
+					return ;
+				}
+				ack(success(tournament.value.getParticipantsProfiles()));
+			})
+			socket.on("create-tournament", (data : any, ack : (tournamentId : Result<string>) => void) => {
 				const	parsed = zodTournamentCreationSettings.safeParse(data);
 
 				if (!parsed.success)
 				{
-					ack("Invalid Data !");
+					ack(error("Invalid Data !"));
 					return ;
 				}
-				const	tournamentOrError = tournamentMaker.createTournament(parsed.data);
+				const	tournament = tournamentMaker.createTournament(parsed.data, socket);
 
-				if (typeof tournamentOrError === "string")
+				if (!tournament.success)
 				{
-					ack(tournamentOrError);
+					ack(tournament);
 					return ;
 				}
-				socket.once("start-tournament", () => {
-					tournamentOrError.start();
-					socket.removeAllListeners("cancel-tournament");
-				});
-				socket.once("cancel-tournament", () => {
-					tournamentOrError.dispose();
-					socket.removeAllListeners("start-tournament");
-				});
+				ack(success(tournament.value.getDescription().id));
 			})
 		});
         await fastify.listen({ port: port, host: host });

@@ -1,22 +1,56 @@
-import type { TournamentCreationSettings, TournamentDescription } from "@shared/ServerMessage";
+import type { TournamentCreationSettings, TournamentDescription, TournamentId } from "@shared/ServerMessage";
 import { ServerTournament } from "./ServerTournament";
+import { error, success, type Result } from "@shared/utils";
+import type { DefaultServer, DefaultSocket } from "..";
 
-const	tournaments = new Set<ServerTournament>();
+const	tournamentsByName = new Map<string, ServerTournament>();
+const	tournamentsById = new Map<string, ServerTournament>();
 
 export class	TournamentMaker
 {
-	constructor()
+	constructor(
+		private _io : DefaultServer
+	)
 	{
 
 	}
 
-	public createTournament(settings : TournamentCreationSettings) : ServerTournament | string
+	public createTournament(settings : TournamentCreationSettings, creator : DefaultSocket) : Result<ServerTournament>
 	{
-		const	tournament = new ServerTournament(() => tournaments.delete(tournament), settings);
+		if (tournamentsByName.has(settings.name))
+			return error("Tournament Name already taken !");
+		const	tournament = new ServerTournament(() => this.removeTournament(tournament), settings, this._io, creator);
 
-		tournaments.add(tournament);
+		this.addTournament(tournament);
+		return success(tournament);
+	}
 
-		return tournament;
+	public joinTournament(tournamentId : TournamentId, socket : DefaultSocket) : Result<ServerTournament>
+	{
+		const	tournament = tournamentsById.get(tournamentId);
+
+		if (tournament === undefined)
+			return error("Invalid Tournament Id !");
+		const	result = tournament.addParticipant(socket);
+		if (!result.success)
+			return result;
+		return success(tournament);
+	}
+
+	private	addTournament(tournament : ServerTournament)
+	{
+		const	description = tournament.getDescription();
+
+		tournamentsById.set(description.id, tournament);
+		tournamentsByName.set(description.name, tournament);
+	}
+
+	private	removeTournament(tournament : ServerTournament)
+	{
+		const	description = tournament.getDescription();
+
+		tournamentsById.delete(description.id);
+		tournamentsByName.delete(description.name);
 	}
 }
 
@@ -24,8 +58,8 @@ export function	getPublicTournamentsDescriptions() : TournamentDescription[]
 {
 	const	descriptions : TournamentDescription[] = [];
 
-	tournaments.forEach(tournament => {
-		const	description = tournament.getDescriptionIfPublic();
+	tournamentsByName.forEach(tournament => {
+		const	description = tournament.getDescriptionIfAvailable();
 
 		if (description !== null)
 			descriptions.push(description);
