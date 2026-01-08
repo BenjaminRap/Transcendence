@@ -104,7 +104,7 @@ export class CreateInGameGUI extends CustomScriptComponent {
 
 	private	onGameEnd(endData : EndData)
 	{
-		this._endGUI.setWinner(endData.winner, endData.forfeit, this._sceneData.serverProxy?.getPlayerIndex());
+		this._endGUI.setWinner(endData.winner, endData.forfeit, this._sceneData.serverProxy.getPlayerIndex());
 		this.switchToGUI(this._endGUI);
 		this._sceneData.tournament?.onGameEnd(endData);
 	}
@@ -125,7 +125,7 @@ export class CreateInGameGUI extends CustomScriptComponent {
 
 	private	onForfeit()
 	{
-		if (this._sceneData.gameType === "Multiplayer" && this._sceneData.serverProxy)
+		if (this._sceneData.gameType === "Multiplayer")
 		{
 			const	opponentIndex = this._sceneData.serverProxy.getOpponentIndex();
 			const	winningSide = (opponentIndex === 0) ? "left" : "right";

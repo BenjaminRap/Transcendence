@@ -12,7 +12,6 @@ import { Color4 } from "@babylonjs/core";
 import { type FrontendGameType, getSceneData } from "@shared/SceneData";
 import { Settings } from "./Settings";
 import { ServerProxy } from "./ServerProxy";
-import type { GameInfos } from "@shared/ServerMessage";
 import type { LocalTournament } from "./LocalTournament";
 import { frontendSocketHandler } from "../index";
 import { ErrorGUI } from "./gui/ErrorGUI";
@@ -187,7 +186,7 @@ export class PongGame extends HTMLElement {
 
 			sceneData.inputs = inputs;
 			sceneData.events.getObservable("input-change").notifyObservers();
-			sceneData.serverProxy?.sendServerMessage("ready");
+			sceneData.serverProxy.sendServerMessage("ready");
 			await frontendSocketHandler.onGameReady();
 			sceneData.events.getObservable("game-start").notifyObservers();
 		} catch (error) {
@@ -201,6 +200,12 @@ export class PongGame extends HTMLElement {
 	public	cancelMatchmaking()
 	{
 		frontendSocketHandler.leaveMatchmaking();
+	}
+
+	public showError(errorText : string)
+	{
+		this._errorGUI.setErrorText(errorText);
+		this._errorGUI.classList.remove("invinsible");
 	}
 
 	private	async getNewScene<T extends FrontendGameType>(

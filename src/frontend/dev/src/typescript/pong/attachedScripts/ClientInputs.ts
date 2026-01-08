@@ -40,7 +40,7 @@ export class ClientInputs extends CustomScriptComponent {
 	{
 		const	serverProxy = this._sceneData.serverProxy;
 
-		if (this._sceneData.gameType !== "Multiplayer" || !serverProxy)
+		if (this._sceneData.gameType !== "Multiplayer")
 			return ;
 
 		this._mainPlayerInput = this._inputManager.getPlayerInput(serverProxy.getPlayerIndex());
