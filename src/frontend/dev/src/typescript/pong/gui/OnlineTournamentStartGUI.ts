@@ -3,12 +3,14 @@ import type { IGUI } from "./IGUI";
 export type OnlineTournamentStartGUIInputs =
 {
 	start: HTMLButtonElement,
+	join: HTMLButtonElement,
+	leave: HTMLButtonElement,
 	cancel: HTMLButtonElement
 }
 
 export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<OnlineTournamentStartGUIInputs>
 {
-	private _buttons : OnlineTournamentStartGUIInputs | undefined;
+	private _inputs : OnlineTournamentStartGUIInputs | undefined;
 
 	constructor()
 	{
@@ -27,12 +29,16 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 				<div class="inline"></div>
 			</fieldset>
 			<div class="w-1/3 h-1/3 relative b-1/3 m-auto">
-				${this.getButtonHTML("Start Tournament", "OnlineTournamentStartGUIStart")}
-				${this.getButtonHTML("Cancel Tournament", "OnlineTournamentStartGUICancel")}
+				${this.getButtonHTML("Start", "OnlineTournamentStartGUIStart")}
+				${this.getButtonHTML("Join", "OnlineTournamentStartGUIJoin")}
+				${this.getButtonHTML("Leave", "OnlineTournamentStartGUILeave")}
+				${this.getButtonHTML("Cancel", "OnlineTournamentStartGUICancel")}
 			</div>
 		`;
-		this._buttons = {
+		this._inputs = {
 			start: this.querySelector("button.OnlineTournamentStartGUIStart")!,
+			join: this.querySelector("button.OnlineTournamentStartGUIJoin")!,
+			leave: this.querySelector("button.OnlineTournamentStartGUILeave")!,
 			cancel: this.querySelector("button.OnlineTournamentStartGUICancel")!
 		}
 	}
@@ -44,7 +50,28 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 
 	public getInputs()
 	{
-		return this._buttons;
+		return this._inputs;
+	}
+
+	public setInputType(type : "creator" | "creator-player" | "player")
+	{
+		if (type === "creator")
+			this.setOnlyInputsVisible("start", "join", "cancel");
+		else if (type === "creator-player")
+			this.setOnlyInputsVisible("start", "leave", "cancel");
+		else
+			this.setOnlyInputsVisible("leave");
+	}
+
+	private	setOnlyInputsVisible(...visibles : (keyof OnlineTournamentStartGUIInputs)[])
+	{
+		if (!this._inputs)
+			return ;
+		Object.entries(this._inputs).forEach(([key, value]) => {
+			const	isVisible = visibles.includes(key as keyof OnlineTournamentStartGUIInputs);
+
+			value.classList.toggle("invinsible", !isVisible);
+		});
 	}
 }
 
