@@ -15,7 +15,7 @@ export class SocketEventController {
 		this.matchMaker = new MatchMaker(io);
 		this.initSocket();
 	}
-	private static connectedUsers: Set<number> = new Set();
+	private static connectedUsers: Map<number, number> = new Map();
 	private static socketInstance: SocketEventController;
 	private matchMaker: MatchMaker;
 
@@ -27,10 +27,6 @@ export class SocketEventController {
 		}
 	}
 
-	// ----------------------------------------------------------------------------- //
-	
-	
-	
     // ==================================== PRIVATE ==================================== //
 	
 	// Auth middleware for socket.io new connections
@@ -47,7 +43,7 @@ export class SocketEventController {
 				const tokenManager: TokenManager = Container.getInstance().getService('TokenManager');
 				const decoded = await tokenManager.verify(token, false);
 
-				socket.data.userId = decoded.userId;
+				(socket.data as any).userId = decoded.userId;
 				
 				next();
 			} catch (err) {
@@ -63,17 +59,12 @@ export class SocketEventController {
 		this.io.on('connection', (socket : DefaultSocket) => {
 			this.handleConnection(socket);
 
-
 			socket.on("join-matchmaking", () => {
 				this.handleMatchMakingRequest(socket);
 			});
 
-   			// Pour permettre au front de demander "qui est en ligne ?" au chargement
             socket.on("get-online-users", (callback) => {
 				this.handleGetStatus(socket, callback);
-                if (typeof callback === 'function') {
-                    callback(Array.from(SocketEventController.connectedUsers));
-                }
             });
 
 			socket.once("disconnect", () => {
@@ -81,27 +72,33 @@ export class SocketEventController {
 			});
 		});
 	}
+	
+	// ----------------------------------------------------------------------------- //
+	private handleConnection(socket: DefaultSocket)
+	{
+		console.log("user connected !");
+		
+		const userId = (socket.data as any).userId;
+
+		socket.data = new SocketData(socket, userId);
+
+		const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
+		const newCount = currentCount + 1;
+
+		SocketEventController.connectedUsers.set(userId, newCount);
+
+		// notifie everyone only if it's the first connection of the user
+		if (newCount === 1) {
+			this.io.emit('user-status-change', { userId: userId, status: 'online' });
+		}
+	}
 
 	// ----------------------------------------------------------------------------- //
 	private handleGetStatus(socket: DefaultSocket, callback: (onlineUsers: number[]) => void)
 	{
 		if (typeof callback === 'function') {
-			callback(Array.from(SocketEventController.connectedUsers));
+			callback(Array.from(SocketEventController.connectedUsers.keys()) );
 		}
-	}
-
-	// ----------------------------------------------------------------------------- //
-	private handleConnection(socket: DefaultSocket)
-	{
-		console.log("user connected !");
-
-		const userId = (socket.data as any).userId;
-		socket.data = new SocketData(socket, userId);
-
-		SocketEventController.connectedUsers.add(userId);
-
-		// 2. Notifier tout le monde (ou juste les amis) que cet utilisateur est en ligne
-		this.io.emit('user-status-change', { userId: userId, status: 'online' });
 	}
 
 	// ----------------------------------------------------------------------------- //
@@ -110,20 +107,32 @@ export class SocketEventController {
 		console.log("try-join-matchmaking");
 		this.matchMaker.addUserToMatchMaking(socket);
 	}	
-	
+
 	// ----------------------------------------------------------------------------- //
 	private handleDisconnect(socket: DefaultSocket)
 	{
 		console.log("disconnected !");
+		
+		// clean MatchMaking
 		this.matchMaker.removeUserFromMatchMaking(socket);
 
 		const userId = socket.data.getUserId();
-		SocketEventController.connectedUsers.delete(userId);
 		
-		this.io.emit('user-status-change', { userId: userId, status: 'offline' });
-
 		socket.data.disconnect();
-		// fermer le status de connexion de l'utilisateur ici
 
+		if (userId) {
+			const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
+			const newCount = currentCount - 1;
+			
+			if (newCount <= 0) {
+				// remove user from map and notify everyone
+				SocketEventController.connectedUsers.delete(userId);
+				this.io.emit('user-status-change', { userId: userId, status: 'offline' });
+			}
+			else {
+				// update count
+				SocketEventController.connectedUsers.set(userId, newCount);
+			}
+		}
 	}
 }
