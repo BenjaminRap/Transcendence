@@ -131,7 +131,6 @@ export class	FrontendSocketHandler
 
 	public	leaveMatchmaking()
 	{
-		console.log("leave-matchamking");
 		this.verifyState("in-matchmaking");
 		this._socket.emit("leave-matchmaking");
 		this._state = "connected";
