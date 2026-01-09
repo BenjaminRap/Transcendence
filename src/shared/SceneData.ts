@@ -1,5 +1,6 @@
 import { Deferred, HavokPlugin, Scene } from "@babylonjs/core";
 import { EventsManager } from "./EventsManager";
+import { PongError } from "./pongError/PongError";
 
 export type ServerGameType = "Server";
 export type FrontendGameType = "Local" | "Multiplayer" | "Bot" | "Menu";
@@ -28,10 +29,10 @@ export abstract class	SceneData
 export function	getSceneData(scene : Scene) : SceneData
 {
 	if (!scene.metadata)
-		throw new Error("Scene metadata is undefined !");
+		throw new PongError("Scene metadata is undefined !", "quitScene");
 
 	const	sceneData = scene.metadata.sceneData;
 	if (!(sceneData instanceof SceneData))
-		throw new Error("Scene is not of the type SceneData !");
+		throw new PongError("Scene is not of the type SceneData !", "quitScene");
 	return sceneData;
 }

@@ -2,6 +2,7 @@ import type { GameInit, KeysUpdate, TournamentCreationSettings, TournamentDescri
 import { FrontendSocketHandler, type ServerInGameMessage } from "./FrontendSocketHandler";
 import type { Deferred, int, Observable } from "@babylonjs/core";
 import type { Profile } from "@shared/Profile";
+import { PongError } from "@shared/pongError/PongError";
 
 type SocketState = "not-connected" | "connected" | "in-matchmaking" | "in-game" | "tournament-creator" | "tournament-player" | "tournament-creator-player" | "in-tournament";
 
@@ -21,7 +22,7 @@ export class	ServerProxy
 		});
 		this._frontendSocketHandler.getOnDisconnectObservable().add(() => {
 			this._state = "not-connected";
-			this._currentPromise?.reject();
+			this._currentPromise?.reject(new PongError("canceled", "ignore"));
 		});
 	}
 
@@ -52,7 +53,7 @@ export class	ServerProxy
 		else if (this._state === "in-tournament")
 			this._frontendSocketHandler.sendEventWithNoResponse("leave-tournament");
 		this._state = "connected";
-		this._currentPromise?.reject("canceled");
+		this._currentPromise?.reject(new PongError("canceled", "ignore"));
 	}
 
 	public onGameReady() : Promise<void>
@@ -91,7 +92,7 @@ export class	ServerProxy
 		this.verifyState("in-matchmaking");
 		this._frontendSocketHandler.sendEventWithNoResponse("leave-matchmaking")
 		this._state = "connected";
-		this._currentPromise?.reject("canceled");
+		this._currentPromise?.reject(new PongError("canceled", "ignore"));
 	}
 
 	public keyUpdate(key : "up" | "down", event : "keyUp" | "keyDown") : void
@@ -155,7 +156,7 @@ export class	ServerProxy
 	public cancelTournament() : void
 	{
 		this.verifyState("tournament-creator", "tournament-creator-player");
-		this._currentPromise?.reject();
+		this._currentPromise?.reject(new PongError("canceled", "ignore"));
 		this._state = "connected";
 		this._frontendSocketHandler.sendEventWithNoResponse("cancel-tournament");
 	}
@@ -188,12 +189,12 @@ export class	ServerProxy
 	private verifyState(...allowedStates : SocketState[]) : void
 	{
 		if (!allowedStates.includes(this._state))
-			throw new Error(`A FrontendSocketHandler method called with an invalid state, current state : ${this._state}, allowed : ${allowedStates}`);
+			throw new PongError(`A FrontendSocketHandler method called with an invalid state, current state : ${this._state}, allowed : ${allowedStates}`, "ignore");
 	}
 
 	private	replaceCurrentPromise(newPromise : Deferred<any>) : void
 	{
-		this._currentPromise?.reject("canceled");
+		this._currentPromise?.reject(new PongError("canceled", "ignore"));
 		this._currentPromise = newPromise;
 	}
 }

@@ -13,6 +13,7 @@ import { zodInt } from "@shared/ImportedHelpers";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import type { Ball } from "./Ball";
 import { Range } from "../Range"
+import { PongError } from "@shared/pongError/PongError";
 
 export class Paddle extends CustomScriptComponent {
 	public static _range : number = 9.4 + Epsilon;
@@ -129,7 +130,7 @@ export class Paddle extends CustomScriptComponent {
 		const	physicsBody = this.transform.getPhysicsBody();
 
 		if (!physicsBody)
-			throw new Error("The Paddle script should be attached to a mesh with a physic body !");
+			throw new PongError("The Paddle script should be attached to a mesh with a physic body !", "quitScene");
 		this._physicsBody = physicsBody;
 		this._physicsBody.disablePreStep = false;
 	}

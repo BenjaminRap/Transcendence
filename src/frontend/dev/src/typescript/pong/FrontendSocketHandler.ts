@@ -1,5 +1,6 @@
 import { Deferred, Observable } from "@babylonjs/core";
 import type { ClientToServerEvents, ServerToClientEvents } from "@shared/MessageType";
+import { PongError } from "@shared/pongError/PongError";
 import type { Profile } from "@shared/Profile";
 import { type GameInfos, type GameInit, type TournamentCreationSettings, type TournamentDescription, type TournamentId, zodGameInit } from "@shared/ServerMessage";
 import type { Result } from "@shared/utils";
@@ -59,7 +60,7 @@ export class	FrontendSocketHandler
 			const	gameInit = zodGameInit.safeParse(data);
 
 			if (!gameInit.success)
-				deferred.reject("Server sent wrong data !");
+				deferred.reject(new PongError("Server sent wrong data !", "ignore"));
 			else
 				deferred.resolve(gameInit.data);
 		});
@@ -121,7 +122,7 @@ export class	FrontendSocketHandler
 			if (tournamentId.success)
 				deferred.resolve(tournamentId.value);
 			else
-				deferred.reject(tournamentId.error);
+				deferred.reject(new PongError(tournamentId.error, "ignore"));
 		});
 		return deferred;
 	}
@@ -134,7 +135,7 @@ export class	FrontendSocketHandler
 			if (result.success)
 				deferred.resolve();
 			else
-				deferred.reject(result.error);
+				deferred.reject(new PongError(result.error, "ignore"));
 		});
 		return deferred;
 	}
@@ -147,7 +148,7 @@ export class	FrontendSocketHandler
 			if (participants.success)
 				deferred.resolve(participants.value);
 			else
-				deferred.reject(participants.error);
+				deferred.reject(new PongError(participants.error, "ignore"));
 		});
 		return deferred;
 	}

@@ -6,6 +6,7 @@ import { ClientProxy } from "./ClientProxy";
 import { type int, Observable } from "@babylonjs/core";
 import type { ServerEvents, ServerToClientEvents } from "@shared/MessageType";
 import type { DefaultServer, DefaultSocket } from "../index";
+import { PongError } from "@shared/pongError/PongError";
 
 export type SocketMessage = {
 	socketIndex : int,
@@ -145,7 +146,7 @@ export class	Room
 		...args: Parameters<ServerToClientEvents[T]>
 	) {
 		if (socketIndex < 0 || socketIndex >= this._sockets.length)
-			throw new Error("sendMessageToSocketByIndex called with an invalid index !");
+			throw new PongError("sendMessageToSocketByIndex called with an invalid index !", "quitPong");
 
 		const	socket = this._sockets[socketIndex];
 
@@ -159,7 +160,7 @@ export class	Room
 		...args: Parameters<ServerToClientEvents[T]>
 	) {
 		if (socketIndex < 0 || socketIndex >= this._sockets.length)
-			throw new Error("broadcastMessageFromSocket called with an invalid index !");
+			throw new PongError("broadcastMessageFromSocket called with an invalid index !", "quitPong");
 
 		const	socket = this._sockets[socketIndex];
 		

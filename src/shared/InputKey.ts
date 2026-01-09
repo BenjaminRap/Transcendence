@@ -1,3 +1,5 @@
+import { PongError } from "./pongError/PongError";
+
 export type InputKeyCallback = (event : "keyUp" | "keyDown") => void;
 
 export class	InputKey
@@ -30,7 +32,7 @@ export class	InputKey
 	public addKeyObserver(callback : InputKeyCallback)
 	{
 		if (this._keyObserver.indexOf(callback) !== -1)
-			throw new Error("onKeyDownObserver already added to the list !");
+			throw new PongError("onKeyDownObserver already added to the list !", "ignore");
 		this._keyObserver.push(callback);
 	}
 

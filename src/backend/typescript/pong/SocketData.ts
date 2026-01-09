@@ -1,6 +1,7 @@
 import { defaultProfile, type Profile } from "@shared/Profile";
 import type { DefaultSocket } from "../";
 import { Room } from "./Room";
+import { PongError } from "@shared/pongError/PongError";
 
 export class	SocketData
 {
@@ -31,7 +32,7 @@ export class	SocketData
 	public	setReady()
 	{
 		if (this._state !== "inRoom")
-			throw new Error("A socket has been set ready while not being in a room !");
+			return ;
 		this._state = "ready";
 	}
 

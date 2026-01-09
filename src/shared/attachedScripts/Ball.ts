@@ -9,6 +9,7 @@ import { Imported } from "@shared/ImportedDecorator";
 import { zodNumber } from "@shared/ImportedHelpers";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { ShapeCastResult } from "@babylonjs/core/Physics/shapeCastResult";
+import { PongError } from "@shared/pongError/PongError";
 
 export class Ball extends CustomScriptComponent {
 	@Imported("TimerManager") private _timerManager! : TimerManager;
@@ -37,7 +38,7 @@ export class Ball extends CustomScriptComponent {
 		const	physicsBody = this.transform.getPhysicsBody();
 
 		if (!physicsBody)
-			throw new Error("The Ball script should be attached to a mesh with a physic body !");
+			throw new PongError("The Ball script should be attached to a mesh with a physic body !", "quitScene");
 		this._physicsBody = physicsBody;
 		this._physicsBody.disablePreStep = false;
 	}

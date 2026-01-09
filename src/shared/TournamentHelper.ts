@@ -1,4 +1,5 @@
 import { Match } from "./Match";
+import { PongError } from "./pongError/PongError";
 import type { Profile } from "./Profile";
 import { isPowerOfTwo, shuffle } from "./utils";
 
@@ -7,11 +8,10 @@ export abstract class	TournamentHelper
 	public static readonly maxTournamentParticipants = 64;
 	public static readonly maxNameLength = 20;
 
-
 	public static createQualificationMatches(profiles : Profile[])
 	{
 		if (profiles.length < 2)
-			throw new Error(`The profiles should be greater than 1, got ${profiles.length}`);
+			throw new PongError(`The profiles should be greater than 1, got ${profiles.length}`, "ignore");
 		shuffle(profiles);
 		const	matches = [];
 
@@ -28,7 +28,7 @@ export abstract class	TournamentHelper
 	public static	createTournamentMatches(profiles : Profile[]) : Match[][]
 	{
 		if (profiles.length < 2 || !isPowerOfTwo(profiles.length))
-			throw new Error(`The profiles should be a power of two, greater than 1, got ${profiles.length}`);
+			throw new PongError(`The profiles should be a power of two, greater than 1, got ${profiles.length}`, "ignore");
 		shuffle(profiles);
 		return this.createMatchesByRoundRecursive(profiles);
 	}

@@ -1,6 +1,7 @@
 import { ScriptComponent } from "@babylonjs-toolkit/next";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import { Scene } from "@babylonjs/core/scene";
+import { PongError } from "./pongError/PongError";
 
 export class	CustomScriptComponent extends ScriptComponent
 {
@@ -27,10 +28,10 @@ export class	CustomScriptComponent extends ScriptComponent
 			.map((key) => key.slice(6, key.length))
 			.sort((a, b) => a.localeCompare(b));
 		if (imported.length !== auto.length)
-			throw new Error(`Wrong imported injections, expected : ${imported}, got : ${auto}`);
+			throw new PongError(`Wrong imported injections, expected : ${imported}, got : ${auto}`, "quitScene");
 		for (let index = 0; index < imported.length; index++) {
 			if (imported[index] != auto[index])
-				throw new Error(`Wrong imported injections, expected : ${imported}, got : ${auto}`);
+				throw new PongError(`Wrong imported injections, expected : ${imported}, got : ${auto}`, "quitScene");
 		}
 	}
 };
