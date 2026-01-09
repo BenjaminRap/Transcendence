@@ -32,7 +32,7 @@ export class	InputKey
 	public addKeyObserver(callback : InputKeyCallback)
 	{
 		if (this._keyObserver.indexOf(callback) !== -1)
-			throw new PongError("onKeyDownObserver already added to the list !", "ignore");
+			throw new PongError("onKeyDownObserver already added to the list !", "quitPong");
 		this._keyObserver.push(callback);
 	}
 

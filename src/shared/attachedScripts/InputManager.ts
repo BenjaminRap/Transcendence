@@ -25,7 +25,7 @@ export class InputManager extends CustomScriptComponent {
 	public getPlayerInput(playerIndex : int) : PlayerInput
 	{
 		if (playerIndex > this._playersInputs.length)
-			throw new PongError("The player index is too big !", "quitScene");
+			throw new PongError("The player index is too big !", "quitPong");
 		return this._playersInputs[playerIndex];
 	}
 

@@ -107,7 +107,7 @@ export class ServerPongGame {
 export function	getServerSceneData(scene : Scene) : ServerSceneData
 {
 	if (!scene.metadata)
-		throw new PongError("Scene metadata is undefined !", "quitScene");
+		throw new PongError("Scene metadata is undefined !", "quitPong");
 
 	const	sceneData = scene.metadata.sceneData;
 	return sceneData;

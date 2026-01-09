@@ -48,7 +48,7 @@ export class	ShotFactory
 	private	getShotAtHeightWithRebound(reboundCount : number, firstRebound : "top" | "bottom", height : number, paddleMiddle : number, terrainWidth : number)
 	{
 		if (reboundCount < 1)
-			throw new PongError("reboundCount should be greater to 1 in getAngleShootAtHeightWithRebound", "ignore");
+			throw new PongError("reboundCount should be greater to 1 in getAngleShootAtHeightWithRebound", "quitPong");
 		const	colliderY = (firstRebound === "top") ? this._topCollisionY : this._bottomCollisionY;
 		const	distEndToCollider = Math.abs(height - colliderY);
 		const	distStartToCollider = Math.abs(paddleMiddle - colliderY);

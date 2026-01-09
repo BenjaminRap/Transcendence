@@ -29,10 +29,10 @@ export abstract class	SceneData
 export function	getSceneData(scene : Scene) : SceneData
 {
 	if (!scene.metadata)
-		throw new PongError("Scene metadata is undefined !", "quitScene");
+		throw new PongError("Scene metadata is undefined !", "quitPong");
 
 	const	sceneData = scene.metadata.sceneData;
 	if (!(sceneData instanceof SceneData))
-		throw new PongError("Scene is not of the type SceneData !", "quitScene");
+		throw new PongError("Scene is not of the type SceneData !", "quitPong");
 	return sceneData;
 }

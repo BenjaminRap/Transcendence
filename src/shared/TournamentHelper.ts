@@ -11,7 +11,7 @@ export abstract class	TournamentHelper
 	public static createQualificationMatches(profiles : Profile[])
 	{
 		if (profiles.length < 2)
-			throw new PongError(`The profiles should be greater than 1, got ${profiles.length}`, "ignore");
+			throw new PongError(`The profiles should be greater than 1, got ${profiles.length}`, "quitPong");
 		shuffle(profiles);
 		const	matches = [];
 
@@ -28,7 +28,7 @@ export abstract class	TournamentHelper
 	public static	createTournamentMatches(profiles : Profile[]) : Match[][]
 	{
 		if (profiles.length < 2 || !isPowerOfTwo(profiles.length))
-			throw new PongError(`The profiles should be a power of two, greater than 1, got ${profiles.length}`, "ignore");
+			throw new PongError(`The profiles should be a power of two, greater than 1, got ${profiles.length}`, "quitPong");
 		shuffle(profiles);
 		return this.createMatchesByRoundRecursive(profiles);
 	}
