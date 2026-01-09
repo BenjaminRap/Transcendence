@@ -55,7 +55,6 @@ export abstract class	TournamentHelper
 		const	participantsToQualify = expectedQualified - qualified.length;
 
 		participants.sort((a, b) => b.score - a.score);
-		console.log(JSON.stringify(participants));
 
 		const	lastQualifiedIndex = participantsToQualify - 1;
 		const	lastQualifiedScore = participants[lastQualifiedIndex].score;
