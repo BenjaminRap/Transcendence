@@ -166,7 +166,7 @@ export namespace RequestBackendModule {
 		}
 	}
 
-	export function logout(args: string[], description: string, usage: string): string
+	export function logout(args: string[], description: string): string
 	{
 		if (!TerminalUserManagement.isLoggedIn)
 			return 'You are not logged in.';

@@ -11,7 +11,7 @@ import { TerminalUtils } from './terminalUtils/terminalUtils';
 
 
 import FileSystem from './filesystem.json' with { type: "json" };
-import { HELP_MESSAGE_NOT_LOG, HELP_MESSAGE, CommandHelpMessage } from './terminalUtils/helpText/help';
+import { HELP_MESSAGE_NOT_LOG, HELP_MESSAGE, HELP_SECONDARY,  CommandHelpMessage } from './terminalUtils/helpText/help';
 import { de } from 'zod/v4/locales';
 
 export namespace TerminalElements {
@@ -70,7 +70,6 @@ export namespace PongUtils {
 	}
 }
 
-
 type FileNode = {
 	type: "file";
 	name: string;
@@ -87,39 +86,37 @@ export namespace TerminalCommand {
 		export class Command {
 		name: string;
 		description: string;
-		usage: string;
-		execute: (args: string[], description: string, usage: string) => Promise<string> | string;
+		execute: (args: string[], description: string) => Promise<string> | string;
 
-		constructor(name: string, description: string, usage: string, execute: (args: string[], description: string, usage: string) => Promise<string> | string) {
+		constructor(name: string, description: string, execute: (args: string[], description: string) => Promise<string> | string) {
 			this.name = name;
 			this.description = description;
-			this.usage = usage;
 			this.execute = execute;
 		}
 
 		async launchCommand(args: string[]): Promise<string> {
-			return await this.execute(args, this.description, this.usage);
+			return await this.execute(args, this.description);
 		}
 	}
 
 	export let commandAvailable =
 	[
-		new Command('echo', CommandHelpMessage.HELP_ECHO, 'echo [text]', echoCommand),
-		new Command('help', 'Display this help message', 'help', helpCommand),
-		new Command('profile', CommandHelpMessage.HELP_PROFILE, 'profile [username]', profileCommand),
-		new Command('kill', 'Terminate a process', 'kill [process_name]', killCommand),
-		new Command('clear', CommandHelpMessage.HELP_CLEAR, 'clear', clearCommand),
-		new Command('register', CommandHelpMessage.HELP_REGISTER, 'register [text]', registerInput),
-		new Command('cd', 'Change the current directory', 'cd [directory]', cdCommand),
-		new Command('ls', 'List directory contents', 'ls', lsCommand),
-		new Command('pwd', 'Print working directory', 'pwd', pwdCommand),
-		new Command('cat', 'Concatenate and display file content', 'cat [file]', catCommand),
-		new Command('whoami', 'Display the current username', 'whoami', whoamiCommand),
-		new Command('login', CommandHelpMessage.HELP_LOGIN, 'login [email] [password]', loginInput),
-		new Command('logout', CommandHelpMessage.HELP_LOGOUT, 'logout', RequestBackendModule.logout),
-		new Command('42' , CommandHelpMessage.HELP_42, '42', OauthCommand),
-		new Command('pong', CommandHelpMessage.HELP_PONG, 'pong', pongCommand),
-		new Command('rm', 'Remove files or directories', 'rm [file]', rmCommand),
+		new Command('echo', CommandHelpMessage.HELP_ECHO, echoCommand),
+		new Command('help', 'Display this help message', helpCommand),
+		new Command('profile', CommandHelpMessage.HELP_PROFILE, profileCommand),
+		new Command('kill', 'Terminate a process', killCommand),
+		new Command('clear', CommandHelpMessage.HELP_CLEAR, clearCommand),
+		new Command('register', CommandHelpMessage.HELP_REGISTER, registerInput),
+		new Command('cd', CommandHelpMessage.HELP_CD, cdCommand),
+		new Command('ls', CommandHelpMessage.HELP_LS, lsCommand),
+		new Command('pwd', CommandHelpMessage.HELP_PWD, pwdCommand),
+		new Command('cat', CommandHelpMessage.HELP_CAT, catCommand),
+		new Command('whoami', CommandHelpMessage.HELP_WHOAMI, whoamiCommand),
+		new Command('login', CommandHelpMessage.HELP_LOGIN, loginInput),
+		new Command('logout', CommandHelpMessage.HELP_LOGOUT, RequestBackendModule.logout),
+		new Command('42' , CommandHelpMessage.HELP_42, OauthCommand),
+		new Command('pong', CommandHelpMessage.HELP_PONG, pongCommand),
+		new Command('rm', 'Remove files or directories', rmCommand),
 	];
 	export let commandHistory: string[] = [];
 	export let indexCommandHistory = -2;
@@ -176,14 +173,20 @@ function echoCommand(args: string[], description: string): string {
 	return result.trim();
 }
 
-function helpCommand(): string {
+function helpCommand(args: string[]): string {
 
 	let result: string;
 
 	if (!TerminalUserManagement.isLoggedIn)
 		result = HELP_MESSAGE_NOT_LOG;
 	else
-		result = HELP_MESSAGE;
+	{
+		if (args.length > 1 &&  args[1] === '2')
+			result = HELP_SECONDARY;
+		else
+			result = HELP_MESSAGE;
+
+	}
 	const lines = result.split('\n');
 	if (lines.length > 1) {
 		result = lines[0] + '\n' + lines.slice(1).map(line => '> ' + line).join('\n');
@@ -276,6 +279,8 @@ function lsCommand(args: string[], description: string): string {
 	let node: Node | null;
 	let targetPath: string;
 
+	if (args.length > 1 && args[1] === '--help')
+		return description;
 	if (args.length === 1) {
 		node = getNode(TerminalFileSystem.currentDirectory);
 		targetPath = TerminalFileSystem.currentDirectory;

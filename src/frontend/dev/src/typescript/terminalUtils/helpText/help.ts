@@ -27,8 +27,8 @@ Astuces :
 	Chaque commande suivie de '--help' affichera une aide contextuelle.`
 
 
-export let HELP_MESSAGE = `
-Help - Utilisation du terminal
+export let HELP_MESSAGE = 
+`Help - Utilisation du terminal
 
 Rappel comment exécuter une commande :
 - Tapez une commande, puis appuyez sur Entrée.
@@ -40,19 +40,28 @@ Vous pouvez profiter de votre compte sur pong ainsi qu'acceder aux fonctionnalit
 - profile : afficher votre profil (ex: profile)
 - profile <username> : afficher le profil d'un autre utilisateur (ex: profile sben-rho)
 
-Vous pouvez vous deconnecter avec la commande 'logout'
-`
+Vous pouvez vous deconnecter avec la commande 'logout'`
 
-/*
+export let HELP_SECONDARY =
+`==================== COMMANDES SYSTÈME (BASH) ====================
+Apprenez à naviguer et à manipuler l'environnement virtuel.
 
-		new Command('cd', 'Change the current directory', 'cd [directory]', cdCommand),
-		new Command('ls', 'List directory contents', 'ls', lsCommand),
-		new Command('pwd', 'Print working directory', 'pwd', pwdCommand),
-		new Command('cat', 'Concatenate and display file content', 'cat [file]', catCommand),
-		new Command('whoami', 'Display the current username', 'whoami', whoamiCommand),
-		new Command('rm', 'Remove files or directories', 'rm [file]', rmCommand),
+NAVIGATION & INFOS :
+	pwd       - Affiche le répertoire actuel (Print Working Directory).
+	ls        - Liste les fichiers et dossiers du répertoire.
+	cd [DIR]  - Change de répertoire (Change Directory).
+	whoami    - Affiche votre identité système.
 
-*/
+MANIPULATION :
+	echo [TXT]- Affiche du texte dans le terminal.
+	cat [FILE]- Affiche le contenu d'un fichier.
+	rm [FILE] - Supprime un fichier.
+	clear     - Nettoie l'écran du terminal.
+
+ASTUCE : Utilisez la touche [TAB] pour l'autocomplétion des noms.
+Ces commandes sont inspirées de Bash, adaptées pour notre terminal virtuel, ainsi tout documentation officielle de bash peut etre utilisee pour mieux comprendre leur fonctionnement.
+==================================================================`
+
 
 export namespace CommandHelpMessage {
 	export let HELP_ECHO = 
@@ -133,4 +142,49 @@ export namespace CommandHelpMessage {
 > Exemple :
 	> "user@terminal:/home/user$ pong"
 	> "Pong lancé !"`
+
+	export let HELP_CD =
+`cd - Change le répertoire courant
+> Utilisation :
+	> cd [répertoire]
+> Exemple : 
+	> "user@terminal:/home/user$ cd documents"
+	> "> Répertoire changé pour /home/user/documents"
+> Atsue :
+	> Tapez 'cd ..' pour revenir au répertoire parent.
+	> Tapdez 'cd' pour revenir a la racine '/'.`
+
+	export let HELP_LS =
+`ls - Liste les fichiers et dossiers dans le répertoire courant
+> Utilisation :
+	> ls
+> Exemple : 
+	> "user@terminal:/home/user$ ls"
+	> "> documents  downloads  pictures  music  videos"
+> Astuce :
+	> Utilisez 'ls [répertoire]' pour lister le contenu d'un répertoire spécifique.`
+
+	export let HELP_PWD =
+`pwd - Affiche le répertoire de travail courant
+> Utilisation :
+	> pwd
+> Exemple : 
+	> "user@terminal:/home/user$ pwd"
+	> "> /home/user"`
+
+	export let HELP_CAT =
+`cat - Affiche le contenu d'un fichier
+> Utilisation :
+	> cat [fichier]
+> Exemple : 
+	> "user@terminal:/home/user$ cat notes.txt"
+	> "> Contenu de notes.txt..."`
+
+	export let HELP_WHOAMI =
+`whoami - Affiche le nom d'utilisateur courant
+> Utilisation :
+	> whoami
+> Exemple : 
+	> "user@terminal:/home/user$ whoami"
+	> "> user"`
 }
