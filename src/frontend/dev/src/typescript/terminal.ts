@@ -12,7 +12,6 @@ import { TerminalUtils } from './terminalUtils/terminalUtils';
 
 import FileSystem from './filesystem.json' with { type: "json" };
 import { HELP_MESSAGE_NOT_LOG, HELP_MESSAGE, HELP_SECONDARY,  CommandHelpMessage } from './terminalUtils/helpText/help';
-import { de } from 'zod/v4/locales';
 
 export namespace TerminalElements {
 	export let terminal: HTMLDivElement | null = null;

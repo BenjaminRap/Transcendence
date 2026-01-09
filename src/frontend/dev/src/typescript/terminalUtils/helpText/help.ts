@@ -40,7 +40,8 @@ Vous pouvez profiter de votre compte sur pong ainsi qu'acceder aux fonctionnalit
 - profile : afficher votre profil (ex: profile)
 - profile <username> : afficher le profil d'un autre utilisateur (ex: profile sben-rho)
 
-Vous pouvez vous deconnecter avec la commande 'logout'`
+Vous pouvez vous deconnecter avec la commande 'logout'
+Si vous chercher de l'aide, tapez 'help' ou 'help 2' pour des commandes systeme supplementaires !`
 
 export let HELP_SECONDARY =
 `==================== COMMANDES SYSTÈME (BASH) ====================
