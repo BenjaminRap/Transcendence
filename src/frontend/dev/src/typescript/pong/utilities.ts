@@ -3,6 +3,7 @@ import type { Material } from "@babylonjs/core/Materials/material";
 import { MultiMaterial } from "@babylonjs/core/Materials/multiMaterial";
 import { Vector2 } from "@babylonjs/core/Maths/math.vector";
 import type { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
+import { PongError } from "@shared/pongError/PongError";
 import { Range } from "@shared/Range";
 
 export function randomFromRange(range : Range) : number
@@ -44,7 +45,7 @@ export function	getRandomWeightedIndex(weights : number[]) : number
 		if (random <= weightsSteps[index])
 			return index;
 	}
-	throw new Error("getRandomWeighted isn't working properly !");
+	throw new PongError("getRandomWeighted isn't working properly !", "quitPong");
 }
 
 export function	replaceMaterial(currentMaterial : Material, newMaterial : Material, scene : Scene)

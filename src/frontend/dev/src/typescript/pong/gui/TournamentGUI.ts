@@ -4,6 +4,7 @@ import { OpponentGUI } from "./OpponentGUI";
 import type { Match } from "@shared/Match";
 import type { Profile } from "@shared/Profile";
 import type { IGUI } from "./IGUI";
+import { PongError } from "@shared/pongError/PongError";
 
 export class	TournamentGUI extends HTMLElement implements IGUI<void>
 {
@@ -168,12 +169,12 @@ export class	TournamentGUI extends HTMLElement implements IGUI<void>
 	public setWinners(round : number)
 	{
 		if (round < 0 || round >= this._matchesByRound.length)
-			throw new Error("TournamentGUI setWinners called with an invalid round !");
+			throw new PongError("TournamentGUI setWinners called with an invalid round !", "quitPong");
 		const	matchesGuis = this._matchesByRoundGuis[round];
 		const	matches = this._matchesByRound[round];
 		const	opponentsGuis = (round === 0) ? this._participantsGuis : this._matchesByRoundGuis[round - 1];
 		if (matches.length !== matchesGuis.length || opponentsGuis.length !== matches.length * 2)
-			throw new Error("Invalid array length in TournamentGUI setWinners !");
+			throw new PongError("Invalid array length in TournamentGUI setWinners !", "quitPong");
 
 		for (let index = 0; index < matchesGuis.length; index++) {
 			const	matchGui = matchesGuis[index];
@@ -184,7 +185,7 @@ export class	TournamentGUI extends HTMLElement implements IGUI<void>
 			const	winnerSide = match.getWinnerSide();
 
 			if (winner === undefined || winnerSide === undefined)
-				throw new Error("A match hasn't finished but TournamentGUI setWinners has been called !");
+				throw new PongError("A match hasn't finished but TournamentGUI setWinners has been called !", "quitPong");
 			matchGui.setWinner(winner);
 			left.setHasWon(winnerSide === "left");
 			right.setHasWon(winnerSide === "right");

@@ -1,5 +1,6 @@
 import type { Profile } from "@shared/Profile";
 import { OpponentGUI } from "./OpponentGUI";
+import { PongError } from "@shared/pongError/PongError";
 
 export class	MatchGUI extends HTMLElement
 {
@@ -30,9 +31,9 @@ export class	MatchGUI extends HTMLElement
 	public setWinner(profile : Profile)
 	{
 		if (this._matchOrOpponent === undefined)
-			throw new Error("MatchGUI setWinner called before the connectedCallback !");
+			throw new PongError("MatchGUI setWinner called before the connectedCallback !", "quitPong");
 		if (this._matchOrOpponent instanceof OpponentGUI)
-			throw new Error("MatchGUI setWinner has been called twice !");
+			throw new PongError("MatchGUI setWinner has been called twice !", "quitPong");
 		const	opponentGUI = new OpponentGUI(profile);
 
 		opponentGUI.classList.add("w-1/2", "m-auto");
@@ -44,7 +45,7 @@ export class	MatchGUI extends HTMLElement
 	public setHasWon(hasWon : boolean)
 	{
 		if (this._matchOrOpponent === undefined || this._matchOrOpponent instanceof HTMLDivElement)
-			throw new Error("MatchGUI setHasWon has been called before setWinner !");
+			throw new PongError("MatchGUI setHasWon has been called before setWinner !", "quitPong");
 		this._matchOrOpponent.setHasWon(hasWon);
 	}
 }

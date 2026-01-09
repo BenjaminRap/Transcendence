@@ -11,6 +11,7 @@ import { zodNumber } from "@shared/ImportedHelpers";
 import { zodRange } from "@shared/Range";
 import { Range } from "@shared/Range";
 import { randomFromRange } from "../utilities";
+import { PongError } from "@shared/pongError/PongError";
 
 export class ParticleText extends CustomScriptComponent {
 	@Imported(Mesh) private _scoreLeft! : Mesh;
@@ -50,10 +51,10 @@ export class ParticleText extends CustomScriptComponent {
 		const	material = mesh.material;
 
 		if (material === null)
-			throw new Error("A mesh assigned to the ParticleText CustomScriptComponent doesn't have a material !");
+			throw new PongError("A mesh assigned to the ParticleText CustomScriptComponent doesn't have a material !", "quitScene");
 		const	textures = material.getActiveTextures();
 		if (textures.length === 0)
-			throw new Error("A mesh with no texture has been assigned to the ParticleText CustomScriptComponent !");
+			throw new PongError("A mesh with no texture has been assigned to the ParticleText CustomScriptComponent !", "quitScene");
 		mesh.isVisible = false;
 		const	texture = textures[0];
 
@@ -108,7 +109,7 @@ export class ParticleText extends CustomScriptComponent {
 		const	data = await texture.readPixels()
 
 		if (data === null)
-			throw new Error("Could not read the texture pixels !");
+			throw new PongError("Could not read the texture pixels !", "quitPong");
 		const	pixels = new Uint32Array(data.buffer, data.byteOffset, data.byteLength / 4);
 		const	opaquePixelCount = this.getOpaquePixelCount(pixels);
 		const	size = texture.getSize();
@@ -120,7 +121,7 @@ export class ParticleText extends CustomScriptComponent {
 		particleSystem.startPositionFunction = (_worldMatrix, positionToUpdate, _particle, _isLocal) => {
 			currentOpaquePixelIndex = this.getNextOpaquePixelIndex(pixels, currentOpaquePixelIndex)
 			if (currentOpaquePixelIndex === undefined)
-				throw new Error("Error counting particles !");
+				throw new PongError("Error counting particles !", "quitPong");
 			const	imagePos = new Vector2(currentOpaquePixelIndex % size.width, Math.floor(currentOpaquePixelIndex / size.width));
 			const	localPos = imagePos.multiplyByFloats(1 / size.width, 1 / size.height);
 			localPos.y = 1 - localPos.y;

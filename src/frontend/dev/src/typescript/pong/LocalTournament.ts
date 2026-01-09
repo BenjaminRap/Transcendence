@@ -5,6 +5,7 @@ import { TournamentGUI } from "./gui/TournamentGUI";
 import type { EndData } from "@shared/attachedScripts/GameManager";
 import type { FrontendEventsManager } from "./FrontendEventsManager";
 import { isPowerOfTwo } from "@shared/utils";
+import { PongError } from "@shared/pongError/PongError";
 
 export class	LocalTournament
 {
@@ -24,7 +25,7 @@ export class	LocalTournament
 	constructor(private _participants : Profile[])
 	{
 		if (_participants.length > TournamentHelper.maxTournamentParticipants)
-			throw new Error(`Too many participants ! : max : ${TournamentHelper.maxTournamentParticipants}`);
+			throw new PongError(`Too many participants ! : max : ${TournamentHelper.maxTournamentParticipants}`, "quitPong");
 		this._expectedQualifiedCount = TournamentHelper.getExpectedQualified(this._participants.length);
 	}
 
@@ -41,15 +42,15 @@ export class	LocalTournament
 	private	endTournament()
 	{
 		if (this._tournamentMatches.length === 0)
-			throw new Error("Error the tournament matches are empty !");
+			throw new PongError("Error the tournament matches are empty !", "quitPong");
 		const	lastRound = this._tournamentMatches[this._tournamentMatches.length - 1];
 		if (lastRound.length !== 1)
-			throw new Error("Error, the last round should only be composed of one match !");
+			throw new PongError("Error, the last round should only be composed of one match !", "quitPong");
 		const	lastMatch = lastRound[0];
 		const	winner = lastMatch.getWinner();
 
 		if (winner === undefined)
-			throw new Error("endTournament called but the tournament isn't finished !");
+			throw new PongError("endTournament called but the tournament isn't finished !", "quitPong");
 		this._events.getObservable("tournament-end").notifyObservers(winner);
 	}
 
@@ -92,19 +93,19 @@ export class	LocalTournament
 	private	async startCurrentMatch()
 	{
 		if (this._timeout !== null)
-			throw new Error("The current timeout hasn't finished !");
+			throw new PongError("The current timeout hasn't finished !", "quitPong");
 		const	matches = this.getMatchList();
 
 		if (matches === null)
-			throw new Error("Current match list is null in LocalTournament !");
+			throw new PongError("Current match list is null in LocalTournament !", "quitPong");
 		if (this._currentMatchIndex >= matches.length)
-			throw new Error("The current match index is out of bound !");
+			throw new PongError("The current match index is out of bound !", "quitPong");
 		const	match = matches[this._currentMatchIndex];
 		const	left = match.getLeft();
 		const	right = match.getRight();
 
 		if (left === undefined || right === undefined)
-			throw new Error("A match is started, but the players has'nt finished their match !");
+			throw new PongError("A match is started, but the players has'nt finished their match !", "quitPong");
 		this._events.getObservable("set-participants").notifyObservers([left, right]);
 		await this.delay(LocalTournament._showOpponentsDurationMs);
 		this._events.getObservable("game-start").notifyObservers();
@@ -139,10 +140,10 @@ export class	LocalTournament
 	public	onGameEnd(endData : EndData)
 	{
 		if (endData.winner === "draw")
-			throw new Error("A game can't be a draw in a tournament !");
+			throw new PongError("A game can't be a draw in a tournament !", "quitPong");
 		const	matches = this.getMatchList();
 		if (matches === null)
-			throw new Error("Current match list is null in LocalTournament !");
+			throw new PongError("Current match list is null in LocalTournament !", "quitPong");
 		const	match = matches[this._currentMatchIndex];
 
 		match.setWinner(endData.winner);
@@ -157,7 +158,7 @@ export class	LocalTournament
 
 		const	matches = this.getMatchList();
 		if (matches === null)
-			throw new Error("Current match list is null in LocalTournament !");
+			throw new PongError("Current match list is null in LocalTournament !", "quitPong");
 		if (this._currentMatchIndex >= matches.length)
 			this.endRound();
 		else

@@ -1,6 +1,7 @@
 import { TournamentHelper } from "@shared/TournamentHelper";
 import type { IGUI } from "./IGUI";
 import type { TournamentCreationSettings } from "@shared/ServerMessage";
+import { PongError } from "@shared/pongError/PongError";
 
 export type OnlineTournamentCreationGUIInputs = {
 	create: HTMLButtonElement,
@@ -93,7 +94,7 @@ export class	OnlineTournamentCreationGUI extends HTMLElement implements IGUI<Onl
 	private	validate()
 	{
 		if (this._settingsInputs === undefined)
-			throw new Error("getOnlineTournamentSettings called before begin connected !");
+			throw new PongError("getOnlineTournamentSettings called before begin connected !", "quitPong");
 		let	isValid = true;
 
 		Object.values(this._settingsInputs).forEach(elem => {
@@ -113,7 +114,7 @@ export class	OnlineTournamentCreationGUI extends HTMLElement implements IGUI<Onl
 	public getOnlineTournamentSettings() : TournamentCreationSettings | null
 	{
 		if (this._settingsInputs === undefined)
-			throw new Error("getOnlineTournamentSettings called before begin connected !");
+			throw new PongError("getOnlineTournamentSettings called before begin connected !", "quitPong");
 		if (!this.validate())
 			return null;
 		const	settings : TournamentCreationSettings = {

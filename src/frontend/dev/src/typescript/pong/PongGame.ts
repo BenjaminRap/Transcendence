@@ -18,6 +18,7 @@ import { ErrorGUI } from "./gui/ErrorGUI";
 import { initMenu } from "./gui/IGUI";
 import { CloseGUI } from "./gui/CloseGUI";
 import type { FrontendTournament } from "./FrontendTournament";
+import { PongError } from "@shared/pongError/PongError";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
@@ -176,7 +177,7 @@ export class PongGame extends HTMLElement {
 	public	async restartOnlineGameAsync() : Promise<void>
 	{
 		if (!this._scene)
-			throw new Error("restartOnlineGameAsync called without a scene !");
+			throw new PongError("restartOnlineGameAsync called without a scene !", "quitPong");
 		try {
 			await this._serverProxy.joinGame();
 
@@ -219,7 +220,7 @@ export class PongGame extends HTMLElement {
 		const	assetsManager = new AssetsManager(scene);
 
 		if (!scene.enablePhysics(Vector3.Zero(), globalThis.HKP))
-			throw new Error("The physics engine hasn't been initialized !");
+			throw new PongError("The physics engine hasn't been initialized !", "quitPong");
 
 		assetsManager.addMeshTask("scene", null, "/scenes/", sceneName)
 
@@ -270,11 +271,11 @@ export class PongGame extends HTMLElement {
 export function	getFrontendSceneData(scene : Scene) : FrontendSceneData
 {
 	if (!scene.metadata)
-		throw new Error("Scene metadata is undefined !");
+		throw new PongError("Scene metadata is undefined !", "quitPong");
 
 	const	sceneData = scene.metadata.sceneData;
 	if (!(sceneData instanceof FrontendSceneData))
-		throw new Error("Scene is not of the type FrontendSceneData !");
+		throw new PongError("Scene is not of the type FrontendSceneData !", "quitPong");
 	return sceneData;
 }
 

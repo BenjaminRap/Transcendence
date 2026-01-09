@@ -9,6 +9,7 @@ import { Imported } from "@shared/ImportedDecorator";
 import { ImportedComponentOptional, zodBoolean, zodString } from "@shared/ImportedHelpers";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import type { SceneFileName } from "../PongGame";
+import { PongError } from "@shared/pongError/PongError";
 
 export class SceneMenuData extends CustomScriptComponent {
 	@Imported(zodString) private _sceneName! : string;
@@ -31,7 +32,7 @@ export class SceneMenuData extends CustomScriptComponent {
 		const	skybox = this._skyboxCreator.getSkybox();
 
 		if (!skybox || !skybox.material)
-			throw new Error("Invalid SkyboxCreator !");
+			throw new PongError("Invalid SkyboxCreator !", "quitScene");
 		this._skyboxMaterial = skybox.material;
 
 		if (!this._defaultSkybox)

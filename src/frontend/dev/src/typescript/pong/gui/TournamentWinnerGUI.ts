@@ -1,6 +1,7 @@
 import type { Profile } from "@shared/Profile";
 import { OpponentGUI } from "./OpponentGUI";
 import type { IGUI } from "./IGUI";
+import { PongError } from "@shared/pongError/PongError";
 
 export type TournamentWinnerGUIInputs =
 {
@@ -47,7 +48,7 @@ export class	TournamentWinnerGUI extends HTMLElement implements IGUI<TournamentW
 	public setWinner(profile : Profile)
 	{
 		if (this._winText === undefined)
-			throw new Error("TournamentWinnerGUI setWinner called before being added to the document !");
+			throw new PongError("TournamentWinnerGUI setWinner called before being added to the document !", "quitPong");
 		const	winnerGUI = new OpponentGUI(profile);
 
 		winnerGUI.classList.add("h-1/2")

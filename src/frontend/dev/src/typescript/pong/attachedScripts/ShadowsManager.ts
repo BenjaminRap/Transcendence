@@ -5,6 +5,7 @@ import { DirectionalLight, type int, ShadowGenerator } from "@babylonjs/core";
 import { Imported } from "@shared/ImportedDecorator";
 import { zodInt } from "@shared/ImportedHelpers";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
+import { PongError } from "@shared/pongError/PongError";
 
 export class ShadowsManager extends CustomScriptComponent {
 	@Imported(TransformNode) private _mainLight! : TransformNode;
@@ -22,7 +23,7 @@ export class ShadowsManager extends CustomScriptComponent {
 		const	lightRig = SceneManager.FindSceneLightRig(this._mainLight)
 
 		if (!(lightRig instanceof DirectionalLight))
-			throw new Error("The main light should be a directional light !");
+			throw new PongError("The main light should be a directional light !", "quitScene");
 		this._shadowGenerator = new ShadowGenerator(this._lightmapSize, lightRig);
 	}
 

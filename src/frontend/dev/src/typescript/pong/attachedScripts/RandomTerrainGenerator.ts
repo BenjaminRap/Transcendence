@@ -9,6 +9,7 @@ import { Float32Array2D } from "../Float32Array2D";
 import { Imported } from "@shared/ImportedDecorator";
 import { zodInt, zodNumber } from "@shared/ImportedHelpers";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
+import { PongError } from "@shared/pongError/PongError";
 
 export class RandomTerrainGenerator extends CustomScriptComponent {
 	@Imported(zodInt) private _dimension! : int;
@@ -63,7 +64,7 @@ export class RandomTerrainGenerator extends CustomScriptComponent {
 		const	positions = this._ground.getVerticesData(VertexBuffer.PositionKind);
 
 		if (!positions)
-			throw new Error("Can not get the ground vertices data !");
+			throw new PongError("Can not get the ground vertices data !", "quitPong");
 		const	heightAverage = this.getAverageHeightInCircle(heights);
 		heights.forEach((value : number, _x : int, _y : int, index : number) => {
 			const xWorld = positions[index * 3];

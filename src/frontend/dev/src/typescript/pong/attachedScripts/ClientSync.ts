@@ -14,6 +14,7 @@ import { Ball } from "@shared/attachedScripts/Ball";
 import { Paddle } from "@shared/attachedScripts/Paddle";
 import type { Platform } from "@shared/attachedScripts/Platform";
 import type { ServerInGameMessage } from "../FrontendSocketHandler";
+import { PongError } from "@shared/pongError/PongError";
 
 export class ClientSync extends CustomScriptComponent {
 	@Imported("InputManager") private	_inputManager! : InputManager;
@@ -107,7 +108,7 @@ export class ClientSync extends CustomScriptComponent {
 		const	colliderScript = this.getPlatformScript(transform) ?? this.getPaddleScript(transform);;
 
 		if (!colliderScript)
-			throw new Error("The getNewPosition raycast hit an unexpected collider !");
+			throw new PongError("The getNewPosition raycast hit an unexpected collider !", "quitScene");
 		const	newVelocity = colliderScript.getNewVelocity(velocity);
 
 		return this.getNewPosition(hitPoint, newVelocity, newRemainingTime);

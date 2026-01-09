@@ -6,6 +6,7 @@ import { TimerManager } from "@shared/attachedScripts/TimerManager";
 import { Imported } from "@shared/ImportedDecorator";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { zodNumber, zodString } from "@shared/ImportedHelpers";
+import { PongError } from "@shared/pongError/PongError";
 
 enum CharacterAnim
 {
@@ -82,7 +83,7 @@ export class Character extends CustomScriptComponent {
 		if (meshes.length != Character._expectedMeshCount
 			|| animationGroups.length != Character._expectedAnimationGroupsCount)
 		{
-			throw new Error(`Invalid Character mesh : ${this._knightPath}, expected ${Character._expectedMeshCount} mesh/es and ${Character._expectedAnimationGroupsCount} animationGroup/s and got ${meshes.length} and ${animationGroups.length}`);
+			throw new PongError(`Invalid Character mesh : ${this._knightPath}, expected ${Character._expectedMeshCount} mesh/es and ${Character._expectedAnimationGroupsCount} animationGroup/s and got ${meshes.length} and ${animationGroups.length}`, "quitScene");
 		}
 		this._knight = meshes[0];
 		this._knight.parent = this.transform;

@@ -23,6 +23,7 @@ import { OnlineTournamentJoinPublicGUI } from "../gui/OnlineTournamentJoinPublic
 import { OnlineTournamentChoiceGUI } from "../gui/OnlineTournamentChoiceGUI";
 import { OnlineTournamentStartGUI } from "../gui/OnlineTournamentStartGUI";
 import { FrontendTournament } from "../FrontendTournament";
+import { PongError } from "@shared/pongError/PongError";
 
 type EnemyType = "Local" | "Multiplayer" | "Bot";
 
@@ -63,7 +64,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 	{
 		this.setScenes();
 		if (this._scenes.length === 0)
-			throw new Error("There is no scene in the menu !");
+			throw new PongError("There is no scene in the menu !", "quitScene");
 		this._currentSceneFileName = this._scenes[0].getSceneFileName();
 		const	theme = this._scenes[0].getTheme();
 
