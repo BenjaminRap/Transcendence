@@ -65,7 +65,7 @@ export class CreateInGameGUI extends CustomScriptComponent {
 
 		}, this._menuParent);
 		this._inMatchmakingGUI = initMenu(new InMatchmakingGUI(), {
-			cancelButton: () => this.cancelMatchmaking(),
+			cancelButton: () => this.leaveMatchmaking(),
 		}, this._menuParent);
 		this._tournamentWinnerGUI = initMenu(new TournamentWinnerGUI(), {
 			goToMenu: () => this.onGoToMenu()
@@ -131,7 +131,7 @@ export class CreateInGameGUI extends CustomScriptComponent {
 			const	winningSide = (opponentIndex === 0) ? "left" : "right";
 
 			this._sceneData.events.getObservable("forfeit").notifyObservers(winningSide);
-			this._sceneData.serverProxy.sendServerMessage("forfeit");
+			this._sceneData.serverProxy.forfeit();;
 		}
 		else
 			this._sceneData.events.getObservable("forfeit").notifyObservers("highestScore");
@@ -154,11 +154,11 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		}
 	}
 
-	private	cancelMatchmaking()
+	private	leaveMatchmaking()
 	{
 		this._inMatchmakingGUI.classList.add("hidden");
 		this._endGUI.classList.remove("hidden");
-		this._sceneData.pongHTMLElement.cancelMatchmaking();
+		this._sceneData.serverProxy.leaveMatchmaking();
 	}
 
 	private	switchToGUI(newGUI : HTMLElement)

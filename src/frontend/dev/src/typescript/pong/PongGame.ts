@@ -109,7 +109,7 @@ export class PongGame extends HTMLElement {
 
 	public async goToMenuScene()
 	{
-		frontendSocketHandler.leaveScene();
+		this._serverProxy.leaveScene();
 		if (!this._scene || getSceneData(this._scene).gameType !== "Menu")
 			await this.changeScene("Menu.gltf", "Menu", [], undefined);
 	}
@@ -154,16 +154,16 @@ export class PongGame extends HTMLElement {
 	private async startOnlineGameAsync(sceneName : SceneFileName) : Promise<void>
 	{
 		try {
-			await frontendSocketHandler.joinGame();
-			const	playerIndex = frontendSocketHandler.getplayerIndex();
+			await this._serverProxy.joinGame();
+			const	playerIndex = this._serverProxy.getPlayerIndex();
 			const	inputs = this._settings._playerInputs.filter((value : ClientInput) => value.index === playerIndex);
 
 			await this.changeScene(sceneName, "Multiplayer", inputs, undefined);
 			const	sceneData = getFrontendSceneData(this._scene!);
 
 			await sceneData.readyPromise.promise;
-			frontendSocketHandler.setReady();
-			await frontendSocketHandler.onGameReady();
+			this._serverProxy.setReady();
+			await this._serverProxy.onGameReady();
 			sceneData.events.getObservable("game-start").notifyObservers();
 		} catch (error) {
 			if (error === "canceled")
@@ -178,16 +178,16 @@ export class PongGame extends HTMLElement {
 		if (!this._scene)
 			throw new Error("restartOnlineGameAsync called without a scene !");
 		try {
-			await frontendSocketHandler.joinGame();
+			await this._serverProxy.joinGame();
 
-			const	playerIndex = frontendSocketHandler.getplayerIndex();
+			const	playerIndex = this._serverProxy.getPlayerIndex();
 			const	inputs = this._settings._playerInputs.filter((value : ClientInput) => value.index === playerIndex);
 			const	sceneData = getFrontendSceneData(this._scene);
 
 			sceneData.inputs = inputs;
 			sceneData.events.getObservable("input-change").notifyObservers();
-			sceneData.serverProxy.sendServerMessage("ready");
-			await frontendSocketHandler.onGameReady();
+			sceneData.serverProxy.setReady();
+			await this._serverProxy.onGameReady();
 			sceneData.events.getObservable("game-start").notifyObservers();
 		} catch (error) {
 			if (error === "canceled")
@@ -195,11 +195,6 @@ export class PongGame extends HTMLElement {
 			console.error(error);
 			this.goToMenuScene();
 		}
-	}
-
-	public	cancelMatchmaking()
-	{
-		frontendSocketHandler.leaveMatchmaking();
 	}
 
 	public showError(errorText : string)
@@ -257,7 +252,7 @@ export class PongGame extends HTMLElement {
 	}
 
 	public disconnectedCallback() : void {
-		frontendSocketHandler.leaveScene();
+		this._serverProxy.leaveScene();
 		if (globalThis.HKP)
 			delete globalThis.HKP;
 		if (globalThis.HKP)

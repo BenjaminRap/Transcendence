@@ -13,6 +13,7 @@ import { Imported } from "@shared/ImportedDecorator";
 import { Ball } from "@shared/attachedScripts/Ball";
 import { Paddle } from "@shared/attachedScripts/Paddle";
 import type { Platform } from "@shared/attachedScripts/Platform";
+import type { ServerInGameMessage } from "../FrontendSocketHandler";
 
 export class ClientSync extends CustomScriptComponent {
 	@Imported("InputManager") private	_inputManager! : InputManager;
@@ -45,7 +46,7 @@ export class ClientSync extends CustomScriptComponent {
 	
 		if (!serverProxy)
 			return ;
-		serverProxy.onServerMessage().add((gameInfos : GameInfos | "room-closed" | "forfeit") => {
+		serverProxy.onServerMessage().add((gameInfos : ServerInGameMessage) => {
 			const	opponentInputs = this._inputManager.getPlayerInput(serverProxy.getOpponentIndex());
 
 			if (gameInfos === "room-closed")

@@ -1,16 +1,100 @@
-import type { GameInfos, KeysUpdate, TournamentCreationSettings, TournamentId } from "@shared/ServerMessage";
-import { FrontendSocketHandler } from "./FrontendSocketHandler";
-import { Observable } from "@babylonjs/core/Misc/observable";
-import type { ClientToServerEvents } from "@shared/MessageType";
+import type { GameInit, KeysUpdate, TournamentCreationSettings, TournamentDescription, TournamentId } from "@shared/ServerMessage";
+import { FrontendSocketHandler, type ServerInGameMessage } from "./FrontendSocketHandler";
+import type { Deferred, int, Observable } from "@babylonjs/core";
+import type { Profile } from "@shared/Profile";
+
+type SocketState = "not-connected" | "connected" | "in-matchmaking" | "in-game" | "tournament-creator" | "tournament-player" | "tournament-creator-player" | "in-tournament";
 
 export class	ServerProxy
 {
+	private _state : SocketState;
+	private _playerIndex : int = 0;
+	private _currentPromise : Deferred<any> | null = null;
+
 	constructor(
 		private _frontendSocketHandler : FrontendSocketHandler,
 	) {
+		this._state = "connected";
+		this._frontendSocketHandler.onServerMessage().add((gameInfos : ServerInGameMessage) => {
+			if (gameInfos === "room-closed" && this._state === "in-game")
+				this._state = "connected";
+		});
+		this._frontendSocketHandler.getOnDisconnectObservable().add(() => {
+			this._state = "not-connected";
+			this._currentPromise?.reject();
+		});
 	}
 
-	public keyUpdate(key : "up" | "down", event : "keyUp" | "keyDown")
+	public async joinGame() : Promise<GameInit>
+	{
+		this.verifyState("connected");
+		const	deferred = this._frontendSocketHandler.joinGame();
+
+		this.replaceCurrentPromise(deferred);
+		this._state = "in-matchmaking";
+		deferred.promise.then((gameInit : GameInit) => {
+			this._state = "in-game";
+			this._playerIndex = gameInit.playerIndex;
+		}).catch(() => {
+			this._state = "connected";
+		});
+		return deferred.promise;
+	}
+
+	public leaveScene() : void
+	{
+		this.verifyState("connected", "in-matchmaking", "in-game", "in-tournament");
+		this._frontendSocketHandler.clearMessageObservable();
+		if (this._state === "in-matchmaking")
+			this._frontendSocketHandler.sendEventWithNoResponse("leave-matchmaking");
+		else if (this._state === "in-game")
+			this._frontendSocketHandler.sendEventWithNoResponse("forfeit");
+		else if (this._state === "in-tournament")
+			this._frontendSocketHandler.sendEventWithNoResponse("leave-tournament");
+		this._state = "connected";
+		this._currentPromise?.reject("canceled");
+	}
+
+	public onGameReady() : Promise<void>
+	{
+		this.verifyState("in-game");
+		const	deferred = this._frontendSocketHandler.onGameReady();
+
+		this.replaceCurrentPromise(deferred);
+		return deferred.promise;
+	}
+
+	public setReady() : void
+	{
+		this.verifyState("in-game");
+		this._frontendSocketHandler.sendEventWithNoResponse("ready");
+	}
+
+	public leaveTournament() : void
+	{
+		this.verifyState("tournament-player", "tournament-creator-player", "in-tournament");
+		if (this._state === "tournament-player" || this._state === "in-tournament")
+			this._state = "connected";
+		else
+			this._state = "tournament-creator"
+		this._frontendSocketHandler.sendEventWithNoResponse("leave-tournament");
+	}
+
+	public forfeit() : void
+	{
+		this.verifyState("in-game", "in-tournament");
+		this._frontendSocketHandler.sendEventWithNoResponse("forfeit")
+	}
+
+	public leaveMatchmaking() : void
+	{
+		this.verifyState("in-matchmaking");
+		this._frontendSocketHandler.sendEventWithNoResponse("leave-matchmaking")
+		this._state = "connected";
+		this._currentPromise?.reject("canceled");
+	}
+
+	public keyUpdate(key : "up" | "down", event : "keyUp" | "keyDown") : void
 	{
 		const	keysUpdate : KeysUpdate =  {};
 
@@ -18,51 +102,98 @@ export class	ServerProxy
 			keysUpdate.up = { event : event };
 		else
 			keysUpdate.down = { event : event };
-		this._frontendSocketHandler.sendServerMessage("input-infos", keysUpdate);
+		this._frontendSocketHandler.sendEventWithNoResponse("input-infos", keysUpdate);
 	}
 
-	public onServerMessage() : Observable<GameInfos | "room-closed" | "forfeit">
+	public onServerMessage() : Observable<ServerInGameMessage>
 	{
 		return this._frontendSocketHandler.onServerMessage();
 	}
 
-	public sendServerMessage<T extends keyof ClientToServerEvents>(event : T, ...args : Parameters<ClientToServerEvents[T]>)
+	public getPlayerIndex() : int
 	{
-		return this._frontendSocketHandler.sendServerMessage(event, ...args);
+		return this._playerIndex;
 	}
 
-	public getPlayerIndex()
+	public getOpponentIndex() : int
 	{
-		return this._frontendSocketHandler.getplayerIndex();
+		return (this._playerIndex === 0) ? 1 : 0;
 	}
 
-	public getOpponentIndex()
+	public createTournament(settings : TournamentCreationSettings) : Promise<TournamentId>
 	{
-		return (this.getPlayerIndex() === 0) ? 1 : 0;
+		this.verifyState("connected");
+		const deferred =  this._frontendSocketHandler.createTournament(settings);
+
+		deferred.promise.catch(() => {
+			this._state = "connected";
+		});
+		this.replaceCurrentPromise(deferred);
+		this._state = "tournament-creator";
+
+		return deferred.promise;
 	}
 
-	public createTournament(settings : TournamentCreationSettings)
+	public joinTournament(tournamentId : TournamentId) : Promise<Profile[]>
 	{
-		return this._frontendSocketHandler.createTournament(settings);
+		this.verifyState("connected", "tournament-creator");
+		const	previousState = this._state;
+
+		if (this._state === "connected")
+			this._state = "tournament-player";
+		else
+			this._state = "tournament-creator-player"
+		const	deferred = this._frontendSocketHandler.joinTournament(tournamentId);
+
+		deferred.promise.catch(() => {
+			this._state = previousState;
+		})
+		this.replaceCurrentPromise(deferred);
+		return deferred.promise;
 	}
 
-	public joinTournament(tournamentId : TournamentId)
+	public cancelTournament() : void
 	{
-		return this._frontendSocketHandler.joinTournament(tournamentId);
+		this.verifyState("tournament-creator", "tournament-creator-player");
+		this._currentPromise?.reject();
+		this._state = "connected";
+		this._frontendSocketHandler.sendEventWithNoResponse("cancel-tournament");
 	}
 
-	public cancelTournament()
+	public startTournament() : Promise<void>
 	{
-		this._frontendSocketHandler.cancelTournament();
+		this.verifyState("tournament-creator", "tournament-creator-player");
+		const	previousState = this._state;
+		const	deferred =  this._frontendSocketHandler.startTournament();
+
+		this.replaceCurrentPromise(deferred);
+		this._state = "in-tournament";
+
+		deferred.promise.catch(() => {
+			this._state = previousState;
+		});
+		return deferred.promise;
 	}
 
-	public startTournament()
+	public async getTournaments() : Promise<TournamentDescription[]>
 	{
-		return this._frontendSocketHandler.startTournament();
+		this.verifyState("connected");
+		const deferred = this._frontendSocketHandler.getTournaments();
+
+		this.replaceCurrentPromise(deferred);
+
+		return deferred.promise;
 	}
 
-	public getTournaments()
+	private verifyState(...allowedStates : SocketState[]) : void
 	{
-		return this._frontendSocketHandler.getTournaments();
+		if (!allowedStates.includes(this._state))
+			throw new Error(`A FrontendSocketHandler method called with an invalid state, current state : ${this._state}, allowed : ${allowedStates}`);
+	}
+
+	private	replaceCurrentPromise(newPromise : Deferred<any>) : void
+	{
+		this._currentPromise?.reject("canceled");
+		this._currentPromise = newPromise;
 	}
 }
