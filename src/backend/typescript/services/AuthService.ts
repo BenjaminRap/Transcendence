@@ -135,6 +135,20 @@ export class AuthService {
         return await this.tokenManager.generatePair(userId, email);
     }
 
+	// --------------------------------------------------------------------------------- //
+	async logout(userId: number): Promise<void> {
+		// notifier la websocket pour deconnecter les autres sessions si besoin
+		// rien a faire pour l'instant car les tokens sont stateless
+		// on pourrait implementer une blacklist des tokens si besoin
+		// mais ca complexifie inutilement le systeme
+		// donc on laisse comme ca pour l'instant
+
+		// est il possible de decompter le nombre de sessions actives pour un utilisateur ?
+		// et de notifier tout le monde uniquement quand la derniere session se deconnecte ?
+		
+		return;
+	}
+
     // ==================================== PRIVATE ==================================== //
 
     // --------------------------------------------------------------------------------- //

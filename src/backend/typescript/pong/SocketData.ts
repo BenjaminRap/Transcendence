@@ -1,4 +1,4 @@
-import type { DefaultSocket } from "../";
+import type { DefaultSocket } from "../controllers/SocketEventController.js";
 import { Room } from "./Room";
 
 export class	SocketData

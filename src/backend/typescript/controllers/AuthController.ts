@@ -81,6 +81,27 @@ export class AuthController {
     }
 
     // --------------------------------------------------------------------------------- //
+	// POST auth/logout
+	async logout(request: FastifyRequest, reply: FastifyReply) {
+		try {
+			const user = (request as any).user;
+
+			await this.authService.logout(user.userId);
+
+			return reply.status(200).send({
+				success: true,
+				message: 'Logout successful',
+			});
+		} catch (error) {
+			request.log.error(error);
+			return reply.status(500).send({
+				success: false,
+				message: 'Internal server error',
+			});
+		}
+	}
+
+    // --------------------------------------------------------------------------------- //
     // GET auth/refresh
     async refresh(request: FastifyRequest, reply: FastifyReply) {
         try {

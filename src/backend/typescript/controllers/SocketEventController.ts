@@ -4,7 +4,7 @@ import type { ClientToServerEvents, ServerToClientEvents } from '@shared/Message
 import { SocketData } from '../pong/SocketData';
 import { Container } from "../container/Container.js";
 import { TokenManager } from "../utils/TokenManager.js";
-
+import type { FriendService } from "../services/FriendService.js";
 
 export type DefaultSocket = Socket<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>;
 
@@ -20,7 +20,7 @@ export class SocketEventController {
 	private matchMaker: MatchMaker;
 
 	// ----------------------------------------------------------------------------- //
-	static initInstance( io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any> ): void
+	static initInstance( io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>): void
 	{
 		if (!SocketEventController.socketInstance) {
 			SocketEventController.socketInstance = new SocketEventController (io);
@@ -31,13 +31,16 @@ export class SocketEventController {
 	
 	// Auth middleware for socket.io new connections
 	// ----------------------------------------------------------------------------- //
-	private initMiddleware()
+	private async initMiddleware()
 	{
 		this.io.use(async (socket, next) => {
 			const token = socket.handshake.auth.token;
-			
-			if (!token)
-				return next(new Error("Authentication error: Token missing"));
+
+			// guest user
+			if (!token) {
+				(socket.data as any).userId = -1;
+				return next();
+			}
 
 			try {
 				const tokenManager: TokenManager = Container.getInstance().getService('TokenManager');
@@ -47,13 +50,15 @@ export class SocketEventController {
 				
 				next();
 			} catch (err) {
-				next(new Error("Authentication error: Invalid token"));
+				(socket.data as any).userId = -1;
+				(socket.data as any).authError = true;
+				return next();
 			}
 		});
 	}
 
 	// ----------------------------------------------------------------------------- //
-	private initSocket()
+	private async initSocket()
 	{
 		this.initMiddleware();
 		this.io.on('connection', (socket : DefaultSocket) => {
@@ -72,17 +77,37 @@ export class SocketEventController {
 			});
 		});
 	}
-	
+
 	// ----------------------------------------------------------------------------- //
-	private handleConnection(socket: DefaultSocket)
+	/**
+	 * 
+	 * la connection a la socket ne veut pas dire que l'utilisateur est authentifié
+	 * il peut jouer en tant que guest au jeu
+	 * mais aucun event lie au changement de profil ne sera emise
+	 * donc la connection a la socket en tant qu'invite et en tant qu'utilisateur authentifié doit etre differencie
+	 * 
+	 * 
+	 */
+	private async handleConnection(socket: DefaultSocket)
 	{
-		console.log("user connected !");
 		
 		const userId = (socket.data as any).userId;
 
 		socket.data = new SocketData(socket, userId);
+
+		if (userId == -1) {
+			if ( (socket.data as any).authError )
+				console.log("Socket connection with invalid token !");
+			else
+				console.log("Guest connected !");
+			return;
+		}
+		console.log(`User ${userId} connected !`);
+
+		// join a room specific to the user for private messages
 		socket.join('user-' + userId);
 
+		// system to count multiple connections from the same user
 		const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
 		const newCount = currentCount + 1;
 
@@ -118,10 +143,11 @@ export class SocketEventController {
 		this.matchMaker.removeUserFromMatchMaking(socket);
 
 		const userId = socket.data.getUserId();
-		
+
+		// clean socket data
 		socket.data.disconnect();
 
-		if (userId) {
+		if (userId != -1) {
 			const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
 			const newCount = currentCount - 1;
 			

@@ -8,7 +8,6 @@ import { registerRoutes } from './plugins/registerRoutes.js';
 import "reflect-metadata";
 import { fpSqlitePlugin } from 'fastify-sqlite-typed';
 import { type DefaultEventsMap, Server, Socket } from 'socket.io';
-import { MatchMaker } from './pong/MatchMaker';
 import { SocketData } from './pong/SocketData';
 import fs from 'fs';
 import path from 'path';
@@ -17,18 +16,14 @@ import type { ClientToServerEvents, ServerToClientEvents } from '@shared/Message
 import { Container } from './container/Container.js';
 import { SocketEventController } from './controllers/SocketEventController.js';
 
-export type DefaultSocket = Socket<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>;
-
 const fastify = Fastify({
 	logger: true
 });
 
 async function	init() : Promise<void>
 {
-	loadHavokPhysics();
+	await loadHavokPhysics();
 }
-
-const	io = new Server(fastify.server);
 
 async function	loadHavokPhysics()
 {
@@ -38,6 +33,13 @@ async function	loadHavokPhysics()
 		wasmBinary: wasmBinary
 	});
 }
+
+const	io = new Server(fastify.server, {
+	cors: {
+		origin: true,		// accept requests from any origin
+		credentials: true,	// allow cookies to be sent
+	}
+});
 
 dotenv.config();
 
@@ -56,7 +58,13 @@ await fastify.register(multipartPlugin);
 
 await fastify.register(staticPlugin);
 
-const container = Container.getInstance(fastify.prisma);
+// Initialize the DI container with the Prisma client
+try {
+	Container.getInstance(fastify.prisma);
+} catch (error) {
+	fastify.log.error(`Could not initialize the DI container: ${error}`);
+	process.exit(1);
+}
 
 await registerRoutes(fastify);
 
