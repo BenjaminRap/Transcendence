@@ -54,12 +54,12 @@ model Match {
 
   createdAt   DateTime      @default(now())
 
-  winner      User?    @relation("matchWinner", fields: [winnerId], references: [id], onDelete: Cascade)
+  winner      User?    @relation("matchWinner", fields: [winnerId], references: [id], onDelete: SetNull)
   winnerId    Int?
   winnerLevel String?  // "Guest_XXX" or "AI_LEVEL" if winnerId is null
 
   loserId     Int?
-  loser       User?    @relation("matchLoser", fields: [loserId], references: [id], onDelete: Cascade)
+  loser       User?    @relation("matchLoser", fields: [loserId], references: [id], onDelete: SetNull)
   loserLevel  String?
 
   scoreWinner Int     @default(0)

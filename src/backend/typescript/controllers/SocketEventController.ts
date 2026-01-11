@@ -153,6 +153,9 @@ export class SocketEventController {
 				// remove user from map and notify everyone
 				SocketEventController.connectedUsers.delete(userId);
 				this.io.emit('user-status-change', { userId: userId, status: 'offline' });
+
+                // leave user room
+                socket.leave('user-' + userId);
 			}
 			else {
 				// update count
@@ -161,7 +164,8 @@ export class SocketEventController {
 		}
 	}
 
-	// ----------------------------------------------------------------------------- //
+    // ----------------------------------------------------------------------------- //
+    // cette fonction n'emet qu'a la room user-{userId}, donc a tous les processus front connectes de cet utilisateur
 	static sendToUser(userId: number, event: string, data: any): void
 	{
 		try {
@@ -172,4 +176,23 @@ export class SocketEventController {
 			console.warn(`Error sending socket event to user ${userId} :`, error);
 		}
 	}
+
+    // ----------------------------------------------------------------------------- //
+    static sendToProfileWatchers(userId: number, event: string, data: any): void
+    {
+        try {
+            if (SocketEventController.socketInstance) {
+                const socketInstance = SocketEventController.socketInstance;
+                const sockets = socketInstance.io.sockets.sockets;
+
+                sockets.forEach((socket) => {
+                    if (socket.data.isWatchingProfile(userId)) {
+                        socket.emit(event as any, data);
+                    }
+                });
+            }            
+        } catch (error) {
+            console.warn(`Error sending socket event to profile watchers of user ${userId} :`, error);
+        }
+    }
 }

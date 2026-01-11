@@ -1,31 +1,32 @@
 import type { GameInfos, GameInit, KeysUpdate } from "./ServerMessage";
+import type { SanitizedUser } from "../backend/typescript/types/auth.types.js";
+import type { GameStats } from "../backend/typescript/types/match.types.js";
 
-export type ClientMessage = "join-matchmaking" | "ready" | "input-infos" | "forfeit" | "leave-matchmaking"
+export type ClientMessage = "join-matchmaking" | 
+                            "ready" | 
+                            "input-infos" | 
+                            "forfeit" | 
+                            "leave-matchmaking" |
+                            "force-disconnect";
+
 export type ClientMessageData<T extends ClientMessage> = T extends "input-infos" ? KeysUpdate : undefined;
 
-export type ServerEvents = "game-infos" | "joined-game" | "ready" | "forfeit" | "room-closed" | "user-status-change" | "profile-update" | "game-stats-update";
-
-export type UserStatusChange = { userId: number, status: 'online' | 'offline' };
-
-export interface SharedUser {
-    id: string;
-    username: string;
-    avatar: string;
-}
-
-export interface SharedGameStats {
-	wins:		number,
-	losses:    	number,
-	total:     	number,
-	winRate:	number,
-}
+export type ServerEvents =  "game-infos" | 
+                            "joined-game" | 
+                            "ready" | 
+                            "forfeit" | 
+                            "room-closed" | 
+                            "user-status-change" | 
+                            "profile-update" | 
+                            "game-stats-update" |
+                            "account-deleted";
 
 export type ServerEventsData<T extends ServerEvents> =
     T extends "game-infos" ? GameInfos :
     T extends "joined-game" ? GameInit :
-    T extends "user-status-change" ? UserStatusChange :
-    T extends "profile-update" ? { user: SharedUser } :
-    T extends "game-stats-update" ? { stats: SharedGameStats } :
+    T extends "user-status-change" ? { userId: number, status: 'online' | 'offline' } :
+    T extends "profile-update" ? { user: SanitizedUser } :
+    T extends "game-stats-update" ? { stats: GameStats } :
     undefined
 
 

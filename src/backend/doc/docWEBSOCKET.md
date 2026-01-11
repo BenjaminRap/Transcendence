@@ -93,7 +93,7 @@ une socket client est necessaire lorsque l'utilisateur veut lancer un match ou b
 
 on ouvre une connexion en GUEST au client qui entre sur le site
 
-si l'utilisateur n'est pas connecte a son compte et/ou n'est pas amis avec le profile qu'il visite alors il ne peut voir ni la liste d'amis ni l'historique des matchs du user qu'il viste mais il peut voir les stats (defaites - victoires - ratio) en plus de la photo de profile et du username
+si l'utilisateur n'est pas connecte a son compte et/ou n'est pas amis avec le profile qu'il visite alors il ne peut avoir ni la liste d'amis ni l'historique des matchs du user qu'il viste mais les stats (defaites - victoires - ratio) en plus de la photo de profile et du username seront notifies en cas de mise a jour
 
 # connexion a la socket en GUEST :
 ``` ts
@@ -102,7 +102,7 @@ si l'utilisateur n'est pas connecte a son compte et/ou n'est pas amis avec le pr
 		token: null // IMPORTANT !!
 	},
 	// Options a ajouter :
-	transports: ["websocket"],	// use immediatly the wss protocole
+	transports: ["websocket"],	// use immediatly the ws protocole
 	autoConnect: true,			// established connexion immediatly after the creation of the websocket in the backend side
 	});
 ```
@@ -129,7 +129,7 @@ l'utilisateur n'est plus en connexion GUEST
 ```
 
 les visiteurs peuvent desormais voir son statut connecte
-l'utilisateur peut voir le profile complet de ses amis
+l'utilisateur peut voir le profile complet de ses amis et les mises a jours sur son profile, les nouveaux matchs sont notifies
 
 
 # LES EVENTS A ECOUTER COTE FRONT
@@ -141,21 +141,8 @@ l'utilisateur peut voir le profile complet de ses amis
 # ecouter un event cote front:
 
 ```ts
-	import { io } from "socket.io-client";
-
-	// Récupération du token (ex: depuis localStorage ou un store)
-	const userToken = localStorage.getItem('jwt_token');
-
-	const socket = io("http://localhost:8181", {
-	auth: {
-		token: userToken
-	},
-	transports: ["websocket"], 
-	autoConnect: true
-	});
-
-	// a partir d'ici une connection websocket existe entre le front et le back
-	// on peut ecouter des events provenant du back ou bien emmetre des events au back
+    // ...
+    // apres connexion a la websocket
 
 	// 1. ÉCOUTER (Recevoir des données du serveur)
     // Syntaxe : socket.on('nom-event', callback_function)
@@ -165,8 +152,9 @@ l'utilisateur peut voir le profile complet de ses amis
 
 ```
 
-| nom event | data | received or emit |
-|-----------|------|------------------|
-| user-status-change | userId: userId, status: 'online or offline' | received from back |
-| profile-update | user: { userID, username, avatar } | received from back |
-| game-stats-update | stats: GameStats | receive from back new player stats |
+# events from backend
+| nom event | data received |
+|-----------|---------------|
+| user-status-change | userId: userId, status: 'online or offline' |
+| profile-update | user: { userID, username, avatar } |
+| game-stats-update | stats: GameStats |
