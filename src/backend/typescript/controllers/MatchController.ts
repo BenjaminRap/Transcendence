@@ -4,19 +4,16 @@ import { CommonSchema } from '../schemas/common.schema.js';
 import { type GameStats, type MatchData, OPPONENT_LEVEL } from '../types/match.types.js';
 import { MatchException, MatchError } from '../error_handlers/Match.error.js';
 import { FriendService } from '../services/FriendService.js';
-import { TournamentService } from '../services/TournamentService.js';
-import { TournamentException } from '../error_handlers/Tournament.error.js';
-import { request } from 'http';
 import { SocketEventController } from './SocketEventController.js';
 
 export class MatchController {
 	constructor(
 		private matchService: MatchService,
 		private friendService: FriendService,
-		private tournamentService: TournamentService
 	) {}
 
 	// ----------------------------------------------------------------------------- //
+	// /api/match/register
 	async registerMatch(request: FastifyRequest<{ Body: MatchData }>, reply: FastifyReply): Promise<{ message?: string }> {
 		// the middleware checkGameSecret already checks the x-game-secret header
         const ret = await this.register(request.body);
@@ -27,54 +24,11 @@ export class MatchController {
             })
         }
 
-		if (request.body.winnerId) {
-			const winnerStats = await this.matchService.getStats([request.body.winnerId]);
-			if (winnerStats.stats && winnerStats.stats[0]) {
-				SocketEventController.sendToUser(request.body.winnerId, 'game-stats-update', { stats: winnerStats.stats[0] });
-			}
-		}
-
-		if (request.body.loserId) {
-			const loserStats = await this.matchService.getStats([request.body.loserId]);
-			if (loserStats.stats && loserStats.stats[0]) {
-				SocketEventController.sendToUser(request.body.loserId, 'game-stats-update', { stats: loserStats.stats[0] });
-			}		
-		}
-
         return reply.code(201);
 	}
 
 	// ----------------------------------------------------------------------------- //
-	async getStats(ids: number[]) : Promise<{ success: boolean, message?: string, stats?: GameStats[] }> {
-		try {
-			// verification pathern
-			const zodParsing = CommonSchema.Ids.safeParse(ids);
-			if (!zodParsing.success)
-				return { success: false, message: zodParsing.error?.issues?.[0]?.message || 'Error ids format' }
-	
-			// duplication detection
-			const parsedIds = [...new Set(zodParsing.data)] ;
-			if (parsedIds.length !== ids.length)
-				return { success: false, message: 'Duplicate ids detected' }
-			
-			// call db 
-			const stats = await this.matchService.getStats(parsedIds);
-			if (!stats.stats)
-				return { success: false, message: stats.message || 'Error retrieving statistics'}
-	
-			return {
-				success: true,
-				stats: stats.stats
-			};			
-		} catch (error) {
-			return {
-				success: false,
-				message: 'Error retrieving data from the database'
-			}
-		}
-	}
-
-	// ----------------------------------------------------------------------------- //
+	// /api/match/history
 	async getMatchHistory(request: FastifyRequest, reply: FastifyReply){
 		try {
 			const id = (request as any).user.userId;
@@ -100,7 +54,7 @@ export class MatchController {
 			}
 		}
 	}
-	
+
 	// --------------------------------------------------------------------------------- //
 	async register(matchData: MatchData): Promise<{success: Boolean, message?: string}>
 	{
@@ -113,7 +67,21 @@ export class MatchController {
             matchData.winnerId = winner.id;
             matchData.winnerLevel = winner.level;
     
-            const matchId = await this.matchService.registerMatch(matchData);
+            await this.matchService.registerMatch(matchData);
+
+			if (matchData.loserId) {
+				const loserStats = await this.matchService.getStat(matchData.loserId);
+				if (loserStats.stats) {
+					SocketEventController.sendToUser(matchData.loserId, 'game-stats-update', { stats: loserStats.stats });
+				}		
+			}
+
+			if (matchData.winnerId) {
+				const winnerStats = await this.matchService.getStat(matchData.winnerId);
+				if (winnerStats.stats) {
+					SocketEventController.sendToUser(matchData.winnerId, 'game-stats-update', { stats: winnerStats.stats });
+				}
+			}
     
             return { success: true };            
         }
@@ -127,7 +95,38 @@ export class MatchController {
         }
 	}
 
-    // ==================================== PRIVATE ==================================== //
+	// ----------------------------------------------------------------------------- //
+	async getStats(ids: number[]) : Promise<{ success: boolean, message?: string, stats?: GameStats[] }> {
+		try {
+			// verification pathern
+			const zodParsing = CommonSchema.Ids.safeParse(ids);
+			if (!zodParsing.success)
+				return { success: false, message: zodParsing.error?.issues?.[0]?.message || 'Error ids format' }
+	
+			// duplication detection
+			const parsedIds = [...new Set(zodParsing.data)] ;
+			if (parsedIds.length !== ids.length)
+				return { success: false, message: 'Duplicate ids detected' }
+			
+			// call db 
+			const stats = await this.matchService.getStats(parsedIds);
+			if (!stats.stats)
+				return { success: false, message: stats.message || 'Error retrieving stats'}
+	
+			return {
+				success: true,
+				stats: stats.stats
+			};			
+		} catch (error) {
+			return {
+				success: false,
+				message: 'Error retrieving data from the database'
+			}
+		}
+	}
+	
+	// ==================================== PRIVATE ==================================== //
+
 	
     // --------------------------------------------------------------------------------- //
     private async checkMatchData(level: string | undefined, id: number | undefined): Promise<{ id: number | undefined, level: string | undefined }>

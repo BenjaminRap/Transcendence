@@ -169,4 +169,4 @@ l'utilisateur peut voir le profile complet de ses amis
 |-----------|------|------------------|
 | user-status-change | userId: userId, status: 'online or offline' | received from back |
 | profile-update | user: { userID, username, avatar } | received from back |
-|  |  |  |
+| game-stats-update | stats: GameStats | receive from back new player stats |

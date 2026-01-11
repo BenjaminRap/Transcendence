@@ -40,7 +40,7 @@ export enum OPPONENT_LEVEL
 export interface MatchData
 {
     winnerId?:      number | undefined,
-    winnerLevel?:   OPPONENT_LEVEL| string | undefined,
+    winnerLevel?:   OPPONENT_LEVEL | string | undefined,
 
     loserId?:       number | undefined,
     loserLevel?:    OPPONENT_LEVEL | string | undefined,

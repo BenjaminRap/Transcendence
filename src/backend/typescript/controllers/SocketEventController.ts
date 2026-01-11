@@ -164,8 +164,12 @@ export class SocketEventController {
 	// ----------------------------------------------------------------------------- //
 	static sendToUser(userId: number, event: string, data: any): void
 	{
-		if (SocketEventController.socketInstance) {
-			SocketEventController.socketInstance.io.to('user-' + userId).emit(event as any, data);
+		try {
+			if (SocketEventController.socketInstance) {
+				SocketEventController.socketInstance.io.to('user-' + userId).emit(event as any, data);
+			}			
+		} catch (error) {
+			console.warn(`Error sending socket event to user ${userId} :`, error);
 		}
 	}
 }
