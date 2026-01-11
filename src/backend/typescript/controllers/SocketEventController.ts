@@ -104,7 +104,7 @@ export class SocketEventController {
 		}
 		console.log(`User ${userId} connected !`);
 
-		// join a room specific to the user for private messages
+		// join a room specific to the user for private events
 		socket.join('user-' + userId);
 
 		// system to count multiple connections from the same user
@@ -137,15 +137,13 @@ export class SocketEventController {
 	// ----------------------------------------------------------------------------- //
 	private handleDisconnect(socket: DefaultSocket)
 	{
-		console.log("disconnected !");
-		
 		// clean MatchMaking
 		this.matchMaker.removeUserFromMatchMaking(socket);
 
-		const userId = socket.data.getUserId();
-
 		// clean socket data
 		socket.data.disconnect();
+		
+		const userId = socket.data.getUserId();
 
 		if (userId != -1) {
 			const currentCount = SocketEventController.connectedUsers.get(userId) || 0;

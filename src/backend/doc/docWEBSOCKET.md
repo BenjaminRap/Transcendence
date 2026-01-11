@@ -1,41 +1,3 @@
-une socket client est necessaire lorsque l'utilisateur veut lancer un match ou bien si il veut visiter le profile d'un utilisateur
-
-OPTION LA PLUS SIMPLE:
-si l'utilisateur doit obligatoirement etre connecte a son compte pour visiter le profile des autres utilisateurs alors il n'a besoin de la websocket que lorsqu'il veut jouer un match en tant que GUEST (la websocket ne sert que lorsqu'un match est joue)
-
-OPTION LA PLUS PROPRE:
-si l'utilisateur a le droit de voir les profiles des autres utilisateurs sans etre lui meme connecte alors il a besoin d'une connection websocket des qu'il arrive sur le site (pour voir les mises a jour du profile qu'il visite comme la photo de profile et username)
-
-si l'utilisateur n'est pas connecte a son compte et/ou n'est pas amis avec le profile qu'il visite alors il ne peut voir ni la liste d'amis ni l'historique des matchs du user qu'il viste mais il peut voir les stats (defaites - victoires - ratio) en plus de la photo de profile et du username
-
-# connexion a la socket en GUEST :
-``` ts
-	const socket = io("http://localhost:8181/socket.io/", { // adresse en mode prod sans passer par proxy
-	auth: {
-		token: null // IMPORTANT !!
-	},
-	// Options a ajouter :
-	transports: ["websocket"],	// use immediatly the wss protocole
-	autoConnect: true,			// established connexion immediatly after the creation of the websocket in the backend side
-	});
-```
-
-si l'utilisateur se connecte a son profile alors qu'il a deja une connexion etablie en GUEST (ou bien qu'il se cree un compte alors qu'il est GUEST)
-
-```ts
-	// Fonction appelée juste après un Login réussi (réception du token API)
-	function handleLoginSuccess(newToken) {
-		// 1. On met à jour le token pour la prochaine connexion
-		socket.auth = { token: newToken };
-
-		// 2. On coupe et on relance.
-		// Le serveur va voir une "nouvelle" connexion, vérifier le token, 
-		// et attacher le userId correct.
-		socket.disconnect();
-		socket.connect();
-	}
-```
-
 
 # envoyer une notification a la room watch-ID lors d'un changement de profile
 
@@ -52,10 +14,6 @@ si l'utilisateur se connecte a son profile alors qu'il a deja une connexion etab
 	};
 
 
-
-
-
-	// ...existing code...
 
     // ----------------------------------------------------------------------------- //
     private initSocket()
@@ -93,7 +51,7 @@ si l'utilisateur se connecte a son profile alors qu'il a deja une connexion etab
     // ...existing code...
 
     // ----------------------------------------------------------------------------- //
-    // Nouvelle méthode pour notifier le changement de profil
+    // Nouvelle méthode pour notifier le changement de profil BACKEND
     static notifyProfileUpdate(userId: number, updatedProfileData: any): void
     {
         if (SocketEventController.socketInstance) {
@@ -130,11 +88,55 @@ si l'utilisateur se connecte a son profile alors qu'il a deja une connexion etab
 
 
 
+
+une socket client est necessaire lorsque l'utilisateur veut lancer un match ou bien si il veut visiter le profile d'un utilisateur
+
+on ouvre une connexion en GUEST au client qui entre sur le site
+
+si l'utilisateur n'est pas connecte a son compte et/ou n'est pas amis avec le profile qu'il visite alors il ne peut voir ni la liste d'amis ni l'historique des matchs du user qu'il viste mais il peut voir les stats (defaites - victoires - ratio) en plus de la photo de profile et du username
+
+# connexion a la socket en GUEST :
+``` ts
+	const socket = io("http://localhost:8181/socket.io/", { // adresse en mode prod sans passer par proxy
+	auth: {
+		token: null // IMPORTANT !!
+	},
+	// Options a ajouter :
+	transports: ["websocket"],	// use immediatly the wss protocole
+	autoConnect: true,			// established connexion immediatly after the creation of the websocket in the backend side
+	});
+```
+
+lorsque l'utilisateur se connecte a son profile ou bien se register sur le site, on met a jour la connexion websocket :
+on recupere le jwt valide renvoye par le backend
+on l'attache a la variable auth de la socket
+
+on coupe la connexion de la socket et on se reconnect comme dans l'exemple ci-dessous
+le backend prend en compte le token jwt et la nouvelle connexion automatiquement
+l'utilisateur n'est plus en connexion GUEST
+
+```ts
+	// Fonction appelée juste après un Login réussi (réception du token API) COTE FRONT
+	function handleLoginSuccess(newToken) {
+		// 1. On met à jour le token pour la prochaine connexion
+		socket.auth = { token: newToken };
+
+		// 2. On coupe et on relance.
+		// Le serveur va voir une "nouvelle" connexion, vérifier le token, 
+		// et attacher le userId correct.
+		socket.disconnect().connect();
+	}
+```
+
+les visiteurs peuvent desormais voir son statut connecte
+l'utilisateur peut voir le profile complet de ses amis
+
+
 # LES EVENTS A ECOUTER COTE FRONT
 
 	- user-status-change
-		-> lorsqu'une connexion socket est initialisee depuis le front apres une 	connexion a la route /api/auth/register && /api/auth/login
-		-> lorsqu'un utilisateur se deconnecte via /api/auth/logout
+		-> lorsqu'une connexion socket est initialisee depuis le front apres une connexion a la route /api/auth/register && /api/auth/login
+		-> lorsqu'un utilisateur se deconnecte (ferme l'onglet)
 
 # ecouter un event cote front:
 
@@ -153,7 +155,18 @@ si l'utilisateur se connecte a son profile alors qu'il a deja une connexion etab
 	});
 
 	// a partir d'ici une connection websocket existe entre le front et le back
+	// on peut ecouter des events provenant du back ou bien emmetre des events au back
 
-	
+	// 1. ÉCOUTER (Recevoir des données du serveur)
+    // Syntaxe : socket.on('nom-event', callback_function)
+
+	// 2. ÉMETTRE (Envoyer des données au serveur)
+    // Syntaxe : socket.emit('nom-event', data)
 
 ```
+
+| nom event | data | received or emit |
+|-----------|------|------------------|
+| user-status-change | userId: userId, status: 'online or offline' | received from back |
+| profile-update | user: { userID, username, avatar } | received from back |
+|  |  |  |

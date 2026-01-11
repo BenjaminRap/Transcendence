@@ -226,6 +226,9 @@ export class SuscriberController {
             // delete user or throw exception USER NOT FOUND
             await this.suscriberService.deleteAccount(Number(id));
 
+			// disconnect all user sockets
+			// SocketEventController.sendToUser(Number(id), 'forfeit', undefined);
+
             return reply.status(204).send();
 
         } catch (error) {
@@ -241,6 +244,4 @@ export class SuscriberController {
             });
         }
     }
-
-    // ================================== PRIVATE ================================== //
 }
