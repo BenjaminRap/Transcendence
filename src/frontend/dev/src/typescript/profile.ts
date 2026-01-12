@@ -4,7 +4,8 @@ import { Modal } from './modal'
 import { ExtendedView } from './extendedView'
 import { TerminalUtils } from './terminalUtils/terminalUtils';
 import { RequestBackendModule } from './terminalUtils/requestBackend';
-import { PongUtils } from './terminal'
+import { PongUtils, TerminalFileSystem, TerminalUserManagement } from './terminal'
+import { WriteOnTerminal } from './terminalUtils/writeOnTerminal';
 
 /*
 	Attente des donnes backend. Penser a sanitize les donnes avant de les afficher https://github.com/cure53/DOMPurify
@@ -189,26 +190,26 @@ function createMatchHistory(profileElement: HTMLElement | null) {
 		const match = matches[i];
 		const matchDiv = document.createElement('div');
 		matchDiv.className = "flex px-4 shadow-lg place-content-between";
-        matchDiv.innerHTML = `
-                <div class="flex flex-1 items-center justify-between pr-2 min-w-0">
-                    <div class="flex flex-col gap-y-0 min-w-0">
-                        <p class="p-0 m-0 truncate">${match.result}</p>
-                        <p class="truncate" style="font-size: 10px;">${match.date}</p>
-                    </div>
-                    <div class="flex flex-col justify-center items-center shrink-0 px-1">
-                        <p>${match.score}</p>
-                        <p style="font-size: 10px;">vs</p>
-                    </div>
-                </div>
-                <div class="flex flex-1 justify-end items-center gap-2 min-w-0 relative">
-                    <div class="group relative min-w-0 text-right">
-                        <p class="truncate cursor-pointer">${match.opponent}</p>
-                        <p class="absolute bottom-full right-0 mb-1 hidden group-hover:block border p-1 border-green-500 bg-black whitespace-nowrap">${match.opponent}</p>
-                    </div>
-                    <img src="${match.profilelinkopponent}" alt="Avatar"
-                        class="w-8 h-8 sm:w-10 sm:h-10 border border-green-500 object-cover shrink-0"></img>
-                </div>
-            `
+		matchDiv.innerHTML = `
+				<div class="flex flex-1 items-center justify-between pr-2 min-w-0">
+					<div class="flex flex-col gap-y-0 min-w-0">
+						<p class="p-0 m-0 truncate">${match.result}</p>
+						<p class="truncate" style="font-size: 10px;">${match.date}</p>
+					</div>
+					<div class="flex flex-col justify-center items-center shrink-0 px-1">
+						<p>${match.score}</p>
+						<p style="font-size: 10px;">vs</p>
+					</div>
+				</div>
+				<div class="flex flex-1 justify-end items-center gap-2 min-w-0 relative">
+					<div class="group relative min-w-0 text-right">
+						<p class="truncate cursor-pointer">${match.opponent}</p>
+						<p class="absolute bottom-full right-0 mb-1 hidden group-hover:block border p-1 border-green-500 bg-black whitespace-nowrap">${match.opponent}</p>
+					</div>
+					<img src="${match.profilelinkopponent}" alt="Avatar"
+						class="w-8 h-8 sm:w-10 sm:h-10 border border-green-500 object-cover shrink-0"></img>
+				</div>
+			`
 		matchElement.appendChild(matchDiv);
 	}
 	matchHistory.appendChild(matchElement);
@@ -230,24 +231,24 @@ function createFriendList(profileElement: HTMLElement | null) {
 	moreFriendsButton?.addEventListener('click', () => {
 		ExtendedView.makeExtendedView('friend', '');
 	});
-    const friendElement = document.createElement('div');
-    friendElement.className = "border border-green-500 py-4 flex flex-col gap-y-4 h-full";
-    for (let i = 0; i < Math.min(friends.length, 4); i++) {
-        const friend = friends[i];
-        const friendDiv = document.createElement('div');
-        friendDiv.className = "flex items-center px-4 gap-x-4 min-w-0";
-        friendDiv.innerHTML = `
-        <img src="${friend.linkofavatar}" alt="Avatar"
-                    class="w-8 h-8 sm:w-10 sm:h-10 border border-green-500 object-cover shrink-0"></img>
-                <div class="flex flex-col gap-y-0 min-w-0 flex-1">
-                    <p class="truncate">${friend.username}</p>
-                    <p class="truncate" style="font-size: 10px;">${friend.status}</p>
-                </div>
-        `
-        friendElement.appendChild(friendDiv);
-    }
+	const friendElement = document.createElement('div');
+	friendElement.className = "border border-green-500 py-4 flex flex-col gap-y-4 h-full";
+	for (let i = 0; i < Math.min(friends.length, 4); i++) {
+		const friend = friends[i];
+		const friendDiv = document.createElement('div');
+		friendDiv.className = "flex items-center px-4 gap-x-4 min-w-0";
+		friendDiv.innerHTML = `
+		<img src="${friend.linkofavatar}" alt="Avatar"
+					class="w-8 h-8 sm:w-10 sm:h-10 border border-green-500 object-cover shrink-0"></img>
+				<div class="flex flex-col gap-y-0 min-w-0 flex-1">
+					<p class="truncate">${friend.username}</p>
+					<p class="truncate" style="font-size: 10px;">${friend.status}</p>
+				</div>
+		`
+		friendElement.appendChild(friendDiv);
+	}
 
-    friendList.appendChild(friendElement);
+	friendList.appendChild(friendElement);
 	profileElement.appendChild(friendList);
 }
 
@@ -317,21 +318,58 @@ export namespace ProfileBuilder {
 }
 
 
-function ChangeName() {
+async function ChangeName() {
 	if (Modal.isModalActive || PongUtils.isPongLaunched )
 		return;
-	Modal.makeModal("Change Name", 'text', 'Shadow 0-1',(text: string) => {
+	Modal.makeModal("Change Name", 'text', 'Shadow 0-1', async (text: string) => {
 		Modal.closeModal();
 		console.log("New name:", text);
-		// Sanitize
-
-
-
+		await requetChangeName(text);
 		// Send Backend
 		// Update 2/3 variable
 		// let args: string[] = ["System Notification (Wall) - Change Name", "You've try to change your name, attempt succesfull, your new name is " + text];
 		// TerminalUtils.notification(args);
 	});
+}
+
+
+
+async function requetChangeName(newName: string): Promise<boolean> {
+	const token = TerminalUtils.getCookie('accessToken') || '';
+
+	try {
+		const response = await fetch('/api/suscriber/updateprofile', {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': 'Bearer ' + TerminalUtils.getCookie('accessToken') || '',
+			},
+			body: JSON.stringify({
+				username: newName
+			},)
+		});
+		const data = await response.json();
+		if (data.success) {
+			console.log("Name changed successfully");
+			TerminalUserManagement.username = newName;
+			TerminalUtils.updatePromptText( TerminalUserManagement.username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ " );
+			WriteOnTerminal.printErrorOnTerminal("Nom d'utilisateur changé avec succès en " + newName);
+			return true ;
+		}
+		if (data.message === 'Invalid or expired token') {
+			const refreshed = await RequestBackendModule.tryRefreshToken();
+			if (!refreshed) {
+				WriteOnTerminal.printErrorOnTerminal("Veuillez vous connecter.");
+				return false;
+			}
+			return await requetChangeName(newName);
+		}
+		return false;
+	} catch (error) {
+		console.error("Error:", error);
+		return false;
+	}
+
 }
 
 function ChangePassword() {
