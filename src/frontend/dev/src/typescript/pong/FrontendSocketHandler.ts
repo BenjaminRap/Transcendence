@@ -90,11 +90,6 @@ export class	FrontendSocketHandler
 		return deferred;
 	}
 
-	public clearMessageObservable()
-	{
-		this._onDisconnectObservable.clear();
-	}
-
 	public onGameReady() : Deferred<void>
 	{
 		const	deferred = new Deferred<void>();
@@ -153,7 +148,7 @@ export class	FrontendSocketHandler
 		return deferred;
 	}
 
-	public getOnDisconnectObservable()
+	public onDisconnect()
 	{
 		return this._onDisconnectObservable;
 	}

@@ -52,7 +52,7 @@ export class PongGame extends HTMLElement {
 			close: () => this._errorGUI.classList.add("hidden")
 		}, this);
 		this._closeGUI = initMenu(new CloseGUI(), {
-			close: () => this.remove()
+			close: () => this.quit()
 		}, this);
 		this._closeGUI.classList.remove("hidden");
 
@@ -253,7 +253,7 @@ export class PongGame extends HTMLElement {
 	}
 
 	public disconnectedCallback() : void {
-		this._serverProxy.leaveScene();
+		this._serverProxy.dispose();
 		if (globalThis.HKP)
 			delete globalThis.HKP;
 		if (globalThis.HKP)
@@ -265,6 +265,11 @@ export class PongGame extends HTMLElement {
 	public focusOnCanvas()
 	{
 		this._canvas.focus();
+	}
+
+	public quit()
+	{
+		this.remove();
 	}
 }
 

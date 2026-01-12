@@ -1,8 +1,9 @@
 import type { GameInit, KeysUpdate, TournamentCreationSettings, TournamentDescription, TournamentId } from "@shared/ServerMessage";
 import { FrontendSocketHandler, type ServerInGameMessage } from "./FrontendSocketHandler";
-import type { Deferred, int, Observable } from "@babylonjs/core";
+import type { Deferred, int, Observable, Observer } from "@babylonjs/core";
 import type { Profile } from "@shared/Profile";
 import { PongError } from "@shared/pongError/PongError";
+import type { FrontendTournament } from "./FrontendTournament";
 
 type SocketState = "not-connected" | "connected" | "in-matchmaking" | "in-game" | "tournament-creator" | "tournament-player" | "tournament-creator-player" | "in-tournament";
 
@@ -11,6 +12,8 @@ export class	ServerProxy
 	private _state : SocketState;
 	private _playerIndex : int = 0;
 	private _currentPromise : Deferred<any> | null = null;
+	private _frontendTournament : FrontendTournament | null = null;
+	private _disconnectedObserver : Observer<void>;
 
 	constructor(
 		private _frontendSocketHandler : FrontendSocketHandler,
@@ -20,7 +23,7 @@ export class	ServerProxy
 			if (gameInfos === "room-closed" && this._state === "in-game")
 				this._state = "connected";
 		});
-		this._frontendSocketHandler.getOnDisconnectObservable().add(() => {
+		this._disconnectedObserver = this._frontendSocketHandler.onDisconnect().add(() => {
 			this._state = "not-connected";
 			this._currentPromise?.reject(new PongError("canceled", "ignore"));
 		});
@@ -45,7 +48,7 @@ export class	ServerProxy
 	public leaveScene() : void
 	{
 		this.verifyState("connected", "in-matchmaking", "in-game", "in-tournament");
-		this._frontendSocketHandler.clearMessageObservable();
+		this._frontendSocketHandler.onServerMessage().clear();
 		if (this._state === "in-matchmaking")
 			this._frontendSocketHandler.sendEventWithNoResponse("leave-matchmaking");
 		else if (this._state === "in-game")
@@ -196,5 +199,15 @@ export class	ServerProxy
 	{
 		this._currentPromise?.reject(new PongError("canceled", "ignore"));
 		this._currentPromise = newPromise;
+	}
+
+	public dispose()
+	{
+		this._frontendSocketHandler.onServerMessage().clear();
+		this._frontendSocketHandler.onDisconnect().remove(this._disconnectedObserver);
+		try {
+			this.leaveScene();
+		} catch (error) {
+		}
 	}
 }
