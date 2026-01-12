@@ -23,6 +23,7 @@ export class	TournamentGUI extends HTMLElement implements IGUI<void>
 	private _dragging : boolean = false;
 	private _left : number = 0;
 	private _top : number = 0;
+	private _stopDraggingListener : (() => void) | null = null;
 
 	constructor(matchesByRound : Match[][] = [], participants : Profile[] = [])
 	{
@@ -48,10 +49,11 @@ export class	TournamentGUI extends HTMLElement implements IGUI<void>
 			this.style.cursor = "grabbing";
 			this._dragging = true
 		});
-		window.addEventListener("mouseup", () => {
+		this._stopDraggingListener = () => {
 			this.style.cursor = "grab";
-			this._dragging = false
-		});
+			this._dragging = false;
+		};
+		window.addEventListener("mouseup", this._stopDraggingListener);
 		this.addEventListener("mousemove", (mouseEvent : MouseEvent) => {
 			if (this._dragging)
 				this.drag(mouseEvent);
@@ -194,6 +196,11 @@ export class	TournamentGUI extends HTMLElement implements IGUI<void>
 
 	public getInputs() {
 		return undefined;
+	}
+
+	disconnectedCallback() {
+		if (this._stopDraggingListener)
+			window.removeEventListener("mouseup", this._stopDraggingListener);
 	}
 }
 
