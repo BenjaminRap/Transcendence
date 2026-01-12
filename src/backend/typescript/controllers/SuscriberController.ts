@@ -101,7 +101,7 @@ export class SuscriberController {
             // check data, user existence, mail and username availability then update and returns user or throw exception
             const user = await this.suscriberService.updateUsername(id, validation.data);
 
-            SocketEventController.sendToUser(Number(id), 'profile-update', { user });
+            SocketEventController.notifyProfileChange(Number(id), 'profile-update', { user });
     
             return reply.status(200).send({
                 success: true,

@@ -55,6 +55,9 @@ export class FriendController {
 
             // check users existance; their connection; update the friendship status
             await this.friendService.acceptFriendRequest(Number(friendId.data), Number(userId));
+
+            // notify the requester that his request has been accepted
+            
             
             return reply.status(204).send();
         } catch (error) {

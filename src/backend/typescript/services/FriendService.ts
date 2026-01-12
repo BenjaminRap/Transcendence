@@ -99,6 +99,34 @@ export class FriendService {
     }
 
     // ----------------------------------------------------------------------------- //
+    async getFriendsIds(userId: number): Promise<number[]> {
+        // check user account validity
+        if ( await this.checkId(userId) == false )
+            throw new FriendException(FriendError.USR_NOT_FOUND, FriendError.USR_NOT_FOUND);
+
+        const friendships = await this.prisma.friendship.findMany({
+            where: {
+                status: 'ACCEPTED',
+                OR: [
+                    { requesterId: userId },
+                    { receiverId: userId }
+                ]
+            },
+            select: {
+                requesterId: true,
+                receiverId: true
+            }
+        });
+
+        // Filter and map to get only the friend's ID
+        const friendIds = friendships.map(f => 
+            f.requesterId === userId ? f.receiverId : f.requesterId
+        );
+
+        return friendIds;
+    }
+
+    // ----------------------------------------------------------------------------- //
     async getPendingList(userId: number): Promise<ListFormat[]> {
         // check user account validity
         if ( await this.checkId(userId) == false )

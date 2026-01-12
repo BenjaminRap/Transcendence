@@ -18,14 +18,38 @@ export class SocketEventController {
 	private static connectedUsers: Map<number, number> = new Map();
 	private static socketInstance: SocketEventController;
 	private matchMaker: MatchMaker;
-
-	// ----------------------------------------------------------------------------- //
+    
+    // =================================== STATIC ==================================== //
+	
+    // ----------------------------------------------------------------------------- //
 	static initInstance( io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>): void
 	{
 		if (!SocketEventController.socketInstance) {
 			SocketEventController.socketInstance = new SocketEventController (io);
 		}
 	}
+
+    // ----------------------------------------------------------------------------- //
+    // cette fonction n'emet qu'a la room user-{userId}, donc a tous les processus front connectes de cet utilisateur
+	static sendToUser(userId: number, event: string, data: any): void
+	{
+		try {
+			if (SocketEventController.socketInstance) {
+				SocketEventController.socketInstance.io.to('user-' + userId).emit(event as any, data);
+			}			
+		} catch (error) {
+			console.warn(`Error sending socket event to user ${userId} :`, error);
+		}
+	}
+
+    // ----------------------------------------------------------------------------- //
+    static notifyProfileChange(id: number, event: string, data: any): void
+    {
+        SocketEventController.sendToUser(id, event, data);
+        SocketEventController.socketInstance.sendToFriends(id, event, data);
+        SocketEventController.socketInstance.sendToProfileWatchers(id, event, data);
+    }
+
 
     // ==================================== PRIVATE ==================================== //
 	
@@ -72,6 +96,14 @@ export class SocketEventController {
 				this.handleGetStatus(socket, callback);
             });
 
+            socket.on("watch-profile", (profileId: number) => {
+                this.addProfileToWatch(socket, profileId);
+            });
+
+            socket.on("unwatch-profile", (profileId: number) => {
+                this.removeProfileToWatch(socket, profileId);
+            });
+
 			socket.once("disconnect", () => {
 				this.handleDisconnect(socket);
 			});
@@ -79,15 +111,6 @@ export class SocketEventController {
 	}
 
 	// ----------------------------------------------------------------------------- //
-	/**
-	 * 
-	 * la connection a la socket ne veut pas dire que l'utilisateur est authentifié
-	 * il peut jouer en tant que guest au jeu
-	 * mais aucun event lie au changement de profil ne sera emise
-	 * donc la connection a la socket en tant qu'invite et en tant qu'utilisateur authentifié doit etre differencie
-	 * 
-	 * 
-	 */
 	private async handleConnection(socket: DefaultSocket)
 	{
 		
@@ -97,7 +120,7 @@ export class SocketEventController {
 
 		if (userId == -1) {
 			if ( (socket.data as any).authError )
-				console.log("Socket connection with invalid token !");
+				console.log("Socket connection with invalid token !\nConnected as Guest.");
 			else
 				console.log("Guest connected !");
 			return;
@@ -135,9 +158,22 @@ export class SocketEventController {
 	}	
 
 	// ----------------------------------------------------------------------------- //
+    private addProfileToWatch(socket: DefaultSocket, profileId: number): void
+    {
+        socket.join('watching-' + profileId);
+    }
+    
+    // ----------------------------------------------------------------------------- //
+    private removeProfileToWatch(socket: DefaultSocket, profileId: number): void
+    {
+        socket.leave('watching-' + profileId);
+    }
+
+	// ----------------------------------------------------------------------------- //
 	private handleDisconnect(socket: DefaultSocket)
 	{
 		// clean MatchMaking
+        // attention, le joueur peut ne jamais avoir demande a rejoindre le matchmaking
 		this.matchMaker.removeUserFromMatchMaking(socket);
 
 		// clean socket data
@@ -145,54 +181,45 @@ export class SocketEventController {
 		
 		const userId = socket.data.getUserId();
 
+        // decompte ne nb de connexion du user (plusieurs onglets...)
 		if (userId != -1) {
 			const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
 			const newCount = currentCount - 1;
 			
 			if (newCount <= 0) {
-				// remove user from map and notify everyone
 				SocketEventController.connectedUsers.delete(userId);
 				this.io.emit('user-status-change', { userId: userId, status: 'offline' });
-
-                // leave user room
-                socket.leave('user-' + userId);
 			}
 			else {
-				// update count
 				SocketEventController.connectedUsers.set(userId, newCount);
 			}
 		}
 	}
 
     // ----------------------------------------------------------------------------- //
-    // cette fonction n'emet qu'a la room user-{userId}, donc a tous les processus front connectes de cet utilisateur
-	static sendToUser(userId: number, event: string, data: any): void
-	{
-		try {
-			if (SocketEventController.socketInstance) {
-				SocketEventController.socketInstance.io.to('user-' + userId).emit(event as any, data);
-			}			
-		} catch (error) {
-			console.warn(`Error sending socket event to user ${userId} :`, error);
-		}
-	}
-
-    // ----------------------------------------------------------------------------- //
-    static sendToProfileWatchers(userId: number, event: string, data: any): void
+    private sendToFriends(userId: number, event: string, data: any): void
     {
         try {
-            if (SocketEventController.socketInstance) {
-                const socketInstance = SocketEventController.socketInstance;
-                const sockets = socketInstance.io.sockets.sockets;
-
-                sockets.forEach((socket) => {
-                    if (socket.data.isWatchingProfile(userId)) {
-                        socket.emit(event as any, data);
-                    }
+            if (SocketEventController.socketInstance)
+            {
+                const friendService: FriendService = Container.getInstance().getService('FriendService');
+    
+                friendService.getFriendsIds(userId).then((friendsIds: number[]) => {
+                    friendsIds.forEach((friendId) => {
+                        SocketEventController.sendToUser(friendId, event, data);
+                    });
+                }).catch((error) => {
+                    console.warn(`Error retrieving friends of user ${userId} :`, error);
                 });
             }            
         } catch (error) {
-            console.warn(`Error sending socket event to profile watchers of user ${userId} :`, error);
+            console.warn(`Error sending socket event to friends of user ${userId} :`, error);
         }
+    }
+
+    // ----------------------------------------------------------------------------- //
+    private sendToProfileWatchers(userId: number, event: string, data: any): void
+    {
+        this.io.to('watching-' + userId).emit(event as any, data);
     }
 }

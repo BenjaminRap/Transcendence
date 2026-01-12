@@ -128,33 +128,59 @@ l'utilisateur n'est plus en connexion GUEST
 	}
 ```
 
-les visiteurs peuvent desormais voir son statut connecte
-l'utilisateur peut voir le profile complet de ses amis et les mises a jours sur son profile, les nouveaux matchs sont notifies
-
-
-# LES EVENTS A ECOUTER COTE FRONT
-
-	- user-status-change
-		-> lorsqu'une connexion socket est initialisee depuis le front apres une connexion a la route /api/auth/register && /api/auth/login
-		-> lorsqu'un utilisateur se deconnecte (ferme l'onglet)
-
-# ecouter un event cote front:
-
-```ts
-    // ...
-    // apres connexion a la websocket
-
-	// 1. ÉCOUTER (Recevoir des données du serveur)
-    // Syntaxe : socket.on('nom-event', callback_function)
-
-	// 2. ÉMETTRE (Envoyer des données au serveur)
-    // Syntaxe : socket.emit('nom-event', data)
-
-```
+l'utilisateur est connecte a la websocket soit en GUEST soit sur son profile
 
 # events from backend
-| nom event | data received |
-|-----------|---------------|
-| user-status-change | userId: userId, status: 'online or offline' |
-| profile-update | user: { userID, username, avatar } |
-| game-stats-update | stats: GameStats |
+| nom event | data received | response explanation |
+|-----------|---------------|----------------------|
+| user-status-change | userId: userId, status: 'online or offline' | user status |
+| profile-update | user: { userID, username, avatar } | profile data |
+| game-stats-update | stats: GameStats | player stats |
+
+
+
+
+
+# events from front
+| nom event | data received | response explanation |
+|-----------|---------------|----------------------|
+| get-online-users | onlineUsers: number[] | full list of connected users |
+
+# exemple
+```ts
+// 1. STATE : Variable pour stocker les IDs (Set pour performance)
+let onlineUsers: Set<number> = new Set();
+
+// Fonction d'initialisation à appeler une fois la socket connectée
+function initOnlineStatusTracking(socket: any) {
+
+    // 2. INITIALISATION : On demande qui est là maintenant (Pattern Request/Response)
+    socket.emit("get-online-users", (ids: number[]) => {
+        onlineUsers = new Set(ids);
+        console.log("Liste initiale chargée :", onlineUsers);
+    });
+
+    // 3. TEMPS RÉEL : On écoute les changements
+    socket.on("user-status-change", (data: { userId: number, status: 'online' | 'offline' }) => {
+        if (data.status === 'online') {
+            onlineUsers.add(data.userId);
+        } else {
+            onlineUsers.delete(data.userId);
+        }
+        console.log(`Mise à jour status user ${data.userId} : ${data.status}`);
+    });
+}
+
+// 4. UTILITAIRE : Fonction pour vérifier si un joueur est en ligne
+function isUserOnline(userId: number): boolean {
+    return onlineUsers.has(userId);
+}
+
+// Lancement
+// initOnlineStatusTracking(socket);
+```
+
+strategie front
+
+appeler get-online-users une fois au demarrage
+tenir un set des ids en ligne a jour lors d'event user-status-change (online / offline) et lors de nouvelle connexion / deconnexion
