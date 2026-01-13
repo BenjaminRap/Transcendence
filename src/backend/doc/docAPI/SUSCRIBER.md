@@ -59,7 +59,10 @@ _Body :_ JSON
 
 _Possibles responses:_
 
-✅ 204 No Content
+✅ 200 OK
+{
+    success: true,
+}
 
 ❌ 401 Unauthorized :
   {
@@ -94,9 +97,9 @@ _Possibles responses:_
 
 -------------------------------------------------------------------------------------------------------------------------
 
-**PUT suscriber/update/profile**
+**PUT suscriber/update/username**
 
-_Description :_ permet d'update certaines donnes de l'user (username, avatar), soit plusieur d'un coup soit une seule. si plusieurs donnees sont demandees a etre mise a jour elles doivent toutes etre valide sinon aucune ne sera mise a jour et il faudra refaire une requete avec toutes les donnees valides
+_Description :_ permet d'update username
 
 _Mandatory headers :_
   Content-Type: application/json,
@@ -105,7 +108,6 @@ _Mandatory headers :_
 _Body :_ JSON
   {
     "username": string -> "new username"
-    "avatar":   string -> pour le moment
   }
 
 _Possibles responses:_

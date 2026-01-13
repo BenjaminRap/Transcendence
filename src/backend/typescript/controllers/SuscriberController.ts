@@ -110,7 +110,7 @@ export class SuscriberController {
                 success: true,
                 message: 'Profile successfully updated',
                 redirectTo: '/suscriber/profile',
-                user
+                user: sanitizeUser(user)
             }); 
         } catch (error) {
             if (error instanceof SuscriberException) {
