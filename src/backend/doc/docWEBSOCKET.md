@@ -185,3 +185,86 @@ strategie front
 
 appeler get-online-users une fois au demarrage
 tenir un set des ids en ligne a jour lors d'event user-status-change (online / offline) et lors de nouvelle connexion / deconnexion
+
+# class SocketService
+```ts
+import { io, Socket } from 'socket.io-client';
+
+export class SocketService {
+    private socket: Socket;
+
+    connect(token: string) {
+        this.socket = io('http://localhost:3000', {
+            auth: { token }
+        });
+    }
+
+    // Méthodes pour le jeu
+    onGameState(callback) {
+        this.socket.on('game_state', callback);
+    }
+
+    // Méthodes pour les notifs
+    onNotification(callback) {
+        this.socket.on('notification', callback);
+    }
+}
+
+export const socketService = new SocketService();
+
+```
+
+# modif class MultiplayerHandler
+
+```ts
+// ...existing code...
+import { socketService } from "../services/SocketService"; // Import du singleton
+
+// ...existing code...
+export class	MultiplayerHandler
+{
+    // ...existing code...
+    // On retire _apiUrl car géré par le service
+    private _socket  : Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
+    // ...existing code...
+
+    public disconnect() // Renommer idéalement en "dispose" ou "leaveGame"
+    {
+        if (!(this._socket))
+            return ;
+        
+        // NE PAS FAIRE: this._socket.disconnect(); 
+        // CAR cela couperait les notifs pour toute l'appli.
+        
+        // FAIRE PLUTÔT: nettoyer les listeners spécifiques au jeu
+        this._socket.off("joined-game");
+        this._socket.off("ready");
+        this._socket.off("game-infos");
+        this._socket.off("forfeit");
+        this._socket.off("room-closed");
+        
+        this._socket = null;
+        this._onServerMessageObservable?.clear();
+        this._onServerMessageObservable = null;
+        this._state = "disconnected";
+    }
+
+    // Modification pour utiliser la socket partagée
+    private async connect() : Promise<void>
+    {
+        // On s'assure que le service global est connecté
+        if (!socketService.socket) {
+            socketService.connect();
+        }
+        this._socket = socketService.socket;
+
+        if (!this._socket) return Promise.reject("Socket connect failed");
+
+        // ...existing code...
+        // La suite logique reste similaire, mais on checke l'état
+        this._state = "connected";
+        return Promise.resolve();
+    }
+    // ...existing code...
+
+```
