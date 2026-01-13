@@ -1,7 +1,6 @@
 import { defaultProfile, type Profile } from "@shared/Profile";
 import type { DefaultSocket } from "../";
 import { Room } from "./Room";
-import { PongError } from "@shared/pongError/PongError";
 
 export class	SocketData
 {
@@ -9,8 +8,12 @@ export class	SocketData
 	private _room : Room | null = null;
 	private _profile : Profile = defaultProfile;
 
-	public getState = () => this._state;
-	public isInRoom = (room : Room) => this._room == room;
+	public getState() {
+		return this._state;
+	}
+	public isInRoom(room : Room) {
+		return this._room == room;
+	}
 
 	constructor(private readonly _socket : DefaultSocket)
 	{
