@@ -12,6 +12,7 @@ export class SocketEventController {
 	constructor (
 		private io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>,
 	) {
+        console.log("CONSTRUCTOR");
 		this.matchMaker = new MatchMaker(io);
 		this.initSocket();
 	}
@@ -24,6 +25,7 @@ export class SocketEventController {
     // ----------------------------------------------------------------------------- //
 	static initInstance( io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>): void
 	{
+        console.log("INITINSTANCE ");
 		if (!SocketEventController.socketInstance) {
 			SocketEventController.socketInstance = new SocketEventController (io);
 		}
@@ -84,6 +86,7 @@ export class SocketEventController {
 	private async initSocket()
 	{
 		this.initMiddleware();
+        console.log("INITSOCKET !");
 		this.io.on('connection', (socket : DefaultSocket) => {
 			this.handleConnection(socket);
 
@@ -95,11 +98,11 @@ export class SocketEventController {
 				this.handleGetStatus(socket, callback);
             });
 
-            socket.on("watch-profile", (profileId: number) => {
+            socket.on("watch-profile", (profileId: number[]) => {
                 this.addProfileToWatch(socket, profileId);
             });
 
-            socket.on("unwatch-profile", (profileId: number) => {
+            socket.on("unwatch-profile", (profileId: number[]) => {
                 this.removeProfileToWatch(socket, profileId);
             });
 
@@ -142,6 +145,8 @@ export class SocketEventController {
 	}
 
 	// ----------------------------------------------------------------------------- //
+    // demander la liste des ids des users en ligne
+    // renvoyer les ids des users connectes qui correspondent a des ids de la liste demandee
 	private handleGetStatus(socket: DefaultSocket, callback: (onlineUsers: number[]) => void)
 	{
 		if (typeof callback === 'function') {
@@ -157,15 +162,19 @@ export class SocketEventController {
 	}	
 
 	// ----------------------------------------------------------------------------- //
-    private addProfileToWatch(socket: DefaultSocket, profileId: number): void
+    private addProfileToWatch(socket: DefaultSocket, profileId: number[]): void
     {
-        socket.join('watching-' + profileId);
+        for (const id of profileId) {
+            socket.join('watching-' + id);
+        }
     }
     
     // ----------------------------------------------------------------------------- //
-    private removeProfileToWatch(socket: DefaultSocket, profileId: number): void
+    private removeProfileToWatch(socket: DefaultSocket, profileId: number[]): void
     {
-        socket.leave('watching-' + profileId);
+        for (const id of profileId) {
+            socket.leave('watching-' + id);
+        }
     }
 
 	// ----------------------------------------------------------------------------- //

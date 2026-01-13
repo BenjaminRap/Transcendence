@@ -38,8 +38,8 @@ export type ClientToServerEvents = {
         (data: ClientMessageData<T>) => void;
 } & {
     "get-online-users": (callback: (users: number[]) => void) => void;
-    "watch-profile": (profileId: number) => void;
-    "unwatch-profile": (profileId: number) => void;
+    "watch-profile": (profileId: number[]) => void;
+    "unwatch-profile": (profileId: number[]) => void;
 };
 
 export type ServerToClientEvents = {
