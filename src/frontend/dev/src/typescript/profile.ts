@@ -355,6 +355,8 @@ export namespace ProfileBuilder {
 		if (profileElement) {
 			document.body.removeChild(profileElement);
 			isActive = false;
+			if (socketUtils && socketUtils.socket)
+				socketUtils.socket.off("profile-update");
 			history.pushState({}, '', `/`);
 		}
 	}
