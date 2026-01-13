@@ -60,7 +60,9 @@ export class SuscriberController {
             // check if user exists, if password is different then hash and update or throw exception
             await this.suscriberService.updatePassword(userId, currentPassword, newPassword);
 
-            return reply.status(204).send();
+            return reply.status(200).send({
+                success: true
+            });
 
         } catch (error) {
             if (error instanceof SuscriberException) {
@@ -94,7 +96,7 @@ export class SuscriberController {
                 return reply.status(400).send({
                     success: false,
                     message: validation.error?.issues?.[0]?.message || 'Invalid input',
-                    redirectTo: '/suscriber/updateprofile'
+                    redirectTo: '/suscriber/update/profile'
                 });
             }
 
@@ -154,7 +156,7 @@ export class SuscriberController {
                 });
             }
 
-            SocketEventController.sendToUser(Number(id), 'profile-update', { user: updatedUser });
+            SocketEventController.notifyProfileChange(Number(id), 'profile-update', { user: updatedUser });
 
             return reply.status(200).send({
                 success: true,
@@ -193,7 +195,7 @@ export class SuscriberController {
             // delete avatar or throw exception USER NOT FOUND
             const user = await this.suscriberService.deleteAvatar(Number(id));
 
-            SocketEventController.sendToUser(Number(id), 'profile-update', { user });
+            SocketEventController.notifyProfileChange(Number(id), 'profile-update', { user });
 
             return reply.status(204).send();
 
@@ -227,7 +229,7 @@ export class SuscriberController {
             await this.suscriberService.deleteAccount(Number(id));
 
             // envoyer un event a la room 'user-{id}' pour que tous les processus front se deconnectent
-            SocketEventController.sendToUser(Number(id), 'account-deleted', undefined);
+            SocketEventController.notifyProfileChange(Number(id), 'account-deleted', undefined);
 
             return reply.status(204).send();
 
