@@ -67,6 +67,28 @@ export namespace RequestBackendModule {
 		}
 	}
 
+	export async function createWebSocket(token: string)
+	{
+		const socket = io("http://localhost:8181", {
+			path: "/socket.io",
+			auth: {
+				token: token
+			},
+			transports: ["websocket", "polling"],
+			autoConnect: true,
+		});
+		socketUtils.socket = socket;
+		socket.on('connect_error', (err: any) => {
+			console.error('Socket connect_error:', err);
+		});
+		socket.on('connect', () => {
+			console.log('Socket connected:', socket.id);
+		});
+		socket.onAny((event, ...args) => {
+			console.log(`Événement reçu '${event}': ${JSON.stringify(args)}`);
+		});
+	}
+
 	export async function loadUser(): Promise<boolean> {
 		const token = TerminalUtils.getCookie('accessToken') || '';
 		if (token === '') {
@@ -85,17 +107,7 @@ export namespace RequestBackendModule {
 				TerminalUserManagement.username = data.user.username;
 				TerminalUtils.updatePromptText( TerminalUserManagement.username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ " );
 				TerminalUserManagement.isLoggedIn = true;
-				const socket = io("http://localhost:8181/socket.io/", {
-				auth: {
-					token: token
-				},
-				transports: ["websocket"],
-				autoConnect: true,
-				});
-				console.log(socket)
-				socketUtils.socket = socket;
-				socketUtils.userId = data.user.id;
-				console.log(socketUtils.userId);
+				createWebSocket(token);
 				return true;
 			}
 			if (data.message === 'Invalid or expired token') {

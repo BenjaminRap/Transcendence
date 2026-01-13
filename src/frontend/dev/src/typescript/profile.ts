@@ -7,6 +7,7 @@ import { RequestBackendModule } from './terminalUtils/requestBackend';
 import { PongUtils, TerminalFileSystem, TerminalUserManagement, socketUtils } from './terminal'
 import { io } from "socket.io-client";
 import { WriteOnTerminal } from './terminalUtils/writeOnTerminal';
+import { name } from '@babylonjs/gui/2D';
 
 /*
 	Attente des donnes backend. Penser a sanitize les donnes avant de les afficher https://github.com/cure53/DOMPurify
@@ -123,14 +124,48 @@ const matches: Match[] = [
 	}
 ];
 
-const profile = {
-	username: "User",
-	linkofavatar: "https://i.pravatar.cc/150?img=12",
-	mmr: 500,
-	win: 5,
-	loss: 10,
+interface Profile {
+    username: string;
+    linkofavatar: string;
+    mmr: number;
+    win: number;
+    loss: number;
 }
 
+// Utilisation :
+let profile: Profile = {
+    username: "User",
+    linkofavatar: "https://i.pravatar.cc/150?img=12",
+    mmr: 500,
+    win: 5,
+    loss: 10,
+};
+
+let profileDiv: HTMLDivElement | null = null;
+
+
+
+export namespace ProfileUpdater {
+	export function updateProfile(username: string, linkofavatar: string) {
+		console.log("Updating profile:", username, linkofavatar);
+		profile.username = username;
+		profile.linkofavatar = linkofavatar;
+		updateProfileCard(profile);
+	}
+}
+
+function updateProfileCard(profile: Profile) {
+	if (!profileDiv)
+		return;
+	profileDiv.innerHTML = `<img src="${profile.linkofavatar}" alt="Avatar" class="w-[12vh] h-[12vh] border border-green-500 object-cover"></img>
+							<h1 class="text-center text-[1.5vh]">${profile.username}</h1>
+							<div class="flex gap-[1vw] text-[0.9vh]">
+								<p>MMR: ${profile.mmr}</p>
+								<p>Win: ${profile.win}</p>
+								<p>Loss: ${profile.loss}</p>
+								<p>W/L: ${(profile.win / (profile.loss + profile.win)).toFixed(2)}</p>
+							</div>`;
+}
 
 function createProfileCard(profileElement: HTMLElement | null) {
 	if (!profileElement)
@@ -146,6 +181,7 @@ function createProfileCard(profileElement: HTMLElement | null) {
 								<p>W/L: ${(profile.win / (profile.loss + profile.win)).toFixed(2)}</p>
 							</div>`;
 	profileElement.appendChild(profileCard);
+	profileDiv = profileCard;
 }
 
 
@@ -305,6 +341,13 @@ export namespace ProfileBuilder {
 		document.body.appendChild(profileElement);
 		history.pushState({}, '', `/profile/${user}`);
 		isActive = true;
+		if (socketUtils && socketUtils.socket)
+		{
+			socketUtils.socket.on("profile-update", (data: { userID: number; username: string; avatar: string }) => {
+				const info = data.user;
+				ProfileUpdater.updateProfile(info.username, info.avatar);
+			});
+		}
 		return 'Profil ouvert. Tapez "kill profile" pour le fermer.';
 	}
 	export function removeProfile() {
@@ -316,13 +359,6 @@ export namespace ProfileBuilder {
 		}
 	}
 	export let isActive = false;
-	if (socketUtils && socketUtils.socket)
-	{
-		console.log('Update Watch !');
-		socketUtils.socket.on("profile-update", (user: { userID: number; username: string; avatar: string }) => {
-			console.log("Hi", user);
-		});
-	}
 }
 
 
@@ -365,6 +401,9 @@ async function requetChangeName(newName: string): Promise<boolean> {
 				return false;
 			}
 			return await requetChangeName(newName);
+		}
+		else {
+			WriteOnTerminal.printErrorOnTerminal(data.message || "Error changing name.");
 		}
 		return false;
 	} catch (error) {
@@ -430,10 +469,49 @@ function ChangeAvatar() {
 	if (Modal.isModalActive || PongUtils.isPongLaunched )
 		return;
 
-	Modal.makeModal("Change Avatar", 'file', '', (text: string) => {
+	Modal.makeModal("Change Avatar", 'file', '', (imageFile: File | null) => {
 		Modal.closeModal();
-		console.log("New avatar:", text);
+		if (!(imageFile instanceof File)) {
+			WriteOnTerminal.printErrorOnTerminal("No file selected.");
+			return;
+		}
+		const formData = new FormData();
+		formData.append('avatar', imageFile);
+		requestChangeAvatar(formData);
+		
 	});
+}
+
+
+async function requestChangeAvatar(formData: FormData): Promise<boolean> {
+	const token = TerminalUtils.getCookie('accessToken') || '';
+
+	try {
+		const response = await fetch('/api/suscriber/update/avatar', {
+			method: 'PUT',
+			headers: {
+				'Authorization': 'Bearer ' + token
+			},
+			body: formData
+		});
+		const data = await response.json();
+		if (data.success) {
+			console.log("Avatar changed successfully");
+			return true;
+		}
+		if (data.message === 'Invalid or expired token') {
+			const refreshed = await RequestBackendModule.tryRefreshToken();
+			if (!refreshed) {
+				WriteOnTerminal.printErrorOnTerminal("Veuillez vous connecter.");
+				return false;
+			}
+			return await requestChangeAvatar(formData);
+		}
+		return false;
+	} catch (error) {
+		console.error("Error:", error);
+		return false;
+	}
 }
 
 function DeleteAccount() {
