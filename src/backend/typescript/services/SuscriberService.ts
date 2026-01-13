@@ -123,6 +123,7 @@ export class SuscriberService {
         return sanitizeUser(updatedUser);
     }
 
+	// a verifier
     // ----------------------------------------------------------------------------- //
     async updateAvatar(buffer: Buffer, userId: number): Promise<SanitizedUser> {
         const user = await this.getById(userId);

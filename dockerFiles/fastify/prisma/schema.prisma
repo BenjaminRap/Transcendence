@@ -56,7 +56,7 @@ model Match {
 
   winner      User?    @relation("matchWinner", fields: [winnerId], references: [id], onDelete: SetNull)
   winnerId    Int?
-  winnerLevel String?  // "Guest_XXX" or "AI_LEVEL" if winnerId is null
+  winnerLevel String?
 
   loserId     Int?
   loser       User?    @relation("matchLoser", fields: [loserId], references: [id], onDelete: SetNull)
@@ -90,7 +90,7 @@ model Tournament {
 
 model TournamentParticipant {
   id            Int       @id @default(autoincrement())
-  alias         String    // user alias
+  alias         String
 
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId        Int
@@ -100,6 +100,6 @@ model TournamentParticipant {
   tournament    Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   tournamentId  Int
 
-  @@unique([userId, tournamentId]) // no duplicate user
-  @@unique([tournamentId, alias])  // no duplicate alias
+  @@unique([userId, tournamentId])
+  @@unique([tournamentId, alias])
 }

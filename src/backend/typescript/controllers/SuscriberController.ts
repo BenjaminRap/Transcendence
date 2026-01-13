@@ -226,13 +226,8 @@ export class SuscriberController {
             // delete user or throw exception USER NOT FOUND
             await this.suscriberService.deleteAccount(Number(id));
 
-			// disconnect all user sockets
-			// SocketEventController.sendToUser(Number(id), 'forfeit', undefined);
-
             // envoyer un event a la room 'user-{id}' pour que tous les processus front se deconnectent
             SocketEventController.sendToUser(Number(id), 'account-deleted', undefined);
-
-            // envoyer un event au front pour que tous les processus front se deconnectent
 
             return reply.status(204).send();
 

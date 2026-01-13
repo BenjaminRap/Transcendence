@@ -7,12 +7,10 @@ import staticPlugin from './plugins/static.js';
 import { registerRoutes } from './plugins/registerRoutes.js';
 import "reflect-metadata";
 import { fpSqlitePlugin } from 'fastify-sqlite-typed';
-import { type DefaultEventsMap, Server, Socket } from 'socket.io';
-import { SocketData } from './pong/SocketData';
+import { Server } from 'socket.io';
 import fs from 'fs';
 import path from 'path';
 import HavokPhysics from "@babylonjs/havok";
-import type { ClientToServerEvents, ServerToClientEvents } from '@shared/MessageType';
 import { Container } from './container/Container.js';
 import { SocketEventController } from './controllers/SocketEventController.js';
 

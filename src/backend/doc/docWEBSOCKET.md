@@ -136,6 +136,7 @@ l'utilisateur est connecte a la websocket soit en GUEST soit sur son profile
 | user-status-change | userId: userId, status: 'online or offline' | user status |
 | profile-update | user: { userID, username, avatar } | profile data |
 | game-stats-update | stats: GameStats | player stats |
+| account-deleted | void | les client qui recoivent cet event doivent se deconnecter |
 
 
 

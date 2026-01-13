@@ -50,7 +50,6 @@ export class SocketEventController {
         SocketEventController.socketInstance.sendToProfileWatchers(id, event, data);
     }
 
-
     // ==================================== PRIVATE ==================================== //
 	
 	// Auth middleware for socket.io new connections
