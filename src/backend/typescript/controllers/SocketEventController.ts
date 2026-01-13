@@ -12,7 +12,6 @@ export class SocketEventController {
 	constructor (
 		private io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>,
 	) {
-        console.log("CONSTRUCTOR");
 		this.matchMaker = new MatchMaker(io);
 		this.initSocket();
 	}
@@ -25,7 +24,6 @@ export class SocketEventController {
     // ----------------------------------------------------------------------------- //
 	static initInstance( io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>): void
 	{
-        console.log("INITINSTANCE ");
 		if (!SocketEventController.socketInstance) {
 			SocketEventController.socketInstance = new SocketEventController (io);
 		}
@@ -91,7 +89,6 @@ export class SocketEventController {
 	private async initSocket()
 	{
 		this.initMiddleware();
-        console.log("INITSOCKET !");
 		this.io.on('connection', (socket : DefaultSocket) => {
 			this.handleConnection(socket);
 
@@ -198,6 +195,7 @@ export class SocketEventController {
 		if (userId != -1) {
 			const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
 			const newCount = currentCount - 1;
+            console.log(`User ${userId} disconnected !`);
 			
 			if (newCount <= 0) {
 				SocketEventController.connectedUsers.delete(userId);

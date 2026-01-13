@@ -13,9 +13,12 @@ _Possibles responses:_
     success: true,
     message: 'Profile retrieved successfully',
     user: SanitizedUser {
-      id        string
-      username  string
-      avatar    string -> pour le moment
+        id:         string,
+        avatar:     string,
+        username:   string,
+        gameStats:  GameStats,
+        lastMatchs: MatchSummary[],
+        friends:    Friend[],
     }
   }
 
@@ -39,7 +42,7 @@ _Possibles responses:_
 
 -------------------------------------------------------------------------------------------------------------------------
 
-**PUT suscriber/updatepassword**
+**PUT suscriber/update/password**
 
 _Description :_ permet de changer de mot de passe de l'utilisateur
 
@@ -91,7 +94,7 @@ _Possibles responses:_
 
 -------------------------------------------------------------------------------------------------------------------------
 
-**PUT suscriber/updateprofile**
+**PUT suscriber/update/profile**
 
 _Description :_ permet d'update certaines donnes de l'user (username, avatar), soit plusieur d'un coup soit une seule. si plusieurs donnees sont demandees a etre mise a jour elles doivent toutes etre valide sinon aucune ne sera mise a jour et il faudra refaire une requete avec toutes les donnees valides
 

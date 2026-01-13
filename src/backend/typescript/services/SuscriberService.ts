@@ -55,9 +55,8 @@ export class SuscriberService {
 		// Get last 4 matches
         const allMatches = this.getLastMatches(user.matchesWons, user.matchesLoses, 4);
 
-		// Sorted friendships
-        const sortedFriendships = this.getSortedFriendlist(user.sentRequests, user.receivedRequests, 4, user.id);
-
+		// Sorted 4 friends
+        const sortedFriends = this.getSortedFriendlist(user.sentRequests, user.receivedRequests, 4, user.id);
 
         return {
             id: user.id.toString(),
@@ -65,7 +64,7 @@ export class SuscriberService {
             username: user.username,
             gameStats: stats,
             lastMatchs: allMatches,
-            friends: sortedFriendships,
+            friends: sortedFriends,
         };
     }
     
@@ -95,7 +94,7 @@ export class SuscriberService {
     }
 
     // ----------------------------------------------------------------------------- //
-    async updateUsername(id: number, data: UpdateData): Promise<SanitizedUser> {
+    async updateUsername(id: number, data: UpdateData): Promise<User> {
         const user = await this.getById(Number(id));
         if (!user) {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
@@ -106,13 +105,11 @@ export class SuscriberService {
 			throw new SuscriberException(SuscriberError.USRNAME_ERROR, SuscriberError.USRNAME_ERROR);
 
         // check username availability
-        if (data.username) {
-            const existingUser = await this.prisma.user.findFirst({
-                where: { username: data.username }
-            });
-            if (existingUser) {
-                throw new SuscriberException(SuscriberError.USRNAME_ALREADY_USED,SuscriberError.USRNAME_ALREADY_USED);
-            }
+        const existingUser = await this.prisma.user.findUnique({
+            where: { username: data.username }
+        });
+        if (existingUser) {
+            throw new SuscriberException(SuscriberError.USRNAME_ALREADY_USED,SuscriberError.USRNAME_ALREADY_USED);
         }
 
         // update user in DB
@@ -123,7 +120,7 @@ export class SuscriberService {
             },
         });
 
-        return sanitizeUser(updatedUser);
+        return updatedUser;
     }
 
     // ----------------------------------------------------------------------------- //
@@ -202,8 +199,8 @@ export class SuscriberService {
     private hasChanged(user: User, data: UpdateData) : boolean {
 		return user.username != data.username;
     }
-	
-	// ----------------------------------------------------------------------------- //
+
+	// --------------------------------------- -------------------------------------- //
 	private calculateStats(matchesWons: number, matchesLoses: number): GameStats {
 		const totalMatches = matchesWons + matchesLoses;
 		const ratio = totalMatches > 0 ? (matchesWons / totalMatches * 100).toFixed(2) : "0.00";
