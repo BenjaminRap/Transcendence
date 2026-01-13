@@ -15,6 +15,9 @@ export namespace TerminalUtils {
 	export function updatePromptText(newPrompt: string) {
 		TerminalPromptAndEnv.promptText = newPrompt;
 		TerminalPromptAndEnv.backUpPromptText = newPrompt;
+		if (!TerminalElements.currentInput)
+			return;
+		TerminalElements.currentInput.value = TerminalPromptAndEnv.promptText;
 	}
 
 	export function countChar(char: string): number {

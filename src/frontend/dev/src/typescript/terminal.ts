@@ -10,8 +10,10 @@ import { WriteOnTerminal } from './terminalUtils/writeOnTerminal';
 import { TerminalUtils } from './terminalUtils/terminalUtils';
 
 
-import FileSystem from './filesystem.json' with { type: "json" };
+import FileSystem from './filesystem.json';
 import { HELP_MESSAGE_NOT_LOG, HELP_MESSAGE, HELP_SECONDARY,  CommandHelpMessage } from './terminalUtils/helpText/help';
+import { io, Socket } from "socket.io-client";
+
 
 export namespace TerminalElements {
 	export let terminal: HTMLDivElement | null = null;
@@ -67,6 +69,12 @@ export namespace PongUtils {
 			pongGameInstance = null;
 		}
 	}
+}
+
+export namespace socketUtils {
+	export let socket: Socket | null = null;
+	export let userId: number | null = null;
+
 }
 
 type FileNode = {
@@ -823,6 +831,19 @@ export namespace Terminal {
 		if (TerminalConfigVariables.isBuilded)
 			return;
 		const success = await RequestBackendModule.loadUser();
+		// true --> socket avec tocken, false socket null 
+		if (!success)
+		{
+			const socket = io("http://localhost:8181/socket.io/", {
+			auth: {
+				token: null
+			},
+			transports: ["websocket"],
+			autoConnect: true,
+			});
+			console.log(socket)
+			socketUtils.socket = socket;
+		}
 		TerminalElements.terminal = document.createElement('div');
 		TerminalElements.terminal.id = "terminal";
 		TerminalElements.terminal.className = "terminal-font p-4 m-0 bg-black border-2 border-green-500 float-left text-green-400 text-sm overflow-y-auto focus:outline-none cursor-text relative scroll-smooth"

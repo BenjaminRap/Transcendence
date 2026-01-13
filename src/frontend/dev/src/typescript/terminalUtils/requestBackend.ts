@@ -2,6 +2,8 @@ import { TerminalUtils } from "./terminalUtils";
 import { WriteOnTerminal } from "./writeOnTerminal";
 import { TerminalFileSystem, TerminalUserManagement } from "../terminal";
 import { CommandHelpMessage } from './helpText/help';
+import { io } from "socket.io-client";
+import { socketUtils } from '../terminal'
 
 
 export namespace RequestBackendModule {
@@ -83,6 +85,17 @@ export namespace RequestBackendModule {
 				TerminalUserManagement.username = data.user.username;
 				TerminalUtils.updatePromptText( TerminalUserManagement.username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ " );
 				TerminalUserManagement.isLoggedIn = true;
+				const socket = io("http://localhost:8181/socket.io/", {
+				auth: {
+					token: token
+				},
+				transports: ["websocket"],
+				autoConnect: true,
+				});
+				console.log(socket)
+				socketUtils.socket = socket;
+				socketUtils.userId = data.user.id;
+				console.log(socketUtils.userId);
 				return true;
 			}
 			if (data.message === 'Invalid or expired token') {
@@ -172,6 +185,7 @@ export namespace RequestBackendModule {
 			return 'You are not logged in.';
 		if (args.length > 1)
 			return description;
+		// API LOGOUT (avant delete token :) )
 		document.cookie = 'accessToken=; path=/;';
 		document.cookie = 'refreshToken=; path=/;';
 		TerminalUserManagement.isLoggedIn = false;

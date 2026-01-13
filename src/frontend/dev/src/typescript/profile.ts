@@ -4,7 +4,8 @@ import { Modal } from './modal'
 import { ExtendedView } from './extendedView'
 import { TerminalUtils } from './terminalUtils/terminalUtils';
 import { RequestBackendModule } from './terminalUtils/requestBackend';
-import { PongUtils, TerminalFileSystem, TerminalUserManagement } from './terminal'
+import { PongUtils, TerminalFileSystem, TerminalUserManagement, socketUtils } from './terminal'
+import { io } from "socket.io-client";
 import { WriteOnTerminal } from './terminalUtils/writeOnTerminal';
 
 /*
@@ -315,6 +316,13 @@ export namespace ProfileBuilder {
 		}
 	}
 	export let isActive = false;
+	if (socketUtils && socketUtils.socket)
+	{
+		console.log('Update Watch !');
+		socketUtils.socket.on("profile-update", (user: { userID: number; username: string; avatar: string }) => {
+			console.log("Hi", user);
+		});
+	}
 }
 
 
@@ -325,24 +333,19 @@ async function ChangeName() {
 		Modal.closeModal();
 		console.log("New name:", text);
 		await requetChangeName(text);
-		// Send Backend
-		// Update 2/3 variable
-		// let args: string[] = ["System Notification (Wall) - Change Name", "You've try to change your name, attempt succesfull, your new name is " + text];
-		// TerminalUtils.notification(args);
 	});
 }
-
 
 
 async function requetChangeName(newName: string): Promise<boolean> {
 	const token = TerminalUtils.getCookie('accessToken') || '';
 
 	try {
-		const response = await fetch('/api/suscriber/updateprofile', {
+		const response = await fetch('/api/suscriber/update/username', {
 			method: 'PUT',
 			headers: {
 				'Content-Type': 'application/json',
-				'Authorization': 'Bearer ' + TerminalUtils.getCookie('accessToken') || '',
+				'Authorization': 'Bearer ' + token
 			},
 			body: JSON.stringify({
 				username: newName
@@ -353,7 +356,6 @@ async function requetChangeName(newName: string): Promise<boolean> {
 			console.log("Name changed successfully");
 			TerminalUserManagement.username = newName;
 			TerminalUtils.updatePromptText( TerminalUserManagement.username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ " );
-			WriteOnTerminal.printErrorOnTerminal("Nom d'utilisateur changé avec succès en " + newName);
 			return true ;
 		}
 		if (data.message === 'Invalid or expired token') {
@@ -378,17 +380,50 @@ function ChangePassword() {
 
 	Modal.makeModal("Actual Password", 'password', '', (text: string) => {
 		Modal.closeModal();
-		console.log("Password:", text);
-		// Send Backend
-		// Si pas bon return
-		// Update 2/3 variable
 		Modal.makeModal("New Password", 'password', '', (newPass: string) => {
 			Modal.closeModal();
-			console.log("New Password:", newPass);
-			// Send Backend
-			// Update 2/3 variable
+			Modal.makeModal("Confirm Password", 'password', '', (confirmPass: string) => {
+				Modal.closeModal();
+				requestChangePassword(text, newPass, confirmPass);
+			});
 		});
 	});
+}
+
+async function requestChangePassword(currentPassword: string, newPassword: string, confirmNewPassword: string): Promise<boolean> {
+	const token = TerminalUtils.getCookie('accessToken') || '';
+
+	try {
+		const response = await fetch('/api/suscriber/update/password', {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': 'Bearer ' + token
+			},
+			body: JSON.stringify({
+				currentPassword: currentPassword,
+				newPassword: newPassword,
+				confirmNewPassword: confirmNewPassword
+			})
+		});
+		const data = await response.json();
+		if (data.success) {
+			WriteOnTerminal.printErrorOnTerminal("Password changed successfully");
+			return true;
+		}
+		if (data.message === 'Invalid or expired token') {
+			const refreshed = await RequestBackendModule.tryRefreshToken();
+			if (!refreshed) {
+				WriteOnTerminal.printErrorOnTerminal("Veuillez vous connecter.");
+				return false;
+			}
+			return await requestChangePassword(currentPassword, newPassword, confirmNewPassword);
+		}
+		return false;
+	} catch (error) {
+		console.error("Error:", error);
+		return false;
+	}
 }
 
 function ChangeAvatar() {
