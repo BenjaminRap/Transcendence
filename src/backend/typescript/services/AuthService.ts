@@ -67,6 +67,7 @@ export class AuthService {
     }
 
     // --------------------------------------------------------------------------------- //
+    // a revoir
     async loginWith42(code: string): Promise<{ user: SanitizedUser; tokens: TokenPair; msg: string }> {
         const tokenResponse = await fetch('https://api.intra.42.fr/oauth/token', {
             method: 'POST',
@@ -85,7 +86,6 @@ export class AuthService {
         }
 
         const tokenData = await tokenResponse.json() as any;
-        console.log("tokenData: ", tokenData);
 		const accessToken = tokenData.access_token;
 
         const userResponse = await fetch('https://api.intra.42.fr/v2/me', {
@@ -134,6 +134,20 @@ export class AuthService {
         }
         return await this.tokenManager.generatePair(userId, email);
     }
+
+	// --------------------------------------------------------------------------------- //
+	async logout(userId: number): Promise<void> {
+		// notifier la websocket pour deconnecter les autres sessions si besoin
+		// rien a faire pour l'instant car les tokens sont stateless
+		// on pourrait implementer une blacklist des tokens si besoin
+		// mais ca complexifie inutilement le systeme
+		// donc on laisse comme ca pour l'instant
+
+		// est il possible de decompter le nombre de sessions actives pour un utilisateur ?
+		// et de notifier tout le monde uniquement quand la derniere session se deconnecte ?
+		
+		return;
+	}
 
     // ==================================== PRIVATE ==================================== //
 

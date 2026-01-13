@@ -39,16 +39,19 @@ export enum OPPONENT_LEVEL
 
 export interface MatchData
 {
-    winnerId?:      number | null,
-    winnerLevel?:   OPPONENT_LEVEL| null,
+    winnerId?:      number | undefined,
+    winnerLevel?:   OPPONENT_LEVEL | string | undefined,
 
-    loserId?:       number | null,
-    loserLevel?:    OPPONENT_LEVEL | string,
+    loserId?:       number | undefined,
+    loserLevel?:    OPPONENT_LEVEL | string | undefined,
     
     scoreWinner:    number,
     scoreLoser:     number,
     
     duration:       number,
-    
-    tournamentId?:  number | null,
+}
+
+export interface MatchTournamentData extends MatchData
+{
+    tournamentId:  number,
 }

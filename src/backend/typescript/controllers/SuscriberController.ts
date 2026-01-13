@@ -4,6 +4,7 @@ import { FileController } from "../controllers/FileController.js";
 import type { UpdatePassword } from "../types/suscriber.types.js";
 import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
 import { SuscriberSchema } from "../schemas/suscriber.schema.js";
+import { SocketEventController } from "./SocketEventController.js";
 
 export class SuscriberController {
     constructor(
@@ -99,6 +100,8 @@ export class SuscriberController {
 
             // check data, user existence, mail and username availability then update and returns user or throw exception
             const user = await this.suscriberService.updateUsername(id, validation.data);
+
+            SocketEventController.notifyProfileChange(Number(id), 'profile-update', { user });
     
             return reply.status(200).send({
                 success: true,
@@ -150,6 +153,9 @@ export class SuscriberController {
                     redirectTo: '/suscriber/profile'
                 });
             }
+
+            SocketEventController.sendToUser(Number(id), 'profile-update', { user: updatedUser });
+
             return reply.status(200).send({
                 success: true,
                 message: 'Avatar successfully updated',
@@ -185,7 +191,9 @@ export class SuscriberController {
             const id = (request as any).user.userId;
 
             // delete avatar or throw exception USER NOT FOUND
-            await this.suscriberService.deleteAvatar(Number(id));
+            const user = await this.suscriberService.deleteAvatar(Number(id));
+
+            SocketEventController.sendToUser(Number(id), 'profile-update', { user });
 
             return reply.status(204).send();
 
@@ -218,6 +226,9 @@ export class SuscriberController {
             // delete user or throw exception USER NOT FOUND
             await this.suscriberService.deleteAccount(Number(id));
 
+            // envoyer un event a la room 'user-{id}' pour que tous les processus front se deconnectent
+            SocketEventController.sendToUser(Number(id), 'account-deleted', undefined);
+
             return reply.status(204).send();
 
         } catch (error) {
@@ -233,6 +244,4 @@ export class SuscriberController {
             });
         }
     }
-
-    // ================================== PRIVATE ================================== //
 }

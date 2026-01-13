@@ -1,5 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import type { PrismaClient, User } from '@prisma/client';
 import type { GameStats, MatchHistoryEntry } from '../types/match.types.js';
+import type { MatchData } from '../types/match.types.js';
 import { number } from 'zod';
 
 export class MatchService {
@@ -8,8 +9,52 @@ export class MatchService {
 	) {}
 
 	// ----------------------------------------------------------------------------- //
+	async registerMatch(matchData: MatchData): Promise<number>{
+		const match = await this.prisma.match.create({
+			data: {
+				winnerId: matchData.winnerId,
+				loserId: matchData.loserId,
+				winnerLevel: matchData.winnerLevel,
+				loserLevel: matchData.loserLevel,
+				scoreWinner: matchData.scoreWinner,
+				scoreLoser: matchData.scoreLoser,
+				duration: matchData.duration,
+                tournamentId: undefined,
+			}
+		});
+
+		return match.id;
+	} 
+
+	// ----------------------------------------------------------------------------- //
+    async registerTournamentMatch(matchData: MatchData, tournamentId: number ): Promise<number>{
+        const match = await this.prisma.match.create({
+            data: {
+                winnerId: matchData.winnerId,
+                loserId: matchData.loserId,
+                winnerLevel: matchData.winnerLevel,
+                loserLevel: matchData.loserLevel,
+                scoreWinner: matchData.scoreWinner,
+                scoreLoser: matchData.scoreLoser,
+                duration: matchData.duration,
+                tournamentId: tournamentId,
+            }
+        });
+        return match.id;
+    }
+
+	// ----------------------------------------------------------------------------- //
+	async thisMatchExists(matchId: number): Promise<boolean> {
+		const match = await this.prisma.match.findUnique({
+			where: { id: matchId },
+			select: { id: true }
+		});
+		return match !== null;
+    }
+
+	// ----------------------------------------------------------------------------- //
 	async getStats(playerIds: number[]): Promise<{stats: GameStats[] | null, message?: string }> {
-		if (!this.theyExist(playerIds))
+		if (!await this.theyExist(playerIds))
 			return { stats: null, message: 'One or more players do not exist' }
 
 		const wins = await this.prisma.match.groupBy({
@@ -36,6 +81,32 @@ export class MatchService {
 		});
 		return { stats }
 	}
+
+	// ----------------------------------------------------------------------------- //
+ 	async getStat(playerId: number): Promise<{stats: GameStats | null, message?: string }> {
+        if (!await this.isExisting(playerId))
+            return { stats: null, message: 'Player does not exist' }
+
+        const wins = await this.prisma.match.count({
+            where: { winnerId: playerId }
+        });
+
+        const losses = await this.prisma.match.count({
+            where: { loserId: playerId }
+        });
+
+        const total = wins + losses;
+        const winRate = total === 0 ? 0 : wins / total;
+
+        const stats: GameStats = {
+            wins: wins,
+            losses: losses,
+            total: total,
+            winRate: winRate,
+        };
+
+        return { stats };
+    }
 
 	// ----------------------------------------------------------------------------- //
 	async getMatchHistory(playerId: number): Promise<MatchHistoryEntry[] | null> {

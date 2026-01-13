@@ -20,13 +20,6 @@ export interface DeleteAccount
     confirmChoice:  boolean,
 }
 
-export interface SuscriberStats
-{
-    gamesPlayed: number,
-    gamesWon:    number,
-    winRate:     number,
-}
-
 export interface SuscriberProfile
 {
     id:         string,

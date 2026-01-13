@@ -37,3 +37,32 @@ lorsque le tournois est termine:
         finalRank       number
     }
 }
+
+
+creer un match:
+
+route: POST /api/match/register
+
+headers: {
+    'x-game-secret': '${GAME_BACKEND_SECRET}'
+}
+
+Body: MatchData
+{
+    winnerId?:      number | undefined,
+    winnerLevel?:   OPPONENT_LEVEL| string | undefined,
+    loserId?:       number | undefined,
+    loserLevel?:    OPPONENT_LEVEL | string | undefined,
+    scoreWinner:    number,
+    scoreLoser:     number,
+    duration:       number,
+    tournamentId?:  number | undefined,
+}
+/*
+    -> winnerId et loserId sont les ID des joueurs qui ont termines le match
+    -> si un joueur joue contre une IA ou que l'un ou les deux joueurs sont guest
+        alors les id des guests ou de l'IA (winner ou loser selon le resultat) sont undefined
+    -> les types MatchData et OPPONENT_LEVEL sont definis dans typescript/types/match.types.d.ts
+
+    -> si le match fait parti d'un tournois alors specifier tournamentId sinon undefined
+*/
