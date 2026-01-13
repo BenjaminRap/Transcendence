@@ -27,8 +27,6 @@ export interface MatchHistoryEntry
 	date:		Date,
 }
 
-
-
 export enum OPPONENT_LEVEL
 {
     GUEST = "GUEST",

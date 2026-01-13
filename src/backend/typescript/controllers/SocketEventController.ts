@@ -45,6 +45,11 @@ export class SocketEventController {
 	}
 
     // ----------------------------------------------------------------------------- //
+    static isUserOnline(userId: number): boolean {
+        return SocketEventController.connectedUsers.has(userId);
+    }
+
+    // ----------------------------------------------------------------------------- //
     static notifyProfileChange(id: number, event: string, data: any): void
     {
         SocketEventController.sendToUser(id, event, data);
