@@ -14,7 +14,13 @@ export const AuthSchema = {
         identifier: z.string()
                     .trim()
                     .min(1, 'Email or username is required'),
-        password: CommonSchema.password
+        password: z.string()
+            .trim()
+            .min(8, 'Bad password')
+            .regex(/(?=.*[a-z])/, 'Bad password')
+            .regex(/(?=.*[A-Z])/, 'Bad password')
+            .regex(/(?=.*\d)/, 'Bad password')
+            .regex(/(?=.*[@$!%*?&.#_\-+=()\[\]{}|:;,<>~])/, 'Bad password'),
     }).strict(),
 
 }

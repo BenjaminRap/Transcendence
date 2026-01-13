@@ -56,7 +56,7 @@ export class AuthController {
             // Check if the username or email address is in the correct format
             if (!CommonSchema.email.safeParse(validation.data.identifier).success &&
                 !CommonSchema.username.safeParse(validation.data.identifier).success) {
-                throw new AuthException(AuthError.INVALID_CREDENTIALS, 'Bad email or username format');
+                throw new AuthException(AuthError.INVALID_CREDENTIALS, 'Bad identifier');
             }
 
             // Finds the user and generates the tokens, returns the sanitized user + tokens
@@ -130,6 +130,7 @@ export class AuthController {
 
     // --------------------------------------------------------------------------------- //
     // GET auth/callback
+    // a revoir
 	async callback42(request: FastifyRequest<{ Querystring: VerifData }>, reply: FastifyReply) {
 		try {
             const { code } = request.query;

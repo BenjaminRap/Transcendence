@@ -67,6 +67,7 @@ export class AuthService {
     }
 
     // --------------------------------------------------------------------------------- //
+    // a revoir
     async loginWith42(code: string): Promise<{ user: SanitizedUser; tokens: TokenPair; msg: string }> {
         const tokenResponse = await fetch('https://api.intra.42.fr/oauth/token', {
             method: 'POST',
@@ -85,7 +86,6 @@ export class AuthService {
         }
 
         const tokenData = await tokenResponse.json() as any;
-        console.log("tokenData: ", tokenData);
 		const accessToken = tokenData.access_token;
 
         const userResponse = await fetch('https://api.intra.42.fr/v2/me', {
