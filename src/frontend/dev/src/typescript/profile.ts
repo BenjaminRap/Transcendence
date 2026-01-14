@@ -20,11 +20,12 @@ export interface GameStats
 
 export interface Friend
 {
-	avatar:     string,
-	username:   string,
-	id:         string,
-	status:     "ACCEPTED" | "PENDING",
-	isOnline:   boolean,
+	avatar:         string,
+	username:       string,
+	id:             number,
+	status:         string,
+	isOnline:       boolean,
+	requesterId:    number,
 }
 
 
@@ -60,109 +61,7 @@ export interface SuscriberProfile
 
 
 
-let profile: SuscriberProfile = {
-	id: 1,
-	avatar: "https://i.pravatar.cc/150?img=12",
-	username: "User",
-	gameStats: {
-		wins: 5,
-		losses: 10,
-		total: 15,
-		winRate: 33.33
-	},
-	lastMatchs: [
-		{
-			opponent: { id: "2", username: "Opponent2", avatar: "https://i.pravatar.cc/150?img=2" },
-			match: {
-				id: 1,
-				createdAt: new Date(),
-				winnerId: 1,
-				winnerLevel: "Gold",
-				loserId: 2,
-				loserLevel: "Silver",
-				scoreWinner: 1,
-				scoreLoser: 0,
-				duration: 300,
-				tournamentId: null
-			}
-		},
-		{
-			opponent: { id: "3", username: "Opponent3", avatar: "https://i.pravatar.cc/150?img=3" },
-			match: {
-				id: 2,
-				createdAt: new Date(),
-				winnerId: 1,
-				winnerLevel: "Gold",
-				loserId: 3,
-				loserLevel: "Bronze",
-				scoreWinner: 2,
-				scoreLoser: 1,
-				duration: 400,
-				tournamentId: null
-			}
-		},
-		{
-			opponent: { id: "4", username: "Opponent4", avatar: "https://i.pravatar.cc/150?img=4" },
-			match: {
-				id: 3,
-				createdAt: new Date(),
-				winnerId: 1,
-				winnerLevel: "Gold",
-				loserId: 4,
-				loserLevel: "Silver",
-				scoreWinner: 3,
-				scoreLoser: 2,
-				duration: 500,
-				tournamentId: null
-			}
-		},
-		{
-			opponent: { id: "5", username: "Opponent5", avatar: "https://i.pravatar.cc/150?img=5" },
-			match: {
-				id: 4,
-				createdAt: new Date(),
-				winnerId: 5,
-				winnerLevel: "Gold",
-				loserId: 1,
-				loserLevel: "Silver",
-				scoreWinner: 4,
-				scoreLoser: 3,
-				duration: 600,
-				tournamentId: null
-			}
-		}
-	],
-	friends: [
-		{
-			avatar: "https://i.pravatar.cc/150?img=6",
-			username: "Friend1",
-			id: "6",
-			status: "ACCEPTED",
-			isOnline: true
-		},
-		{
-			avatar: "https://i.pravatar.cc/150?img=7",
-			username: "Friend2",
-			id: "7",
-			status: "ACCEPTED",
-			isOnline: false
-		},
-		{
-			avatar: "https://i.pravatar.cc/150?img=8",
-			username: "Friend3",
-			id: "8",
-			status: "PENDING",
-			isOnline: true
-		},
-		{
-			avatar: "https://i.pravatar.cc/150?img=9",
-			username: "Friend4",
-			id: "9",
-			status: "PENDING",
-			isOnline: false
-		}
-	]
-};
+let profile: SuscriberProfile;
 
 let profileDiv: HTMLDivElement | null = null;
 
@@ -339,10 +238,10 @@ function createFriendList(profileElement: HTMLElement | null) {
 			const buttonAccept = pendingTag.querySelector('#AcceptRequest');
 			const buttonRefuse = pendingTag.querySelector('#RefuseRequest');
 			buttonAccept?.addEventListener('click', () => {
-				acceptFriendRequest(friend.username);
+				acceptFriendRequest(friend.id);
 			});
 			buttonRefuse?.addEventListener('click', () => {
-				refuseFriendRequest(friend.username);
+				removeFriend(friend.id);
 			});
 			friendDiv.appendChild(pendingTag);
 		}
@@ -355,7 +254,7 @@ function createFriendList(profileElement: HTMLElement | null) {
 			`
 			const removeButton = pendingTag.querySelector('#removeFriendButton');
 			removeButton?.addEventListener('click', () => {
-				removeFriend(friend.username);
+				removeFriend(friend.id);
 			});
 			friendDiv.appendChild(pendingTag);
 		}
@@ -381,7 +280,7 @@ async function fetchProfileData(user: string): Promise<string> {
 		});
 		const data = await response.json();
 		if (data.success) {
-			// profile = data.user;
+			profile = data.user;
 			console.log(profile);
 			return "OK";
 		}
@@ -606,14 +505,68 @@ function DeleteAccount() {
 	});
 }
 
-function acceptFriendRequest(username: string) {
-	console.log(`Accepted friend request from: ${username}`);
+	// PUT /friend/accept/:id
+async function acceptFriendRequest(id: number): Promise<boolean> {
+	try {
+		const response = await fetch(`/api/friend/accept/${id}`, {
+			method: 'PUT',
+			headers: {
+				'Authorization': 'Bearer ' + TerminalUtils.getCookie('accessToken')
+			}
+		});
+		if (response.status === 204) {
+			console.log("Friend request accepted (204 No Content)");
+			return true;
+		}
+		const data = await response.json();
+		if (data.success) {
+			console.log("Friend request accepted");
+			return true;
+		}
+		if (data.message === 'Invalid or expired token') {
+			const refreshed = await RequestBackendModule.tryRefreshToken();
+			if (!refreshed) {
+				WriteOnTerminal.printErrorOnTerminal("Veuillez vous connecter.");
+				return false;
+			}
+			return await acceptFriendRequest(id);
+		}
+		return false;
+	} catch (error) {
+		console.error("Error:", error);
+		return false;
+	}
 }
 
-function refuseFriendRequest(username: string) {
-	console.log(`Refused friend request from: ${username}`);
-}
-
-function removeFriend(username: string) {
-	console.log(`Removing friend: ${username}`);
+// PUT /friend/delete/:id
+async function removeFriend(id: number): Promise<boolean> {
+	try {
+		const response = await fetch(`/api/friend/delete/${id}`, {
+			method: 'PUT',
+			headers: {
+				'Authorization': 'Bearer ' + TerminalUtils.getCookie('accessToken')
+			}
+		});
+		if (response.status === 204) {
+			console.log("Friend removed successfully (204 No Content)");
+			return true;
+		}
+		const data = await response.json();
+		if (data.success) {
+			console.log("Friend removed successfully");
+			return true;
+		}
+		if (data.message === 'Invalid or expired token') {
+			const refreshed = await RequestBackendModule.tryRefreshToken();
+			if (!refreshed) {
+				WriteOnTerminal.printErrorOnTerminal("Veuillez vous connecter.");
+				return false;
+			}
+			return await removeFriend(id);
+		}
+		return false;
+	} catch (error) {
+		console.error("Error:", error);
+		return false;
+	}
 }
