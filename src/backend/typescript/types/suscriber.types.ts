@@ -24,7 +24,7 @@ export interface Friend
 {
     avatar:     string,
     username:   string,
-    id:         string,
+    id:         number,
     status:     string,
     isOnline:   boolean,
 }
@@ -37,7 +37,7 @@ export interface MatchSummary
 
 export interface SuscriberProfile
 {
-    id:         string,
+    id:         number,
     avatar:     string,
     username:   string,
     gameStats:  GameStats,
