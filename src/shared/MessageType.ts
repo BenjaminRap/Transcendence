@@ -28,7 +28,7 @@ export type ServerEventsData<T extends ServerEvents> =
     T extends "user-status-change" ? { userId: number, status: 'online' | 'offline' } :
     T extends "profile-update" ? { user: SanitizedUser } :
     T extends "game-stats-update" ? { stats: GameStats } :
-	T extends "friend-status-update" ? { userId: number, status: 'PENDING' | 'ACCEPTED' | 'REFUSED' } :
+	T extends "friend-status-update" ? { fromUserId: number, status: 'PENDING' | 'ACCEPTED' } :
     undefined
 
 

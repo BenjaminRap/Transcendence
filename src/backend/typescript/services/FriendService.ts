@@ -1,6 +1,7 @@
 import { PrismaClient, type Friendship, type User } from "@prisma/client"
 import { FriendException, FriendError } from "../error_handlers/Friend.error.js";
 import type { ListFormat } from '../types/friend.types.js';
+import { SocketEventController } from "../controllers/SocketEventController.js";
 
 export class FriendService {
     constructor(
@@ -44,6 +45,7 @@ export class FriendService {
         if (friendship.status === 'ACCEPTED')
             throw new FriendException(FriendError.ACCEPTED, FriendError.ACCEPTED);
 
+        // if the requester try to accept the friend request
         if (friendship.receiverId !== userId)
             throw new FriendException(FriendError.INVALID_ID, "the user can't accept this friend request");
 
@@ -196,7 +198,8 @@ export class FriendService {
                     user: {
                         id: Number(friend.id),
                         username: friend.username,
-                        avatar: friend.avatar
+                        avatar: friend.avatar,
+                        isOnline: SocketEventController.isUserOnline(friend.id),
                     }
                 } as ListFormat;
             })

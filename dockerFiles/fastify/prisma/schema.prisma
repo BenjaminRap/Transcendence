@@ -80,8 +80,8 @@ model Tournament {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  creator     User?      @relation("tournamentCreator", fields: [creatorId], references: [id], onDelete: SetNull)
   creatorId   Int?
+  creator     User?      @relation("tournamentCreator", fields: [creatorId], references: [id], onDelete: SetNull)
 
   participants TournamentParticipant[]
   matches      Match[]
@@ -92,13 +92,13 @@ model TournamentParticipant {
   id            Int       @id @default(autoincrement())
   alias         String
 
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user          User      @relation(fields: [userId], references: [id], onDelete: SetNull)
   userId        Int
 
   finalRank     Int?
 
-  tournament    Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   tournamentId  Int
+  tournament    Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 
   @@unique([userId, tournamentId])
   @@unique([tournamentId, alias])

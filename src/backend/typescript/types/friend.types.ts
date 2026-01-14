@@ -2,7 +2,8 @@ export interface FriendProfile
 {
     id:         number,
     username:   string,
-    avatar:     string
+    avatar:     string,
+    isOnline:   boolean,
 }
 
 export interface ListFormat

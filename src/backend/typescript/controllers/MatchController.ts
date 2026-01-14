@@ -127,7 +127,6 @@ export class MatchController {
 	
 	// ==================================== PRIVATE ==================================== //
 
-	
     // --------------------------------------------------------------------------------- //
     private async checkMatchData(level: string | undefined, id: number | undefined): Promise<{ id: number | undefined, level: string | undefined }>
     {

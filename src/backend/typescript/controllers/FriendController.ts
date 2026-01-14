@@ -3,7 +3,6 @@ import { FriendService } from '../services/FriendService.js'
 import { FriendException, FriendError } from '../error_handlers/Friend.error.js';
 import { CommonSchema } from '../schemas/common.schema.js';
 import { SocketEventController } from './SocketEventController.js';
-import { Socket } from 'socket.io';
 
 export class FriendController {
     constructor(
@@ -14,18 +13,18 @@ export class FriendController {
     // POST /friend/request/:id
     async createFriendRequest(request: FastifyRequest<{ Params: {id: string} }>, reply: FastifyReply) {
         try {
-            const userId = (request as any).user.userId;
             const friendId = CommonSchema.idParam.safeParse(request.params['id']);
             if (!friendId.success) {
                 throw new FriendException(FriendError.INVALID_ID, 'Invalid Id format');
             }
-
+           
             // check users existance; their connection; create the friend request
+            const userId = (request as any).user.userId;
             await this.friendService.createFriendRequest(Number(friendId.data), Number(userId));
 
 			// notify the friend that a request has been sent
 			SocketEventController.sendToUser(Number(friendId.data), 'friend-status-update', {
-				userId: Number(userId), status: 'PENDING'
+				fromUserId: Number(userId), status: 'PENDING'
 			});
     
             return reply.status(201).send({
@@ -99,11 +98,6 @@ export class FriendController {
 
             await this.friendService.deleteFriend(Number(friendId.data), Number(userId));
 
-			// notify both users about the deleted friendship
-			SocketEventController.sendToUser(Number(friendId.data), 'friend-status-update', {
-				userId: Number(userId), status: 'REFUSED'
-			});
-            
             return reply.status(204).send();
 
         } catch (error) {

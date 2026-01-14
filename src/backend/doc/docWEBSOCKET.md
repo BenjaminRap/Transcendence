@@ -47,7 +47,7 @@ l'utilisateur est connecte a la websocket soit en GUEST soit sur son profile
 | profile-update | user: { userID, username, avatar } | profile data |
 | game-stats-update | stats: GameStats | player stats |
 | account-deleted | void | les client qui recoivent cet event doivent se deconnecter |
-
+|friend-status-update| { fromUserId: number, status: 'PENDING' | 'ACCEPTED' } | |
 
 # events from front
 | nom event | data received | response explanation |
