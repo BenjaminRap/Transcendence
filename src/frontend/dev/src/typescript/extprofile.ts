@@ -198,7 +198,7 @@ function createMatchHistory(profileElement: HTMLElement | null) {
 				<div class="card flex justify-center items-center gap-2 max-w-1/2 relative ">
 					<div class="group w-full max-w-[80%]">
 						<p class="truncate cursor-pointer">${match.opponent}</p>
-						<p class="absolute top-[-24px] right-0 hidden group-hover:block border p-1 border-green-500 bg-black">${match.opponent}</p>
+						<p class="absolute -top-6 right-0 hidden group-hover:block border p-1 border-green-500 bg-black">${match.opponent}</p>
 					</div>
 					<img src="${match.profilelinkopponent}" alt="Avatar"
 						class="w-10 h-10 border border-green-500 object-cover"></img>
@@ -297,25 +297,25 @@ async function sendFriendRequest(id: number)
 		const data = await response.json();
 		if (data.success) {
 			console.log('data :', data);
-			WriteOnTerminal.printErrorOnTerminal(`Demande d'ami envoyée à ${profile.username}`, 5);
+			WriteOnTerminal.printErrorOnTerminal(`Demande d'ami envoyée à ${profile.username}`);
 			return "OK";
 		}
 		if (data.message === 'Invalid or expired token') {
 			const refreshed = await RequestBackendModule.tryRefreshToken();
 			if (!refreshed) {
-				WriteOnTerminal.printErrorOnTerminal(`Vous n'êtes pas connecté.`, 5);
+				WriteOnTerminal.printErrorOnTerminal(`Vous n'êtes pas connecté.`);
 			}
 			return "OK";
 		}
 		if (data.message === 'Friendship in pending mod')
 		{
-			WriteOnTerminal.printErrorOnTerminal('Votre demande d\'ami est en attente.', 5);
+			WriteOnTerminal.printErrorOnTerminal('Votre demande d\'ami est en attente.');
 			return "OK";
 		}
 		console.error("Error fetching profile data:", data.message);
-		WriteOnTerminal.printErrorOnTerminal('Erreur lors de la récupération des données du profil.', 5);
+		WriteOnTerminal.printErrorOnTerminal('Erreur lors de la récupération des données du profil.');
 	} catch (error) {
 		console.error("Error:", error);
-		WriteOnTerminal.printErrorOnTerminal('Erreur lors de la récupération des données du profil.', 5);
+		WriteOnTerminal.printErrorOnTerminal('Erreur lors de la récupération des données du profil.');
 	}
 }

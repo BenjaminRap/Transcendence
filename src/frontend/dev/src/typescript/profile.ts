@@ -9,136 +9,159 @@ import { io } from "socket.io-client";
 import { WriteOnTerminal } from './terminalUtils/writeOnTerminal';
 import { name } from '@babylonjs/gui/2D';
 
-/*
-	Attente des donnes backend. Penser a sanitize les donnes avant de les afficher https://github.com/cure53/DOMPurify
-*/
+
+export interface GameStats
+{
+	wins:        number,
+	losses:        number,
+	total:         number,
+	winRate:    number,
+}
+
+export interface Friend
+{
+	avatar:     string,
+	username:   string,
+	id:         string,
+	status:     "ACCEPTED" | "PENDING",
+	isOnline:   boolean,
+}
+
 
 interface Match {
-	state: string;
-	opponent: string;
-	result: string;
-	date: string;
-	profilelinkopponent: string;
-	score: string;
+	id: number;
+	createdAt: Date;
+	winnerId: number | null;
+	winnerLevel: string | null;
+	loserId: number | null;
+	loserLevel: string | null;
+	scoreWinner: number;
+	scoreLoser: number;
+	duration: number;
+	tournamentId: number | null;
 }
 
-interface Friend {
-	username: string;
-	linkofavatar: string;
-	status: string;
+
+export interface MatchSummary
+{
+		opponent: { id: string, username: string, avatar: string,} | null,
+		match: Match | null,
 }
 
-const friends: Friend[] = [
-	{
-		username: "Friend1",
-		linkofavatar: "https://i.pravatar.cc/150?img=5",
-		status: "Online"
-	},
-	{
-		username: "Friend2",
-		linkofavatar: "https://i.pravatar.cc/150?img=6",
-		status: "Last seen : 2h ago"
-	},
-	{
-		username: "Friend3",
-		linkofavatar: "https://i.pravatar.cc/150?img=7",
-		status: "In Game"
-	},
-	{
-		username: "Friend4",
-		linkofavatar: "https://i.pravatar.cc/150?img=8",
-		status: "Online"
-	},
-	{
-		username: "Friend5",
-		linkofavatar: "https://i.pravatar.cc/150?img=9",
-		status: ""
-	},
-];
-
-
-const matches: Match[] = [
-	{
-		state: "Finished",
-		opponent: "Opponent1",
-		result: "Win",
-		date: "2023-10-01",
-		profilelinkopponent: "https://i.pravatar.cc/150?img=1",
-		score: "1-0"
-	},
-	{
-		state: "Finished",
-		opponent: "Opponent2",
-		result: "Loss",
-		date: "2023-10-02",
-		profilelinkopponent: "https://i.pravatar.cc/150?img=2",
-		score: "0-1"
-	},
-	{
-		state: "Finished",
-		opponent: "Opponent3",
-		result: "Win",
-		date: "2023-10-03",
-		profilelinkopponent: "https://i.pravatar.cc/150?img=3",
-		score: "1-0"
-	},
-	{
-		state: "Finished",
-		opponent: "Opponent4",
-		result: "Loss",
-		date: "2023-10-04",
-		profilelinkopponent: "https://i.pravatar.cc/150?img=4",
-		score: "0-1"
-	},
-	{
-		state: "Finished",
-		opponent: "Opponent4",
-		result: "Loss",
-		date: "2023-10-04",
-		profilelinkopponent: "https://i.pravatar.cc/150?img=4",
-		score: "0-1"
-	},
-	{
-		state: "Finished",
-		opponent: "Opponent4",
-		result: "Loss",
-		date: "2023-10-04",
-		profilelinkopponent: "https://i.pravatar.cc/150?img=4",
-		score: "0-1"
-	},
-	{
-		state: "Finished",
-		opponent: "Opponent4",
-		result: "Loss",
-		date: "2023-10-04",
-		profilelinkopponent: "https://i.pravatar.cc/150?img=4",
-		score: "0-1"
-	},
-	{
-		state: "Finished",
-		opponent: "Opponent4",
-		result: "Loss",
-		date: "2023-10-04",
-		profilelinkopponent: "https://i.pravatar.cc/150?img=4",
-		score: "0-1"
-	}
-];
-
-interface Profile {
-    username: string;
-    linkofavatar: string;
-    mmr: number;
-    win: number;
-    loss: number;
+export interface SuscriberProfile
+{
+	id:         number,
+	avatar:     string,
+	username:   string,
+	gameStats:  GameStats,
+	lastMatchs: MatchSummary[],
+	friends:    Friend[],
 }
 
-// Utilisation :
-let profile: Profile = {
-    username: "User",
-    linkofavatar: "https://i.pravatar.cc/150?img=12",
-    mmr: 500,
-    win: 5,
-    loss: 10,
+
+
+let profile: SuscriberProfile = {
+	id: 1,
+	avatar: "https://i.pravatar.cc/150?img=12",
+	username: "User",
+	gameStats: {
+		wins: 5,
+		losses: 10,
+		total: 15,
+		winRate: 33.33
+	},
+	lastMatchs: [
+		{
+			opponent: { id: "2", username: "Opponent2", avatar: "https://i.pravatar.cc/150?img=2" },
+			match: {
+				id: 1,
+				createdAt: new Date(),
+				winnerId: 1,
+				winnerLevel: "Gold",
+				loserId: 2,
+				loserLevel: "Silver",
+				scoreWinner: 1,
+				scoreLoser: 0,
+				duration: 300,
+				tournamentId: null
+			}
+		},
+		{
+			opponent: { id: "3", username: "Opponent3", avatar: "https://i.pravatar.cc/150?img=3" },
+			match: {
+				id: 2,
+				createdAt: new Date(),
+				winnerId: 1,
+				winnerLevel: "Gold",
+				loserId: 3,
+				loserLevel: "Bronze",
+				scoreWinner: 2,
+				scoreLoser: 1,
+				duration: 400,
+				tournamentId: null
+			}
+		},
+		{
+			opponent: { id: "4", username: "Opponent4", avatar: "https://i.pravatar.cc/150?img=4" },
+			match: {
+				id: 3,
+				createdAt: new Date(),
+				winnerId: 1,
+				winnerLevel: "Gold",
+				loserId: 4,
+				loserLevel: "Silver",
+				scoreWinner: 3,
+				scoreLoser: 2,
+				duration: 500,
+				tournamentId: null
+			}
+		},
+		{
+			opponent: { id: "5", username: "Opponent5", avatar: "https://i.pravatar.cc/150?img=5" },
+			match: {
+				id: 4,
+				createdAt: new Date(),
+				winnerId: 5,
+				winnerLevel: "Gold",
+				loserId: 1,
+				loserLevel: "Silver",
+				scoreWinner: 4,
+				scoreLoser: 3,
+				duration: 600,
+				tournamentId: null
+			}
+		}
+	],
+	friends: [
+		{
+			avatar: "https://i.pravatar.cc/150?img=6",
+			username: "Friend1",
+			id: "6",
+			status: "ACCEPTED",
+			isOnline: true
+		},
+		{
+			avatar: "https://i.pravatar.cc/150?img=7",
+			username: "Friend2",
+			id: "7",
+			status: "ACCEPTED",
+			isOnline: false
+		},
+		{
+			avatar: "https://i.pravatar.cc/150?img=8",
+			username: "Friend3",
+			id: "8",
+			status: "PENDING",
+			isOnline: true
+		},
+		{
+			avatar: "https://i.pravatar.cc/150?img=9",
+			username: "Friend4",
+			id: "9",
+			status: "PENDING",
+			isOnline: false
+		}
+	]
 };
 
 let profileDiv: HTMLDivElement | null = null;
@@ -149,21 +172,20 @@ export namespace ProfileUpdater {
 	export function updateProfile(username: string, linkofavatar: string) {
 		console.log("Updating profile:", username, linkofavatar);
 		profile.username = username;
-		profile.linkofavatar = linkofavatar;
+		profile.avatar = linkofavatar;
 		updateProfileCard(profile);
 	}
 }
 
-function updateProfileCard(profile: Profile) {
+function updateProfileCard(profile: SuscriberProfile) {
 	if (!profileDiv)
 		return;
-	profileDiv.innerHTML = `<img src="${profile.linkofavatar}" alt="Avatar" class="w-[12vh] h-[12vh] border border-green-500 object-cover"></img>
+	profileDiv.innerHTML = `<img src="${profile.avatar}" alt="Avatar" class="w-[12vh] h-[12vh] border border-green-500 object-cover"></img>
 							<h1 class="text-center text-[1.5vh]">${profile.username}</h1>
 							<div class="flex gap-[1vw] text-[0.9vh]">
-								<p>MMR: ${profile.mmr}</p>
-								<p>Win: ${profile.win}</p>
-								<p>Loss: ${profile.loss}</p>
-								<p>W/L: ${(profile.win / (profile.loss + profile.win)).toFixed(2)}</p>
+								<p>Win: ${profile.gameStats.wins}</p>
+								<p>Loss: ${profile.gameStats.losses}</p>
+								<p>W/L: ${(profile.gameStats.wins / (profile.gameStats.losses + profile.gameStats.wins)).toFixed(2)}</p>
 							</div>`;
 }
 
@@ -172,13 +194,12 @@ function createProfileCard(profileElement: HTMLElement | null) {
 		return;
 	const profileCard = document.createElement('div');
 	profileCard.className = "flex flex-col px-[2vw] py-[1vh] shadow-lg border border-green-500 items-center h-[19.7%] overflow-hidden";
-	profileCard.innerHTML = `<img src="${profile.linkofavatar}" alt="Avatar" class="w-[12vh] h-[12vh] border border-green-500 object-cover"></img>
+	profileCard.innerHTML = `<img src="${profile.avatar}" alt="Avatar" class="w-[12vh] h-[12vh] border border-green-500 object-cover"></img>
 							<h1 class="text-center text-[1.5vh]">${profile.username}</h1>
 							<div class="flex gap-[1vw] text-[0.9vh]">
-								<p>MMR: ${profile.mmr}</p>
-								<p>Win: ${profile.win}</p>
-								<p>Loss: ${profile.loss}</p>
-								<p>W/L: ${(profile.win / (profile.loss + profile.win)).toFixed(2)}</p>
+								<p>Win: ${profile.gameStats.wins}</p>
+								<p>Loss: ${profile.gameStats.losses}</p>
+								<p>W/L: ${(profile.gameStats.wins / (profile.gameStats.losses + profile.gameStats.wins)).toFixed(2)}</p>
 							</div>`;
 	profileElement.appendChild(profileCard);
 	profileDiv = profileCard;
@@ -223,31 +244,51 @@ function createMatchHistory(profileElement: HTMLElement | null) {
 
 	profileElement.appendChild(matchHistory);
 
-	for (let i = 0; i < Math.min(matches.length, 4); i++) {
-		const match = matches[i];
+	for (let i = 0; i < Math.min(profile.lastMatchs.length, 4); i++) {
+		const match = profile.lastMatchs[i];
 		const matchDiv = document.createElement('div');
+		if (!match || !match.match || !match.opponent) 
+			continue;
+		let result;
+		if (match.match.winnerId && match.match.winnerId === profile.id) {
+			result = "Win";
+		} else {
+			result = "Loose";
+		}
+		let score;
+		if (result === "Win") {
+			score = `${match.match.scoreWinner} - ${match.match.scoreLoser}`;
+		} else {
+			score = `${match.match.scoreLoser} - ${match.match.scoreWinner}`;
+		}
 		matchDiv.className = "flex px-4 shadow-lg place-content-between";
 		matchDiv.innerHTML = `
 				<div class="flex flex-1 items-center justify-between pr-2 min-w-0">
 					<div class="flex flex-col gap-y-0 min-w-0">
-						<p class="p-0 m-0 truncate">${match.result}</p>
-						<p class="truncate" style="font-size: 10px;">${match.date}</p>
+						<p class="p-0 m-0 truncate">${result}</p>
+						<p class="truncate" style="font-size: 10px;">${match.match.createdAt.toLocaleDateString()}</p>
 					</div>
 					<div class="flex flex-col justify-center items-center shrink-0 px-1">
-						<p>${match.score}</p>
+						<p>${score}</p>
 						<p style="font-size: 10px;">vs</p>
 					</div>
 				</div>
 				<div class="flex flex-1 justify-end items-center gap-2 min-w-0 relative">
 					<div class="group relative min-w-0 text-right">
-						<p class="truncate cursor-pointer">${match.opponent}</p>
-						<p class="absolute bottom-full right-0 mb-1 hidden group-hover:block border p-1 border-green-500 bg-black whitespace-nowrap">${match.opponent}</p>
+						<p class="truncate cursor-pointer">${match.opponent.username}</p>
+						<p class="absolute bottom-full right-0 mb-1 hidden group-hover:block border p-1 border-green-500 bg-black whitespace-nowrap">${match.opponent.username}</p>
 					</div>
-					<img src="${match.profilelinkopponent}" alt="Avatar"
+					<img src="${match.opponent.avatar}" alt="Avatar"
 						class="w-8 h-8 sm:w-10 sm:h-10 border border-green-500 object-cover shrink-0"></img>
 				</div>
 			`
 		matchElement.appendChild(matchDiv);
+	}
+	if (profile.lastMatchs.length === 0) {
+		const noMatchMessage = document.createElement('div');
+		noMatchMessage.className = "text-center text-gray-500";
+		noMatchMessage.innerText = "Aucun match trouvé.";
+		matchElement.appendChild(noMatchMessage);
 	}
 	matchHistory.appendChild(matchElement);
 	profileElement.appendChild(matchHistory);
@@ -270,18 +311,54 @@ function createFriendList(profileElement: HTMLElement | null) {
 	});
 	const friendElement = document.createElement('div');
 	friendElement.className = "border border-green-500 py-4 flex flex-col gap-y-4 h-full";
-	for (let i = 0; i < Math.min(friends.length, 4); i++) {
-		const friend = friends[i];
+	for (let i = 0; i < Math.min(profile.friends.length, 4); i++) {
+		const friend = profile.friends[i];
 		const friendDiv = document.createElement('div');
+		let status;
+		if (friend.isOnline) {
+			status = "Online.";
+		} else {
+			status = "Offline.";
+		}
 		friendDiv.className = "flex items-center px-4 gap-x-4 min-w-0";
 		friendDiv.innerHTML = `
-		<img src="${friend.linkofavatar}" alt="Avatar"
+		<img src="${friend.avatar}" alt="Avatar"
 					class="w-8 h-8 sm:w-10 sm:h-10 border border-green-500 object-cover shrink-0"></img>
 				<div class="flex flex-col gap-y-0 min-w-0 flex-1">
 					<p class="truncate">${friend.username}</p>
-					<p class="truncate" style="font-size: 10px;">${friend.status}</p>
+					<p class="truncate" style="font-size: 10px;">${status}</p>
 				</div>
 		`
+		if (friend.status === "PENDING") {
+			const pendingTag = document.createElement('div');
+			pendingTag.className = "flex gap-x-2";
+			pendingTag.innerHTML = `
+				<button id="AcceptRequest" class="ml-auto p-1 border border-green-500 hover:underline hover:underline-offset-2 cursor-pointer">Accept</button>
+				<button id="RefuseRequest" class="ml-auto p-1 border border-green-500 hover:underline hover:underline-offset-2 cursor-pointer">Refuse</button>
+			`
+			const buttonAccept = pendingTag.querySelector('#AcceptRequest');
+			const buttonRefuse = pendingTag.querySelector('#RefuseRequest');
+			buttonAccept?.addEventListener('click', () => {
+				acceptFriendRequest(friend.username);
+			});
+			buttonRefuse?.addEventListener('click', () => {
+				refuseFriendRequest(friend.username);
+			});
+			friendDiv.appendChild(pendingTag);
+		}
+		else
+		{
+			const pendingTag = document.createElement('div');
+			pendingTag.className = "flex gap-x-2";
+			pendingTag.innerHTML = `
+				<button id="removeFriendButton" class="ml-auto p-1 border border-green-500 hover:underline hover:underline-offset-2 cursor-pointer">Remove</button>
+			`
+			const removeButton = pendingTag.querySelector('#removeFriendButton');
+			removeButton?.addEventListener('click', () => {
+				removeFriend(friend.username);
+			});
+			friendDiv.appendChild(pendingTag);
+		}
 		friendElement.appendChild(friendDiv);
 	}
 
@@ -304,8 +381,8 @@ async function fetchProfileData(user: string): Promise<string> {
 		});
 		const data = await response.json();
 		if (data.success) {
-			profile.username = data.user.username;
-			profile.linkofavatar = data.user.avatar;
+			// profile = data.user;
+			console.log(profile);
 			return "OK";
 		}
 		if (data.message === 'Invalid or expired token') {
@@ -527,4 +604,16 @@ function DeleteAccount() {
 		else
 			console.log("Account deletion cancelled");
 	});
+}
+
+function acceptFriendRequest(username: string) {
+	console.log(`Accepted friend request from: ${username}`);
+}
+
+function refuseFriendRequest(username: string) {
+	console.log(`Refused friend request from: ${username}`);
+}
+
+function removeFriend(username: string) {
+	console.log(`Removing friend: ${username}`);
 }

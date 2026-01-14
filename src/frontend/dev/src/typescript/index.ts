@@ -96,7 +96,7 @@ else if (path.startsWith('/profile/')) {
 	}
 	else
 	{
-		if (user === TerminalUserManagement.username)
+		if (user === TerminalUserManagement.username || user === '')
 			ProfileBuilder.buildProfile('');
 		else
 			ExtProfileBuilder.buildExtProfile(user);
