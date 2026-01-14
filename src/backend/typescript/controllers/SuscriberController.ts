@@ -5,6 +5,7 @@ import type { UpdatePassword } from "../types/suscriber.types.js";
 import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
 import { SuscriberSchema } from "../schemas/suscriber.schema.js";
 import { SocketEventController } from "./SocketEventController.js";
+import { type SanitizedUser, sanitizeUser } from "../types/auth.types.js";
 
 export class SuscriberController {
     constructor(
@@ -100,16 +101,16 @@ export class SuscriberController {
                 });
             }
 
-            // check data, user existence, mail and username availability then update and returns user or throw exception
+            // check data, user existence, username availability then update and returns user or throw exception
             const user = await this.suscriberService.updateUsername(id, validation.data);
 
-            SocketEventController.notifyProfileChange(Number(id), 'profile-update', { user });
+            SocketEventController.notifyProfileChange(Number(id), 'profile-update', { user: sanitizeUser(user) });
     
             return reply.status(200).send({
                 success: true,
                 message: 'Profile successfully updated',
                 redirectTo: '/suscriber/profile',
-                user
+                user: sanitizeUser(user)
             }); 
         } catch (error) {
             if (error instanceof SuscriberException) {

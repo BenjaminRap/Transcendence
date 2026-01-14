@@ -72,7 +72,6 @@ async function start(): Promise<void> {
         const host = process.env.HOST || '0.0.0.0';
 
         await init();
-        console.log("SOCKET:");
 		SocketEventController.initInstance(io);
         await fastify.listen({ port: port, host: host });
         // fastify.log.info(`Server listening at ${ host }:${ port }`);

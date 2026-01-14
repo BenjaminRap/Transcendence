@@ -20,12 +20,27 @@ export interface DeleteAccount
     confirmChoice:  boolean,
 }
 
+export interface Friend
+{
+    avatar:     string,
+    username:   string,
+    id:         string,
+    status:     string,
+    isOnline:   boolean,
+}
+
+export interface MatchSummary
+{
+        opponent: { id: string, username: string, avatar: string,} | null,
+        match: Match | null,
+}
+
 export interface SuscriberProfile
 {
     id:         string,
     avatar:     string,
     username:   string,
     gameStats:  GameStats,
-    lastMatchs: Match[],
-    friends:    Friendship[],
+    lastMatchs: MatchSummary[],
+    friends:    Friend[],
 }
