@@ -23,7 +23,7 @@ _Possibles responses:_
   }
 
 ❌ 401 Unauthorized :
-  {
+  {w
     "success": false,
     "message": "Invalid or missing token"
   }

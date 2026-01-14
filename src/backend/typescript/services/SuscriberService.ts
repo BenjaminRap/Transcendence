@@ -58,6 +58,8 @@ export class SuscriberService {
 		// Sorted 4 friends
         const sortedFriends = this.getSortedFriendlist(user.sentRequests, user.receivedRequests, 4, user.id);
 
+        // afficher la liste des amis dans le terminal pour debug
+
         return {
             id: user.id,
             avatar: user.avatar,

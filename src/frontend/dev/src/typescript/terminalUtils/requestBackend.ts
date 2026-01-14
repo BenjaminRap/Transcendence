@@ -2,6 +2,8 @@ import { TerminalUtils } from "./terminalUtils";
 import { WriteOnTerminal } from "./writeOnTerminal";
 import { TerminalFileSystem, TerminalUserManagement } from "../terminal";
 import { CommandHelpMessage } from './helpText/help';
+import { io } from "socket.io-client";
+import { socketUtils } from '../terminal'
 
 
 export namespace RequestBackendModule {
@@ -65,6 +67,28 @@ export namespace RequestBackendModule {
 		}
 	}
 
+	export async function createWebSocket(token: string)
+	{
+		const socket = io("http://localhost:8181", {
+			path: "/socket.io",
+			auth: {
+				token: token
+			},
+			transports: ["websocket", "polling"],
+			autoConnect: true,
+		});
+		socketUtils.socket = socket;
+		socket.on('connect_error', (err: any) => {
+			console.error('Socket connect_error:', err);
+		});
+		socket.on('connect', () => {
+			console.log('Socket connected:', socket.id);
+		});
+		socket.onAny((event, ...args) => {
+			console.log(`Événement reçu '${event}': ${JSON.stringify(args)}`);
+		});
+	}
+
 	export async function loadUser(): Promise<boolean> {
 		const token = TerminalUtils.getCookie('accessToken') || '';
 		if (token === '') {
@@ -83,6 +107,7 @@ export namespace RequestBackendModule {
 				TerminalUserManagement.username = data.user.username;
 				TerminalUtils.updatePromptText( TerminalUserManagement.username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ " );
 				TerminalUserManagement.isLoggedIn = true;
+				createWebSocket(token);
 				return true;
 			}
 			if (data.message === 'Invalid or expired token') {
@@ -172,6 +197,7 @@ export namespace RequestBackendModule {
 			return 'You are not logged in.';
 		if (args.length > 1)
 			return description;
+		// API LOGOUT (avant delete token :) )
 		document.cookie = 'accessToken=; path=/;';
 		document.cookie = 'refreshToken=; path=/;';
 		TerminalUserManagement.isLoggedIn = false;

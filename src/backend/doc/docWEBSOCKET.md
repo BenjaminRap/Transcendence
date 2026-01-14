@@ -1,94 +1,4 @@
 
-# envoyer une notification a la room watch-ID lors d'un changement de profile
-
-``` ts
-	export type ClientToServerEvents = {
-		[T in ClientMessage]: ClientMessageData<T> extends undefined ?
-			() => void :
-			(data: ClientMessageData<T>) => void;
-	} & {
-		"get-online-users": (callback: (users: number[]) => void) => void;
-		// NOUVEAUX EVENTS
-		"watch-profile": (data: { userId: number }) => void;
-		"unwatch-profile": (data: { userId: number }) => void;
-	};
-
-
-
-    // ----------------------------------------------------------------------------- //
-    private initSocket()
-    {
-        this.initMiddleware();
-        this.io.on('connection', (socket : DefaultSocket) => {
-            this.handleConnection(socket);
-
-            socket.on("join-matchmaking", () => {
-                this.handleMatchMakingRequest(socket);
-            });
-
-            socket.on("get-online-users", (callback) => {
-                this.handleGetStatus(socket, callback);
-            });
-
-            // --- DEBUT AJOUT ---
-            socket.on("watch-profile", (data) => {
-                const targetRoom = `watching-user-${data.userId}`;
-                socket.join(targetRoom);
-            });
-
-            socket.on("unwatch-profile", (data) => {
-                const targetRoom = `watching-user-${data.userId}`;
-                socket.leave(targetRoom);
-            });
-            // --- FIN AJOUT ---
-
-            socket.once("disconnect", () => {
-                this.handleDisconnect(socket);
-            });
-        });
-    }
-
-    // ...existing code...
-
-    // ----------------------------------------------------------------------------- //
-    // Nouvelle méthode pour notifier le changement de profil BACKEND
-    static notifyProfileUpdate(userId: number, updatedProfileData: any): void
-    {
-        if (SocketEventController.socketInstance) {
-            // 1. Notifier ceux qui regardent le profil (Room "watching")
-            const watchingRoom = `watching-user-${userId}`;
-            SocketEventController.socketInstance.io.to(watchingRoom).emit('profile-update', { 
-                user: updatedProfileData 
-            });
-
-            // 2. Notifier l'utilisateur lui-même (Room "perso") 
-            // Utile s'il a le site ouvert sur plusieurs onglets/appareils
-            SocketEventController.sendToUser(userId, 'profile-update', { user: updatedProfileData });
-        }
-    }
-
-
-
-	// Dans votre route de mise à jour de profil/avatar
-	async updateAvatar(...) {
-		// ... logique de mise à jour DB ...
-		
-		const updatedUser = ...; // L'objet User mis à jour
-		
-		// Hop, on notifie tout le monde concerné en une ligne
-		SocketEventController.notifyProfile// Dans votre route de mise à jour de profil/avatar
-	async updateAvatar(...) {
-		// ... logique de mise à jour DB ...
-		
-		const updatedUser = ...; // L'objet User mis à jour
-		
-		// Hop, on notifie tout le monde concerné en une ligne
-		SocketEventController.notifyProfile
-```
-
-
-
-
 une socket client est necessaire lorsque l'utilisateur veut lancer un match ou bien si il veut visiter le profile d'un utilisateur
 
 on ouvre une connexion en GUEST au client qui entre sur le site
@@ -139,9 +49,6 @@ l'utilisateur est connecte a la websocket soit en GUEST soit sur son profile
 | account-deleted | void | les client qui recoivent cet event doivent se deconnecter |
 
 
-
-
-
 # events from front
 | nom event | data received | response explanation |
 |-----------|---------------|----------------------|
@@ -160,6 +67,12 @@ function initOnlineStatusTracking(socket: any) {
         onlineUsers = new Set(ids);
         console.log("Liste initiale chargée :", onlineUsers);
     });
+
+
+    socket.on("profile-update", (user: {userID, username, avatar }) => {
+        console.log(user);
+    })
+
 
     // 3. TEMPS RÉEL : On écoute les changements
     socket.on("user-status-change", (data: { userId: number, status: 'online' | 'offline' }) => {
@@ -186,85 +99,3 @@ strategie front
 appeler get-online-users une fois au demarrage
 tenir un set des ids en ligne a jour lors d'event user-status-change (online / offline) et lors de nouvelle connexion / deconnexion
 
-# class SocketService
-```ts
-import { io, Socket } from 'socket.io-client';
-
-export class SocketService {
-    private socket: Socket;
-
-    connect(token: string) {
-        this.socket = io('http://localhost:3000', {
-            auth: { token }
-        });
-    }
-
-    // Méthodes pour le jeu
-    onGameState(callback) {
-        this.socket.on('game_state', callback);
-    }
-
-    // Méthodes pour les notifs
-    onNotification(callback) {
-        this.socket.on('notification', callback);
-    }
-}
-
-export const socketService = new SocketService();
-
-```
-
-# modif class MultiplayerHandler
-
-```ts
-// ...existing code...
-import { socketService } from "../services/SocketService"; // Import du singleton
-
-// ...existing code...
-export class	MultiplayerHandler
-{
-    // ...existing code...
-    // On retire _apiUrl car géré par le service
-    private _socket  : Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
-    // ...existing code...
-
-    public disconnect() // Renommer idéalement en "dispose" ou "leaveGame"
-    {
-        if (!(this._socket))
-            return ;
-        
-        // NE PAS FAIRE: this._socket.disconnect(); 
-        // CAR cela couperait les notifs pour toute l'appli.
-        
-        // FAIRE PLUTÔT: nettoyer les listeners spécifiques au jeu
-        this._socket.off("joined-game");
-        this._socket.off("ready");
-        this._socket.off("game-infos");
-        this._socket.off("forfeit");
-        this._socket.off("room-closed");
-        
-        this._socket = null;
-        this._onServerMessageObservable?.clear();
-        this._onServerMessageObservable = null;
-        this._state = "disconnected";
-    }
-
-    // Modification pour utiliser la socket partagée
-    private async connect() : Promise<void>
-    {
-        // On s'assure que le service global est connecté
-        if (!socketService.socket) {
-            socketService.connect();
-        }
-        this._socket = socketService.socket;
-
-        if (!this._socket) return Promise.reject("Socket connect failed");
-
-        // ...existing code...
-        // La suite logique reste similaire, mais on checke l'état
-        this._state = "connected";
-        return Promise.resolve();
-    }
-    // ...existing code...
-
-```
