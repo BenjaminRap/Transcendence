@@ -292,6 +292,7 @@ export class SuscriberService {
                 avatar: friend.avatar,
                 isOnline: SocketEventController.isUserOnline(friend.id),
                 status: relation.status,
+                requesterId: relation.requesterId,
             };
         });
     }
