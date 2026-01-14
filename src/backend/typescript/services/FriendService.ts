@@ -44,6 +44,9 @@ export class FriendService {
         if (friendship.status === 'ACCEPTED')
             throw new FriendException(FriendError.ACCEPTED, FriendError.ACCEPTED);
 
+        if (friendship.receiverId !== userId)
+            throw new FriendException(FriendError.INVALID_ID, "the user can't accept this friend request");
+
         await this.prisma.friendship.update({
             where: { id: friendship.id },
             data: { status: 'ACCEPTED' }
@@ -180,24 +183,20 @@ export class FriendService {
     }
 
     // ----------------------------------------------------------------------------- //
-    private async formatList(list: Friendship[], userId: number): Promise<ListFormat[]> {
+    private async formatList(list: any[], userId: number): Promise<ListFormat[]> {
         return await Promise.all(
             list.map(async (friendship) => {
-                const friendId = friendship.requesterId === userId
-                    ? friendship.receiverId
-                    : friendship.requesterId;
-
-                const otherUser = await this.getById(friendId);
-                if (!otherUser)
-                    throw new FriendException(FriendError.USR_NOT_FOUND, FriendError.USR_NOT_FOUND);
+                const friend = friendship.requesterId === userId
+                    ? friendship.receiver
+                    : friendship.requester;
 
                 return {
                     status: friendship.status,
                     updatedAt: friendship.updatedAt.toISOString(),
                     user: {
-                        id: otherUser.id.toString(),
-                        username: otherUser.username,
-                        avatar: otherUser.avatar
+                        id: Number(friend.id),
+                        username: friend.username,
+                        avatar: friend.avatar
                     }
                 } as ListFormat;
             })

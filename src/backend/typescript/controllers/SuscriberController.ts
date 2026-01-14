@@ -5,7 +5,7 @@ import type { UpdatePassword } from "../types/suscriber.types.js";
 import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
 import { SuscriberSchema } from "../schemas/suscriber.schema.js";
 import { SocketEventController } from "./SocketEventController.js";
-import { type SanitizedUser, sanitizeUser } from "../types/auth.types.js";
+import { sanitizeUser } from "../types/auth.types.js";
 
 export class SuscriberController {
     constructor(
@@ -56,7 +56,7 @@ export class SuscriberController {
             }
             
             const userId = (request as any).user.userId;
-            const { newPassword, currentPassword } = request.body;
+            const { newPassword, currentPassword } = validation.data;
 
             // check if user exists, if password is different then hash and update or throw exception
             await this.suscriberService.updatePassword(userId, currentPassword, newPassword);

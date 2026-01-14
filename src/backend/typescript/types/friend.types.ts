@@ -1,6 +1,6 @@
 export interface FriendProfile
 {
-    id:         string,
+    id:         number,
     username:   string,
     avatar:     string
 }
