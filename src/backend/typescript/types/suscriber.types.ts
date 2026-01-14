@@ -22,11 +22,12 @@ export interface DeleteAccount
 
 export interface Friend
 {
-    avatar:     string,
-    username:   string,
-    id:         string,
-    status:     string,
-    isOnline:   boolean,
+    avatar:         string,
+    username:       string,
+    id:             number,
+    status:         string,
+    isOnline:       boolean,
+    requesterId:    number,
 }
 
 export interface MatchSummary
@@ -37,7 +38,7 @@ export interface MatchSummary
 
 export interface SuscriberProfile
 {
-    id:         string,
+    id:         number,
     avatar:     string,
     username:   string,
     gameStats:  GameStats,

@@ -58,8 +58,10 @@ export class SuscriberService {
 		// Sorted 4 friends
         const sortedFriends = this.getSortedFriendlist(user.sentRequests, user.receivedRequests, 4, user.id);
 
+        // afficher la liste des amis dans le terminal pour debug
+
         return {
-            id: user.id.toString(),
+            id: user.id,
             avatar: user.avatar,
             username: user.username,
             gameStats: stats,
@@ -250,13 +252,6 @@ export class SuscriberService {
 
     // ----------------------------------------------------------------------------- //
     private getSortedFriendlist(requester: any[], receiver: any[], limit: number, userId: number): Friend[] {
-        /**
-         * dans cette fonction on doit trier les amis selon ces critères :
-         * 1. Les amis avec le statut 'ACCEPTED' et qui sont en ligne (connectés via websocket) doivent apparaître en premier.
-         * 2. Ensuite, les demandes d'amitié en attente avec le statut 'PENDING'.
-         * 3. Enfin, les amis avec le statut 'ACCEPTED' mais qui sont hors ligne.
-         * ...
-         */
         const allFriendships = [
             ...(requester || []),
             ...(receiver || []),
@@ -292,11 +287,12 @@ export class SuscriberService {
             const friend = relation.requesterId === userId ? relation.receiver : relation.requester;
             
             return {
-                id: friend.id.toString(),
+                id: Number(friend.id),
                 username: friend.username,
                 avatar: friend.avatar,
                 isOnline: SocketEventController.isUserOnline(friend.id),
                 status: relation.status,
+                requesterId: relation.requesterId,
             };
         });
     }
