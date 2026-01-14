@@ -7,6 +7,7 @@ import { type int, Observable } from "@babylonjs/core";
 import type { ServerEvents, ServerToClientEvents } from "@shared/MessageType";
 import type { DefaultServer, DefaultSocket } from "../index";
 import { PongError } from "@shared/pongError/PongError";
+import type { Profile } from "@shared/Profile";
 
 export type SocketMessage = {
 	socketIndex : int,
@@ -15,6 +16,7 @@ export type SocketMessage = {
 
 export class	Room
 {
+	private static readonly _showParticipantsTimeoutMs = 2000;
 	private _sockets : DefaultSocket[] = [];
 	private _serverPongGame : ServerPongGame | undefined;
 	private _disposed : boolean = false;
@@ -23,6 +25,7 @@ export class	Room
 	private _socketsReadyCount : int = 0;
 	private _sceneData : ServerSceneData | undefined;
 	private _ended : boolean = false;
+	private _timeout : NodeJS.Timeout | null = null;
 	
 	constructor(
 		private readonly _io : DefaultServer,
@@ -39,10 +42,12 @@ export class	Room
 
 	private	async init()
 	{
+		const	participants = this._sockets.map((socket) => socket.data.getProfile());
+
 		for (let index = 0; index < this._sockets.length; index++) {
 			const socket = this._sockets[index];
 
-			await this.addSocketToRoom(socket, index);
+			await this.addSocketToRoom(socket, index, participants);
 		}
 
 		const	clientProxy = new ClientProxy(this);
@@ -54,6 +59,8 @@ export class	Room
 	{
 		if (this._disposed)
 			return ;
+		if (this._timeout)
+			clearTimeout(this._timeout);
 		console.log("disposing room !");
 		this._io.to(this._roomId).emit("room-closed");
 		this._disposed = true;
@@ -73,8 +80,6 @@ export class	Room
 
 	private removeSocketFromRoom(socket : DefaultSocket)
 	{
-		if (!socket.data.isInRoom(this))
-			return ;
 		socket.data.leaveRoom();
 		socket.leave(this._roomId);
 		socket.removeAllListeners("ready");
@@ -84,15 +89,14 @@ export class	Room
 			this._socketsReadyCount--;
 	}
 
-	private async addSocketToRoom(socket : DefaultSocket, playerIndex : number)
+	private async addSocketToRoom(socket : DefaultSocket, playerIndex : number, participants : Profile[])
 	{
-		if (socket.data.isInRoom(this))
-			return ;
 		socket.data.joinRoom(this);
 		await socket.join(this._roomId);
 		const	gameInit : GameInit = {
-			playerIndex: playerIndex
-		}
+            playerIndex: playerIndex,
+            participants: participants
+        }
 		socket.emit("joined-game", gameInit);
 		socket.once("ready", () => { this.setSocketReady(socket) } );
 	}
@@ -110,6 +114,7 @@ export class	Room
 	private	async startGame()
 	{
 		await this._sceneData!.readyPromise.promise;
+		await this.delay(Room._showParticipantsTimeoutMs);
 		this._sceneData!.events.getObservable("game-start").notifyObservers();
 		this._sceneData!.events.getObservable("end").add(() => { this.gameEnd() });
 		this.sendMessageToRoom("ready");
@@ -196,5 +201,20 @@ export class	Room
 			});
 		});
 		return observable;
+	}
+
+	private async delay(durationMs : number)
+	{
+		return new Promise<void>((resolve, reject) => {
+			if (this._timeout !== null)
+			{
+				reject();
+				return ;
+			}
+			this._timeout = setTimeout(() => {
+				this._timeout = null;
+				resolve();
+			}, durationMs);
+		})
 	}
 }

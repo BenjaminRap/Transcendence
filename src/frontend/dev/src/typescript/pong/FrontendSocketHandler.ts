@@ -60,7 +60,7 @@ export class	FrontendSocketHandler
 			const	gameInit = zodGameInit.safeParse(data);
 
 			if (!gameInit.success)
-				deferred.reject(new PongError("Server sent wrong data !", "ignore"));
+				deferred.reject(new PongError(`Server sent wrong data ! : ${gameInit.error}`, "ignore"));
 			else
 				deferred.resolve(gameInit.data);
 		});

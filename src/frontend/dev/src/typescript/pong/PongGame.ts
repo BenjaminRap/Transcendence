@@ -19,6 +19,7 @@ import { initMenu } from "./gui/IGUI";
 import { CloseGUI } from "./gui/CloseGUI";
 import type { FrontendTournament } from "./FrontendTournament";
 import { PongError } from "@shared/pongError/PongError";
+import type { Profile } from "@shared/Profile";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
@@ -155,15 +156,16 @@ export class PongGame extends HTMLElement {
 	private async startOnlineGameAsync(sceneName : SceneFileName) : Promise<void>
 	{
 		try {
-			await this._serverProxy.joinGame();
-			const	playerIndex = this._serverProxy.getPlayerIndex();
-			const	inputs = this._settings._playerInputs.filter((value : ClientInput) => value.index === playerIndex);
+			const	gameInit = await this._serverProxy.joinGame();
+			const	inputs = this._settings._playerInputs.filter((value : ClientInput) => value.index === gameInit.playerIndex);
 
 			await this.changeScene(sceneName, "Multiplayer", inputs, undefined);
 			const	sceneData = getFrontendSceneData(this._scene!);
 
 			await sceneData.readyPromise.promise;
 			this._serverProxy.setReady();
+			const	participants = gameInit.participants as [Profile, Profile];
+			sceneData.events.getObservable("set-participants").notifyObservers(participants);
 			await this._serverProxy.onGameReady();
 			sceneData.events.getObservable("game-start").notifyObservers();
 		} catch (error) {
@@ -179,15 +181,15 @@ export class PongGame extends HTMLElement {
 		if (!this._scene)
 			throw new PongError("restartOnlineGameAsync called without a scene !", "quitPong");
 		try {
-			await this._serverProxy.joinGame();
-
-			const	playerIndex = this._serverProxy.getPlayerIndex();
-			const	inputs = this._settings._playerInputs.filter((value : ClientInput) => value.index === playerIndex);
+			const	gameInit = await this._serverProxy.joinGame();
+			const	inputs = this._settings._playerInputs.filter((value : ClientInput) => value.index === gameInit.playerIndex);
 			const	sceneData = getFrontendSceneData(this._scene);
 
 			sceneData.inputs = inputs;
 			sceneData.events.getObservable("input-change").notifyObservers();
 			sceneData.serverProxy.setReady();
+			const	participants = gameInit.participants as [Profile, Profile];
+			sceneData.events.getObservable("set-participants").notifyObservers(participants);
 			await this._serverProxy.onGameReady();
 			sceneData.events.getObservable("game-start").notifyObservers();
 		} catch (error) {

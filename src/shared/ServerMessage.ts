@@ -46,10 +46,16 @@ export const zodGameInfos = zod.discriminatedUnion("type", [
 ]);
 export type GameInfos = zod.infer<typeof zodGameInfos>;
 
+const	zodProfile = zod.object({
+	name: zod.string(),
+	image: zod.string()
+});
+
 const	zodPlayerIndex = zod.int().min(0).max(1);
 
 export const zodGameInit = zod.object({
-	playerIndex: zodPlayerIndex
+	playerIndex: zodPlayerIndex,
+	participants: zod.array(zodProfile).length(2)
 })
 export type GameInit = zod.infer<typeof zodGameInit>;
 
