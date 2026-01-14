@@ -1,4 +1,4 @@
-import { TournamentHelper} from "@shared/TournamentHelper";
+import { TournamentHelper, type ProfileWithScore} from "@shared/TournamentHelper";
 import type { Profile } from "@shared/Profile";
 import type { Match } from "@shared/Match";
 import { TournamentGUI } from "./gui/TournamentGUI";
@@ -16,16 +16,18 @@ export class	LocalTournament
 	private _tournamentMatches : Match[][] = [];
 	private _qualificationMatches : Match[] = [];
 	private _currentMatchIndex = 0;
-	private _qualified : Profile[] = [];
+	private _qualified : ProfileWithScore[] = [];
 	private _timeout : number | null = null;
 	private _tournamentGUI? : TournamentGUI;
 	private _expectedQualifiedCount : number;
 	private _events! : FrontendEventsManager;
+	private _participants : ProfileWithScore[]
 
-	constructor(private _participants : Profile[])
+	constructor(_participants : Profile[])
 	{
 		if (_participants.length > TournamentHelper.maxTournamentParticipants)
 			throw new PongError(`Too many participants ! : max : ${TournamentHelper.maxTournamentParticipants}`, "quitPong");
+		this._participants = _participants.map(profile => ({...profile, score: 0}));
 		this._expectedQualifiedCount = TournamentHelper.getExpectedQualified(this._participants.length);
 	}
 
@@ -139,17 +141,12 @@ export class	LocalTournament
 
 	public	onGameEnd(endData : EndData)
 	{
-		if (endData.winner === "draw")
-			throw new PongError("A game can't be a draw in a tournament !", "quitPong");
 		const	matches = this.getMatchList();
 		if (matches === null)
 			throw new PongError("Current match list is null in LocalTournament !", "quitPong");
 		const	match = matches[this._currentMatchIndex];
 
-		match.setWinner(endData.winner);
-		const	winner = match.getWinner()!;
-
-		winner.score += 1;
+		match.setWinner(endData);
 	}
 
 	public startNextGame()

@@ -62,8 +62,7 @@ export class	ProfileCreationGUI extends HTMLElement
 	{
 		return {
 			name: this._inputs!.name.value,
-			image: this._inputs!.image.value,
-			score: 0
+			image: this._inputs!.image.value
 		}
 	}
 }

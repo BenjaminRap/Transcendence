@@ -3,29 +3,33 @@ import { PongError } from "./pongError/PongError";
 import type { Profile } from "./Profile";
 import { isPowerOfTwo, shuffle } from "./utils";
 
+export type ProfileWithScore = Profile & {
+	score : number
+}
+
 export abstract class	TournamentHelper
 {
 	public static readonly maxTournamentParticipants = 64;
 	public static readonly maxNameLength = 20;
 
-	public static createQualificationMatches(profiles : Profile[])
+	public static createQualificationMatches(participants : ProfileWithScore[])
 	{
-		if (profiles.length < 2)
-			throw new PongError(`The profiles should be greater than 1, got ${profiles.length}`, "quitPong");
-		shuffle(profiles);
+		if (participants.length < 2)
+			throw new PongError(`The profiles should be greater than 1, got ${participants.length}`, "quitPong");
+		shuffle(participants);
 		const	matches = [];
 
-		for (let index = 0; index < profiles.length; index++) {
+		for (let index = 0; index < participants.length; index++) {
 			const	opponentLeftIndex = index;
-			const	opponentRightIndex = (index + 1) % profiles.length;
-			const	match = new Match(profiles[opponentLeftIndex], profiles[opponentRightIndex]);
+			const	opponentRightIndex = (index + 1) % participants.length;
+			const	match = new Match(participants[opponentLeftIndex], participants[opponentRightIndex]);
 
 			matches.push(match);
 		}
 		return matches;
 	}
 
-	public static	createTournamentMatches(profiles : Profile[]) : Match[][]
+	public static	createTournamentMatches(profiles : ProfileWithScore[]) : Match[][]
 	{
 		if (profiles.length < 2 || !isPowerOfTwo(profiles.length))
 			throw new PongError(`The profiles should be a power of two, greater than 1, got ${profiles.length}`, "quitPong");
@@ -33,7 +37,7 @@ export abstract class	TournamentHelper
 		return this.createMatchesByRoundRecursive(profiles);
 	}
 
-	public static createMatchesByRoundRecursive(participants : Profile[] | Match[]) : Match[][]
+	public static createMatchesByRoundRecursive(participants : ProfileWithScore[] | Match[]) : Match[][]
 	{
 		if (participants.length === 1)
 			return [];
@@ -48,7 +52,7 @@ export abstract class	TournamentHelper
 		return matchesByRounds;
 	}
 
-	public static setQualifiedParticipants(qualified : Profile[], participants : Profile[], expectedQualified : number)
+	public static setQualifiedParticipants(qualified : ProfileWithScore[], participants : ProfileWithScore[], expectedQualified : number)
 	{
 		if (qualified.length >= expectedQualified)
 			return;
@@ -63,7 +67,7 @@ export abstract class	TournamentHelper
 
 		if (lastQualifiedIndex === lastWithSameScore)
 		{
-			qualified.push(...participants.splice(0, participantsToQualify))
+			qualified.push(...participants.splice(0, participantsToQualify));
 			participants = [];
 		}
 		else
