@@ -2,7 +2,6 @@ import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager } from "@babylonjs-toolkit/next";
 import { FrontendSceneData } from "../FrontendSceneData";
-import type { GameInfos } from "@shared/ServerMessage";
 import { GameManager } from "@shared/attachedScripts/GameManager";
 import { InputKey } from "@shared/InputKey";
 import { InputManager } from "@shared/attachedScripts/InputManager";
@@ -74,7 +73,10 @@ export class ClientSync extends CustomScriptComponent {
 				this._paddleRight.transform.position.copyFrom(this.xyzToVector3(gameInfos.infos.paddleRightPos));
 			}
 			else if (gameInfos.type === "goal")
+			{
+				this._ball.setBallStartDirection(this.xyzToVector3(gameInfos.infos.newBallDirection));
 				this._gameManager.onGoal(gameInfos.infos.side);
+			}
 		});
 	}
 	

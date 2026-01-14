@@ -18,6 +18,7 @@ export const zodKeysUpdate = zod.object({
 
 export const zodGoal = zod.object({
 	side: zod.enum(["right", "left"]),
+	newBallDirection: zodVector3
 });
 
 export const zodItemsUpdate = zod.object({

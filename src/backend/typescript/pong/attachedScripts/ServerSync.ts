@@ -47,7 +47,8 @@ export class ServerSync extends CustomScriptComponent {
 		const	message : GameInfos = {
 			type: "goal",
 			infos: {
-				side: side
+				side: side,
+				newBallDirection: this._ball.getBallStartDirection()
 			}
 		}
 		this._sceneData.clientProxy.sendMessageToRoom("game-infos", message);
