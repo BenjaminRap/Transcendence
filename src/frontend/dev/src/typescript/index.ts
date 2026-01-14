@@ -5,6 +5,7 @@ import { WriteOnTerminal } from './terminalUtils/writeOnTerminal'
 import { TerminalUtils } from './terminalUtils/terminalUtils'
 import { TerminalUserManagement } from './terminal'
 import { HELP_MESSAGE_NOT_LOG } from './terminalUtils/helpText/help'
+import { ExtProfileBuilder } from "./extprofile"
 
 const url = new URL( window.location.href);
 const path = url.pathname;
@@ -95,8 +96,10 @@ else if (path.startsWith('/profile/')) {
 	}
 	else
 	{
-		// Si le user ==== a son propre username on met ProfileBuilder.buildProfile('') sinon ExtProfileBuilder.buildExtProfile(user)
-		ProfileBuilder.buildProfile(user);
+		if (user === TerminalUserManagement.username)
+			ProfileBuilder.buildProfile('');
+		else
+			ExtProfileBuilder.buildExtProfile(user);
 	}
 }
 else

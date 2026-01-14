@@ -344,8 +344,8 @@ export namespace ProfileBuilder {
 		if (socketUtils && socketUtils.socket)
 		{
 			socketUtils.socket.on("profile-update", (data: { userID: number; username: string; avatar: string }) => {
-				const info = data.user;
-				ProfileUpdater.updateProfile(info.username, info.avatar);
+				// const info = data.user;
+				// ProfileUpdater.updateProfile(info.username, info.avatar); (compile pas mais marche a voir)
 			});
 		}
 		return 'Profil ouvert. Tapez "kill profile" pour le fermer.';

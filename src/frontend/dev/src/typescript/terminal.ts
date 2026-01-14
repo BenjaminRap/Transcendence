@@ -220,8 +220,7 @@ async function profileCommand(args: string[], description: string): Promise<stri
 		result = await ProfileBuilder.buildProfile('');
 	else
 	{
-		// result = await ExtProfileBuilder.buildExtProfile(args[1]);
-		ExtProfileBuilder.buildExtProfile(args[1]);
+		await ExtProfileBuilder.buildExtProfile(args[1]);
 		result = 'Profil ouvert. Tapez "kill profile" pour le fermer.';
 	}
 	return result;

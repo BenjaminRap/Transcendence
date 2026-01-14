@@ -1,5 +1,9 @@
+import type { boolean } from "zod";
 import { ExtendedView } from "./extendedView";
 import { PongUtils } from './terminal'
+import { TerminalUtils } from "./terminalUtils/terminalUtils";
+import { RequestBackendModule } from "./terminalUtils/requestBackend";
+import { WriteOnTerminal } from "./terminalUtils/writeOnTerminal";
 
 
 export { };
@@ -24,7 +28,7 @@ interface Friend {
 	status: string;
 }
 
-const friends: Friend[] = [
+let friends: Friend[] = [
 	{
 		username: "Friend1",
 		linkofavatar: "https://i.pravatar.cc/150?img=5",
@@ -53,7 +57,7 @@ const friends: Friend[] = [
 ];
 
 
-const matches: Match[] = [
+let matches: Match[] = [
 	{
 		state: "Finished",
 		opponent: "Opponent1",
@@ -120,7 +124,8 @@ const matches: Match[] = [
 	}
 ];
 
-const profile = {
+let profile = {
+	id: 1,
 	username: "User",
 	linkofavatar: "https://i.pravatar.cc/150?img=12",
 	mmr: 500,
@@ -150,12 +155,13 @@ function createButtons(profileElement: HTMLElement | null) {
 	if (!profileElement)
 		return;
 	const buttonContainer = document.createElement('div');
-	buttonContainer.className = "grid grid-cols-2 place-content-stretch gap-2";
-	buttonContainer.innerHTML = `<button class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Add Friend</button>
-								<button class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Block User</button>`
+	buttonContainer.className = "flex gap-2";
+	buttonContainer.innerHTML = `<button id="addFriendButton" class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Add Friend</button>`
+								// <button class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Block User</button>`
 								// 	<button class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Change Avatar</button>
 								// <button class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Delete Account</button>
-
+	const addFriendButton = buttonContainer.querySelector('#addFriendButton');
+	addFriendButton?.addEventListener('click', () => sendFriendRequest(profile.id));
 	profileElement.appendChild(buttonContainer);
 }
 
@@ -204,8 +210,52 @@ function createMatchHistory(profileElement: HTMLElement | null) {
 	profileElement.appendChild(matchHistory);
 }
 
+// GET /users/search/username/:username
+async function fetchProfileData(user: string) : Promise <string>
+{
+	const token = TerminalUtils.getCookie('accessToken') || '';
+	if (token === '') {
+		return `Vous n'êtes pas connecté.`;
+	}
+	try {
+		const response = await fetch(`/api/users/search/username/${user}`, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': 'Bearer ' + token
+			},
+		});
+		const data = await response.json();
+		if (data.success) {
+			console.log('data :', data.user[0]);
+			profile.username = data.user[0].username;
+			profile.linkofavatar = data.user[0].avatar;
+			profile.id = data.user[0].id;
+			return "OK";
+		}
+		if (data.message === 'Invalid or expired token') {
+			const refreshed = await RequestBackendModule.tryRefreshToken();
+			if (!refreshed) {
+				return `Vous n'êtes pas connecté.`;
+			}
+			return "OK";
+		}
+		console.error("Error fetching profile data:", data.message);
+		return 'Erreur lors de la récupération des données du profil.';
+	} catch (error) {
+		console.error("Error:", error);
+		return 'Erreur lors de la récupération des données du profil.';
+	}
+}
+
+
 export namespace ExtProfileBuilder {
-	export function buildExtProfile(user: string) {
+	export async function buildExtProfile(user: string) {
+		const result = await fetchProfileData(user);
+		if (result !== "OK") {
+			console.error("Error fetching profile data:", result);
+			return;
+		}
 		const profileElement = document.createElement('div');
 		profileElement.id = "profile";
 		profileElement.className = "p-4 m-0 terminal-font bg-black border-2 border-collapse border-green-500 flex flex-col gap-y-4"
@@ -228,4 +278,44 @@ export namespace ExtProfileBuilder {
 		}
 	}
 	export let isActive = false;
+}
+
+// POST /friend/request/:id
+async function sendFriendRequest(id: number) 
+{
+	const token = TerminalUtils.getCookie('accessToken') || '';
+	if (token === '') {
+		return `Vous n'êtes pas connecté.`;
+	}
+	try {
+		const response = await fetch(`/api/friend/request/${id}`, {
+			method: 'POST',
+			headers: {
+				'Authorization': 'Bearer ' + token
+			},
+		});
+		const data = await response.json();
+		if (data.success) {
+			console.log('data :', data);
+			WriteOnTerminal.printErrorOnTerminal(`Demande d'ami envoyée à ${profile.username}`, 5);
+			return "OK";
+		}
+		if (data.message === 'Invalid or expired token') {
+			const refreshed = await RequestBackendModule.tryRefreshToken();
+			if (!refreshed) {
+				WriteOnTerminal.printErrorOnTerminal(`Vous n'êtes pas connecté.`, 5);
+			}
+			return "OK";
+		}
+		if (data.message === 'Friendship in pending mod')
+		{
+			WriteOnTerminal.printErrorOnTerminal('Votre demande d\'ami est en attente.', 5);
+			return "OK";
+		}
+		console.error("Error fetching profile data:", data.message);
+		WriteOnTerminal.printErrorOnTerminal('Erreur lors de la récupération des données du profil.', 5);
+	} catch (error) {
+		console.error("Error:", error);
+		WriteOnTerminal.printErrorOnTerminal('Erreur lors de la récupération des données du profil.', 5);
+	}
 }
