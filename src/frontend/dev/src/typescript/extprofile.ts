@@ -156,7 +156,7 @@ function createButtons(profileElement: HTMLElement | null) {
 		return;
 	const buttonContainer = document.createElement('div');
 	buttonContainer.className = "flex gap-2";
-	buttonContainer.innerHTML = `<button id="addFriendButton" class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Add Friend</button>`
+	buttonContainer.innerHTML = `<button id="addFriendButton" class=" w-full p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Add Friend</button>`
 								// <button class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Block User</button>`
 								// 	<button class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Change Avatar</button>
 								// <button class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Delete Account</button>

@@ -7,7 +7,6 @@ import { RequestBackendModule } from './terminalUtils/requestBackend';
 import { PongUtils, TerminalFileSystem, TerminalUserManagement, socketUtils } from './terminal'
 import { io } from "socket.io-client";
 import { WriteOnTerminal } from './terminalUtils/writeOnTerminal';
-import { name } from '@babylonjs/gui/2D';
 
 
 export interface GameStats
@@ -214,11 +213,12 @@ function createFriendList(profileElement: HTMLElement | null) {
 		const friend = profile.friends[i];
 		const friendDiv = document.createElement('div');
 		let status;
-		if (friend.isOnline) {
+		if (friend.status === "PENDING")
+			status = "Pending...";
+		else if (friend.isOnline)
 			status = "Online.";
-		} else {
+		else
 			status = "Offline.";
-		}
 		friendDiv.className = "flex items-center px-4 gap-x-4 min-w-0";
 		friendDiv.innerHTML = `
 		<img src="${friend.avatar}" alt="Avatar"
@@ -228,7 +228,7 @@ function createFriendList(profileElement: HTMLElement | null) {
 					<p class="truncate" style="font-size: 10px;">${status}</p>
 				</div>
 		`
-		if (friend.status === "PENDING") {
+		if (friend.status === "PENDING" && friend.requesterId !== profile.id) {
 			const pendingTag = document.createElement('div');
 			pendingTag.className = "flex gap-x-2";
 			pendingTag.innerHTML = `
