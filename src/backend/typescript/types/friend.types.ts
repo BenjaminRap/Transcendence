@@ -4,6 +4,7 @@ export interface FriendProfile
     username:       string,
     avatar:         string,
     isOnline:       boolean,
+    requesterId:    number,
 }
 
 export interface ListFormat

@@ -52,7 +52,7 @@ Accepte une demande d'ami reçue (statut `PENDING` -> `ACCEPTED`).
 #### 🗑️ Supprimer un ami / Annuler une demande
 Supprime une relation d'amitié existante ou annule/refuse une demande en cours.
 
-- **URL** : `PUT /friend/delete/:id`
+- **URL** : `DELETE /friend/delete/:id`
 - **Params** : `id` (integer) - L'ID de l'ami ou de la demande à supprimer.
 
 **Réponses :**
@@ -87,7 +87,8 @@ Récupère la liste de tous les amis confirmés (`ACCEPTED`).
         "id": 42,
         "username": "Alice",
         "avatar": "http://...",
-        "isOnline": true
+        "isOnline": true,
+        "requesterId": 42
       }
     }
   ]
@@ -97,7 +98,7 @@ Récupère la liste de tous les amis confirmés (`ACCEPTED`).
 ---
 
 #### ⏳ Demandes en attente
-Récupère la liste des demandes reçues en attente (`PENDING`).
+Récupère la liste de toutes les demandes d'amis en cours (`PENDING`), qu'elles aient été **envoyées** ou **reçues** par l'utilisateur courant.
 
 - **URL** : `GET /friend/search/pendinglist`
 
@@ -116,9 +117,14 @@ Récupère la liste des demandes reçues en attente (`PENDING`).
         "id": 99,
         "username": "Bob",
         "avatar": "http://...",
-        "isOnline": false
+        "isOnline": false,
+        "requesterId": 99
       }
     }
   ]
 }
 ```
+
+> **Note :** Le champ `requesterId` permet de savoir qui a initié la demande.
+> - Si `user.id === user.requesterId`, la demande vient de cet utilisateur (Reçue).
+> - Si `user.id !== user.requesterId`, vous avez envoyé la demande (Envoyée).

@@ -1,6 +1,7 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { type User, Match } from '@prisma/client';
 import { MatchService } from '../services/MatchService.js';
+import { TournamentService } from '../services/TournamentService.js';
 import { CommonSchema } from '../schemas/common.schema.js';
 import type { StartMatchData, EndMatchData, MatchData, OPPONENT_LEVEL } from '../types/match.types.js';
 import { MatchException, MatchError } from '../error_handlers/Match.error.js';
@@ -13,6 +14,7 @@ export class MatchController {
 	constructor(
 		private matchService: MatchService,
 		private friendService: FriendService,
+		private tournamentService: TournamentService,
 	) {}
 
 
@@ -95,7 +97,7 @@ export class MatchController {
 
 
     // --------------------------------------------------------------------------------- //
-    async startMatch(data: StartMatchData): Promise<{ success: boolean, matchData?: MatchData, message?: string }> {
+    async startMatch(data: StartMatchData): Promise<{ success: boolean, matchId?: number, message?: string }> {
         try {
             const player1 = await this.checkMatchData(data.player1.level, data.player1.id);
             data.player1.id = player1.id;
@@ -108,7 +110,7 @@ export class MatchController {
             const matchId = await this.matchService.startMatch(data.player1, data.player2);
             return { 
                 success: true,
-                matchData: matchData
+                matchId: matchId
             };
         }
         catch (error) {
@@ -121,7 +123,7 @@ export class MatchController {
     }
 
 	// --------------------------------------------------------------------------------- //
-    async endMatch(data: MatchResultData): Promise<{ success: boolean, message?: string }> {
+    async endMatch(data: EndMatchData): Promise<{ success: boolean, message?: string }> {
         try {
             const match = await this.matchService.getMatch(data.matchId);
             if (!match) {
@@ -137,6 +139,11 @@ export class MatchController {
             }
 
             await this.matchService.endMatch(validData, match);
+
+            if (match.tournamentId) {
+                await this.tournamentService.updateMatchResult(match.tournamentId, match.id);
+            }
+
             return { success: true };
         }
         catch (error) {
@@ -265,23 +272,31 @@ export class MatchController {
     // =================================== PRIVATE ==================================== //
 
     // --------------------------------------------------------------------------------- //
-    private validDataMatch(data: MatchResultData, match: Match): { success: boolean, message?: string } {
-        // verifier que les joueurs correspondent
-        // comparer les ids des joueurs dans data avec ceux dans match
+    /**
+     * on doit s'assurer que les IDs des joueurs du match correspondent bien
+     * si on a un ou des joueurs qui sont en Guest le winner ou loser id peut etre null et loser ou winner level non nul 
+     */
+    private validDataMatch(data: EndMatchData, match: Match): { success: boolean, message?: string } {
+        // Normalisation des IDs pour la comparaison (Prisma utilise null, JS utilise undefined)
+        const p1Id = match.player1Id ?? null;
+        const p2Id = match.player2Id ?? null;
+        const winnerId = data.winner.id ?? null;
+        const loserId = data.loser.id ?? null;
 
-        if (match.player1Id === undefined ) {
-            if (match.player1Level)
-            return { success: false, message: 'WinnerId and LoserId must be defined' };
+        // On vérifie si l'un des deux scénarios valides est rencontré :
+        // Scénario A : Player 1 a gagné, Player 2 a perdu
+        const scenarioA = (p1Id === winnerId && p2Id === loserId);
+
+        // Scénario B : Player 1 a perdu, Player 2 a gagné
+        const scenarioB = (p1Id === loserId && p2Id === winnerId);
+
+        if (scenarioA || scenarioB) {
+            return { success: true };
         }
 
-        const player1Match = (match.player1Id === data.winnerId || match.player1Id === data.loserId);
-        const player2Match = (match.player2Id === data.winnerId || match.player2Id === data.loserId);
-
-        if (!player1Match || !player2Match) {
-            return { success: false, message: 'Match data does not correspond to the registered match players' };
-        }
-        
-        return { success: true };
+        return { 
+            success: false, 
+            message: 'Match data (winner/loser IDs) does not correspond to the registered match players' 
+        };
     }
-
 }

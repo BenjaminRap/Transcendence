@@ -25,19 +25,12 @@ export interface StartMatchData {
     player2: PlayerInfo,
 }
 
-export interface EndMatchData
-{
+export interface EndMatchData {
     matchId:	    number,
-    
-    winnerId?:	    number,
-    winnerLevel?:   string,
-    
-    loserId?:	    number,
-    loserLevel?:    string,
-
+    winner:         PlayerInfo,
+    loser:          PlayerInfo,
     scoreWinner:	number,
     scoreLoser:	    number,
-    
     duration:	    number,
 }
 

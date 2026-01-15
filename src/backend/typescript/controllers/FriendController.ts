@@ -89,7 +89,7 @@ export class FriendController {
     }
 
     // ----------------------------------------------------------------------------- //
-    // PUT /friend/delete/:id
+    // DELETE /friend/delete/:id
     async deleteFriend(request: FastifyRequest<{ Params: {id: string} }>, reply: FastifyReply) {
         try {
             const userId = (request as any).user.userId;

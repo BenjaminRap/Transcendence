@@ -1,4 +1,4 @@
-import { PrismaClient, type Friendship, type User } from "@prisma/client"
+import { PrismaClient, type Friendship } from "@prisma/client"
 import { FriendException, FriendError } from "../error_handlers/Friend.error.js";
 import type { ListFormat } from '../types/friend.types.js';
 import { SocketEventController } from "../controllers/SocketEventController.js";
@@ -229,6 +229,7 @@ export class FriendService {
                         username: friend.username,
                         avatar: friend.avatar,
                         isOnline: SocketEventController.isUserOnline(friend.id),
+                        requesterId: friendship.requesterId,
                     }
                 } as ListFormat;
             })

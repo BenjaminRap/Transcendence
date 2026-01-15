@@ -13,7 +13,7 @@ export class UsersService {
     ) {}
 
     // ----------------------------------------------------------------------------- //
-    async getById(id: number, userId: number): Promise<PublicProfile | null> {
+    async getById(id: number, userId: number): Promise<PublicProfile> {
         if ( !await this.checkIfUserExists(userId) ){
             throw new UsersException(UsersError.USER_NOT_FOUND, 'No suscriber found');
         }

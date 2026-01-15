@@ -65,7 +65,7 @@ export class UsersController {
             return reply.status(200).send({
                 success: true,
                 message: 'Profiles successfully retrieved',
-                users
+                user: users
             });
         } catch (error) {
             if (error instanceof UsersException) {

@@ -42,10 +42,12 @@ Récupère les informations du profil de l'utilisateur connecté, incluant les s
       {
         "opponent": { "id": 2, "username": "rival", "avatar": "..." },
         "match": { "id": 100, "status": "FINISHED", "scoreWinner": 5, "scoreLoser": 3 }
-      }
+      },
+      { ... }
     ],
     "friends": [
-      { "id": 3, "username": "friend1", "status": "ACCEPTED", "isOnline": true }
+      { "id": 3, "username": "friend1", "status": "ACCEPTED", "isOnline": true },
+      { ... }
     ]
   }
 }
