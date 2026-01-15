@@ -149,6 +149,8 @@ function updateProfileCard() {
 								<p>Loss: ${profile.loss}</p>
 								<p>W/L: ${(profile.win / (profile.loss + profile.win)).toFixed(2)}</p>
 							</div>`;
+	history.pushState({}, '', `/profile/${profile.username}`);
+
 }
 
 function createProfileCard(profileElement: HTMLElement | null): HTMLElement | void {

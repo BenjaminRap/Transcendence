@@ -615,12 +615,17 @@ async function acceptFriendRequest(id: number): Promise<boolean> {
 			}
 		});
 		if (response.status === 204) {
-			console.log("Friend request accepted (204 No Content)");
+			const friend = profile.friends.find(friend => friend.id === id);
+			if (friend) {
+				friend.status = "ACCEPTED";
+			}
+			sortFriendList();
+			updateFriendDiv();
 			return true;
 		}
 		const data = await response.json();
 		if (data.success) {
-			console.log("Friend request accepted");
+			WriteOnTerminal.printErrorOnTerminal("Friend request accepted");
 			return true;
 		}
 		if (data.message === 'Invalid or expired token') {
