@@ -15,7 +15,7 @@ export type EndData = {
 }
 
 export class GameManager extends CustomScriptComponent {
-	private static readonly _pointsToWin = 1;
+	private static readonly _pointsToWin = 5;
 
 	@Imported(TransformNode) private	_goalLeft! : TransformNode;
 	@Imported(TransformNode) private	_goalRight! : TransformNode;

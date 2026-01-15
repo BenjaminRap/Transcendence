@@ -18,7 +18,6 @@ export class FrontendSceneData extends SceneData
 		havokPlugin : HavokPlugin,
 		public readonly pongHTMLElement : PongGame,
 		public readonly gameType : FrontendGameType,
-		public inputs : readonly ClientInput[],
 		public readonly serverProxy : ServerProxy,
 		public readonly tournament? : LocalTournament
 	) {

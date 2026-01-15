@@ -1,6 +1,7 @@
 import { Observable } from "@babylonjs/core/Misc/observable";
 import { EventsManager } from "@shared/EventsManager";
 import type { Profile } from "@shared/Profile";
+import type { ClientInput } from "./FrontendSceneData";
 
 export class	FrontendEventsManager extends EventsManager
 {
@@ -11,7 +12,7 @@ export class	FrontendEventsManager extends EventsManager
 		super();
 		const additionalEvents = {
 			"show-tournament": new Observable<HTMLElement>,
-			"input-change": new Observable<void>,
+			"input-change": new Observable<ClientInput[]>,
 			"enemy-type-change" : new Observable<[string, string]>,
 			"scene-change" : new Observable<[string, string]>,
 			"set-participants" : new Observable<[Profile, Profile]>,
