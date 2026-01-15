@@ -833,7 +833,7 @@ export namespace Terminal {
 		// true --> socket avec tocken, false socket null 
 		if (!success)
 		{
-			const socket = io("http://localhost:8181/socket.io/", {
+			const socket = io("socket.io/", {
 			auth: {
 				token: null
 			},

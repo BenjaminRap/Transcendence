@@ -1,9 +1,11 @@
 import type { boolean } from "zod";
 import { ExtendedView } from "./extendedView";
-import { PongUtils } from './terminal'
+import { PongUtils, socketUtils } from './terminal'
 import { TerminalUtils } from "./terminalUtils/terminalUtils";
 import { RequestBackendModule } from "./terminalUtils/requestBackend";
 import { WriteOnTerminal } from "./terminalUtils/writeOnTerminal";
+import { ProfileUpdater } from "./profile";
+import type { HtmlElementTexture } from "@babylonjs/core";
 
 
 export { };
@@ -133,22 +135,55 @@ let profile = {
 	loss: 10,
 }
 
+let profileDiv : HTMLElement | null;
 
-function createProfileCard(profileElement: HTMLElement | null) {
+
+
+function updateProfileCard() {
+	if (!profileDiv)
+		return;
+	profileDiv.innerHTML = `<img src="${profile.linkofavatar}" alt="Avatar" class="w-[12vh] h-[12vh] border border-green-500 object-cover"></img>
+							<h1 class="text-center text-[1.5vh]">${profile.username}</h1>
+							<div class="flex gap-[1vw] text-[0.9vh]">
+								<p>Win: ${profile.win}</p>
+								<p>Loss: ${profile.loss}</p>
+								<p>W/L: ${(profile.win / (profile.loss + profile.win)).toFixed(2)}</p>
+							</div>`;
+}
+
+function createProfileCard(profileElement: HTMLElement | null): HTMLElement | void {
 	if (!profileElement)
 		return;
 	const profileCard = document.createElement('div');
-	profileCard.className = "flex flex-col p-4 shadow-lg border border-green-500 align-center justify-center items-center";
-	profileCard.innerHTML = `<img src="${profile.linkofavatar}" alt="Avatar" class="w-24 h-24 border border-green-500 object-cover"></img>
-							<h1 class="text-center">${profile.username}</h1>
-							<div class="flex gap-4 text-xs">
-								<p>MMR: ${profile.mmr}</p>
+	profileCard.className = "flex flex-col px-[2vw] py-[1vh] shadow-lg border border-green-500 items-center h-[19.7%] overflow-hidden";
+	profileCard.innerHTML = `<img src="${profile.linkofavatar}" alt="Avatar" class="w-[12vh] h-[12vh] border border-green-500 object-cover"></img>
+							<h1 class="text-center text-[1.5vh]">${profile.username}</h1>
+							<div class="flex gap-[1vw] text-[0.9vh]">
 								<p>Win: ${profile.win}</p>
 								<p>Loss: ${profile.loss}</p>
 								<p>W/L: ${(profile.win / (profile.loss + profile.win)).toFixed(2)}</p>
 							</div>`;
 	profileElement.appendChild(profileCard);
+	profileDiv = profileCard;
+	return profileCard;
 }
+
+
+// function createProfileCard(profileElement: HTMLElement | null) {
+// 	if (!profileElement)
+// 		return;
+// 	const profileCard = document.createElement('div');
+// 	profileCard.className = "flex flex-col p-4 shadow-lg border border-green-500 align-center justify-center items-center";
+// 	profileCard.innerHTML = `<img src="${profile.linkofavatar}" alt="Avatar" class="w-24 h-24 border border-green-500 object-cover"></img>
+// 							<h1 class="text-center">${profile.username}</h1>
+// 							<div class="flex gap-4 text-xs">
+// 								<p>MMR: ${profile.mmr}</p>
+// 								<p>Win: ${profile.win}</p>
+// 								<p>Loss: ${profile.loss}</p>
+// 								<p>W/L: ${(profile.win / (profile.loss + profile.win)).toFixed(2)}</p>
+// 							</div>`;
+// 	profileElement.appendChild(profileCard);
+// }
 
 
 function createButtons(profileElement: HTMLElement | null) {
@@ -227,7 +262,7 @@ async function fetchProfileData(user: string) : Promise <string>
 		});
 		const data = await response.json();
 		if (data.success) {
-			console.log('data :', data.user[0]);
+			console.log('data :', data.user);
 			profile.username = data.user[0].username;
 			profile.linkofavatar = data.user[0].avatar;
 			profile.id = data.user[0].id;
@@ -268,6 +303,18 @@ export namespace ExtProfileBuilder {
 		document.body.appendChild(profileElement);
 		history.pushState({}, '', `/profile/${user}`);
 		isActive = true;
+
+		if (socketUtils && socketUtils.socket)
+		{
+			socketUtils.socket.on("profile-update", (data : {user: { id: string; username: string; avatar: string }}) => {
+				console.log("Profile updated:", data.user.id, ' : ', data.user.username, ' : ', data.user.avatar);
+				if (parseInt(data.user.id) === profile.id) {
+					profile.username = data.user.username;
+					profile.linkofavatar = data.user.avatar;
+					updateProfileCard();
+				}
+			});
+		}
 	}
 	export function removeExtProfile() {
 		const profileElement = document.getElementById('profile');

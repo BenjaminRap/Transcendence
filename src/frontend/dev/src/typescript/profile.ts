@@ -65,17 +65,37 @@ let profile: SuscriberProfile;
 let profileDiv: HTMLDivElement | null = null;
 
 
+function sortFriendList()
+{
+	// Online > Pending > Offline
+	let pendingFriends = [];
+	let onlineFriends = [];
+	let offlineFriends = [];
+
+	for (const friend of profile.friends) {
+		if (friend.isOnline) {
+			onlineFriends.push(friend);
+		} else if (friend.status === "pending") {
+			pendingFriends.push(friend);
+		} else {
+			offlineFriends.push(friend);
+		}
+	}
+
+	profile.friends = [...onlineFriends, ...pendingFriends, ...offlineFriends];
+	console.log("Sorted friend list:", profile.friends);
+}
+
 
 export namespace ProfileUpdater {
 	export function updateProfile(username: string, linkofavatar: string) {
 		console.log("Updating profile:", username, linkofavatar);
 		profile.username = username;
 		profile.avatar = linkofavatar;
-		updateProfileCard(profile);
+		ProfileUpdater.updateProfileCard(profile);
 	}
-}
 
-function updateProfileCard(profile: SuscriberProfile) {
+	export function updateProfileCard(profile: SuscriberProfile) {
 	if (!profileDiv)
 		return;
 	profileDiv.innerHTML = `<img src="${profile.avatar}" alt="Avatar" class="w-[12vh] h-[12vh] border border-green-500 object-cover"></img>
@@ -85,9 +105,70 @@ function updateProfileCard(profile: SuscriberProfile) {
 								<p>Loss: ${profile.gameStats.losses}</p>
 								<p>W/L: ${(profile.gameStats.wins / (profile.gameStats.losses + profile.gameStats.wins)).toFixed(2)}</p>
 							</div>`;
+	}
+
+	export function updateFriendList(id: number, status: string) {
+		const friend = profile.friends.find(friend => friend.id === id);
+		let online;
+		if (status === "online") {
+			online = true;
+		} else {
+			online = false;
+		}
+		if (friend) {
+			friend.isOnline = online;
+		}
+		sortFriendList();
+		updateFriendDiv();
+	}
+
+	export function updateFriendProfile(userID: number, username: string, avatar: string)
+	{
+		if (userID === profile.id)
+			ProfileUpdater.updateProfile(username, avatar);
+		else
+		{
+			console.log("Salut " + userID)
+			const index = profile.friends.findIndex(friend => friend.id === userID);
+			if (index !== -1) {
+				profile.friends[index].username = username;
+				profile.friends[index].avatar = avatar;
+			}
+			if (index < 4)
+			{
+				sortFriendList();
+				updateFriendDiv();
+			}
+		}
+	}
+
+	export function removeFriend(id: number) {
+		profile.friends = profile.friends.filter(friend => friend.id !== id);
+		sortFriendList();
+		updateFriendDiv();
+	}
 }
 
-function createProfileCard(profileElement: HTMLElement | null) {
+
+function updateFriendDiv()
+{
+	if (!profileDiv)
+		return;
+	const newFriendListElement = createFriendElement();
+	if (!newFriendListElement)
+		return;
+	const oldFriendListElement = document.getElementById('friend-list');
+	if (oldFriendListElement && oldFriendListElement.parentElement) {
+		oldFriendListElement.parentElement.replaceChild(newFriendListElement, oldFriendListElement);
+	} else if (oldFriendListElement) {
+		oldFriendListElement.remove();
+		profileDiv.appendChild(newFriendListElement);
+	} else {
+		profileDiv.appendChild(newFriendListElement);
+	}
+}
+
+function createProfileCard(profileElement: HTMLElement | null): HTMLElement | void {
 	if (!profileElement)
 		return;
 	const profileCard = document.createElement('div');
@@ -101,10 +182,11 @@ function createProfileCard(profileElement: HTMLElement | null) {
 							</div>`;
 	profileElement.appendChild(profileCard);
 	profileDiv = profileCard;
+	return profileCard;
 }
 
 
-function createButtons(profileElement: HTMLElement | null) {
+function createButtons(profileElement: HTMLElement | null): HTMLElement | void {
 	if (!profileElement)
 		return;
 	const buttonContainer = document.createElement('div');
@@ -122,9 +204,10 @@ function createButtons(profileElement: HTMLElement | null) {
 	const deleteAccountButton = buttonContainer.querySelector('#deleteAccountButton');
 	deleteAccountButton?.addEventListener('click', DeleteAccount);
 	profileElement.appendChild(buttonContainer);
+	return buttonContainer;
 }
 
-function createMatchHistory(profileElement: HTMLElement | null) {
+function createMatchHistory(profileElement: HTMLElement | null): HTMLElement | void {
 	if (!profileElement)
 		return;
 	const matchHistory = document.createElement('div');
@@ -190,25 +273,17 @@ function createMatchHistory(profileElement: HTMLElement | null) {
 	}
 	matchHistory.appendChild(matchElement);
 	profileElement.appendChild(matchHistory);
+	return matchHistory;
 }
 
-function createFriendList(profileElement: HTMLElement | null) {
-	if (!profileElement)
-		return;
-	const friendList = document.createElement('div');
-	friendList.className = "flex flex-col h-[28.6%]";
-	friendList.innerHTML = `
-		<div class="flex w-full place-content-between">
-			<p class="text-center">Friends</p>
-			<button id="moreFriends" class="cursor-pointer hover:underline hover:underline-offset-2">View More</button>
-		</div>
-	`
-	const moreFriendsButton = friendList.querySelector('#moreFriends');
-	moreFriendsButton?.addEventListener('click', () => {
-		ExtendedView.makeExtendedView('friend', '');
-	});
+
+
+
+function createFriendElement() : HTMLElement
+{
 	const friendElement = document.createElement('div');
 	friendElement.className = "border border-green-500 py-4 flex flex-col gap-y-4 h-full";
+	friendElement.id = "friend-list";
 	for (let i = 0; i < Math.min(profile.friends.length, 4); i++) {
 		const friend = profile.friends[i];
 		const friendDiv = document.createElement('div');
@@ -260,9 +335,28 @@ function createFriendList(profileElement: HTMLElement | null) {
 		}
 		friendElement.appendChild(friendDiv);
 	}
+	return friendElement;
+}
 
+function createFriendDiv(profileElement: HTMLElement | null): HTMLElement | void {
+	if (!profileElement)
+		return;
+	const friendList = document.createElement('div');
+	friendList.className = "flex flex-col h-[28.6%]";
+	friendList.innerHTML = `
+		<div class="flex w-full place-content-between">
+			<p class="text-center">Friends</p>
+			<button id="moreFriends" class="cursor-pointer hover:underline hover:underline-offset-2">View More</button>
+		</div>
+	`
+	const moreFriendsButton = friendList.querySelector('#moreFriends');
+	moreFriendsButton?.addEventListener('click', () => {
+		ExtendedView.makeExtendedView('friend', '');
+	});
+	const friendElement = createFriendElement();
 	friendList.appendChild(friendElement);
 	profileElement.appendChild(friendList);
+	return friendList;
 }
 
 async function fetchProfileData(user: string): Promise<string> {
@@ -312,17 +406,24 @@ export namespace ProfileBuilder {
 		createProfileCard(profileElement);
 		createButtons(profileElement);
 		createMatchHistory(profileElement);
-		createFriendList(profileElement);
-		
+		createFriendDiv(profileElement);
+
 		document.body.appendChild(profileElement);
 		history.pushState({}, '', `/profile/${user}`);
 		isActive = true;
 		if (socketUtils && socketUtils.socket)
 		{
-			socketUtils.socket.on("profile-update", (data: { userID: number; username: string; avatar: string }) => {
-				// const info = data.user;
-				// ProfileUpdater.updateProfile(info.username, info.avatar); (compile pas mais marche a voir)
+			socketUtils.socket.on("profile-update", (data : {user: { id: string; username: string; avatar: string }}) => {
+				console.log("Profile updated:", data.user.id);
+				ProfileUpdater.updateFriendProfile(parseInt(data.user.id), data.user.username, data.user.avatar);
 			});
+			socketUtils.socket.on("user-status-change", (data: { userId: string; status: string }) => {
+				ProfileUpdater.updateFriendList(parseInt(data.userId), data.status);
+			});
+			// friend-status-update
+			// Ajouter / Remove a profile.friends > Sort > Rebuild
+
+
 		}
 		return 'Profil ouvert. Tapez "kill profile" pour le fermer.';
 	}
@@ -505,7 +606,6 @@ function DeleteAccount() {
 	});
 }
 
-	// PUT /friend/accept/:id
 async function acceptFriendRequest(id: number): Promise<boolean> {
 	try {
 		const response = await fetch(`/api/friend/accept/${id}`, {
@@ -538,7 +638,6 @@ async function acceptFriendRequest(id: number): Promise<boolean> {
 	}
 }
 
-// PUT /friend/delete/:id
 async function removeFriend(id: number): Promise<boolean> {
 	try {
 		const response = await fetch(`/api/friend/delete/${id}`, {
@@ -548,12 +647,13 @@ async function removeFriend(id: number): Promise<boolean> {
 			}
 		});
 		if (response.status === 204) {
-			console.log("Friend removed successfully (204 No Content)");
+			console.log("Friend removed successfully");
+			ProfileUpdater.removeFriend(id);
 			return true;
 		}
 		const data = await response.json();
 		if (data.success) {
-			console.log("Friend removed successfully");
+
 			return true;
 		}
 		if (data.message === 'Invalid or expired token') {
