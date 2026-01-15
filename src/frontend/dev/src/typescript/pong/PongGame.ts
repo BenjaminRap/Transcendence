@@ -125,8 +125,8 @@ export class PongGame extends HTMLElement {
 		await this.changeScene(sceneName, "Bot");
 		const	sceneData = getFrontendSceneData(this._scene!);
 
-		this.setInputs(sceneData, 0);
 		await sceneData.readyPromise.promise;
+		this.setInputs(sceneData, 0);
 		sceneData.events.getObservable("game-start").notifyObservers();
 	}
 
@@ -140,8 +140,8 @@ export class PongGame extends HTMLElement {
 		await this.changeScene(sceneName, "Local", tournament);
 		const	sceneData = getFrontendSceneData(this._scene!);
 
-		this.setInputs(sceneData, 0, 1);
 		await sceneData.readyPromise.promise;
+		this.setInputs(sceneData, 0, 1);
 		if (tournament)
 			tournament.start(sceneData.events);
 		else
@@ -161,8 +161,8 @@ export class PongGame extends HTMLElement {
 			await this.changeScene(sceneName, "Multiplayer");
 			const	sceneData = getFrontendSceneData(this._scene!);
 
-			this.setInputs(sceneData, gameInit.playerIndex);
 			await sceneData.readyPromise.promise;
+			this.setInputs(sceneData, gameInit.playerIndex);
 			this._serverProxy.setReady();
 			const	participants = gameInit.participants as [Profile, Profile];
 			sceneData.events.getObservable("set-participants").notifyObservers(participants);

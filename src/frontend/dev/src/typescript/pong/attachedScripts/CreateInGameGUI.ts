@@ -14,7 +14,7 @@ import { Imported } from "@shared/ImportedDecorator";
 import type { ThemeName } from "../menuStyles";
 import { MatchOpponentsGUI } from "../gui/MatchOpponentsGUI";
 import { TournamentWinnerGUI } from "../gui/TournamentWinnerGUI";
-import { initMenu, type IGUI, type IGUIInputsType } from "../gui/IGUI";
+import { initMenu } from "../gui/IGUI";
 
 export class CreateInGameGUI extends CustomScriptComponent {
 	@Imported("InputManager") private _inputManager! : InputManager;
@@ -99,6 +99,9 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		this._sceneData.events.getObservable("tournament-end").add((winner) => { 
 			this._tournamentWinnerGUI.setWinner(winner);
 			this.switchToGUI(this._tournamentWinnerGUI);
+		});
+		this._sceneData.events.getObservable("input-change").add(clientInputs => {
+			this._matchOpponentsGUI.setInputs(clientInputs);
 		});
 	}
 
