@@ -83,7 +83,7 @@ export class TournamentController {
         if (data.participants.length > this.tournamentLimit) {
             return [-1];
         }
-        this.tournamentService.createTournament(data);
+        // this.tournamentService.createTournament(data);
         return  [0];
     }
 

@@ -25,6 +25,9 @@ model User {
   matchesWons       Match[]   @relation("matchWinner")
   matchesLoses      Match[]   @relation("matchLoser")
 
+  matchesAsPlayer1  Match[]   @relation("Player1")
+  matchesAsPlayer2  Match[]   @relation("Player2")
+
   tournamentsCreated       Tournament[]     @relation("tournamentCreator")
   tournamentParticipations TournamentParticipant[]
 }
@@ -50,12 +53,32 @@ model Friendship {
 // -------------------------------------------------------------------------------------------- //
 
 model Match {
-  id          Int           @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
+  
+  // Nouveau champ pour gérer le flux : IN_PROGRESS (en cours), FINISHED (terminé)
+  status      String    @default("IN_PROGRESS")
 
-  createdAt   DateTime      @default(now())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  winner      User?    @relation("matchWinner", fields: [winnerId], references: [id], onDelete: SetNull)
+  // --- DEFINITION DES JOUEURS (Au moment de la création du match) ---
+
+  // Joueur 1 (Soit un User ID, soit un niveau/alias IA/Guest)
+  player1Id         Int?
+  player1           User?     @relation("Player1", fields: [player1Id], references: [id], onDelete: SetNull)
+  player1Level      String?
+
+  // Joueur 2
+  player2Id         Int?
+  player2           User?     @relation("Player2", fields: [player2Id], references: [id], onDelete: SetNull)
+  player2Level      String?
+
+
+  // --- RESULTATS (Remplis uniquement quand status = FINISHED) ---
+
+  // Le gagnant doit correspondre logiciellement à player1 ou player2
   winnerId    Int?
+  winner      User?    @relation("matchWinner", fields: [winnerId], references: [id], onDelete: SetNull)
   winnerLevel String?
 
   loserId     Int?
@@ -64,11 +87,12 @@ model Match {
 
   scoreWinner Int     @default(0)
   scoreLoser  Int     @default(0)
-  duration    Int     @default(0)
+  duration    Int     @default(0) // En secondes a calculer entre le temps de createdAt et le moment ou on enregistre le resultat
 
   tournament   Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   tournamentId Int?
 }
+
 // -------------------------------------------------------------------------------------------- //
 
 model Tournament {
@@ -86,14 +110,15 @@ model Tournament {
   participants TournamentParticipant[]
   matches      Match[]
 }
+
 // -------------------------------------------------------------------------------------------- //
 
 model TournamentParticipant {
   id            Int       @id @default(autoincrement())
   alias         String
 
-  user          User      @relation(fields: [userId], references: [id], onDelete: SetNull)
-  userId        Int
+  user          User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId        Int?
 
   finalRank     Int?
 

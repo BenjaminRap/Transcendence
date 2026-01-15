@@ -1,5 +1,5 @@
 import type { GameStats } from "./match.types"
-import type { Match, Friendship } from "@prisma/client";
+import type { Match } from "@prisma/client";
 
 export interface UpdateData
 {
@@ -32,8 +32,8 @@ export interface Friend
 
 export interface MatchSummary
 {
-        opponent: { id: string, username: string, avatar: string,} | null,
-        match: Match | null,
+    opponent: { id: string, username: string, avatar: string, isFriend: boolean } | null,
+    match: Match | null,
 }
 
 export interface SuscriberProfile

@@ -19,12 +19,14 @@ export class FriendController {
             }
            
             // check users existance; their connection; create the friend request
+            // reurn the user 
             const userId = (request as any).user.userId;
-            await this.friendService.createFriendRequest(Number(friendId.data), Number(userId));
+            const userProfile = await this.friendService.createFriendRequest(Number(friendId.data), Number(userId));
 
 			// notify the friend that a request has been sent
 			SocketEventController.sendToUser(Number(friendId.data), 'friend-status-update', {
-				fromUserId: Number(userId), status: 'PENDING'
+				requester: userProfile,
+                status: 'PENDING'
 			});
     
             return reply.status(201).send({
@@ -60,11 +62,11 @@ export class FriendController {
             }
 
             // check users existance; their connection; update the friendship status
-            await this.friendService.acceptFriendRequest(Number(friendId.data), Number(userId));
+            const userProfile = await this.friendService.acceptFriendRequest(Number(friendId.data), Number(userId));
 
 			// notify friendship acceptance to friend
 			SocketEventController.sendToUser(Number(friendId.data), 'friend-status-update', {
-				userId: Number(userId), status: 'ACCEPTED'
+				friendProfile: userProfile, status: 'ACCEPTED'
 			});
 
             return reply.status(204).send();

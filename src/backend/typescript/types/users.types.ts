@@ -7,12 +7,6 @@ export interface PublicProfile
     avatar:     string,
     username:   string,
 	stats: 		GameStats,
-	lastMatchs: Match[]
-}
-
-export interface UserSearchResult
-{
-	id:       number,
-	username: string,
-	avatar:   string
+	lastMatchs: Match[],
+    isFriend:   boolean
 }

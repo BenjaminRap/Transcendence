@@ -1,236 +1,146 @@
-**GET suscriber/profile**
+# 👤 Subscriber API Documention
 
-_Description :_ renvoie le profile de l'utilisateur courant
+Cette API permet de gérer le profil de l'utilisateur (récupération, mise à jour, suppression).
 
-_Mandatory headers :_
-  Content-Type:   application/json,
-  Authorization:  Bearer <TOKEN>
+## 🔒 Authentication
 
-_Possibles responses:_
+Tous les endpoints nécessitent une authentification via **Bearer Token**.
 
-✅ 200 Ok
-  {
-    success: true,
-    message: 'Profile retrieved successfully',
-    user: SanitizedUser {
-        id:         string,
-        avatar:     string,
-        username:   string,
-        gameStats:  GameStats,
-        lastMatchs: MatchSummary[],
-        friends:    Friend[],
-    }
-  }
+| Header | Type | Value |
+| :--- | :--- | :--- |
+| `Authorization` | String | `Bearer <YOUR_JWT_TOKEN>` |
+| `Content-Type` | String | `application/json` (sauf pour l'upload d'avatar) |
 
-❌ 401 Unauthorized :
-  {w
-    "success": false,
-    "message": "Invalid or missing token"
-  }
+---
 
-❌ 404 Not Found :
-  {
-    "success": false,
-    "message": "User not found"
-  }
+## 📡 Endpoints
 
-❌ 500 Internal Server Error :
-  {
-    "success": false,
-    "message": "Internal Server Error"
-  }
+### 1. Gestion du Profil
 
--------------------------------------------------------------------------------------------------------------------------
+#### 👤 Récupérer son profil
+Récupère les informations du profil de l'utilisateur connecté, incluant les statistiques et les amis.
 
-**PUT suscriber/update/password**
+- **URL** : `GET /suscriber/profile`
 
-_Description :_ permet de changer de mot de passe de l'utilisateur
+**Réponses :**
 
-_Mandatory headers :_
-  Content-Type: application/json,
-  Authorization: Bearer <TOKEN>
-
-_Body :_ JSON
-  {
-    "currentPassword":    string
-    "newPassword":        string  -> "doit respecter les regles du mot de passe valide"
-    "confirmNewPassword": string  -> "doit etre similaire a newPassword"
-  }
-
-_Possibles responses:_
-
-✅ 200 OK
+**200 OK**
+```json
 {
-    success: true,
-}
-
-❌ 401 Unauthorized :
-  {
-    "success": false,
-    "message": "Invalid or missing token in the header"
-  }
-
-❌ 400 Bad Request :
-  {
-    "success": false,
-    "message": "mauvais format password, manque ou mauvais confirmPassword, confirmChoice absent ou false"
-  }
-
-❌ 404 Not Found :
-  {
-    "success": false,
-    "message": "User not found"
-  }
-
-❌ 409 Conflict :
-  {
-    "success": false,
-    "message": "password similar to the current one or invalid_credential (mauvais current password)"
-    "redirectTo": '/suscriber/updatepassword'
-  }
-
-❌ 500 Internal Server Error :
-  {
-    "success": false,
-    "message": "Internal Server Error"
-  }
-
--------------------------------------------------------------------------------------------------------------------------
-
-**PUT suscriber/update/username**
-
-_Description :_ permet d'update username
-
-_Mandatory headers :_
-  Content-Type: application/json,
-  Authorization: Bearer <TOKEN>
-
-_Body :_ JSON
-  {
-    "username": string -> "new username"
-  }
-
-_Possibles responses:_
-
-✅ 200 Ok
-  {
-    success:  true,
-    message: 'Profile successfully updated',
-    redirectTo: '/suscriber/profile',
-    user: {
-      id,
-      username,
-      avatar,
-    }
-  }
-
-❌ 401 Unauthorized :
-  {
-    "success": false,
-    "message": "Invalid or missing token in the header",
-  }
-
-❌ 400 Bad Request :
-  {
-    "success": false,
-    "message": "Missing or invalid mandatory body content"
-    "redirectTo": '/suscriber/profile'
-  }
-
-❌ 404 Not Found :
-  {
-    "success": false,
-    "message": "User not found"
-  }
-
-❌ 409 Conflict :
-  {
-    "success": false,
-    "message": "User with this email or username already exist",
-    "redirectTo": '/suscriber/updateprofile'
-  }
-
-❌ 500 Internal Server Error :
-  {
-    "success": false,
-    "message": "Internal Server Error"
-  }
-
--------------------------------------------------------------------------------------------------------------------------
-
-**PUT suscriber/delete/account**
-
-_Description :_ permet de supprimer son profile
-
-_Mandatory headers :_
-  Content-Type: application/json,
-  Authorization: Bearer <TOKEN>
-
-_Possibles responses:_
-
-✅ 204 No Content
-
-❌ 401 Unauthorized :
-  {
-    "success": false,
-    "message": "Invalid or missing token in the header"
-  }
-
-❌ 404 Not Found :
-  {
-    "success": false,
-    "message": "User not found"
-  }
-
-❌ 500 Internal Server Error :
-  {
-    "success": false,
-    "message": "Internal Server Error"
-  }
-
--------------------------------------------------------------------------------------------------------------------------
-
-**GET suscriber/getstats**
-
-_Description :_ recupere les stats en match de l'utilisateur
-
-_Mandatory headers :_
-  Content-Type: application/json,
-  Authorization: Bearer <TOKEN>
-
-_Possibles responses:_
-
-✅ 200 Ok
-{
-  success:  true,
-  message:  "stats retrieved",
-  stats: {
-    gamesPlayed: number,
-    gamesWon:    number,
-    winRate:     number, 
+  "success": true,
+  "message": "Profile successfully retrieved",
+  "user": {
+    "id": 1,
+    "username": "user1",
+    "avatar": "http://...",
+    "gameStats": {
+      "gamesPlayed": 10,
+      "gamesWon": 5,
+      "winRate": 50
+    },
+    "lastMatchs": [
+      {
+        "opponent": { "id": 2, "username": "rival", "avatar": "..." },
+        "match": { "id": 100, "status": "FINISHED", "scoreWinner": 5, "scoreLoser": 3 }
+      }
+    ],
+    "friends": [
+      { "id": 3, "username": "friend1", "status": "ACCEPTED", "isOnline": true }
+    ]
   }
 }
+```
 
-❌ 401 Unauthorized :
-  {
-    "success": false,
-    "message": "Invalid or missing token in the header"
-  }
+| Code | Description | Body Example |
+| :--- | :--- | :--- |
+| **401** | ❌ Non autorisé | `{ "success": false, "message": "Invalid or missing token" }` |
+| **404** | ❌ User introuvable | `{ "success": false, "message": "User not found" }` |
+| **500** | ⚠️ Erreur serveur | `{ "success": false, "message": "Internal server error" }` |
 
-❌ 400 Bad Request :
-  {
-    "success":    false,
-    "message":    "",
-  }
+---
 
-❌ 404 Not Found :
-  {
-    "success": false,
-    "message": "User not found"
-  }
+#### ✏️ Modifier le nom d'utilisateur
+Met à jour le nom d'utilisateur.
 
-❌ 500 Internal Server Error :
-  {
-    "success": false,
-    "message": "Internal Server Error"
-  }
+- **URL** : `PUT /suscriber/update/username`
+- **Body** : `{ "username": "NewUsername" }`
+
+**Réponses :**
+
+| Code | Description | Body Example |
+| :--- | :--- | :--- |
+| **200** | ✅ Mis à jour | `{ "success": true, "message": "Profile successfully updated", "redirectTo": "...", "user": { ... } }` |
+| **400** | ⚠️ Erreur input | `{ "success": false, "message": "Invalid input", "redirectTo": "..." }` |
+| **409** | ⚠️ Conflit | `{ "success": false, "message": "User with this username already exist", "redirectTo": "..." }` |
+| **500** | ⚠️ Erreur serveur | `{ "success": false, "message": "Internal server error" }` |
+
+---
+
+#### 🔑 Modifier le mot de passe
+Met à jour le mot de passe de l'utilisateur.
+
+- **URL** : `PUT /suscriber/update/password`
+- **Body** : `{ "currentPassword": "...", "newPassword": "...", "confirmNewPassword": "..." }`
+
+**Réponses :**
+
+| Code | Description | Body Example |
+| :--- | :--- | :--- |
+| **200** | ✅ Mis à jour | `{ "success": true }` |
+| **400** | ⚠️ Erreur input | `{ "success": false, "message": "Invalid input", "redirectTo": "..." }` |
+| **409** | ⚠️ Conflit | `{ "success": false, "message": "invalid_credential", "redirectTo": "..." }` |
+| **500** | ⚠️ Erreur serveur | `{ "success": false, "message": "Internal server error" }` |
+
+---
+
+### 2. Gestion de l'Avatar
+
+#### 🖼️ Modifier l'avatar
+Met à jour l'image de profil. Extrait le fichier du `multipart/form-data`.
+
+- **URL** : `PUT /suscriber/update/avatar`
+- **Header** : `Content-Type: multipart/form-data`
+- **Body** : Form-data avec le champ `avatar`.
+
+**Réponses :**
+
+| Code | Description | Body Example |
+| :--- | :--- | :--- |
+| **200** | ✅ Mis à jour | `{ "success": true, "message": "Avatar successfully updated", "user": { ... } }` |
+| **400** | ⚠️ Erreur | `{ "success": false, "message": "Error during avatar normalization or upload" }` |
+| **500** | ⚠️ Erreur serveur | `{ "success": false, "message": "Internal server error" }` |
+
+---
+
+#### 🗑️ Supprimer l'avatar
+Supprime l'avatar personnalisé et remet l'avatar par défaut.
+
+- **URL** : `DELETE /suscriber/delete/avatar`
+
+**Réponses :**
+
+| Code | Description | Body |
+| :--- | :--- | :--- |
+| **204** | ✅ Supprimé | *(Aucun contenu)* |
+| **404** | ❌ User introuvable | `{ "success": false, "message": "User not found" }` |
+| **500** | ⚠️ Erreur serveur | `{ "success": false, "message": "Internal server error" }` |
+
+---
+
+### 3. Suppression du Compte
+
+#### 💀 Supprimer le compte
+Supprime définitivement le compte utilisateur.
+
+- **URL** : `DELETE /suscriber/delete/account`
+
+**Réponses :**
+
+| Code | Description | Body |
+| :--- | :--- | :--- |
+| **204** | ✅ Supprimé | *(Aucun contenu)* |
+| **401** | ❌ Non autorisé | `{ "success": false, "message": "Invalid or missing token" }` |
+| **404** | ❌ User introuvable | `{ "success": false, "message": "User not found" }` |
+| **500** | ⚠️ Erreur serveur | `{ "success": false, "message": "Internal server error" }` |
+
+

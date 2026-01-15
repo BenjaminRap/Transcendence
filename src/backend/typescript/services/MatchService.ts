@@ -1,12 +1,43 @@
-import type { PrismaClient, User } from '@prisma/client';
-import type { GameStats, MatchHistoryEntry } from '../types/match.types.js';
-import type { MatchData } from '../types/match.types.js';
+import type { PrismaClient, Match } from '@prisma/client';
+import type { GameStats, MatchHistoryEntry, MatchData } from '../types/match.types.js';
+import type { EndMatchData } from '../types/match.types.js';
+import type { PlayerInfo } from '../types/match.types.js';
 import { number } from 'zod';
 
 export class MatchService {
 	constructor(
 		private prisma: PrismaClient,
 	) {}
+
+	// ----------------------------------------------------------------------------- //
+    async startMatch(player1: PlayerInfo, player2: PlayerInfo): Promise<number> {
+        const match = await this.prisma.match.create({
+            data: {
+                player1Id: player1.id,
+                player1Level: player1.level,
+                player2Id: player2.id,
+                player2Level: player2.level,
+            }
+        });
+        return match.id;
+    }
+
+	// ----------------------------------------------------------------------------- //
+    async endMatch(matchData: EndMatchData, match: Match): Promise<void> {
+
+        await this.prisma.match.update({
+            where: { id: matchData.matchId as number },
+            data: {
+                winnerId: matchData.winnerId,
+                loserId: matchData.loserId,
+                winnerLevel: matchData.winnerLevel,
+                loserLevel: matchData.loserLevel,
+                scoreWinner: matchData.scoreWinner,
+                scoreLoser: matchData.scoreLoser,
+                duration: matchData.duration,
+            }
+        });
+    }
 
 	// ----------------------------------------------------------------------------- //
 	async registerMatch(matchData: MatchData): Promise<number>{
@@ -27,7 +58,7 @@ export class MatchService {
 	} 
 
 	// ----------------------------------------------------------------------------- //
-    async registerTournamentMatch(matchData: MatchData, tournamentId: number ): Promise<number>{
+    async registerTournamentMatch(matchData: EndMatchData, tournamentId: number ): Promise<number>{
         const match = await this.prisma.match.create({
             data: {
                 winnerId: matchData.winnerId,
@@ -44,12 +75,15 @@ export class MatchService {
     }
 
 	// ----------------------------------------------------------------------------- //
-	async thisMatchExists(matchId: number): Promise<boolean> {
-		const match = await this.prisma.match.findUnique({
-			where: { id: matchId },
-			select: { id: true }
+    /**
+     * 
+     * peut etre qu'il faudra recuperer les users pour mettre a jour leurs stats via websocket
+     * 
+     */
+	async getMatch(matchId: number): Promise<Match | null> {
+		return await this.prisma.match.findUnique({
+			where: { id: matchId }
 		});
-		return match !== null;
     }
 
 	// ----------------------------------------------------------------------------- //

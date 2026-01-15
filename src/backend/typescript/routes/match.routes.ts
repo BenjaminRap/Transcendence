@@ -9,13 +9,8 @@ export function matchRoutes(
     controller: MatchController,
     middleware: {
         auth: AuthMiddleware,
-        header: HeaderMiddleware
     }
 ) {
-    fastify.post<{ Body: MatchData }>('/register', {
-        preHandler: middleware.header.checkGameSecret,
-    }, controller.registerMatch.bind(controller));
-
     fastify.get('/history', {
         preHandler: middleware.auth.authenticate,
     }, controller.getMatchHistory.bind(controller));

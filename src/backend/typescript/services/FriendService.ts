@@ -2,6 +2,7 @@ import { PrismaClient, type Friendship, type User } from "@prisma/client"
 import { FriendException, FriendError } from "../error_handlers/Friend.error.js";
 import type { ListFormat } from '../types/friend.types.js';
 import { SocketEventController } from "../controllers/SocketEventController.js";
+import type { FriendProfile } from "../types/friend.types.js";
 
 export class FriendService {
     constructor(
@@ -9,7 +10,7 @@ export class FriendService {
     ) {}
 
     // ----------------------------------------------------------------------------- //
-    async createFriendRequest(friendId: number, userId: number) {
+    async createFriendRequest(friendId: number, userId: number): Promise<FriendProfile> {
         if (friendId == userId)
             throw new FriendException(FriendError.INVALID_ID, 'Impossible to create this bond of friendship')
 		
@@ -26,11 +27,16 @@ export class FriendService {
                 throw new FriendException(FriendError.PENDING, FriendError.PENDING);
         }
 
-        await this.prisma.friendship.create({ data: {requesterId: Number(userId), receiverId: Number(friendId)} });        
+        await this.prisma.friendship.create({ data: {requesterId: Number(userId), receiverId: Number(friendId)} });
+        
+        const user = await this.getById(userId);
+        user.isOnline = SocketEventController.isUserOnline(userId);
+        
+        return user;
     }
 
     // ----------------------------------------------------------------------------- //
-    async acceptFriendRequest(friendId: number, userId: number) {
+    async acceptFriendRequest(friendId: number, userId: number): Promise<FriendProfile> {
         if (friendId == userId)
             throw new FriendException(FriendError.INVALID_ID, "the user can't accept its own friend request");
 
@@ -53,6 +59,11 @@ export class FriendService {
             where: { id: friendship.id },
             data: { status: 'ACCEPTED' }
         });
+
+        const user = await this.getById(userId);
+        user.isOnline = SocketEventController.isUserOnline(userId);
+        
+        return user;
     }
 
     // ----------------------------------------------------------------------------- //
@@ -97,7 +108,7 @@ export class FriendService {
         });
 
         if (friendList.length === 0)
-            throw new FriendException(FriendError.USR_NOT_FOUND, "No friends found");
+            return [];
 
         // returns the formated friend list
         return (await this.formatList(friendList, userId) as ListFormat[]);
@@ -152,17 +163,35 @@ export class FriendService {
         });
 
         if (pendingList.length === 0)
-            throw new FriendException(FriendError.USR_NOT_FOUND, "No pending friends found");
+            return [];
 
         return (await this.formatList(pendingList, userId) as ListFormat[]);
     }
-	
-	// ----------------------------------------------------------------------------- //
-	async getById(id: number): Promise<User | null> {
-		return await this.prisma.user.findUnique({ where: { id } });
-	}
 
+    // ----------------------------------------------------------------------------- //
+    async isFriend(friendId: number, userId: number): Promise<boolean> {
+        if ( await this.checkId(friendId) == false || await this.checkId(userId) == false )
+            throw new FriendException(FriendError.USR_NOT_FOUND, FriendError.USR_NOT_FOUND);
+
+        const friendship = await this.getExistingLink(friendId, userId);
+        if (friendship && friendship.status === 'ACCEPTED')
+            return true;
+        return false;
+    }
+	
 	// ================================== PRIVATE ================================== //
+
+    // ----------------------------------------------------------------------------- //
+    private async getById(id: number): Promise<FriendProfile> {
+        return await this.prisma.user.findUnique({
+            where: { id },
+            select: {
+                id: true,
+                username: true,
+                avatar: true,
+            }
+        }) as FriendProfile;
+    }
 
     // ----------------------------------------------------------------------------- //
     private async checkId(id: number): Promise<boolean> {

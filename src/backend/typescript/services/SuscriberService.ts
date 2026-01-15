@@ -9,12 +9,14 @@ import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.
 import path from "path";
 import { SocketEventController } from "../controllers/SocketEventController.js";
 import type { Friend, MatchSummary } from "../types/suscriber.types.js";
+import { FriendService } from "./FriendService.js";
 
 export class SuscriberService {
     constructor(
         private prisma: PrismaClient,
         private passwordHasher: PasswordHasher,
-        private fileService: FileService
+        private fileService: FileService,
+        private friendService: FriendService,
     ) {}
     private api_url = process.env.API_URL || 'https://localhost:8080/api';
     private default_avatar_filename = 'avatarDefault.webp';
@@ -81,7 +83,7 @@ export class SuscriberService {
             throw new SuscriberException(SuscriberError.INVALID_CREDENTIALS, SuscriberError.INVALID_CREDENTIALS);
         }
 
-        if (user.password === newPassword) {
+        if (await this.passwordHasher.verify(newPassword, user.password)) {
             throw new SuscriberException(SuscriberError.PASSWD_ERROR, SuscriberError.PASSWD_ERROR);
         }
 
@@ -243,7 +245,8 @@ export class SuscriberService {
                 opponent: opponentObj ? {
                     id: opponentObj.id.toString(),
                     username: opponentObj.username,
-                    avatar: opponentObj.avatar
+                    avatar: opponentObj.avatar,
+                    isFriend: this.friendService.isFriend(opponentObj.id, match.userId)
                 } : null, // Cas où l'adversaire a supprimé son compte
                 match: match as Match,
             } as MatchSummary;

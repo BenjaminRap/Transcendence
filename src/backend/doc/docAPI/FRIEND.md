@@ -1,222 +1,124 @@
-**POST friend/request/:id**
+# 🤝 Friend API Documention
 
-_Description :_ envoie une demande d'ami
+Cette API permet de gérer les relations d'amitié entre utilisateurs.
 
-_Mandatory headers :_
-  Content-Type:   application/json,
-  Authorization:  Bearer <TOKEN>
+## 🔒 Authentication
 
-_Mandatory url param :_
-	id:
+Tous les endpoints nécessitent une authentification via **Bearer Token**.
 
-_Possibles responses:_
+| Header | Type | Value |
+| :--- | :--- | :--- |
+| `Authorization` | String | `Bearer <YOUR_JWT_TOKEN>` |
+| `Content-Type` | String | `application/json` |
 
-✅ 201 Created
-  {
-    success: true,
-    message: 'Friend request successfully sent'
-  }
+---
 
-❌ 401 Unauthorized :
-  {
-    "success": false,
-    "message": "Invalid or missing token"
-  }
+## 📡 Endpoints
 
-❌ 404 Not Found :
-  {
-    "success": false,
-    "message": "User not found"
-  }
+### 1. Gestion des Demandes
 
-❌ 400 Bad Request :
-  {
-    "success": false,
-    "message": "parametre id invalid (ex: id: -1) / deja ami / demande deja envoye / demande envoyee a sois meme"
-  }
+#### 📨 Envoyer une demande d'ami
+Envoie une invitation à un autre utilisateur.
 
-❌ 500 Internal Server Error :
-  {
-    "success": false,
-    "message": "Internal Server Error"
-  }
+- **URL** : `POST /friend/request/:id`
+- **Params** : `id` (integer) - L'ID de l'utilisateur cible.
 
--------------------------------------------------------------------------------------------------------------------------
+**Réponses :**
 
-**PUT friend/accept/:id**
+| Code | Description | Body Example |
+| :--- | :--- | :--- |
+| **201** | ✅ Demande envoyée | `{ "success": true, "message": "Friend request successfully sent" }` |
+| **400** | ⚠️ Erreur logique | `{ "success": false, "message": "Already friends / Request already sent" }` |
+| **404** | ❌ User introuvable | `{ "success": false, "message": "User not found" }` |
 
-_Description :_ accepter une demande d'ami qui est en mode pending
+---
 
-_Mandatory headers :_
-  Content-Type:   application/json,
-  Authorization:  Bearer <TOKEN>
+#### ✅ Accepter une demande
+Accepte une demande d'ami reçue (statut `PENDING` -> `ACCEPTED`).
 
-_Mandatory url param :_
-	id:
+- **URL** : `PUT /friend/accept/:id`
+- **Params** : `id` (integer) - L'ID de l'utilisateur qui a envoyé la demande.
 
-_Possibles responses:_
+**Réponses :**
 
-✅ 204 No Content
+| Code | Description | Body |
+| :--- | :--- | :--- |
+| **204** | ✅ Accepté | *(Aucun contenu)* |
+| **400** | ⚠️ Erreur logique | `{ "success": false, "message": "No pending request / Already friends" }` |
+| **404** | ❌ User introuvable | `{ "success": false, "message": "User not found" }` |
 
-❌ 401 Unauthorized :
-  {
-    "success": false,
-    "message": "Invalid or missing token"
-  }
+---
 
-❌ 404 Not Found :
-  {
-    "success": false,
-    "message": "User not found"
-  }
+#### 🗑️ Supprimer un ami / Annuler une demande
+Supprime une relation d'amitié existante ou annule/refuse une demande en cours.
 
-❌ 400 Bad Request :
-  {
-    "success": false,
-    "message": "parametre id invalid (ex: id: -1) / deja ami / pas de demande en attente / accepter une demande pour sois meme"
-  }
+- **URL** : `PUT /friend/delete/:id`
+- **Params** : `id` (integer) - L'ID de l'ami ou de la demande à supprimer.
 
-❌ 500 Internal Server Error :
-  {
-    "success": false,
-    "message": "Internal Server Error"
-  }
+**Réponses :**
 
--------------------------------------------------------------------------------------------------------------------------
+| Code | Description | Body |
+| :--- | :--- | :--- |
+| **204** | ✅ Supprimé | *(Aucun contenu)* |
+| **400** | ⚠️ Erreur logique | `{ "success": false, "message": "Not friends / No request found" }` |
+| **404** | ❌ User introuvable | `{ "success": false, "message": "User not found" }` |
 
-**PUT friend/delete/:id**
+---
 
-_Description :_ supprimer une demande d'amis ou supprimer un ami
+### 2. Récupération des Listes
 
-_Mandatory headers :_
-  Content-Type:   application/json,
-  Authorization:  Bearer <TOKEN>
+#### 👥 Ma liste d'amis
+Récupère la liste de tous les amis confirmés (`ACCEPTED`).
 
-_Mandatory url param :_
-	id:
+- **URL** : `GET /friend/search/myfriends`
 
-_Possibles responses:_
+**Réponses :**
 
-✅ 204 No Content
-
-❌ 401 Unauthorized :
-  {
-    "success": false,
-    "message": "Invalid or missing token"
-  }
-
-❌ 404 Not Found :
-  {
-    "success": false,
-    "message": "User not found"
-  }
-
-❌ 400 Bad Request :
-  {
-    "success": false,
-    "message": "parametre id invalid (ex: id: -1) / pas de demande en attente ou de lien d'amitie / supprimer sa propre amitie"
-  }
-
-❌ 500 Internal Server Error :
-  {
-    "success": false,
-    "message": "Internal Server Error"
-  }
-
--------------------------------------------------------------------------------------------------------------------------
-
-**GET friend/search/myfriends**
-
-_Description :_ rechercher sa liste d'amis
-
-_Mandatory headers :_
-  Content-Type:   application/json,
-  Authorization:  Bearer <TOKEN>
-
-_Possibles responses:_
-
-✅ 200 Ok
+**200 OK**
+```json
 {
-	success: true,
-	message: 'Friendlist found'
-	friendList: [
-		{
-			id:         string,
-			username:   string,
-			avatar:     string
-		},
-		{
-			id:         string,
-			username:   string,
-			avatar:     string
-		} ...
-	]
+  "success": true,
+  "message": "Friends list successfully found",
+  "friendList": [
+    {
+      "status": "ACCEPTED",
+      "updatedAt": "2024-01-15T12:00:00.000Z",
+      "user": {
+        "id": 42,
+        "username": "Alice",
+        "avatar": "http://...",
+        "isOnline": true
+      }
+    }
+  ]
 }
+```
 
-❌ 401 Unauthorized :
-  {
-    "success": false,
-    "message": "Invalid or missing token"
-  }
+---
 
-❌ 404 Not Found :
-  {
-    "success": false,
-    "message": "User not found or No friends found"
-  }
+#### ⏳ Demandes en attente
+Récupère la liste des demandes reçues en attente (`PENDING`).
 
- ❌ 500 Internal Server Error :
-  {
-    "success": false,
-    "message": "Internal Server Error"
-  }
+- **URL** : `GET /friend/search/pendinglist`
 
--------------------------------------------------------------------------------------------------------------------------
+**Réponses :**
 
-**GET friend/search/pendinglist** -> rechercher les demandes en attente
-
-_Description :_ rechercher sa liste d'amis
-
-_Mandatory headers :_
-  Content-Type:   application/json,
-  Authorization:  Bearer <TOKEN>
-
-_Possibles responses:_
-
-✅ 200 Ok
+**200 OK**
+```json
 {
-	success: true,
-	message: 'Friendlist found'
-	friendList: [
-		{
-			id:         string,
-			username:   string,
-			avatar:     string
-		},
-		{
-			id:         string,
-			username:   string,
-			avatar:     string
-		} ...
-	]
+  "success": true,
+  "message": "Pending list successfully found",
+  "friendList": [
+    {
+      "status": "PENDING",
+      "updatedAt": "2024-01-15T12:30:00.000Z",
+      "user": {
+        "id": 99,
+        "username": "Bob",
+        "avatar": "http://...",
+        "isOnline": false
+      }
+    }
+  ]
 }
-
-❌ 401 Unauthorized :
-  {
-    "success": false,
-    "message": "Invalid or missing token"
-  }
-
-❌ 404 Not Found :
-  {
-    "success": false,
-    "message": "User not found or No friends found"
-  }
-
- ❌ 500 Internal Server Error :
-  {
-    "success": false,
-    "message": "Internal Server Error"
-  }
-
--------------------------------------------------------------------------------------------------------------------------
+```
