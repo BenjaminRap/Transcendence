@@ -146,7 +146,7 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		{
 			this._endGUI.classList.add("hidden");
 			this._inMatchmakingGUI.classList.remove("hidden");
-			this._sceneData.pongHTMLElement.restartOnlineGameAsync().then(() => {
+			this._sceneData.pongHTMLElement.startOnlineGame().then(() => {
 				this._inMatchmakingGUI.classList.add("hidden");
 			});
 		}

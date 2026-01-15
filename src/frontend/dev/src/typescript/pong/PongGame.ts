@@ -108,21 +108,28 @@ export class PongGame extends HTMLElement {
 		this._scene = await this.getNewScene(newSceneName, gameType, tournament);
 	}
 
+	private	isInMenu()
+	{
+		if (this._scene === undefined)
+			return false;
+		const	sceneData = getFrontendSceneData(this._scene);
+		
+		return sceneData.gameType === "Menu";
+	}
+
 	public async goToMenuScene()
 	{
+		if (this.isInMenu())
+			return ;
 		this._serverProxy.leaveScene();
 		if (!this._scene || getSceneData(this._scene).gameType !== "Menu")
 			await this.changeScene("Menu.gltf", "Menu");
 	}
 
-	public startBotGame(sceneName : SceneFileName)
+	public async startBotGame(sceneName : SceneFileName)
 	{
-		this.startBotGameAsync(sceneName);
-	}
-
-	private async startBotGameAsync(sceneName : SceneFileName)
-	{
-		await this.changeScene(sceneName, "Bot");
+		if (this.isInMenu())
+			await this.changeScene(sceneName, "Bot");
 		const	sceneData = getFrontendSceneData(this._scene!);
 
 		await sceneData.readyPromise.promise;
@@ -130,14 +137,10 @@ export class PongGame extends HTMLElement {
 		sceneData.events.getObservable("game-start").notifyObservers();
 	}
 
-	public startLocalGame(sceneName : SceneFileName, tournament? : LocalTournament)
+	public async startLocalGame(sceneName : SceneFileName, tournament? : LocalTournament)
 	{
-		this.startLocalGameAsync(sceneName, tournament);
-	}
-
-	private async startLocalGameAsync(sceneName : SceneFileName, tournament? : LocalTournament)
-	{
-		await this.changeScene(sceneName, "Local", tournament);
+		if (this.isInMenu())
+			await this.changeScene(sceneName, "Local", tournament);
 		const	sceneData = getFrontendSceneData(this._scene!);
 
 		await sceneData.readyPromise.promise;
@@ -148,54 +151,21 @@ export class PongGame extends HTMLElement {
 			sceneData.events.getObservable("game-start").notifyObservers();
 	}
 
-	public startOnlineGame(sceneName : SceneFileName)
+	public async startOnlineGame(sceneName : SceneFileName = "Terminal.gltf") : Promise<void>
 	{
-		this.startOnlineGameAsync(sceneName);
-	}
+		const	gameInit = await this._serverProxy.joinGame();
 
-	private async startOnlineGameAsync(sceneName : SceneFileName) : Promise<void>
-	{
-		try {
-			const	gameInit = await this._serverProxy.joinGame();
-
+		if (this.isInMenu())
 			await this.changeScene(sceneName, "Multiplayer");
-			const	sceneData = getFrontendSceneData(this._scene!);
+		const	sceneData = getFrontendSceneData(this._scene!);
 
-			await sceneData.readyPromise.promise;
-			this.setInputs(sceneData, gameInit.playerIndex);
-			this._serverProxy.setReady();
-			const	participants = gameInit.participants as [Profile, Profile];
-			sceneData.events.getObservable("set-participants").notifyObservers(participants);
-			await this._serverProxy.onGameReady();
-			sceneData.events.getObservable("game-start").notifyObservers();
-		} catch (error) {
-			if (error === "canceled")
-				return ;
-			console.error(error);
-			this.goToMenuScene();
-		}
-	}
-
-	public	async restartOnlineGameAsync() : Promise<void>
-	{
-		if (!this._scene)
-			throw new PongError("restartOnlineGameAsync called without a scene !", "quitPong");
-		try {
-			const	gameInit = await this._serverProxy.joinGame();
-			const	sceneData = getFrontendSceneData(this._scene);
-
-			this.setInputs(sceneData, gameInit.playerIndex);
-			sceneData.serverProxy.setReady();
-			const	participants = gameInit.participants as [Profile, Profile];
-			sceneData.events.getObservable("set-participants").notifyObservers(participants);
-			await this._serverProxy.onGameReady();
-			sceneData.events.getObservable("game-start").notifyObservers();
-		} catch (error) {
-			if (error === "canceled")
-				return ;
-			console.error(error);
-			this.goToMenuScene();
-		}
+		await sceneData.readyPromise.promise;
+		this.setInputs(sceneData, gameInit.playerIndex);
+		this._serverProxy.setReady();
+		const	participants = gameInit.participants as [Profile, Profile];
+		sceneData.events.getObservable("set-participants").notifyObservers(participants);
+		await this._serverProxy.onGameReady();
+		sceneData.events.getObservable("game-start").notifyObservers();
 	}
 
 	private setInputs(sceneData : FrontendSceneData, ...inputIndexes : int[])
