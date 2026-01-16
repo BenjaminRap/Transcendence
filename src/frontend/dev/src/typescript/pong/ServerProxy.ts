@@ -154,26 +154,34 @@ export class	ServerProxy
 
 	public joinTournament(tournamentId : TournamentId) : Promise<Profile[]>
 	{
-		this.verifyState("connected", "tournament-creator");
-		const	previousState = this._state;
-
-		if (this._state === "connected")
-			this._state = "tournament-player";
-		else
-			this._state = "tournament-creator-player"
+		this.verifyState("connected");
+		this._state = "tournament-player";
 		const	deferred = this._frontendSocketHandler.joinTournament(tournamentId);
 
 		deferred.promise
 			.then(() => {
-				if (previousState === "tournament-creator")
-					return ;
 				this._tournamentData = {
 					isCreator: false,
 					id: tournamentId
 				}
 			})
 			.catch(() => {
-				this._state = previousState;
+				this._state = "connected";
+			})
+		this.replaceCurrentPromise(deferred);
+		return deferred.promise;
+	}
+
+	public joinTournamentAsCreator()
+	{
+		this.verifyState("tournament-creator");
+		this._state = "tournament-creator-player";
+
+		const	deferred = this._frontendSocketHandler.joinTournament(this._tournamentData!.id);
+
+		deferred.promise
+			.catch(() => {
+				this._state = "tournament-creator";
 			})
 		this.replaceCurrentPromise(deferred);
 		return deferred.promise;
