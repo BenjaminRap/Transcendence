@@ -106,12 +106,12 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		}, this._menuParent);
 		this._onlineTournamentStartGUI = initMenu(new OnlineTournamentStartGUI(), {
 			start: () => this.startTournament(),
-			join: () => this.joinTournament(),
+			join: () => this.joinTournamentAsCreator(),
 			leave: () => this.leaveTournament(),
 			cancel: () => this.cancelTournament()
 		}, this._menuParent);
 		this._onlineTournamentJoinPrivateGUI = initMenu(new OnlineTournamentJoinPrivateGUI(), {
-			join: () => this.joinTournament(),
+			join: () => this.joinTournament(this._onlineTournamentJoinPrivateGUI.getTournamentId()),
 			cancel: () => this.switchMenu(this._onlineTournamentJoinPrivateGUI, this._onlineTournamentChoiceGUI)
 		}, this._menuParent);
 		this._onlineTournamentJoinPublicGUI = initMenu(new OnlineTournamentJoinPublicGUI(), {
@@ -248,24 +248,36 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 	private	async createTournament()
 	{
+		const	settings = this._onlineTournamentCreationGUI.getOnlineTournamentSettings();
+
+		if (settings === null)
+			return ;
+		this._sceneData.serverProxy.createTournament(settings);
 	}
 
 	private	async cancelTournament()
 	{
+		this._sceneData.serverProxy.cancelTournament();
 	}
 
 	private	async startTournament()
 	{
-
+		this._sceneData.serverProxy.startTournament();
 	}
 
-	private	async joinTournament()
+	private async joinTournamentAsCreator()
 	{
+		this._sceneData.serverProxy.joinTournamentAsCreator();
+	}
+
+	private	async joinTournament(tournamentId : string)
+	{
+		this._sceneData.serverProxy.joinTournament(tournamentId);
 	}
 
 	private	async leaveTournament()
 	{
-
+		this._sceneData.serverProxy.leaveTournament();
 	}
 
 	private	async refreshTournaments()
