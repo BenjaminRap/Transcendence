@@ -22,7 +22,6 @@ import { OnlineTournamentJoinPrivateGUI } from "../gui/OnlineTournamentJoinPriva
 import { OnlineTournamentJoinPublicGUI } from "../gui/OnlineTournamentJoinPublicGUI";
 import { OnlineTournamentChoiceGUI } from "../gui/OnlineTournamentChoiceGUI";
 import { OnlineTournamentStartGUI } from "../gui/OnlineTournamentStartGUI";
-import { FrontendTournament } from "../FrontendTournament";
 import { PongError } from "@shared/pongError/PongError";
 
 type EnemyType = "Local" | "Multiplayer" | "Bot";
@@ -249,21 +248,10 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 	private	async createTournament()
 	{
-		const	settings = this._onlineTournamentCreationGUI.getOnlineTournamentSettings();
-
-		if (settings === null)
-			return ;
-		const	result = await FrontendTournament.createTournament(this._sceneData.serverProxy, settings);
-
-		if (!result.success)
-			this._sceneData.pongHTMLElement.showError(result.error);
-		else
-			this.switchMenu(this._onlineTournamentCreationGUI, this._onlineTournamentStartGUI);
 	}
 
 	private	async cancelTournament()
 	{
-		this._sceneData.serverProxy.cancelTournament();
 	}
 
 	private	async startTournament()

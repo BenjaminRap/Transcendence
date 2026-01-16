@@ -17,7 +17,6 @@ import { frontendSocketHandler } from "../index";
 import { ErrorGUI } from "./gui/ErrorGUI";
 import { initMenu } from "./gui/IGUI";
 import { CloseGUI } from "./gui/CloseGUI";
-import type { FrontendTournament } from "./FrontendTournament";
 import { PongError } from "@shared/pongError/PongError";
 import type { Profile } from "@shared/Profile";
 
@@ -27,7 +26,6 @@ import.meta.glob("@shared/attachedScripts/*", { eager: true});
 export type SceneFileName = "Magic.gltf" | "Basic.gltf" | "Terminal.gltf";
 export type TournamentType<T extends FrontendGameType> =
 	T extends "Local" ? LocalTournament :
-	T extends "Online" ? FrontendTournament :
 	undefined
 
 export class PongGame extends HTMLElement {
