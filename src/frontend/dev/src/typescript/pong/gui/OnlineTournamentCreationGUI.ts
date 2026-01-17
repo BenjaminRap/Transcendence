@@ -5,7 +5,6 @@ import { PongError } from "@shared/pongError/PongError";
 
 export type OnlineTournamentCreationGUIInputs = {
 	create: HTMLButtonElement,
-	createAndJoin: HTMLButtonElement,
 	cancel: HTMLButtonElement
 }
 
@@ -22,7 +21,7 @@ type OnlineTournamentSettingsInputs = {
 
 export class	OnlineTournamentCreationGUI extends HTMLElement implements IGUI<OnlineTournamentCreationGUIInputs>
 {
-	private _buttons : OnlineTournamentCreationGUIInputs | undefined;
+	private _inputs : OnlineTournamentCreationGUIInputs | undefined;
 	private _settingsInputs : OnlineTournamentSettingsInputs | undefined;
 
 	constructor()
@@ -34,51 +33,54 @@ export class	OnlineTournamentCreationGUI extends HTMLElement implements IGUI<Onl
 	{
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm");
 		this.innerHTML = `
-			<fieldset class="text-(--text-color) font-(family-name:--font) h-1/2 w-11/12 border-(--border-color) border-solid border-(length:--border-width) m-auto mt-[1%] mb-[1%]">
+			<fieldset class="text-(--text-color) font-(family-name:--font) h-3/5 w-11/12 border-(--border-color) border-solid border-(length:--border-width) m-auto mt-[1%] mb-[1%]">
 				<legend class="m-auto pr-[2%] pl-[2%] text-[3.5cqw]">Tournament's settings</legend>
 				<div class="ml-[30%] flex flex-col pointer-events-auto text-[2.5cqw]">
-					<p class="OnlineTournamentCreationGUINameErrorText w-full text-red-900 bg-red-300/25 backdrop-blur-3xl mb-[0.5cqw] text-center rounded-md invisible">Error</p>
+					${this.getErrorText("onlineTournamentCreationGUINameErrorText")}
 					<label>
 						Name :
-						<input class="ml-[1%] focus:border-(--border-color) focus:border-b-(length:--border-width) focus:outline-none OnlineTournamentCreationGUIName" type="text" placeholder="Tournament" maxlength="${TournamentHelper.maxNameLength}" required>
+						<input class="ml-[1%] focus:border-(--border-color) focus:border-b-(length:--border-width) focus:outline-none onlineTournamentCreationGUIName" type="text" placeholder="Tournament" maxlength="${TournamentHelper.maxNameLength}" required>
 					</label>
-					<p class="OnlineTournamentCreationGUIIsPublicErrorText w-full text-red-900 bg-red-300/25 backdrop-blur-3xl mb-[0.5cqw] text-center rounded-md invisible">Error</p>
+					${this.getErrorText("onlineTournamentCreationGUIIsPublicErrorText")}
 					<label>
 						Is Public :
-						<input class="ml-[1%] h-1/2 aspect-square accent-(--border-color) OnlineTournamentCreationGUIIsPublic" type="checkbox">
+						<input class="ml-[1%] h-1/2 aspect-square accent-(--border-color) onlineTournamentCreationGUIIsPublic" type="checkbox">
 					</label>
-					<p class="OnlineTournamentCreationGUIMaxPlayersCountErrorText w-full text-red-900 bg-red-300/25 backdrop-blur-3xl mb-[0.5cqw] text-center rounded-md invisible">Error</p>
+					${this.getErrorText("onlineTournamentCreationGUIMaxPlayersCountErrorText")}
 					<label>
 						Max Players Count :
-						<input class="ml-[1%] focus:border-(--border-color) focus:border-b-(length:--border-width) focus:outline-none w-1/12 OnlineTournamentCreationGUIMaxPlayersCount" type="number" min="2" max="${TournamentHelper.maxTournamentParticipants}" step="1" placeholder="2" required>
+						<input class="ml-[1%] focus:border-(--border-color) focus:border-b-(length:--border-width) focus:outline-none w-1/12 onlineTournamentCreationGUIMaxPlayersCount" type="number" min="2" max="${TournamentHelper.maxTournamentParticipants}" step="1" placeholder="2" value="2" required>
 					</label>
 				</div>
 			</fieldset>
 			<div class="flex flex-col size-full h-1/2 w-1/4 m-auto">
-				${this.getButtonHTML("Create", "OnlineTournamentCreationGUICreate")}
-				${this.getButtonHTML("Create And Join", "OnlineTournamentCreationGUICreateAndJoin")}
-				${this.getButtonHTML("Cancel", "OnlineTournamentCreationGUICancel")}
+				${this.getButtonHTML("Create", "onlineTournamentCreationGUICreate")}
+				${this.getButtonHTML("Cancel", "onlineTournamentCreationGUICancel")}
 			</div>
 		`;
-		this._buttons = {
-			create: this.querySelector("button.OnlineTournamentCreationGUICreate")!,
-			createAndJoin: this.querySelector("button.OnlineTournamentCreationGUICreateAndJoin")!,
-			cancel: this.querySelector("button.OnlineTournamentCreationGUICancel")!
+		this._inputs = {
+			create: this.querySelector("button.onlineTournamentCreationGUICreate")!,
+			cancel: this.querySelector("button.onlineTournamentCreationGUICancel")!
 		};
 		this._settingsInputs = {
 			name: {
-				input: this.querySelector("button.OnlineTournamentCreationGUIName")!,
-				errorText: this.querySelector("p.OnlineTournamentCreationGUINameErrorText")!,
+				input: this.querySelector("input.onlineTournamentCreationGUIName")!,
+				errorText: this.querySelector("p.onlineTournamentCreationGUINameErrorText")!,
 			},
 			isPublic: {
-				input: this.querySelector("button.OnlineTournamentCreationGUIIsPublic")!,
-				errorText: this.querySelector("p.OnlineTournamentCreationGUIIsPublicErrorText")!,
+				input: this.querySelector("input.onlineTournamentCreationGUIIsPublic")!,
+				errorText: this.querySelector("p.onlineTournamentCreationGUIIsPublicErrorText")!,
 			},
 			maxPlayersCount: {
-				input: this.querySelector("button.OnlineTournamentCreationGUIMaxPlayersCount")!,
-				errorText: this.querySelector("p.OnlineTournamentCreationGUIMaxPlayersCountErrorText")!,
+				input: this.querySelector("input.onlineTournamentCreationGUIMaxPlayersCount")!,
+				errorText: this.querySelector("p.onlineTournamentCreationGUIMaxPlayersCountErrorText")!,
 			}
 		}
+	}
+
+	private	getErrorText(className : string)
+	{
+		return `<p class="${className} w-full text-red-900 bg-red-300/25 backdrop-blur-3xl text-center rounded-md invisible -translate-x-[20%]">Error</p>`;
 	}
 
 	private	getButtonHTML(text : string, className : string)
@@ -88,7 +90,7 @@ export class	OnlineTournamentCreationGUI extends HTMLElement implements IGUI<Onl
 
 	public getInputs()
 	{
-		return this._buttons;
+		return this._inputs;
 	}
 
 	private	validate()

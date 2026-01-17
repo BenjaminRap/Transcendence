@@ -105,7 +105,6 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		}, this._menuParent);
 		this._onlineTournamentCreationGUI = initMenu(new OnlineTournamentCreationGUI(), {
 			create: () => this.createTournament(),
-			createAndJoin: () => this.switchMenu(this._onlineTournamentStartGUI),
 			cancel: () => this.switchMenu(this._onlineTournamentChoiceGUI)
 		}, this._menuParent);
 		this._onlineTournamentStartGUI = initMenu(new OnlineTournamentStartGUI(), {
