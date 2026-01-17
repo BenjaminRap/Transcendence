@@ -19,6 +19,7 @@ import { initMenu } from "./gui/IGUI";
 import { CloseGUI } from "./gui/CloseGUI";
 import { PongError } from "@shared/pongError/PongError";
 import type { Profile } from "@shared/Profile";
+import type { TournamentEvent } from "@shared/ServerMessage";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
@@ -65,7 +66,7 @@ export class PongGame extends HTMLElement {
 		} catch (error) {
 			console.error(`Could not initialize the scene : ${error}`)
 		}
-		this._serverProxy.onTournamentMessage().add(() => this.onTournamentMessage());
+		this._serverProxy.onTournamentMessage().add(tournamentEvent => this.onTournamentMessage(tournamentEvent));
     }
 
 	private renderScene() : void
@@ -167,9 +168,11 @@ export class PongGame extends HTMLElement {
 		sceneData.events.getObservable("game-start").notifyObservers();
 	}
 
-	private onTournamentMessage()
+	private onTournamentMessage(tournamentEvent : TournamentEvent)
 	{
-
+		if (!this._scene)
+			return ;
+		getFrontendSceneData(this._scene).events.getObservable("tournament-event").notifyObservers(tournamentEvent);
 	}
 
 	private setInputs(sceneData : FrontendSceneData, ...inputIndexes : int[])
