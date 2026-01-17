@@ -173,10 +173,34 @@ export class PongGame extends HTMLElement {
 		sceneData.events.getObservable("input-change").notifyObservers(inputs);
 	}
 
-	public showError(errorText : string)
+	private	showError(errorText : string)
 	{
 		this._errorGUI.setErrorText(errorText);
 		this._errorGUI.classList.remove("invinsible");
+	}
+
+	public onError(error : any)
+	{
+		let		severity = (error instanceof PongError) ? error.getSeverity() : "quitPong";
+		const	message = (error instanceof Error) ? error.message : error;
+
+		if (severity === "quitScene" && this.isInMenu())
+			severity = "quitPong";
+		switch (severity)
+		{
+			case "ignore":
+				break;
+			case "show":
+				this.showError(message);
+				break;
+			case "quitScene":
+				this.showError(message);
+				this.goToMenuScene();
+				break;
+			case "quitPong":
+				this.quit();
+				break;
+		}
 	}
 
 	private	async getNewScene<T extends FrontendGameType>(
