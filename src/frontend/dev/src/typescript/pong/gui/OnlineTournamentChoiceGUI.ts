@@ -10,7 +10,7 @@ export type OnlineTournamentChoiceGUIInputs =
 
 export class	OnlineTournamentChoiceGUI extends HTMLElement implements IGUI<OnlineTournamentChoiceGUIInputs>
 {
-	private _buttons : OnlineTournamentChoiceGUIInputs | undefined;
+	private _inputs : OnlineTournamentChoiceGUIInputs | undefined;
 
 	constructor()
 	{
@@ -28,7 +28,7 @@ export class	OnlineTournamentChoiceGUI extends HTMLElement implements IGUI<Onlin
 				${this.getButtonHTML("Cancel", "OnlineTournamentChoiceCancel")}
 			</div>
 		`;
-		this._buttons = {
+		this._inputs = {
 			create : this.querySelector("button.OnlineTournamentChoiceCreate")!,
 			joinPublic : this.querySelector("button.OnlineTournamentChoiceJoinPublic")!,
 			joinPrivate : this.querySelector("button.OnlineTournamentChoiceJoinPrivate")!,
@@ -43,7 +43,7 @@ export class	OnlineTournamentChoiceGUI extends HTMLElement implements IGUI<Onlin
 
 	public getInputs()
 	{
-		return this._buttons;
+		return this._inputs;
 	}
 }
 
