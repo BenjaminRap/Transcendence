@@ -126,6 +126,17 @@ export class	OnlineTournamentCreationGUI extends HTMLElement implements IGUI<Onl
 		};
 		return settings;
 	}
+
+	public reset()
+	{
+		if (!this._settingsInputs)
+			return ;
+		Object.values(this._settingsInputs).forEach(elem => {
+			elem.errorText.classList.add("invisible");
+			elem.input.value = elem.input.defaultValue;
+			elem.input.checked = elem.input.defaultChecked;
+		});
+	}
 }
 
 customElements.define("online-tournament-creation-gui", OnlineTournamentCreationGUI);

@@ -53,6 +53,13 @@ export class	OnlineTournamentJoinPrivateGUI extends HTMLElement implements IGUI<
 			return "";
 		return this._tournamentIdInput.value.trim();
 	}
+
+	public reset()
+	{
+		if (!this._tournamentIdInput)
+			return ;
+		this._tournamentIdInput.value = "";
+	}
 }
 
 customElements.define("online-tournament-join-private-gui", OnlineTournamentJoinPrivateGUI);

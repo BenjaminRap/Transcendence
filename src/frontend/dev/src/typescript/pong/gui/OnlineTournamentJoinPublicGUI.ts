@@ -69,6 +69,11 @@ export class	OnlineTournamentJoinPublicGUI extends HTMLElement implements IGUI<O
 	{
 		return this._onTournamentJoinObservable;
 	}
+
+	public reset()
+	{
+		this._descriptionsContainer?.replaceChildren();
+	}
 }
 
 customElements.define("online-tournament-join-public-gui", OnlineTournamentJoinPublicGUI);
