@@ -119,8 +119,8 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			refresh: () => this.refreshTournaments(),
 			cancel: () => this.switchMenu(this._onlineTournamentJoinPublicGUI, this._onlineTournamentChoiceGUI)
 		}, this._menuParent);
-		this._onlineTournamentJoinPublicGUI.onTournamentJoin().add((description : TournamentDescription) => {
-			this.joinTournament(description.id);
+		this._onlineTournamentJoinPublicGUI.onTournamentJoin().add((id : string) => {
+			this.joinTournament(id);
 		});
 	}
 

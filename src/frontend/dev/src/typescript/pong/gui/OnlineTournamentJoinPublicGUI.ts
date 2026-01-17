@@ -13,7 +13,7 @@ export class	OnlineTournamentJoinPublicGUI extends HTMLElement implements IGUI<O
 {
 	private _inputs : OnlineTournamentJoinPublicGUIInputs | undefined;
 	private _descriptionsContainer : HTMLDivElement | undefined;
-	private _onTournamentJoinObservable = new Observable<TournamentDescription>();
+	private _onTournamentJoinObservable = new Observable<string>();
 
 	constructor()
 	{
@@ -58,7 +58,7 @@ export class	OnlineTournamentJoinPublicGUI extends HTMLElement implements IGUI<O
 			const	tournamentDescriptionGUI = new TournamentDescriptionGUI(description);
 
 			tournamentDescriptionGUI.addEventListener("click", () => {
-				this._onTournamentJoinObservable.notifyObservers(tournamentDescriptionGUI.getDescription());
+				this._onTournamentJoinObservable.notifyObservers(tournamentDescriptionGUI.getTournamentId());
 			})
 			nodes.push(tournamentDescriptionGUI);
 		});

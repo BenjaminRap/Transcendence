@@ -28,9 +28,9 @@ export class	TournamentDescriptionGUI extends HTMLElement
 		`;
 	}
 
-	public getDescription()
+	public getTournamentId()
 	{
-		return this._description;
+		return this._description.id;
 	}
 }
 
