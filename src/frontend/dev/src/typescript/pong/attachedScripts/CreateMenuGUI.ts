@@ -270,6 +270,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 	private	async cancelTournament()
 	{
 		this._sceneData.serverProxy.cancelTournament();
+		this.switchMenu(this._onlineTournamentCreationGUI);
 	}
 
 	private	async startTournament()
