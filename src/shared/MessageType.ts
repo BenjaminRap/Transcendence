@@ -2,7 +2,7 @@ import type { Profile } from "./Profile";
 import type { GameInfos, GameInit, KeysUpdate, TournamentCreationSettings, TournamentDescription, TournamentId } from "./ServerMessage";
 import type { Result } from "./utils";
 
-export type ClientMessage = "join-matchmaking" | "ready" | "input-infos" | "forfeit" | "leave-matchmaking" | "create-tournament" | "start-tournament" | "join-tournament" | "leave-tournament" | "cancel-tournament" | "get-tournaments";
+export type ClientMessage = "join-matchmaking" | "ready" | "input-infos" | "forfeit" | "leave-matchmaking" | "create-tournament" | "start-tournament" | "join-tournament" | "leave-tournament" | "cancel-tournament" | "get-tournaments" | "ban-participant";
 export type ClientMessageData<T extends ClientMessage> =
 	T extends "input-infos" ? [KeysUpdate] :
 	T extends "create-tournament" ? [TournamentCreationSettings, (tournamentId : Result<TournamentId>) => void] :
@@ -11,7 +11,7 @@ export type ClientMessageData<T extends ClientMessage> =
 	T extends "get-tournaments" ? [(descriptions : TournamentDescription[]) => void] :
 	[];
 
-export type ServerEvents = "game-infos" | "joined-game" | "ready" | "forfeit" | "room-closed" | "tournament-canceled" | "add-participant" | "remove-participant";
+export type ServerEvents = "game-infos" | "joined-game" | "ready" | "forfeit" | "room-closed" | "tournament-canceled" | "add-participant" | "remove-participant" | "kicked" | "banned";
 export type ServerEventsData<T extends ServerEvents> =
 	T extends "game-infos" ? [GameInfos] :
 	T extends "joined-game" ? [GameInit] :
