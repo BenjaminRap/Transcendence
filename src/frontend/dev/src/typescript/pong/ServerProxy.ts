@@ -23,7 +23,7 @@ export class	ServerProxy
 		private _frontendSocketHandler : FrontendSocketHandler,
 	) {
 		this._state = "connected";
-		this._frontendSocketHandler.onServerMessage().add((gameInfos : ServerInGameMessage) => {
+		this._frontendSocketHandler.onGameMessage().add((gameInfos : ServerInGameMessage) => {
 			if (gameInfos === "room-closed" && this._state === "in-game")
 				this._state = "connected";
 		});
@@ -52,7 +52,7 @@ export class	ServerProxy
 	public leaveScene() : void
 	{
 		this.verifyState("connected", "in-matchmaking", "in-game", "in-tournament");
-		this._frontendSocketHandler.onServerMessage().clear();
+		this._frontendSocketHandler.onGameMessage().clear();
 		if (this._state === "in-matchmaking")
 			this._frontendSocketHandler.sendEventWithNoResponse("leave-matchmaking");
 		else if (this._state === "in-game")
@@ -116,9 +116,14 @@ export class	ServerProxy
 		this._frontendSocketHandler.sendEventWithNoResponse("input-infos", keysUpdate);
 	}
 
-	public onServerMessage() : Observable<ServerInGameMessage>
+	public onGameMessage() : Observable<ServerInGameMessage>
 	{
-		return this._frontendSocketHandler.onServerMessage();
+		return this._frontendSocketHandler.onGameMessage();
+	}
+
+	public onTournamentMessage() : Observable<void>
+	{
+		return this._frontendSocketHandler.onTournamentMessage();
 	}
 
 	public getPlayerIndex() : int
@@ -240,7 +245,7 @@ export class	ServerProxy
 
 	public dispose()
 	{
-		this._frontendSocketHandler.onServerMessage().clear();
+		this._frontendSocketHandler.onGameMessage().clear();
 		this._frontendSocketHandler.onDisconnect().remove(this._disconnectedObserver);
 		try {
 			this.leaveScene();

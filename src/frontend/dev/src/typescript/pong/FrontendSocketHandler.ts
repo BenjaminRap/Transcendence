@@ -15,13 +15,15 @@ export class	FrontendSocketHandler
 	private static readonly _apiUrl = "/api/socket.io/";
 
 	private _socket : DefaultSocket;
-	private _onServerMessageObservable : Observable<ServerInGameMessage>;
-	private _onDisconnectObservable : Observable<void> = new Observable();
+	private _onGameMessageObservable : Observable<ServerInGameMessage>;
+	private _onDisconnectObservable  = new Observable<void>();
+	private _onTournamentEventObservable : Observable<void>;
 
 	private constructor(socket : DefaultSocket)
 	{
 		this._socket = socket;
-		this._onServerMessageObservable = createNewOnServerMessageObservable(socket);
+		this._onGameMessageObservable = createNewOnGameMessageObservable(socket);
+		this._onTournamentEventObservable = createNewOnTournamentMessageObservable(socket);
 		this._onDisconnectObservable.add(() => {
 			this.onDisconnectEvent();
 		})
@@ -77,7 +79,7 @@ export class	FrontendSocketHandler
 	private	onDisconnectEvent()
 	{
 		this._socket.off();
-		this._onServerMessageObservable.clear();
+		this._onGameMessageObservable.clear();
 	}
 
 	public getTournaments() : Deferred<TournamentDescription[]>
@@ -100,9 +102,9 @@ export class	FrontendSocketHandler
 		return deferred;
 	}
 
-	public onServerMessage() : Observable<ServerInGameMessage>
+	public onGameMessage() : Observable<ServerInGameMessage>
 	{
-		return (this._onServerMessageObservable);
+		return this._onGameMessageObservable;
 	}
 
 	public sendEventWithNoResponse<T extends EventWithNoResponse>(event : T, ...args: Parameters<ClientToServerEvents[T]>)
@@ -152,14 +154,31 @@ export class	FrontendSocketHandler
 	{
 		return this._onDisconnectObservable;
 	}
+
+	public onTournamentMessage()
+	{
+		return this._onTournamentEventObservable;
+	}
 }
 
-function	createNewOnServerMessageObservable(socket : DefaultSocket)
+function	createNewOnGameMessageObservable(socket : DefaultSocket)
 {
 	const	observable = new Observable<ServerInGameMessage>();
 
 	socket.on("game-infos", (gameInfos : GameInfos) => { observable.notifyObservers(gameInfos) });
 	socket.on("forfeit", () => { observable.notifyObservers("forfeit") });
 	socket.on("room-closed", () => { observable.notifyObservers("room-closed") });
+	return observable;
+}
+
+function	createNewOnTournamentMessageObservable(socket : DefaultSocket)
+{
+	const	observable = new Observable<void>();
+
+	socket.on("tournament-canceled", () => { observable.notifyObservers() });
+	socket.on("add-participant", () => { observable.notifyObservers() });
+	socket.on("remove-participant", () => { observable.notifyObservers() });
+	socket.on("banned", () => { observable.notifyObservers() });
+	socket.on("kicked", () => { observable.notifyObservers() });
 	return observable;
 }

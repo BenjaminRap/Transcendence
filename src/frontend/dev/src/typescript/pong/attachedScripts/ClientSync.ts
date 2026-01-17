@@ -46,7 +46,7 @@ export class ClientSync extends CustomScriptComponent {
 	
 		if (!serverProxy)
 			return ;
-		serverProxy.onServerMessage().add((gameInfos : ServerInGameMessage) => {
+		serverProxy.onGameMessage().add((gameInfos : ServerInGameMessage) => {
 			const	opponentInputs = this._inputManager.getPlayerInput(serverProxy.getOpponentIndex());
 
 			if (gameInfos === "room-closed")
