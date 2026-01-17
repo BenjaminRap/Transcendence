@@ -176,7 +176,7 @@ export class PongGame extends HTMLElement {
 	private	showError(errorText : string)
 	{
 		this._errorGUI.setErrorText(errorText);
-		this._errorGUI.classList.remove("invinsible");
+		this._errorGUI.classList.remove("hidden");
 	}
 
 	public onError(error : any)
