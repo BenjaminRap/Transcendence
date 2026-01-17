@@ -252,5 +252,4 @@ export class	ServerProxy
 		} catch (error) {
 		}
 	}
-
 }
