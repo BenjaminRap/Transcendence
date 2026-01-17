@@ -1,4 +1,4 @@
-export type PongErrorSeverity = "ignore" | "quitScene" | "quitPong";
+export type PongErrorSeverity = "ignore" | "show" | "quitScene" | "quitPong";
 
 export class	PongError extends Error
 {

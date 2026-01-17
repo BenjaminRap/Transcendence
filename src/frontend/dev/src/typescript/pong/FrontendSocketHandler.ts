@@ -117,7 +117,7 @@ export class	FrontendSocketHandler
 			if (tournamentId.success)
 				deferred.resolve(tournamentId.value);
 			else
-				deferred.reject(new PongError(tournamentId.error, "ignore"));
+				deferred.reject(new PongError(tournamentId.error, "show"));
 		});
 		return deferred;
 	}
@@ -130,7 +130,7 @@ export class	FrontendSocketHandler
 			if (result.success)
 				deferred.resolve();
 			else
-				deferred.reject(new PongError(result.error, "ignore"));
+				deferred.reject(new PongError(result.error, "show"));
 		});
 		return deferred;
 	}
@@ -143,7 +143,7 @@ export class	FrontendSocketHandler
 			if (participants.success)
 				deferred.resolve(participants.value);
 			else
-				deferred.reject(new PongError(participants.error, "ignore"));
+				deferred.reject(new PongError(participants.error, "show"));
 		});
 		return deferred;
 	}
