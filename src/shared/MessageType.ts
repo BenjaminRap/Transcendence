@@ -9,6 +9,7 @@ export type ClientMessageData<T extends ClientMessage> =
 	T extends "start-tournament" ? [(result : Result<null>) => void] :
 	T extends "join-tournament" ? [TournamentId, (participants : Result<Profile[]>) => void] :
 	T extends "get-tournaments" ? [(descriptions : TournamentDescription[]) => void] :
+	T extends "ban-participant" ? [string] :
 	[];
 
 export type ServerEvents = "game-infos" | "joined-game" | "ready" | "forfeit" | "room-closed" | "tournament-canceled" | "add-participant" | "remove-participant" | "kicked" | "banned";
