@@ -9,7 +9,7 @@ const	defaultDescription : TournamentDescription = {
 
 export class	TournamentDescriptionGUI extends HTMLElement
 {
-	private _description : TournamentDescription;
+	private readonly _description : TournamentDescription;
 
 	constructor(description? : TournamentDescription)
 	{
@@ -26,6 +26,11 @@ export class	TournamentDescriptionGUI extends HTMLElement
 					<p>${this._description.currentPlayerCount}/${this._description.maxPlayerCount}</p>
 				</div>
 		`;
+	}
+
+	public getDescription()
+	{
+		return this._description;
 	}
 }
 

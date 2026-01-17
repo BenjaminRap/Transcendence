@@ -1,6 +1,7 @@
 import type { TournamentDescription } from "@shared/ServerMessage";
 import type { IGUI } from "./IGUI";
 import { TournamentDescriptionGUI } from "./TournamentDescriptionGUI";
+import { Observable } from "@babylonjs/core";
 
 export type OnlineTournamentJoinPublicGUIInputs =
 {
@@ -12,6 +13,7 @@ export class	OnlineTournamentJoinPublicGUI extends HTMLElement implements IGUI<O
 {
 	private _inputs : OnlineTournamentJoinPublicGUIInputs | undefined;
 	private _descriptionsContainer : HTMLDivElement | undefined;
+	private _onTournamentJoinObservable = new Observable<TournamentDescription>();
 
 	constructor()
 	{
@@ -56,11 +58,16 @@ export class	OnlineTournamentJoinPublicGUI extends HTMLElement implements IGUI<O
 			const	tournamentDescriptionGUI = new TournamentDescriptionGUI(description);
 
 			tournamentDescriptionGUI.addEventListener("click", () => {
-				console.log("click tournament");
+				this._onTournamentJoinObservable.notifyObservers(tournamentDescriptionGUI.getDescription());
 			})
 			nodes.push(tournamentDescriptionGUI);
 		});
 		this._descriptionsContainer?.replaceChildren(...nodes);
+	}
+
+	public onTournamentJoin()
+	{
+		return this._onTournamentJoinObservable;
 	}
 }
 

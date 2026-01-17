@@ -23,6 +23,7 @@ import { OnlineTournamentJoinPublicGUI } from "../gui/OnlineTournamentJoinPublic
 import { OnlineTournamentChoiceGUI } from "../gui/OnlineTournamentChoiceGUI";
 import { OnlineTournamentStartGUI } from "../gui/OnlineTournamentStartGUI";
 import { PongError } from "@shared/pongError/PongError";
+import type { TournamentDescription } from "@shared/ServerMessage";
 
 type EnemyType = "Local" | "Multiplayer" | "Bot";
 
@@ -118,6 +119,9 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			refresh: () => this.refreshTournaments(),
 			cancel: () => this.switchMenu(this._onlineTournamentJoinPublicGUI, this._onlineTournamentChoiceGUI)
 		}, this._menuParent);
+		this._onlineTournamentJoinPublicGUI.onTournamentJoin().add((description : TournamentDescription) => {
+			this.joinTournament(description.id);
+		});
 	}
 
 	protected	ready()
