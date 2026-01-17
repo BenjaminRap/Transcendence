@@ -2,11 +2,22 @@ import { defaultProfile, type Profile } from "@shared/Profile";
 import type { DefaultSocket } from "../";
 import { Room } from "./Room";
 
+let	guestProfileId = BigInt(0);
+
+function	getGuestProfile() : Profile
+{
+	guestProfileId++;
+	return {
+		name: `guest${guestProfileId}`,
+		image: defaultProfile.image
+	}
+}
+
 export class	SocketData
 {
 	private _state : "unactive" | "waiting" | "inRoom" | "ready" = "unactive";
 	private _room : Room | null = null;
-	private _profile : Profile = defaultProfile;
+	private _profile : Profile = getGuestProfile();
 
 	public getState() {
 		return this._state;
