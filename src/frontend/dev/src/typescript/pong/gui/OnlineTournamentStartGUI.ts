@@ -26,11 +26,11 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 			<div class="h-1/5 w-full">
 				<p class="h-1/2 text-(--text-color) text-[4cqw] font-(family-name:--font) text-center border-solid border-(length:--border-width) border-(--border-color) m-auto w-fit relative top-1/2 -translate-y-1/2 pr-[5%] pl-[5%] select-text pointer-events-auto leading-[1.1] onlineTournamentStartGUITournamentId">xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx</p>
 			</div>
-			<fieldset class="w-11/12 h-1/2 overflow-y-scroll pointer-events-auto border-solid border-(--border-color) border-(length:--border-width) m-auto scrollbar-thumb-white scrollbar-track-[transparent] cursor-all-scroll">
+			<fieldset class="w-11/12 h-[60%] overflow-y-scroll pointer-events-auto border-solid border-(--border-color) border-(length:--border-width) m-auto scrollbar-thumb-white scrollbar-track-[transparent] cursor-all-scroll">
 				<legend class="m-auto pr-[2%] pl-[2%] text-[3cqw] text-(--text-color) font-(family-name:--font)">Participants</legend>
 				<div class="inline"></div>
 			</fieldset>
-			<div class="w-1/3 h-1/3 relative b-1/3 m-auto">
+			<div class="flex flex-row w-full justify-around h-1/3 relative b-1/3">
 				${this.getButtonHTML("Start", "onlineTournamentStartGUIStart")}
 				${this.getButtonHTML("Join", "onlineTournamentStartGUIJoin")}
 				${this.getButtonHTML("Leave", "onlineTournamentStartGUILeave")}
@@ -48,7 +48,7 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 
 	private	getButtonHTML(text : string, className : string)
 	{
-		return `<button class="${className} text-[3cqw] w-full h-[35%] mt-[5%] grow menu-button">${text}</button>`;
+		return `<button class="${className} text-[3cqw] w-1/4 h-[40%] mt-[2%] menu-button">${text}</button>`;
 	}
 
 	public getInputs()
@@ -76,7 +76,7 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 		Object.entries(this._inputs).forEach(([key, value]) => {
 			const	isVisible = visibles.includes(key as keyof OnlineTournamentStartGUIInputs);
 
-			value.classList.toggle("invinsible", !isVisible);
+			value.classList.toggle("hidden", !isVisible);
 		});
 	}
 }
