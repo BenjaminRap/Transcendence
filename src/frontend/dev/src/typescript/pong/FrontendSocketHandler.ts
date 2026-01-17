@@ -2,7 +2,7 @@ import { Deferred, Observable } from "@babylonjs/core";
 import type { ClientToServerEvents, ServerToClientEvents } from "@shared/MessageType";
 import { PongError } from "@shared/pongError/PongError";
 import type { Profile } from "@shared/Profile";
-import { type GameInfos, type GameInit, type TournamentCreationSettings, type TournamentDescription, type TournamentId, zodGameInit } from "@shared/ServerMessage";
+import { type GameInfos, type GameInit, type TournamentCreationSettings, type TournamentDescription, type TournamentEvent, type TournamentId, zodGameInit } from "@shared/ServerMessage";
 import type { Result } from "@shared/utils";
 import { io, Socket } from "socket.io-client";
 
@@ -17,7 +17,7 @@ export class	FrontendSocketHandler
 	private _socket : DefaultSocket;
 	private _onGameMessageObservable : Observable<ServerInGameMessage>;
 	private _onDisconnectObservable  = new Observable<void>();
-	private _onTournamentEventObservable : Observable<void>;
+	private _onTournamentEventObservable : Observable<TournamentEvent>;
 
 	private constructor(socket : DefaultSocket)
 	{
@@ -173,12 +173,8 @@ function	createNewOnGameMessageObservable(socket : DefaultSocket)
 
 function	createNewOnTournamentMessageObservable(socket : DefaultSocket)
 {
-	const	observable = new Observable<void>();
+	const	observable = new Observable<TournamentEvent>();
 
-	socket.on("tournament-canceled", () => { observable.notifyObservers() });
-	socket.on("add-participant", () => { observable.notifyObservers() });
-	socket.on("remove-participant", () => { observable.notifyObservers() });
-	socket.on("banned", () => { observable.notifyObservers() });
-	socket.on("kicked", () => { observable.notifyObservers() });
+	socket.on("tournament-event", tournamentEvent => observable.notifyObservers(tournamentEvent));
 	return observable;
 }

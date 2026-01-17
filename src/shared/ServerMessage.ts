@@ -80,3 +80,24 @@ export const	zodTournamentDescription = zod.object({
 	path: [ "currentPlayerCount" ]
 });
 export type TournamentDescription = zod.infer<typeof zodTournamentDescription>;
+
+export const	zodTournamentEvent = zod.discriminatedUnion("type", [
+	zod.object({
+		type: zod.literal("add-participant"),
+		profile: zodProfile
+	}),
+	zod.object({
+		type: zod.literal("remove-participant"),
+		name: zod.string()
+	}),
+	zod.object({
+		type: zod.literal("banned")
+	}),
+	zod.object({
+		type: zod.literal("kicked")
+	}),
+	zod.object({
+		type: zod.literal("tournament-canceled")
+	})
+]);
+export type TournamentEvent = zod.infer<typeof zodTournamentEvent>;

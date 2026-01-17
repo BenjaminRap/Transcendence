@@ -1,4 +1,4 @@
-import type { GameInit, KeysUpdate, TournamentCreationSettings, TournamentDescription, TournamentId } from "@shared/ServerMessage";
+import type { GameInit, KeysUpdate, TournamentCreationSettings, TournamentDescription, TournamentEvent, TournamentId } from "@shared/ServerMessage";
 import { FrontendSocketHandler, type ServerInGameMessage } from "./FrontendSocketHandler";
 import type { Deferred, int, Observable, Observer } from "@babylonjs/core";
 import type { Profile } from "@shared/Profile";
@@ -121,7 +121,7 @@ export class	ServerProxy
 		return this._frontendSocketHandler.onGameMessage();
 	}
 
-	public onTournamentMessage() : Observable<void>
+	public onTournamentMessage() : Observable<TournamentEvent>
 	{
 		return this._frontendSocketHandler.onTournamentMessage();
 	}
