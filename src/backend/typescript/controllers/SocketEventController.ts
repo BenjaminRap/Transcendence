@@ -29,8 +29,8 @@ export class SocketEventController {
 		}
 	}
 
+    // send message to a specific user
     // ----------------------------------------------------------------------------- //
-    // cette fonction n'emet qu'a la room user-{userId}, donc a tous les processus front connectes de cet utilisateur
 	static sendToUser(userId: number, event: string, data: any): void
 	{
 		try {
@@ -42,17 +42,48 @@ export class SocketEventController {
 		}
 	}
 
+    // send message to all users watching a specific profile
     // ----------------------------------------------------------------------------- //
-    static isUserOnline(userId: number): boolean {
-        return SocketEventController.connectedUsers.has(userId);
+    static sendToProfileWatchers(userId: number, event: string, data: any): void
+    {
+        SocketEventController.socketInstance.io.to('watching-' + userId).emit(event as any, data);
     }
 
+    // send message to all friends of a specific user
+    // ----------------------------------------------------------------------------- //
+    static sendToFriends(userId: number, event: string, data: any): void
+    {
+        try {
+            if (SocketEventController.socketInstance)
+            {
+                const friendService: FriendService = Container.getInstance().getService('FriendService');
+    
+                friendService.getFriendsIds(userId).then((friendsIds: number[]) => {
+                    friendsIds.forEach((friendId) => {
+                        SocketEventController.sendToUser(friendId, event, data);
+                    });
+                }).catch((error) => {
+                    console.warn(`Error retrieving friends of user ${userId} :`, error);
+                });
+            }            
+        } catch (error) {
+            console.warn(`Error sending socket event to friends of user ${userId} :`, error);
+        }
+    }
+
+    // notify profile change to user, friends and watchers
     // ----------------------------------------------------------------------------- //
     static notifyProfileChange(id: number, event: string, data: any): void
     {
         SocketEventController.sendToUser(id, event, data);
-        SocketEventController.socketInstance.sendToFriends(id, event, data);
-        SocketEventController.socketInstance.sendToProfileWatchers(id, event, data);
+        SocketEventController.sendToFriends(id, event, data);
+        SocketEventController.sendToProfileWatchers(id, event, data);
+    }
+
+    // check if a user is online
+    // ----------------------------------------------------------------------------- //
+    static isUserOnline(userId: number): boolean {
+        return SocketEventController.connectedUsers.has(userId);
     }
 
     // ==================================== PRIVATE ==================================== //
@@ -206,31 +237,4 @@ export class SocketEventController {
 			}
 		}
 	}
-
-    // ----------------------------------------------------------------------------- //
-    private sendToFriends(userId: number, event: string, data: any): void
-    {
-        try {
-            if (SocketEventController.socketInstance)
-            {
-                const friendService: FriendService = Container.getInstance().getService('FriendService');
-    
-                friendService.getFriendsIds(userId).then((friendsIds: number[]) => {
-                    friendsIds.forEach((friendId) => {
-                        SocketEventController.sendToUser(friendId, event, data);
-                    });
-                }).catch((error) => {
-                    console.warn(`Error retrieving friends of user ${userId} :`, error);
-                });
-            }            
-        } catch (error) {
-            console.warn(`Error sending socket event to friends of user ${userId} :`, error);
-        }
-    }
-
-    // ----------------------------------------------------------------------------- //
-    private sendToProfileWatchers(userId: number, event: string, data: any): void
-    {
-        this.io.to('watching-' + userId).emit(event as any, data);
-    }
 }

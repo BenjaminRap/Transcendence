@@ -1,3 +1,11 @@
+import type { Match } from "@prisma/client";
+
+export enum OPPONENT_LEVEL
+{
+    GUEST = "GUEST",
+    AI = "AI",
+}
+
 export interface GameStats
 {
 	wins:		number,
@@ -5,15 +13,6 @@ export interface GameStats
 	total:     	number,
 	winRate:	number,
 }
-
-export interface MatchStats
-{
-	playerId:	number,
-	stats:		GameStats,
-}
-
-
-
 
 export interface PlayerInfo {
     id?: number,
@@ -25,6 +24,13 @@ export interface StartMatchData {
     player2: PlayerInfo,
 }
 
+export interface MatchData
+{
+    matchId:        number,
+    player1Info:  PlayerInfo,
+    player2Info:  PlayerInfo,
+}
+
 export interface EndMatchData {
     matchId:	    number,
     winner:         PlayerInfo,
@@ -34,35 +40,26 @@ export interface EndMatchData {
     duration:	    number,
 }
 
-export interface MatchData
+export interface OpponentSummary
 {
-    matchId:        number,
-    player1Info:  PlayerInfo,
-    player2Info:  PlayerInfo,
+    id: string,
+    username: string,
+    avatar: string,
+    isFriend: boolean,
 }
 
-interface OpponentInfo
+export interface MatchResult
 {
-	id:			number,
-	username:	string,
-	avatar:		string,
+    matchId: number,
+    scoreWinner: number,
+    scoreLoser: number,
+    duration: number,
+    winner: PlayerInfo,
+    loser: PlayerInfo,
 }
 
-export interface MatchHistoryEntry
+export interface MatchSummary
 {
-	matchId:	number,
-	opponent:	OpponentInfo,
-	userResult:	'win' | 'loss',
-	date:		Date,
-}
-
-export enum OPPONENT_LEVEL
-{
-    GUEST = "GUEST",
-    AI = "AI",
-}
-
-export interface MatchTournamentData extends MatchData
-{
-    tournamentId:  number,
+    opponent?: OpponentSummary,
+    matchResult: MatchResult,
 }

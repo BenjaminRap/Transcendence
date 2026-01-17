@@ -11,5 +11,5 @@ export interface ListFormat
 {
     status:     string,
     updatedAt:  string,
-    user:       FriendProfile,
+    user:       FriendProfile | null,
 }

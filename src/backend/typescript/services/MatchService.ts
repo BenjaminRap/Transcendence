@@ -1,89 +1,122 @@
 import type { PrismaClient, Match } from '@prisma/client';
-import type { GameStats, MatchHistoryEntry, MatchData } from '../types/match.types.js';
-import type { EndMatchData } from '../types/match.types.js';
+import type { GameStats, EndMatchData, MatchResult } from '../types/match.types.js';
 import type { PlayerInfo } from '../types/match.types.js';
-import { number } from 'zod';
+import type { MatchSummary, OpponentSummary } from '../types/match.types.js';
+import { FriendService } from './FriendService.js';
 
 export class MatchService {
 	constructor(
 		private prisma: PrismaClient,
+        private friendService: FriendService,
 	) {}
-
+    
 	// ----------------------------------------------------------------------------- //
     async startMatch(player1: PlayerInfo, player2: PlayerInfo): Promise<number> {
         const match = await this.prisma.match.create({
             data: {
-                player1Id: player1.id,
-                player1Level: player1.level,
-                player2Id: player2.id,
-                player2Level: player2.level,
+                player1Id: player1.id ?? null,
+                player1Level: player1.level ?? null,
+                player2Id: player2.id ?? null,
+                player2Level: player2.level ?? null,
             }
         });
-        return match.id;
+
+        return match.id
     }
 
 	// ----------------------------------------------------------------------------- //
-    async endMatch(matchData: EndMatchData, match: Match): Promise<void> {
-
+    async endMatch(matchData: EndMatchData): Promise<void> {
         await this.prisma.match.update({
             where: { id: matchData.matchId as number },
             data: {
-                winnerId: matchData.winnerId,
-                loserId: matchData.loserId,
-                winnerLevel: matchData.winnerLevel,
-                loserLevel: matchData.loserLevel,
-                scoreWinner: matchData.scoreWinner,
-                scoreLoser: matchData.scoreLoser,
+                status: 'FINISHED',
+
+                winnerId: matchData.winner.id ?? null,
+                winnerLevel: matchData.winner.level ?? null,
+
+                loserId: matchData.loser.id ?? null,
+                loserLevel: matchData.loser.level ?? null,
+                
+                scoreWinner: matchData.scoreWinner as number,
+                scoreLoser: matchData.scoreLoser as number,
+
                 duration: matchData.duration,
             }
         });
     }
 
 	// ----------------------------------------------------------------------------- //
-	async registerMatch(matchData: MatchData): Promise<number>{
-		const match = await this.prisma.match.create({
-			data: {
-				winnerId: matchData.winnerId,
-				loserId: matchData.loserId,
-				winnerLevel: matchData.winnerLevel,
-				loserLevel: matchData.loserLevel,
-				scoreWinner: matchData.scoreWinner,
-				scoreLoser: matchData.scoreLoser,
-				duration: matchData.duration,
-                tournamentId: undefined,
-			}
-		});
-
-		return match.id;
-	} 
-
-	// ----------------------------------------------------------------------------- //
-    async registerTournamentMatch(matchData: EndMatchData, tournamentId: number ): Promise<number>{
-        const match = await this.prisma.match.create({
-            data: {
-                winnerId: matchData.winnerId,
-                loserId: matchData.loserId,
-                winnerLevel: matchData.winnerLevel,
-                loserLevel: matchData.loserLevel,
-                scoreWinner: matchData.scoreWinner,
-                scoreLoser: matchData.scoreLoser,
-                duration: matchData.duration,
-                tournamentId: tournamentId,
+	async getMatchInProgress(matchId: number): Promise<Match | null> {
+        return this.prisma.match.findFirst({
+            where: {
+                id: matchId,
+                status: 'IN_PROGRESS'
             }
         });
-        return match.id;
     }
 
-	// ----------------------------------------------------------------------------- //
-    /**
-     * 
-     * peut etre qu'il faudra recuperer les users pour mettre a jour leurs stats via websocket
-     * 
-     */
-	async getMatch(matchId: number): Promise<Match | null> {
-		return await this.prisma.match.findUnique({
-			where: { id: matchId }
-		});
+    // --------------------------------------- -------------------------------------- //
+    calculateStats(matchesWons: number, matchesLoses: number): GameStats {
+        const totalMatches = matchesWons + matchesLoses;
+        const ratio = totalMatches > 0 ? (matchesWons / totalMatches * 100).toFixed(2) : "0.00";
+
+        return {
+            wins: matchesWons,
+            losses: matchesLoses,
+            total: totalMatches,
+            winRate: parseFloat(ratio),
+        };
+    }
+
+    // ----------------------------------------------------------------------------- //
+    async getLastMatches(userId: number, matchesWons: any[], matchesLoses: any[], limit: number): Promise<MatchSummary[]> {
+
+        const allMatches = [
+            ...(matchesWons || []),
+            ...(matchesLoses || []),
+        ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, limit);
+
+        return Promise.all(allMatches.map(async match => {
+            
+            const isUserWinner = match.winnerId === userId;
+            
+            const opponentUser = isUserWinner ? match.loser : match.winner;
+            const opponentLevel = isUserWinner ? match.loserLevel : match.winnerLevel;
+
+            let opponentSummary: OpponentSummary;
+
+            if (opponentUser) {
+                // if user exists in DB
+                opponentSummary = {
+                    id: opponentUser.id.toString(),
+                    username: opponentUser.username,
+                    avatar: opponentUser.avatar,
+                    isFriend: await this.friendService.isFriend(userId, opponentUser.id)
+                };
+            } else if (opponentLevel) {
+                // if opponent is a guest or AI
+                opponentSummary = {
+                    id: "GUEST",
+                    username: opponentLevel,
+                    avatar: process.env.DEFAULT_AVATAR_URL || "https://8080:localhost/api//static/public/avatarDefault.webp", 
+                    isFriend: false
+                };
+            } else {
+                // if user has deleted their account (neither User nor Level if it was a real user before)
+                opponentSummary = {
+                    id: "DELETED",
+                    username: "Deleted User",
+                    avatar: process.env.DEFAULT_AVATAR_URL || "https://8080:localhost/api//static/public/avatarDefault.webp",
+                    isFriend: false
+                };
+            }
+
+            return {
+                opponent: opponentSummary,
+                match: match as MatchResult,
+            } as MatchSummary;
+        }));
     }
 
 	// ----------------------------------------------------------------------------- //
@@ -102,16 +135,12 @@ export class MatchService {
 			where: { loserId: { in: playerIds } },
 			_count: true
 		});
+        
 		const stats = playerIds.map(id => {
 			const won = wins.find(w => w.winnerId === id)?._count ?? 0;
 			const lost = losses.find(l => l.loserId === id)?._count ?? 0;
 
-			return {
-				wins: won,
-				losses: lost,
-				total: won + lost,
-				winRate: won + lost === 0 ? 0 : won / (won + lost),
-			} as GameStats;
+			return this.calculateStats(won, lost);;
 		});
 		return { stats }
 	}
@@ -129,66 +158,10 @@ export class MatchService {
             where: { loserId: playerId }
         });
 
-        const total = wins + losses;
-        const winRate = total === 0 ? 0 : wins / total;
-
-        const stats: GameStats = {
-            wins: wins,
-            losses: losses,
-            total: total,
-            winRate: winRate,
-        };
+        const stats: GameStats = this.calculateStats(wins, losses);
 
         return { stats };
     }
-
-	// ----------------------------------------------------------------------------- //
-	async getMatchHistory(playerId: number): Promise<MatchHistoryEntry[] | null> {
-		if (await this.isExisting(playerId) === false)
-			throw new Error('Player does not exist');
-
-		const matches = await this.prisma.match.findMany({
-			where: {
-				OR: [
-					{ winnerId: playerId },
-					{ loserId: playerId }
-				]
-			},
-			select: {
-				id: true,
-				winner: {
-					select: {
-						id: true,
-						username: true,
-						avatar: true,
-					},
-				},
-				loser: {
-					select: {
-						id: true,
-						username: true,
-						avatar: true,
-					},
-				},
-				scoreWinner: true,
-				scoreLoser: true,
-				winnerId: true,
-				createdAt: true
-			},
-			orderBy: {
-				createdAt: 'desc'
-			}
-		});
-
-		const history = matches.map(match => ({
-			matchId: match.id,
-			opponent: match.winnerId === playerId ? match.loser : match.winner,
-			userResult: match.winnerId === playerId ? 'win' : 'loss',
-			date: match.createdAt
-		}) as MatchHistoryEntry);
-
-		return history;
-	}
 
 	// ================================== PRIVATE ================================== //
 
@@ -204,7 +177,7 @@ export class MatchService {
 		const missingIds = ids.filter(ids => !existingIds.includes(ids));
 
 		if (missingIds.length > 0)
-			false;
+			return false;
 		return true;
 	}
 

@@ -5,6 +5,7 @@ on ouvre une connexion en GUEST au client qui entre sur le site
 
 si l'utilisateur n'est pas connecte a son compte et/ou n'est pas amis avec le profile qu'il visite alors il ne peut avoir ni la liste d'amis ni l'historique des matchs du user qu'il viste mais les stats (defaites - victoires - ratio) en plus de la photo de profile et du username seront notifies en cas de mise a jour
 
+
 # connexion a la socket en GUEST :
 ``` ts
 	const socket = io("http://localhost:8181/socket.io/", { // adresse en mode prod sans passer par proxy
@@ -39,6 +40,8 @@ l'utilisateur n'est plus en connexion GUEST
 ```
 
 l'utilisateur est connecte a la websocket soit en GUEST soit sur son profile
+
+
 
 # events from backend
 | nom event | data received | response explanation |

@@ -53,6 +53,9 @@ export class TournamentController {
      *      je sauvegarde le match et je mets a jour la liste des matchs du tournois
      * 
      * 
+     * si un joueur participe a un tournois il ne peut pas participer a un autre tournois en meme temps
+     * 
+     * 
      * 
      *  la structure des tournois a verifier
      *      -> matchmaking donne deja la structure du tournois ?

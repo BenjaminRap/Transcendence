@@ -19,7 +19,7 @@ export class FriendController {
             }
            
             // check users existance; their connection; create the friend request
-            // reurn the user 
+            // returns the current user profile
             const userId = (request as any).user.userId;
             const userProfile = await this.friendService.createFriendRequest(Number(friendId.data), Number(userId));
 

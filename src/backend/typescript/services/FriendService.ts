@@ -31,6 +31,7 @@ export class FriendService {
         
         const user = await this.getById(userId);
         user.isOnline = SocketEventController.isUserOnline(userId);
+        user.requesterId = userId;
         
         return user;
     }
@@ -62,6 +63,7 @@ export class FriendService {
 
         const user = await this.getById(userId);
         user.isOnline = SocketEventController.isUserOnline(userId);
+        user.requesterId = friendship.requesterId;
         
         return user;
     }
@@ -101,16 +103,31 @@ export class FriendService {
                 ],
                 status: 'ACCEPTED',
             },
-            include: {
-                requester: true,
-                receiver: true,
-            },
+            select: {
+                id: true,
+                status: true,
+                updatedAt: true,
+                requesterId: true,
+                requester: {
+                    select: {
+                        id: true,
+                        username: true,
+                        avatar: true,
+                    }
+                },
+                receiver: {
+                    select: {
+                        id: true,
+                        username: true,
+                        avatar: true,
+                    }
+                }
+            }
         });
 
         if (friendList.length === 0)
             return [];
 
-        // returns the formated friend list
         return (await this.formatList(friendList, userId) as ListFormat[]);
     }
 
@@ -179,10 +196,8 @@ export class FriendService {
         return false;
     }
 	
-	// ================================== PRIVATE ================================== //
-
     // ----------------------------------------------------------------------------- //
-    private async getById(id: number): Promise<FriendProfile> {
+    async getById(id: number): Promise<FriendProfile> {
         return await this.prisma.user.findUnique({
             where: { id },
             select: {
@@ -192,6 +207,8 @@ export class FriendService {
             }
         }) as FriendProfile;
     }
+	
+    // ================================== PRIVATE ================================== //
 
     // ----------------------------------------------------------------------------- //
     private async checkId(id: number): Promise<boolean> {

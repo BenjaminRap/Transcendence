@@ -1,4 +1,4 @@
-import type { GameStats } from "./match.types"
+import type { GameStats, MatchSummary } from "./match.types"
 import type { Match } from "@prisma/client"
 
 export interface PublicProfile
@@ -7,6 +7,6 @@ export interface PublicProfile
     avatar:     string,
     username:   string,
 	stats: 		GameStats,
-	lastMatchs: Match[],
+	lastMatchs: MatchSummary[],
     isFriend:   boolean
 }
