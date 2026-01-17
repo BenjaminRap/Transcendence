@@ -17,7 +17,7 @@ export type ServerEventsData<T extends ServerEvents> =
 	T extends "game-infos" ? [GameInfos] :
 	T extends "joined-game" ? [GameInit] :
 	T extends "add-participant" ? [Profile] :
-	T extends "remove-participant" ? [Profile] :
+	T extends "remove-participant" ? [string] :
 	[]
 
 
