@@ -9,7 +9,6 @@ export type OnlineTournamentJoinPrivateGUIInputs =
 export class	OnlineTournamentJoinPrivateGUI extends HTMLElement implements IGUI<OnlineTournamentJoinPrivateGUIInputs>
 {
 	private _inputs : OnlineTournamentJoinPrivateGUIInputs | undefined;
-	private _errorText : HTMLParagraphElement | undefined;
 	private _tournamentIdInput : HTMLInputElement | undefined;
 
 	constructor()
@@ -23,7 +22,6 @@ export class	OnlineTournamentJoinPrivateGUI extends HTMLElement implements IGUI<
 		this.innerHTML = `
 			<div class="h-3/5 w-full">
 				<div class="w-2/3 text-(family-name:--font) m-auto relative top-1/2 -translate-y-1/2">
-					<p class="onlineTournamentJoinPrivateGUIErrorText w-full text-red-900 bg-red-300/25 backdrop-blur-3xl mb-[0.5cqw] text-center rounded-md invisible text-[2cqw]">Error</p>
 					<input text="text" placeholder="xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx" maxlength="36" class="w-full text-(--text-color) text-[3cqw] text-center pointer-events-auto border-(length:--border-width) border-(--border-color) rounded-(--rounded) p-[3%] focus:outline-none onlineTournamentJoinPrivateGUITournamentIdInput">
 				</div>
 			</div>
@@ -36,7 +34,6 @@ export class	OnlineTournamentJoinPrivateGUI extends HTMLElement implements IGUI<
 			join: this.querySelector<HTMLButtonElement>("button.onlineTournamentJoinPrivateGUIRefresh")!,
 			cancel: this.querySelector<HTMLButtonElement>("button.onlineTournamentJoinPrivateGUICancel")!
 		};
-		this._errorText = this.querySelector<HTMLParagraphElement>("p.onlineTournamentJoinPrivateGUIErrorText")!;
 		this._tournamentIdInput = this.querySelector<HTMLInputElement>("input.onlineTournamentJoinPrivateGUITournamentIdInput")!;
 	}
 
