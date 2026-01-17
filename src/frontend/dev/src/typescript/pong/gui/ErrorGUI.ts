@@ -17,7 +17,7 @@ export class	ErrorGUI extends HTMLElement implements IGUI<ErrorGUIInputs>
 
 	public	connectedCallback()
 	{
-		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm", "z-10");
+		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "backdrop-blur-sm", "z-10");
 		this.innerHTML = `
 				<fieldset class="w-11/12 h-2/3 border-solid border-(--border-color) border-(length:--border-width) mt-[1%] m-auto">
 
