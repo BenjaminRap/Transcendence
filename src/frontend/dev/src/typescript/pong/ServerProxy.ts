@@ -221,6 +221,11 @@ export class	ServerProxy
 		return deferred.promise;
 	}
 
+	public isTournamentCreator()
+	{
+		return this._state === "tournament-creator" || this._state === "tournament-creator-player";
+	}
+
 	private verifyState(...allowedStates : SocketState[]) : void
 	{
 		if (!allowedStates.includes(this._state))
@@ -242,4 +247,5 @@ export class	ServerProxy
 		} catch (error) {
 		}
 	}
+
 }
