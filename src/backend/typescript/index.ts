@@ -160,6 +160,7 @@ async function start(): Promise<void> {
 					ack(tournament);
 					return ;
 				}
+				console.log(`${socket.data.getProfile().name} joined the ${tournament.value.getDescription().name} tournament`);
 				ack(success(tournament.value.getParticipantsProfiles()));
 			})
 			socket.on("create-tournament", (data : any, ack : (tournamentId : Result<string>) => void) => {
@@ -177,7 +178,10 @@ async function start(): Promise<void> {
 					ack(tournament);
 					return ;
 				}
-				ack(success(tournament.value.getDescription().id));
+				const	description = tournament.value.getDescription();
+
+				console.log(`tournament created : ${description.name}`);
+				ack(success(description.id));
 			})
 		});
         await fastify.listen({ port: port, host: host });

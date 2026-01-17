@@ -33,6 +33,7 @@ export class	ServerTournament
 			return error("Not enough players !");
 		this._creator.removeAllListeners("cancel-tournament");
 		this._started = true;
+		console.log(`${this._settings.name} tournament started !`);
 		return success(null);
 	}
 
@@ -40,6 +41,7 @@ export class	ServerTournament
 	{
 		if (this._disposed)
 			return ;
+		console.log(`${this._settings.name} tournamend end`);
 		this._disposed = true;
 		if (this._started === false)
 		{
@@ -84,6 +86,7 @@ export class	ServerTournament
 		this._io.to(this._tournamentId).emit("add-participant", profile);
 		socket.join(this._tournamentId);
 		socket.once("leave-tournament", () => {
+			console.log(`${socket.data.getProfile().name} leaved tournament ${this._settings.name}`);
 			if (this._started)
 			{
 				console.log("leave matchamking that has started");
