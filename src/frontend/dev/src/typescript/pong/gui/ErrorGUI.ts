@@ -21,8 +21,8 @@ export class	ErrorGUI extends HTMLElement implements IGUI<ErrorGUIInputs>
 		this.innerHTML = `
 				<fieldset class="w-11/12 h-2/3 border-solid border-(--border-color) border-(length:--border-width) mt-[1%] m-auto">
 
-					<legend class="m-auto pr-[2%] pl-[2%] text-(--text-color) text-[5cqw] font-(family-name:--font) errorGUIText">Error</legend>
-					<p class="text-[3cqw] font-(family-name:--font) text-(--text-color) text-center w-4/5 h-3/5 m-auto">Sorry there was an error !</p>
+					<legend class="m-auto pr-[2%] pl-[2%] text-(--text-color) text-[5cqw] font-(family-name:--font)">Error</legend>
+					<p class="text-[3cqw] font-(family-name:--font) text-(--text-color) text-center w-4/5 h-3/5 m-auto errorGUIText">Sorry there was an error !</p>
 					<div class="h-1/3 w-1/3 m-auto">
 						${this.getButtonHTML("Close", "errorGUIClose")}
 					</div>
