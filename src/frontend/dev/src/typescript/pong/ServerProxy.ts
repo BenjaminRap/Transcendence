@@ -246,6 +246,7 @@ export class	ServerProxy
 	public dispose()
 	{
 		this._frontendSocketHandler.onGameMessage().clear();
+		this._frontendSocketHandler.onTournamentMessage().clear();
 		this._frontendSocketHandler.onDisconnect().remove(this._disconnectedObserver);
 		try {
 			this.leaveScene();
