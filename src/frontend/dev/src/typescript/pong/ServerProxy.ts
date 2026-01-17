@@ -221,9 +221,9 @@ export class	ServerProxy
 		return deferred.promise;
 	}
 
-	public isTournamentCreator()
+	public getTournamentData()
 	{
-		return this._state === "tournament-creator" || this._state === "tournament-creator-player";
+		return this._tournamentData;
 	}
 
 	private verifyState(...allowedStates : SocketState[]) : void

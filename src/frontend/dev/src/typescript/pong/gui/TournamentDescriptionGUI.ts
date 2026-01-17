@@ -1,4 +1,4 @@
-import type { TournamentDescription } from "@shared/ServerMessage";
+import type { TournamentDescription, TournamentId } from "@shared/ServerMessage";
 
 const	defaultDescription : TournamentDescription = {
     name: "defautServer",
@@ -28,7 +28,7 @@ export class	TournamentDescriptionGUI extends HTMLElement
 		`;
 	}
 
-	public getTournamentId()
+	public getTournamentId() : TournamentId
 	{
 		return this._description.id;
 	}

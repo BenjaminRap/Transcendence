@@ -260,8 +260,8 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		if (settings === null)
 			return ;
 		try {
-			await this._sceneData.serverProxy.createTournament(settings);
-			this._onlineTournamentStartGUI.setInputType("creator");
+			const	tournamentId = await this._sceneData.serverProxy.createTournament(settings);
+			this._onlineTournamentStartGUI.init("creator", tournamentId);
 			this.switchMenu(this._onlineTournamentStartGUI);
 		} catch (error) {
 			this._sceneData.pongHTMLElement.onError(error);
@@ -286,7 +286,9 @@ export class CreateMenuGUI extends CustomScriptComponent {
 	{
 		try {
 			await this._sceneData.serverProxy.joinTournamentAsCreator();
-			this._onlineTournamentStartGUI.setInputType("creator-player")
+			const	tournamentData = this._sceneData.serverProxy.getTournamentData()!;
+
+			this._onlineTournamentStartGUI.init("creator-player", tournamentData.id);
 		} catch (error) {
 			this._sceneData.pongHTMLElement.onError(error);
 		}
@@ -296,7 +298,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 	{
 		try {
 			await this._sceneData.serverProxy.joinTournament(tournamentId);
-			this._onlineTournamentStartGUI.setInputType("player")
+			this._onlineTournamentStartGUI.init("player", tournamentId)
 			this.switchMenu(this._onlineTournamentStartGUI);
 		} catch (error) {
 			this._sceneData.pongHTMLElement.onError(error);
@@ -306,8 +308,9 @@ export class CreateMenuGUI extends CustomScriptComponent {
 	private	async leaveTournament()
 	{
 		this._sceneData.serverProxy.leaveTournament();
-		if (this._sceneData.serverProxy.isTournamentCreator())
-			this._onlineTournamentStartGUI.setInputType("creator");
+		const	tournamentData = this._sceneData.serverProxy.getTournamentData();
+		if (tournamentData?.isCreator)
+			this._onlineTournamentStartGUI.init("creator", tournamentData.id);
 		else
 			this.switchMenu(this._onlineTournamentChoiceGUI);
 	}
