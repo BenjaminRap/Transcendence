@@ -84,7 +84,8 @@ export type TournamentDescription = zod.infer<typeof zodTournamentDescription>;
 export const	zodTournamentEvent = zod.discriminatedUnion("type", [
 	zod.object({
 		type: zod.literal("add-participant"),
-		profile: zodProfile
+		profile: zodProfile,
+		isCreator: zod.boolean()
 	}),
 	zod.object({
 		type: zod.literal("remove-participant"),
