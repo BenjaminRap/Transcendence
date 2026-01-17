@@ -65,6 +65,7 @@ export class PongGame extends HTMLElement {
 		} catch (error) {
 			console.error(`Could not initialize the scene : ${error}`)
 		}
+		this._serverProxy.onTournamentMessage().add(() => this.onTournamentMessage());
     }
 
 	private renderScene() : void
@@ -164,6 +165,11 @@ export class PongGame extends HTMLElement {
 		sceneData.events.getObservable("set-participants").notifyObservers(participants);
 		await this._serverProxy.onGameReady();
 		sceneData.events.getObservable("game-start").notifyObservers();
+	}
+
+	private onTournamentMessage()
+	{
+
 	}
 
 	private setInputs(sceneData : FrontendSceneData, ...inputIndexes : int[])
