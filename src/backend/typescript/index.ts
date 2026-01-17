@@ -35,7 +35,10 @@ async function	init() : Promise<void>
 {
 	loadHavokPhysics();
 }
-const	io = new Server<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>(fastify.server);
+
+export type ServerType = Server<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>
+
+const	io : ServerType = new Server(fastify.server);
 
 async function	loadHavokPhysics()
 {

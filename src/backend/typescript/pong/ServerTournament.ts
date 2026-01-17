@@ -1,6 +1,5 @@
 import type { TournamentCreationSettings, TournamentDescription, TournamentId } from "@shared/ServerMessage";
-import type { DefaultSocket } from "..";
-import type { DefaultEventsMap, Server } from "socket.io";
+import type { DefaultSocket, ServerType } from "..";
 import { error, success, type Result } from "@shared/utils";
 
 export class	ServerTournament
@@ -13,7 +12,7 @@ export class	ServerTournament
 	constructor(
 		private _onTournamentDispose : () => void,
 		private readonly _settings : TournamentCreationSettings,
-		private _io : Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>,
+		private _io : ServerType,
 		private _creator : DefaultSocket
 	)
 	{
@@ -46,7 +45,7 @@ export class	ServerTournament
 		if (this._started === false)
 		{
 			this._players.forEach((player) => {
-				player.emit("tournament-canceled");
+				player.emit("tournament-event", { type: "tournament-canceled" });
 				player.removeAllListeners("leave-tournament");
 				player.leave(this._tournamentId);
 			});
@@ -83,7 +82,11 @@ export class	ServerTournament
 		const	profile = socket.data.getProfile();
 
 		this._players.add(socket);
-		this._io.to(this._tournamentId).emit("add-participant", profile);
+		this._io.to(this._tournamentId).emit("tournament-event", {
+            type: "add-participant",
+			profile: profile,
+			isCreator: profile === this._creator.data.getProfile()
+        });
 		socket.join(this._tournamentId);
 		socket.once("leave-tournament", () => {
 			console.log(`${socket.data.getProfile().name} leaved tournament ${this._settings.name}`);
@@ -94,7 +97,10 @@ export class	ServerTournament
 			}
 			else
 			{
-				this._io.to(this._tournamentId).emit("remove-participant", profile);
+				this._io.to(this._tournamentId).emit("tournament-event", {
+					type: "remove-participant",
+					name: profile.name
+				});
 				this._players.delete(socket);
 				socket.leave(this._tournamentId);
 			}
