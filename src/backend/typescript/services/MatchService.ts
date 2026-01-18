@@ -15,9 +15,9 @@ export class MatchService {
         const match = await this.prisma.match.create({
             data: {
                 player1Id: player1.id ?? null,
-                player1GuestName: player1.guestName ?? null,
+                player1GuestName: player1.guestName,
                 player2Id: player2.id ?? null,
-                player2GuestName: player2.guestName ?? null,
+                player2GuestName: player2.guestName,
             }
         });
 
@@ -32,10 +32,10 @@ export class MatchService {
                 status: MatchStatus.FINISHED,
 
                 winnerId: matchData.winner.id ?? null,
-                winnerGuestName: matchData.winner.guestName ?? null,
+                winnerGuestName: matchData.winner.guestName,
 
                 loserId: matchData.loser.id ?? null,
-                loserGuestName: matchData.loser.guestName ?? null,
+                loserGuestName: matchData.loser.guestName,
                 
                 scoreWinner: Number(matchData.scoreWinner),
                 scoreLoser: Number(matchData.scoreLoser),

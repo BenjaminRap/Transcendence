@@ -1,9 +1,3 @@
-export enum OPPONENT_LEVEL
-{
-    GUEST = "GUEST",
-    AI = "AI",
-}
-
 export interface GameStats
 {
 	wins:		number,
@@ -13,8 +7,8 @@ export interface GameStats
 }
 
 export interface PlayerInfo {
-    id?: number,
-    guestName?: string,
+    id:         number | undefined,
+    guestName:  string,
 }
 
 export interface StartMatchData {

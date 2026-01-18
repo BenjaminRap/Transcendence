@@ -20,14 +20,13 @@ export interface PlayerInfo {
 export interface TournamentParticipant {
     alias: string;
     userId?: number;
-    userGuestName?: string;
-    isAdmin?: boolean;
+    userGuestName: string;
 }
 
 export interface CreateTournament {
     title: string;
     adminUserId?: number;
-    adminGuestName?: string; // champ obligatoire si adminUserId non fourni (c'est a dire admin GUEST et le nom doit etre fourni par l'utilisateur dans le front)
+    adminGuestName: string;
     participants: TournamentParticipant[];
     matchups: StartMatchData[];
 }

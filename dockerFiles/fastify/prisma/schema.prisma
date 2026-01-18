@@ -84,11 +84,11 @@ model Match {
 
   player1Id         Int?
   player1           User?     @relation("Player1", fields: [player1Id], references: [id], onDelete: SetNull)
-  player1GuestName  String?
+  player1GuestName  String
 
   player2Id         Int?
   player2           User?     @relation("Player2", fields: [player2Id], references: [id], onDelete: SetNull)
-  player2GuestName  String?
+  player2GuestName  String
 
   winnerId    Int?
   winner      User?    @relation("matchWinner", fields: [winnerId], references: [id], onDelete: SetNull)

@@ -1,6 +1,6 @@
 import { type Match, MatchStatus } from '@prisma/client';
 import { MatchService } from '../services/MatchService.js';
-import { OPPONENT_LEVEL, type StartMatchData, type EndMatchData, type MatchData } from '../types/match.types.js';
+import { type StartMatchData, type EndMatchData, type MatchData } from '../types/match.types.js';
 import { MatchException, MatchError } from '../error_handlers/Match.error.js';
 import { FriendService } from '../services/FriendService.js';
 import { SocketEventController } from './SocketEventController.js';
@@ -90,8 +90,14 @@ export class MatchController {
         }
     }
 
-	// ----------------------------------------------------------------------------- //
-	// 
+    // --------------------------------------------------------------------------------- //
+    public createAlias(name: string): { success: boolean, alias?: string, message?: string }
+    {
+        if (!name || name.length < 3 || name.length > 12)
+            return { success: false, message: 'Invalid alias name length (3-12 characters)' };
+
+        return { success: true, alias: this.generateName(`${name}_`) };
+    }
 
     // =================================== PRIVATE ==================================== //
 
@@ -128,37 +134,21 @@ export class MatchController {
 	// ==================================== PRIVATE ==================================== //
 
     // --------------------------------------------------------------------------------- //
-    private async checkMatchData(guestName: string | undefined, id: number | undefined): Promise<PlayerInfo>
+    private async checkMatchData(guestName: string, id: number | undefined): Promise<PlayerInfo>
     {
-		if (guestName) {
-            return { id: undefined, guestName: this.manageOpponent(guestName as OPPONENT_LEVEL) }
-		}
-		else if (id) {
+        if (id) {
             const user: FriendProfile | null = await this.friendService.getById(Number(id));
             if(!user)
                 throw new MatchException(MatchError.USR_NOT_FOUND, 'User with id ' + id.toString() + ' of the match not found');
-            return { id: user.id, guestName: this.createAlias(`${user.username}_`) }
         }
-        else
-            throw new MatchException(MatchError.INVALID_OPPONENT, "No opponent define");
+        if (guestName.length < 3 || guestName.length > 20)
+            throw new MatchException(MatchError.INVALID_OPPONENT, 'Alias length must be between 3 and 20 characters');
+
+        return { id, guestName }
     }
 
     // --------------------------------------------------------------------------------- //
-    private manageOpponent(level: OPPONENT_LEVEL): string
-    {
-        switch (level)
-        {
-            case OPPONENT_LEVEL.GUEST:
-                return this.createAlias('Guest_');
-            case OPPONENT_LEVEL.AI:
-                return this.createAlias('AI_');
-            default:
-                throw new MatchException(MatchError.INVALID_OPPONENT, 'Unknow opponent type');
-        }
-    }
-
-    // --------------------------------------------------------------------------------- //
-    private createAlias(level: string): string {
+    private generateName(level: string): string {
         return `${level}${randomUUID().split('-')[0]}`;
     }
 
@@ -176,21 +166,21 @@ export class MatchController {
         // players identifiers from the match record 
         const p1 = { 
             id: match.player1Id ?? null, 
-            guestName: match.player1GuestName ?? null 
+            guestName: match.player1GuestName 
         };
         const p2 = { 
             id: match.player2Id ?? null, 
-            guestName: match.player2GuestName ?? null 
+            guestName: match.player2GuestName 
         };
         
         // participants identifiers from the match end data
         const winner = { 
             id: data.winner?.id ?? null, 
-            guestName: data.winner?.guestName ?? null 
+            guestName: data.winner?.guestName 
         };
         const loser = { 
             id: data.loser?.id ?? null, 
-            guestName: data.loser?.guestName ?? null 
+            guestName: data.loser?.guestName 
         };
         
         // Scénario A : Player 1 won, Player 2 lost
