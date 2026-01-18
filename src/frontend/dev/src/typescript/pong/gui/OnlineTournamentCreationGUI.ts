@@ -50,7 +50,7 @@ export class	OnlineTournamentCreationGUI extends HTMLElement implements IGUI<Onl
 					${this.getErrorText("onlineTournamentCreationGUIAcceptGuestsErrorText")}
 					<label>
 						Accept Guests :
-						<input class="ml-[1%] h-1/2 aspect-square accent-(--border-color) onlineTournamentCreationGUIAcceptGuests" type="checkbox">
+						<input class="ml-[1%] h-1/2 aspect-square accent-(--border-color) onlineTournamentCreationGUIAcceptGuests" type="checkbox" checked>
 					</label>
 					${this.getErrorText("onlineTournamentCreationGUIMaxPlayersCountErrorText")}
 					<label>
