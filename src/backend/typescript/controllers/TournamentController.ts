@@ -10,7 +10,8 @@ export class TournamentController {
         private userService: UsersService,
     ) {}
 
-    private tournamentLimit = 64;
+    private tournamentLimitMax = 64;
+    private tournamentLimitMin = 64;
 
 	// ----------------------------------------------------------------------------- //
     async createTournament(data: CreateTournament) : Promise<{ success: boolean, message?: string }> {
@@ -75,11 +76,24 @@ export class TournamentController {
     // ----------------------------------------------------------------------------- //
     private async validateTournamentData(data: CreateTournament): Promise<{ success: boolean, message?: string }> {
         // Basic Validation
+        if (!data.adminUserId && !data.adminGuestName) {
+            return {success: false, message: 'Admin user or guest name is required.'}
+        }
         if (!data.title || data.title.length < 3 || data.title.length > 20) {
-            return { success: false, message: 'Invalid tournament title.' };
+            return { success: false, message: 'Invalid tournament title.' }
+        }
+        
+        // check if nb participant is power of 2
+        const pCount = data.participants.length;
+        if ((pCount & (pCount - 1)) !== 0) {
+            return { success: false, message: 'Tournament are allowed with 4, 8, 16, 32, 64 participants.' };
+        }
+        // and not exceed the limit
+        if (pCount > this.tournamentLimitMax || pCount < this.tournamentLimitMin) {
+            return { success: false, message: 'Participant limit exceeded.' }
         }
 
-        // check UserId
+        // check Admin validity
         if (data.adminUserId ) {
             if (typeof data.adminUserId !== 'number' || data.adminUserId <= 0) {
                 return { success: false, message: 'Invalid admin user ID.' };
@@ -96,16 +110,26 @@ export class TournamentController {
         
         for(const p of data.participants) {
             if (!p.alias)
-                return { success: false };
+                return { success: false, message: 'Participant alias is required.' };
 
             if (participantAliases.has(p.alias))
-                return { success: false };
+                return { success: false, message: `Duplicate participant alias: ${p.alias}` };
 
             participantAliases.add(p.alias);
             
+            // 
+            if (p.userId) {
+                if (typeof p.userId !== 'number' || p.userId <= 0) {
+                    return { success: false, message: 'Invalid participant user ID.' };
+                }
+                // check if user exist
+                if (!await this.userService.checkIfUserExists(p.userId)) {
+                    return { success: false, message: `Participant user with ID ${p.userId} does not exist.` };
+                }
+            }
             const idKey = p.userId ? `U_${p.userId}` : `G_${p.userGuestName}`;
             if (participantIds.has(idKey))
-                return { success: false };
+                return { success: false, message: `Duplicate participant ID/guest name: ${idKey}` };
 
             participantIds.add(idKey);
         }
@@ -115,22 +139,10 @@ export class TournamentController {
             const p1Key = m.player1.id ? `U_${m.player1.id}` : `G_${m.player1.guestName}`;
             const p2Key = m.player2.id ? `U_${m.player2.id}` : `G_${m.player2.guestName}`;
             if (!participantIds.has(p1Key) || !participantIds.has(p2Key)) {
-                return {success: false}
+                return { success: false, message: `Invalid matchup between ${p1Key} and ${p2Key}` };
             }
         }
-        
-        // Admin Validation
-        if (!data.adminUserId && !data.adminGuestName) {
-            return {success: false}
-        }
-        if (data.adminUserId && data.adminGuestName) {
-            return {success: false}
-        }
 
-        if (data.participants.length > this.tournamentLimit) {
-            return {success: false}
-        }
-        return {success: true};
+        return { success: true };
     }
-
 }

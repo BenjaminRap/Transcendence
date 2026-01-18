@@ -1,104 +1,80 @@
 
-une socket client est necessaire lorsque l'utilisateur veut lancer un match ou bien si il veut visiter le profile d'un utilisateur
+# 🔌 WebSocket Documentation
 
-on ouvre une connexion en GUEST au client qui entre sur le site
+La communication en temps réel (WebSocket) est utilisée pour :
+- Le Matchmaking et le jeu.
+- Le suivi du statut en ligne des utilisateurs.
+- Les mises à jour de profil en temps réel.
+- Les notifications de demandes d'amis.
 
-si l'utilisateur n'est pas connecte a son compte et/ou n'est pas amis avec le profile qu'il visite alors il ne peut avoir ni la liste d'amis ni l'historique des matchs du user qu'il viste mais les stats (defaites - victoires - ratio) en plus de la photo de profile et du username seront notifies en cas de mise a jour
+---
 
+## 🚀 Connexion
 
-# connexion a la socket en GUEST :
-``` ts
-	const socket = io("http://localhost:8181/socket.io/", { // adresse en mode prod sans passer par proxy
-	auth: {
-		token: null // IMPORTANT !!
-	},
-	// Options a ajouter :
-	transports: ["websocket"],	// use immediatly the ws protocole
-	autoConnect: true,			// established connexion immediatly after the creation of the websocket in the backend side
-	});
+### 1. Mode Invité (Guest)
+Par défaut, tout visiteur se connecte en mode "Guest". Cela permet d'accéder aux fonctionnalités publiques sans être authentifié.
+
+```typescript
+const socket = io("http://localhost:8181", {
+    path: "/socket.io/",
+    transports: ["websocket"], // Évite le fallback polling
+    auth: {
+        token: null // IMPORTANT : null pour guest
+    },
+    autoConnect: true,
+});
 ```
 
-lorsque l'utilisateur se connecte a son profile ou bien se register sur le site, on met a jour la connexion websocket :
-on recupere le jwt valide renvoye par le backend
-on l'attache a la variable auth de la socket
+### 2. Mode Authentifié
+Une fois l'utilisateur connecté via l'API REST (Login/Register), le client doit mettre à jour la connexion WebSocket avec le token JWT reçu.
 
-on coupe la connexion de la socket et on se reconnect comme dans l'exemple ci-dessous
-le backend prend en compte le token jwt et la nouvelle connexion automatiquement
-l'utilisateur n'est plus en connexion GUEST
+```typescript
+// Fonction à appeler après une connexion réussie (API REST)
+function handleLoginSuccess(newToken: string) {
+    // 1. Mettre à jour le token d'authentification
+    socket.auth = { token: newToken };
 
-```ts
-	// Fonction appelée juste après un Login réussi (réception du token API) COTE FRONT
-	function handleLoginSuccess(newToken) {
-		// 1. On met à jour le token pour la prochaine connexion
-		socket.auth = { token: newToken };
-
-		// 2. On coupe et on relance.
-		// Le serveur va voir une "nouvelle" connexion, vérifier le token, 
-		// et attacher le userId correct.
-		socket.disconnect().connect();
-	}
-```
-
-l'utilisateur est connecte a la websocket soit en GUEST soit sur son profile
-
-
-
-# events from backend
-| nom event | data received | response explanation |
-|-----------|---------------|----------------------|
-| user-status-change | userId: userId, status: 'online or offline' | user status |
-| profile-update | user: { userID, username, avatar } | profile data |
-| game-stats-update | stats: GameStats | player stats |
-| account-deleted | void | les client qui recoivent cet event doivent se deconnecter |
-|friend-status-update| { fromUserId: number, status: 'PENDING' | 'ACCEPTED' } | |
-
-# events from front
-| nom event | data received | response explanation |
-|-----------|---------------|----------------------|
-| get-online-users | onlineUsers: number[] | full list of connected users |
-
-# exemple
-```ts
-// 1. STATE : Variable pour stocker les IDs (Set pour performance)
-let onlineUsers: Set<number> = new Set();
-
-// Fonction d'initialisation à appeler une fois la socket connectée
-function initOnlineStatusTracking(socket: any) {
-
-    // 2. INITIALISATION : On demande qui est là maintenant (Pattern Request/Response)
-    socket.emit("get-online-users", (ids: number[]) => {
-        onlineUsers = new Set(ids);
-        console.log("Liste initiale chargée :", onlineUsers);
-    });
-
-
-    socket.on("profile-update", (user: {userID, username, avatar }) => {
-        console.log(user);
-    })
-
-
-    // 3. TEMPS RÉEL : On écoute les changements
-    socket.on("user-status-change", (data: { userId: number, status: 'online' | 'offline' }) => {
-        if (data.status === 'online') {
-            onlineUsers.add(data.userId);
-        } else {
-            onlineUsers.delete(data.userId);
-        }
-        console.log(`Mise à jour status user ${data.userId} : ${data.status}`);
-    });
+    // 2. Reconnecter la socket pour prendre en compte le token côté serveur
+    // Le serveur associera alors cette socket au userId correspondant
+    socket.disconnect().connect();
 }
-
-// 4. UTILITAIRE : Fonction pour vérifier si un joueur est en ligne
-function isUserOnline(userId: number): boolean {
-    return onlineUsers.has(userId);
-}
-
-// Lancement
-// initOnlineStatusTracking(socket);
 ```
 
-strategie front
+---
 
-appeler get-online-users une fois au demarrage
-tenir un set des ids en ligne a jour lors d'event user-status-change (online / offline) et lors de nouvelle connexion / deconnexion
+## 📡 Événements Client (Emit)
 
+Ces événements sont envoyés par le **Frontend** vers le **Backend**.
+
+| Nom de l'événement | Données envoyées | Description |
+|-------------------|------------------|-------------|
+| `join-matchmaking` | `void` | Demande à rejoindre la file d'attente pour un match. |
+| `get-online-users` | `callback: (ids: number[]) => void` | Demande la liste des IDs des utilisateurs connectés (Req/Res pattern). |
+| `watch-profile` | `profileIds: number[]` | S'abonne aux mises à jour (ex: status, avatar) d'une liste de profils spécifiques. |
+| `unwatch-profile` | `profileIds: number[]` | Se désabonne des mises à jour de ces profils. |
+
+---
+
+## 📥 Événements Serveur (On)
+
+Ces événements sont envoyés par le **Backend** vers le **Frontend**.
+
+### Statut et Profil
+| Nom de l'événement | Données reçues | Description |
+|-------------------|----------------|-------------|
+| `user-status-change` | `{ userId: number, status: 'online' \| 'offline' }` | Notifie qu'un ami ou un profil surveillé vient de se connecter/déconnecter. |
+| `profile-update` | `{ user: PublicUser }` | Notifie qu'un profil surveillé a été modifié (avatar, username). |
+| `account-deleted` | `void` | Notifie que le compte courant a été supprimé (provoque une déconnexion forcée). |
+
+### Amis
+| Nom de l'événement | Données reçues | Description |
+|-------------------|----------------|-------------|
+| `friend-status-update` | `{ requester: User, status: 'PENDING' }` | **Reçu par le destinataire** lors d'une nouvelle demande d'ami. |
+| `friend-status-update` | `{ friendProfile: User, status: 'ACCEPTED' }` | **Reçu par le demandeur** lors de l'acceptation de sa demande. |
+
+### Jeu (Stats)
+| Nom de l'événement | Données reçues | Description |
+|-------------------|----------------|-------------|
+| `game-stats-update` | `stats: GameStats` | Mise à jour des statistiques après un match. |
+
+---

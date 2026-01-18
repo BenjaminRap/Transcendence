@@ -34,7 +34,7 @@ export interface EndMatchData {
 
 export interface OpponentSummary
 {
-    id: string,
+    id: number | undefined,
     username: string,
     avatar: string,
     isFriend: boolean,

@@ -92,11 +92,11 @@ model Match {
 
   winnerId    Int?
   winner      User?    @relation("matchWinner", fields: [winnerId], references: [id], onDelete: SetNull)
-  winnerGuestName String?
+  winnerGuestName String
 
   loserId     Int?
   loser       User?    @relation("matchLoser", fields: [loserId], references: [id], onDelete: SetNull)
-  loserGuestName  String?
+  loserGuestName  String
 
   scoreWinner Int     @default(0)
   scoreLoser  Int     @default(0)

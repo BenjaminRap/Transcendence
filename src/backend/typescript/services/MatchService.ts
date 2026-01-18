@@ -82,7 +82,6 @@ export class MatchService {
             const isUserWinner = match.winnerId === userId;
             
             const opponentUser = isUserWinner ? match.loser : match.winner;
-            // Use guest name as fallback level/name
             const opponentGuestName = isUserWinner ? match.loserGuestName : match.winnerGuestName;
 
             let opponentSummary: OpponentSummary;
@@ -90,24 +89,16 @@ export class MatchService {
             if (opponentUser) {
                 // if user exists in DB
                 opponentSummary = {
-                    id: opponentUser.id.toString(),
+                    id: Number(opponentUser.id),
                     username: opponentUser.username,
                     avatar: opponentUser.avatar,
-                    isFriend: await this.friendService.isFriend(userId, opponentUser.id)
+                    isFriend: await this.friendService.isFriend(userId, Number(opponentUser.id))
                 };
-            } else if (opponentGuestName) {
-                // if opponent is a guest, AI, OR a deleted user who has a snapshot name
+            }else {
+                // opponent is guest or AI
                 opponentSummary = {
-                    id: "GUEST",
+                    id: undefined,
                     username: opponentGuestName,
-                    avatar: process.env.DEFAULT_AVATAR_URL || "http://localhost:8181/static/public/avatarDefault.webp", 
-                    isFriend: false
-                };
-            } else {
-                // Fallback for very old data or errors
-                opponentSummary = {
-                    id: "DELETED",
-                    username: "Deleted User",
                     avatar: process.env.DEFAULT_AVATAR_URL || "http://localhost:8181/static/public/avatarDefault.webp",
                     isFriend: false
                 };
@@ -122,11 +113,11 @@ export class MatchService {
                     duration: match.duration,
                     winner: {
                         id: match.winnerId ?? undefined,
-                        guestName: match.winnerGuestName ?? undefined,
+                        guestName: match.winnerGuestName,
                     } as PlayerInfo,
                     loser: {
                         id: match.loserId ?? undefined,
-                        guestName: match.loserGuestName ?? undefined,
+                        guestName: match.loserGuestName,
                     } as PlayerInfo,
                 },
             } as MatchSummary;

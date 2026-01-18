@@ -90,7 +90,8 @@ Récupère la liste de tous les amis confirmés (`ACCEPTED`).
         "isOnline": true,
         "requesterId": 42
       }
-    }
+    },
+    { ... },
   ]
 }
 ```

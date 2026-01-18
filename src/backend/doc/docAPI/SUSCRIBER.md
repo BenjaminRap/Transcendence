@@ -40,8 +40,8 @@ Récupère les informations du profil de l'utilisateur connecté, incluant les s
     },
     "lastMatchs": [
       {
-        "opponent": { "id": 2, "username": "rival", "avatar": "..." },
-        "match": { "id": 100, "status": "FINISHED", "scoreWinner": 5, "scoreLoser": 3 }
+        "opponent": { "id": 2, "username": "rival", "avatar": "...", "isFriend": false },
+        "matchResult": { "matchId": 100, "scoreWinner": 5, "scoreLoser": 3, "winner": { "id": 1, "guestName": null }, "loser": { "id": 2, "guestName": null } }
       },
       { ... }
     ],
@@ -89,8 +89,8 @@ Met à jour le mot de passe de l'utilisateur.
 | Code | Description | Body Example |
 | :--- | :--- | :--- |
 | **200** | ✅ Mis à jour | `{ "success": true }` |
-| **400** | ⚠️ Erreur input | `{ "success": false, "message": "Invalid input", "redirectTo": "..." }` |
-| **409** | ⚠️ Conflit | `{ "success": false, "message": "invalid_credential", "redirectTo": "..." }` |
+| **400** | ⚠️ Erreur input | `{ "success": false, "message": "Invalid input" }` |
+| **409** | ⚠️ Conflit | `{ "success": false, "message": "invalid_credential" }` |
 | **500** | ⚠️ Erreur serveur | `{ "success": false, "message": "Internal server error" }` |
 
 ---
@@ -134,7 +134,7 @@ Supprime l'avatar personnalisé et remet l'avatar par défaut.
 #### 💀 Supprimer le compte
 Supprime définitivement le compte utilisateur.
 
-- **URL** : `DELETE /suscriber/delete/account`
+- **URL** : `DELETE /suscriber/deleteaccount`
 
 **Réponses :**
 

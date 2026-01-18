@@ -152,8 +152,8 @@ Renouvelle les tokens d'accès expirés.
 
 | Code | Description | Body Example |
 | :--- | :--- | :--- |
-| **401** | ⛔ Token Invalide | `{ "success": false, "message": "Invalid token" }` |
 | **404** | ❌ User Introuvable | `{ "success": false, "message": "User not found" }` |
+| **500** | ❌ Erreur Serveur | `{ "success": false, "message": "Internal server error" }` |
 
 ---
 

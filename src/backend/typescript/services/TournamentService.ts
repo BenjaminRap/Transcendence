@@ -2,53 +2,36 @@ import type { PrismaClient } from '@prisma/client';
 import { TournamentException, TournamentError } from '../error_handlers/Tournament.error.js';
 import type { CreateTournament, TournamentState, PlayerInfo } from '../types/tournament.types.js';
 import { MatchService } from './MatchService.js';
+import type { EndMatchData } from '../types/match.types.js';
 
 export class TournamentService {
 	constructor(
 		private prisma: PrismaClient,
         private matchService: MatchService,
 	) {}
-    private tournamentLimitMin =  8;
-	private tournamentLimitMax = 64;
-
-    // ----------------------------------------------------------------------------- //
-    
 
     // ----------------------------------------------------------------------------- //
 	async createTournament(data: CreateTournament): Promise<TournamentState> {
-        // Validation: Power of 2
-        const count = data.participants.length;
-        if (count < this.tournamentLimitMin || (count & (count - 1)) !== 0) {
-            throw new TournamentException(TournamentError.INVALID_PARTICIPANT_COUNT);
-        }
-        if (data.participants.length > this.tournamentLimitMax) {
-			throw new TournamentException(TournamentError.TOURNAMENT_LIMIT_EXCEEDED);
-		}
-        // Validation: Matchups length
-        if (data.matchups.length !== count / 2) {
-             throw new TournamentException(TournamentError.INVALID_MATCHUPS_COUNT);
-        }
-        
         // Create Tournament
+        const participants = data.participants.map(participant => ({
+						alias: participant.alias,
+						userId: participant.userId ?? null,
+                        guestName: participant.userGuestName
+					}))
+
 		const tournament = await this.prisma.tournament.create({
 			data: {
 				title: data.title,
-				maxParticipants: count,
 				status: 'ONGOING',
-				creatorId: data.adminUserId,
+				creatorId: data.adminUserId ?? null,
                 creatorGuestName: data.adminGuestName,
 				participants: {
-					create: data.participants.map(participant => ({
-						alias: participant.alias,
-						userId: participant.userId,
-                        guestName: participant.userGuestName
-					})),
+					create: participants,
 				},
 			} as any,
 		});
 
         // Generate Bracket & Start Initial Matches
-        const totalRounds = Math.log2(count);
         
         // We create ALL matches for the bracket structure now to have IDs
         const matchesCreated: any[] = [];
@@ -67,14 +50,17 @@ export class TournamentService {
         }
 
         // Subsequent Rounds placeholders
+        const count = participants.length;
+        const totalRounds = Math.log2(count);
+
         let matchesInRound = count / 2;
-        for (let r = 2; r <= totalRounds; r++) {
+        for (let round = 2; round <= totalRounds; round++) {
             matchesInRound /= 2;
             for (let i = 0; i < matchesInRound; i++) {
                  await this.prisma.match.create({
                     data: {
                         tournamentId: tournament.id,
-                        round: r,
+                        round: round,
                         matchOrder: i,
                         status: 'IN_PROGRESS' 
                     } as any 
@@ -83,19 +69,19 @@ export class TournamentService {
         }
         
         // Construct return state
-        const playersState = data.participants.map(p => {
+        const playersState = data.participants.map(participant => {
              let currentMatchId = null;
              // Check in created matches (Round 1)
-             for(const m of matchesCreated) {
-                 if ((m.player1Id === p.userId && m.player1GuestName === p.userGuestName) ||
-                     (m.player2Id === p.userId && m.player2GuestName === p.userGuestName)) {
-                     currentMatchId = m.id;
+             for(const match of matchesCreated) {
+                 if ((match.player1Id === participant.userId && match.player1GuestName === participant.userGuestName) ||
+                     (match.player2Id === participant.userId && match.player2GuestName === participant.userGuestName)) {
+                     currentMatchId = match.id;
                      break;
                  }
              }
              
              return {
-                 participantAlias: p.alias,
+                 participantAlias: participant.alias,
                  currentMatchId
              };
         });
@@ -124,21 +110,13 @@ export class TournamentService {
 	}
 
 	// ----------------------------------------------------------------------------- //
-    async updateTournamentProgress(tournamentId: number, matchId: number, winnerId: number | null, winnerGuestName: string | null) {
-        const match = await this.prisma.match.findUnique({ where: { id: matchId } });
+    async updateTournamentProgress(tournamentId: number, matchData: EndMatchData) {
+        const match = await this.prisma.match.findUnique({ where: { id: matchData.matchId } });
         if (!match || match.tournamentId !== tournamentId) {
             throw new TournamentException(TournamentError.MATCH_NOT_FOUND);
         }
         
-        // Update the match winner
-        await this.prisma.match.update({
-            where: { id: matchId },
-            data: { 
-                status: 'FINISHED',
-                winnerId: winnerId,
-                winnerGuestName: winnerGuestName
-            } as any
-        });
+        await this.matchService.endMatch(matchData);
 
         // Determine next match
         // Using 'any' to bypass TS check until schema regeneration
@@ -164,11 +142,11 @@ export class TournamentService {
         if (nextMatch) {
             const updateData: any = {};
             if (isPlayer1InNext) {
-                updateData.player1Id = winnerId;
-                updateData.player1GuestName = winnerGuestName;
+                updateData.player1Id = matchData.winner.id;
+                updateData.player1GuestName = matchData.winner.guestName;
             } else {
-                updateData.player2Id = winnerId;
-                updateData.player2GuestName = winnerGuestName;
+                updateData.player2Id = matchData.winner.id;
+                updateData.player2GuestName = matchData.winner.guestName;
             }
             await this.prisma.match.update({
                 where: { id: nextMatch.id },
@@ -209,12 +187,13 @@ export class TournamentService {
             } as any
         });
         
-        if (!match) throw new TournamentException(TournamentError.MATCH_NOT_FOUND);
+        if (!match)
+            throw new TournamentException(TournamentError.MATCH_NOT_FOUND);
         return match;
     }
 
 	// ----------------------------------------------------------------------------- //
-	async updateTournamentStatus(tournamentId: number, status: string) {
+	private async updateTournamentStatus(tournamentId: number, status: string) {
 		const tournament = await this.prisma.tournament.update({
 			where: { id: tournamentId },
 			data: { status } as any,
@@ -223,19 +202,20 @@ export class TournamentService {
 	}
 
 	// ----------------------------------------------------------------------------- //
-	async finishTournament(tournamentId: number) {
+	private async finishTournament(tournamentId: number) {
 		const tournament = await this.updateTournamentStatus(tournamentId, 'FINISHED');
 		return tournament;
 	}
 
 	// ----------------------------------------------------------------------------- //
-    async cancelTournament(tournamentId: number, adminId: number | string) {
+    async cancelTournament(tournamentId: number, adminId: number | null, adminGuestName: string) {
         const tournament = await this.getTournamentById(tournamentId);
-        
-        const isCreator = (typeof adminId === 'number' && tournament.creatorId === adminId) || 
-                          (typeof adminId === 'string' && (tournament as any).creatorGuestName === adminId);
-        
-        if (!isCreator) throw new TournamentException(TournamentError.UNAUTHORIZED);
+
+        const isCreator = (tournament.creatorId === adminId) ||
+                          (tournament.creatorGuestName === adminGuestName);
+
+        if (!isCreator)
+            throw new TournamentException(TournamentError.UNAUTHORIZED);
 
         await this.prisma.match.updateMany({
             where: {
@@ -246,6 +226,10 @@ export class TournamentService {
                 status: 'CANCELLED'
             } as any
         });
+
+        // il faut peut etre reflechir aux matchs en cours
+        // For now, we just set the tournament status to CANCELLED
+        // TODO: Notify players in ongoing matches about cancellation
 
         return this.updateTournamentStatus(tournamentId, 'CANCELLED');
     }

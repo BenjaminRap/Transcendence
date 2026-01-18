@@ -43,20 +43,18 @@ Récupère les informations complètes d'un utilisateur spécifique via son ID.
     "lastMatchs": [
       {
         "opponent": {
-          "id": "21",
+          "id": 21,
           "username": "Arthur",
-          "avatar": "http://..."
+          "avatar": "http://...",
+          "isFriend": false
         },
-        "match": {
-          "id": 101,
+        "matchResult": {
+          "matchId": 101,
           "scoreWinner": 11,
           "scoreLoser": 5,
-          "createdAt": "2026-01-15T10:00:00.000Z",
-          "status": "FINISHED",
-          "winnerId":? 42,
-          "winnerLevel":? null,
-          "loserId":? null,
-          "loserLevel":? "Guest_2337"
+          "duration": 300,
+          "winner": { "id": 42, "guestName": null },
+          "loser": { "id": null, "guestName": "Guest_2337" }
          }
       }
     ],
@@ -88,16 +86,16 @@ Recherche une liste d'utilisateurs dont le pseudo contient la chaîne fournie.
   "user": [
     {
       "id": 42,
-      "avatar": "http://...",
       "username": "Zaphod",
-      "stats": {
-        "wins": 10,
-        "losses": 5,
-        "total": 15,
-        "winRate": 66.67
-      },
+      "avatar": "http://...",
+      "stats": { ... },
       "lastMatchs": [ ... ],
       "isFriend": true
+    },
+    ...
+  ]
+}
+```ts
     },
     {
       "id": 84,
