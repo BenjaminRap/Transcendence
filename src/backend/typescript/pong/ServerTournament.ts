@@ -42,6 +42,11 @@ export class	ServerTournament
 		this._players.delete(name);
 		socket.emit("tournament-event", {type: "banned"});
 		socket.leave(this._tournamentId);
+		this._io.to(this._tournamentId).emit("tournament-event", {
+			type: "remove-participant",
+			name: name
+		});
+		console.log(`${name} has been banned from the ${this._settings.name} tournament !`);
 	}
 
 	private	kickParticipant(name : string)
@@ -52,6 +57,11 @@ export class	ServerTournament
 		this._players.delete(name);
 		socket.emit("tournament-event", {type: "kicked"});
 		socket.leave(this._tournamentId);
+		this._io.to(this._tournamentId).emit("tournament-event", {
+			type: "remove-participant",
+			name: name
+		});
+		console.log(`${name} has been kicked from the ${this._settings.name} tournament !`);
 	}
 
 	private	removeCreatorEvents()
