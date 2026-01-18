@@ -23,6 +23,7 @@ import { OnlineTournamentJoinPublicGUI } from "../gui/OnlineTournamentJoinPublic
 import { OnlineTournamentChoiceGUI } from "../gui/OnlineTournamentChoiceGUI";
 import { OnlineTournamentStartGUI } from "../gui/OnlineTournamentStartGUI";
 import { PongError } from "@shared/pongError/PongError";
+import type { TournamentEvent } from "@shared/ServerMessage";
 
 type EnemyType = "Local" | "Multiplayer" | "Bot";
 
@@ -70,6 +71,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 		applyTheme(this._sceneData.pongHTMLElement, theme)
 		this.createMenus();
+		this._sceneData.serverProxy.onTournamentMessage().add(tournamentEvent => this.onTournamentEvent(tournamentEvent));
 	}
 
 	private	createMenus()
@@ -307,8 +309,10 @@ export class CreateMenuGUI extends CustomScriptComponent {
 	private	async joinTournament(tournamentId : string)
 	{
 		try {
-			await this._sceneData.serverProxy.joinTournament(tournamentId);
+			const	participants = await this._sceneData.serverProxy.joinTournament(tournamentId);
+
 			this._onlineTournamentStartGUI.init("player", tournamentId)
+			this._onlineTournamentStartGUI.addParticipants(false, ...participants);
 			this.switchMenu(this._onlineTournamentStartGUI);
 		} catch (error) {
 			this._sceneData.pongHTMLElement.onError(error);
@@ -334,6 +338,24 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		} catch (error) {
 			this._sceneData.pongHTMLElement.onError(error);
 		}
+	}
+
+	private	onTournamentEvent(tournamentEvent : TournamentEvent)
+	{
+		const	message =
+			tournamentEvent.type === "kicked" ? "You have been banned from the tournament" :
+			tournamentEvent.type === "banned" ? "You have been kicked from the tournament" :
+			tournamentEvent.type === "tournament-canceled" ? "The tournament has been canceled" :
+			null;
+		if (message !== null)
+		{
+			this._sceneData.pongHTMLElement.onError(new PongError(message, "ignore"));
+			this.switchMenu(this._onlineTournamentChoiceGUI);
+		}
+		else if (tournamentEvent.type === "add-participant")
+			this._onlineTournamentStartGUI.addParticipant(false, tournamentEvent.profile);
+		else if (tournamentEvent.type === "remove-participant")
+			this._onlineTournamentStartGUI.removeParticipant(tournamentEvent.name);
 	}
 
 	private	switchMenu(newGUI : HTMLElement)
