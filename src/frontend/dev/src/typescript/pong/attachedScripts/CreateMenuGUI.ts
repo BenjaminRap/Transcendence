@@ -71,7 +71,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 		applyTheme(this._sceneData.pongHTMLElement, theme)
 		this.createMenus();
-		this._sceneData.serverProxy.onTournamentMessage().add(tournamentEvent => this.onTournamentEvent(tournamentEvent));
+		this._sceneData.events.getObservable("tournament-event").add(tournamentEvent => this.onTournamentEvent(tournamentEvent));
 	}
 
 	private	createMenus()
