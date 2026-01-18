@@ -348,6 +348,10 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 	private	onTournamentEvent(tournamentEvent : TournamentEvent)
 	{
+		const	tournamentData = this._sceneData.serverProxy.getTournamentData();
+
+		if (!tournamentData)
+			return ;
 		const	message =
 			tournamentEvent.type === "kicked" ? "You have been banned from the tournament" :
 			tournamentEvent.type === "banned" ? "You have been kicked from the tournament" :
@@ -359,7 +363,11 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			this.switchMenu(this._onlineTournamentChoiceGUI);
 		}
 		else if (tournamentEvent.type === "add-participant")
-			this._onlineTournamentStartGUI.addParticipant(false, tournamentEvent.profile);
+		{
+			const	areYouCreator = tournamentData.isCreator;
+			const	canKickOrBan = areYouCreator && !tournamentEvent.isCreator;
+			this._onlineTournamentStartGUI.addParticipant(canKickOrBan, tournamentEvent.profile);
+		}
 		else if (tournamentEvent.type === "remove-participant")
 			this._onlineTournamentStartGUI.removeParticipant(tournamentEvent.name);
 	}
