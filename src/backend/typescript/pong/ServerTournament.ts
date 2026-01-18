@@ -23,16 +23,19 @@ export class	ServerTournament
 
 			ack(result);
 		});
-		this._creator.once("ban-participant", (name : string) => this.banParticipant(name));
-		this._creator.once("kick-participant", (name : string) => this.kickParticipant(name));
 		this._creator.once("cancel-tournament", () => this.dispose());
+		this._creator.on("ban-participant", (name : string) => this.banParticipant(name));
+		this._creator.on("kick-participant", (name : string) => this.kickParticipant(name));
 		this._creator.join(this._tournamentId);
 	}
 
 	private	banParticipant(name : string)
 	{
-		this._bannedPlayers.add(name);
 		const	socket = this._players.get(name);
+
+		if (socket == this._creator)
+			return ;
+		this._bannedPlayers.add(name);
 		if (!socket)
 			return ;
 		this._players.delete(name);
@@ -43,20 +46,26 @@ export class	ServerTournament
 	private	kickParticipant(name : string)
 	{
 		const	socket = this._players.get(name);
-		if (!socket)
+		if (!socket || socket === this._creator)
 			return ;
 		this._players.delete(name);
 		socket.emit("tournament-event", {type: "kicked"});
 		socket.leave(this._tournamentId);
 	}
 
+	private	removeCreatorEvents()
+	{
+		this._creator.removeAllListeners("start-tournament");
+		this._creator.removeAllListeners("cancel-tournament");
+		this._creator.removeAllListeners("ban-participant");
+		this._creator.removeAllListeners("kick-participant");
+	}
+
 	private start() : Result<null>
 	{
 		if (this._players.size < 2)
 			return error("Not enough players !");
-		this._creator.removeAllListeners("cancel-tournament");
-		this._creator.removeAllListeners("ban-participant");
-		this._creator.removeAllListeners("kick-participant");
+		this.removeCreatorEvents();
 		this._started = true;
 		console.log(`${this._settings.name} tournament started !`);
 		return success(null);
@@ -68,18 +77,14 @@ export class	ServerTournament
 			return ;
 		console.log(`${this._settings.name} tournamend end`);
 		this._disposed = true;
-		if (this._started === false)
-		{
-			this._players.forEach((player) => {
+		this._players.forEach((player) => {
+			if (this._started === false)
 				player.emit("tournament-event", { type: "tournament-canceled" });
-				player.removeAllListeners("leave-tournament");
-				player.leave(this._tournamentId);
-			});
-			this._creator.removeAllListeners("start-tournament");
-			this._creator.removeAllListeners("cancel-tournament");
-			this._creator.removeAllListeners("ban-participant");
-			this._creator.removeAllListeners("kick-participant");
-		}
+			player.removeAllListeners("leave-tournament");
+			player.leave(this._tournamentId);
+		});
+		this._creator.leave(this._tournamentId);
+		this.removeCreatorEvents();
 		this._onTournamentDispose();
 	}
 
