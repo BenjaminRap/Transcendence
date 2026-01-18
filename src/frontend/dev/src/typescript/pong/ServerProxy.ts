@@ -52,7 +52,6 @@ export class	ServerProxy
 	public leaveScene() : void
 	{
 		this.verifyState("connected", "in-matchmaking", "in-game", "in-tournament");
-		this._frontendSocketHandler.onGameMessage().clear();
 		if (this._state === "in-matchmaking")
 			this._frontendSocketHandler.sendEventWithNoResponse("leave-matchmaking");
 		else if (this._state === "in-game")

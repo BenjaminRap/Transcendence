@@ -178,9 +178,9 @@ export class PongGame extends HTMLElement {
 
 	private onGameMessage(gameInfos : GameInfos)
 	{
-		// if (!this._scene)
-		// 	return ;
-		// getFrontendSceneData(this._scene).events.getObservable("tournament-event").notifyObservers(tournamentEvent);
+		if (!this._scene)
+			return ;
+		getFrontendSceneData(this._scene).events.getObservable("game-infos").notifyObservers(gameInfos);
 	}
 
 	private setInputs(sceneData : FrontendSceneData, ...inputIndexes : int[])

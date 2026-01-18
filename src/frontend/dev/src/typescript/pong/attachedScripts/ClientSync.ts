@@ -42,12 +42,8 @@ export class ClientSync extends CustomScriptComponent {
 	
 	private	listenToGameInfos()
 	{
-		const	serverProxy = this._sceneData.serverProxy;
-	
-		if (!serverProxy)
-			return ;
-		serverProxy.onGameMessage().add((gameInfos : GameInfos) => {
-			const	opponentInputs = this._inputManager.getPlayerInput(serverProxy.getOpponentIndex());
+		this._sceneData.events.getObservable("game-infos").add((gameInfos : GameInfos) => {
+			const	opponentInputs = this._inputManager.getPlayerInput(this._sceneData.serverProxy.getOpponentIndex());
 
 			switch (gameInfos.type)
 			{
@@ -56,7 +52,7 @@ export class ClientSync extends CustomScriptComponent {
 				this.updateKey({event: "keyUp"}, opponentInputs.up);
 				break ;
 			case "forfeit":
-				const	winningSide = (serverProxy.getPlayerIndex() === 0) ? "left" : "right";
+				const	winningSide = (this._sceneData.serverProxy.getPlayerIndex() === 0) ? "left" : "right";
 
 				this._sceneData.events.getObservable("forfeit").notifyObservers(winningSide);
 				break ;
