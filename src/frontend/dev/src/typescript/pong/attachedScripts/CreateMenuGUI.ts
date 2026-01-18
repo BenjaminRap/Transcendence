@@ -136,6 +136,12 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		this._onlineTournamentJoinPublicGUI.onTournamentJoin().add((id : string) => {
 			this.joinTournament(id);
 		});
+		this._onlineTournamentStartGUI.onBanParticipant().add((name : string) => {
+			this._sceneData.serverProxy.banPlayerFromTournament(name);
+		});
+		this._onlineTournamentStartGUI.onKickParticipant().add((name : string) => {
+			this._sceneData.serverProxy.kickPlayerFromTournament(name);
+		});
 	}
 
 	protected	ready()
