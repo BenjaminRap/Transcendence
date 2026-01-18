@@ -15,16 +15,13 @@ function	getGuestProfile() : Profile
 
 export class	SocketData
 {
-	private _state : "unactive" | "waiting" | "inRoom" | "ready" = "unactive";
+	private _state : "unactive" | "waiting" | "inRoom" = "unactive";
 	private _room : Room | null = null;
 	private _profile : Profile = getGuestProfile();
 	private _connected : boolean = false;
 
 	public getState() {
 		return this._state;
-	}
-	public isInRoom(room : Room) {
-		return this._room == room;
 	}
 
 	public isConnected() {
@@ -46,13 +43,6 @@ export class	SocketData
 	public joinRoom(room : Room) {
 		this._room = room;
 		this._state = "inRoom";
-	}
-
-	public	setReady()
-	{
-		if (this._state !== "inRoom")
-			return ;
-		this._state = "ready";
 	}
 
 	public leaveRoom() {

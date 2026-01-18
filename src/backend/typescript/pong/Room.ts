@@ -72,7 +72,7 @@ export class	Room
 
 	public onSocketDisconnect(socket : DefaultSocket)
 	{
-		if (!socket.data.isInRoom(this) || this._ended)
+		if (this._ended)
 			return ;
 		socket.broadcast.to(this._roomId).emit("game-infos", { type: "forfeit" });
 		this.gameEnd();
@@ -85,8 +85,6 @@ export class	Room
 		socket.removeAllListeners("ready");
 		socket.removeAllListeners("input-infos");
 		socket.removeAllListeners("forfeit");
-		if (socket.data.getState() === "ready")
-			this._socketsReadyCount--;
 	}
 
 	private async addSocketToRoom(socket : DefaultSocket, playerIndex : number, participants : Profile[])
@@ -98,15 +96,12 @@ export class	Room
             participants: participants
         }
 		socket.emit("joined-game", gameInit);
-		socket.once("ready", () => { this.setSocketReady(socket) } );
+		socket.once("ready", () => { this.setSocketReady() } );
 	}
 
-	private	setSocketReady(socket : DefaultSocket)
+	private	setSocketReady()
 	{
-		if (socket.data.getState() === "ready")
-			return ;
 		this._socketsReadyCount++;
-		socket.data.setReady();
 		if (this._socketsReadyCount === 2)
 			this.startGame();
 	}
