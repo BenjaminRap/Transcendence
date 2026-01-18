@@ -6,6 +6,7 @@ export class	ServerTournament
 {
 	private	_disposed = false;
 	private _players = new Map<string, DefaultSocket>();
+	private _bannedPlayers = new Set<string>();
 	private _tournamentId : TournamentId;
 	private _started = false;
 
@@ -30,12 +31,23 @@ export class	ServerTournament
 
 	private	banParticipant(name : string)
 	{
-
+		this._bannedPlayers.add(name);
+		const	socket = this._players.get(name);
+		if (!socket)
+			return ;
+		this._players.delete(name);
+		socket.emit("tournament-event", {type: "banned"});
+		socket.leave(this._tournamentId);
 	}
 
 	private	kickParticipant(name : string)
 	{
-
+		const	socket = this._players.get(name);
+		if (!socket)
+			return ;
+		this._players.delete(name);
+		socket.emit("tournament-event", {type: "kicked"});
+		socket.leave(this._tournamentId);
 	}
 
 	private start() : Result<null>
@@ -96,6 +108,9 @@ export class	ServerTournament
 		if (this._players.size === this._settings.maxPlayerCount)
 			return error("The tournament is already full !");
 		const	profile = socket.data.getProfile();
+
+		if (this._bannedPlayers.has(profile.name))
+			return error("You have been banned from this tournament !");
 
 		this._players.set(profile.name, socket);
 		this._io.to(this._tournamentId).emit("tournament-event", {
