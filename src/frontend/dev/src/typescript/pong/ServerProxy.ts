@@ -31,6 +31,10 @@ export class	ServerProxy
 			this._state = "not-connected";
 			this._currentPromise?.reject(new PongError("canceled", "ignore"));
 		});
+		this._frontendSocketHandler.onTournamentMessage().add((tournamentEvent : TournamentEvent) => {
+			if ((tournamentEvent.type === "banned" || tournamentEvent.type === "kicked" || tournamentEvent.type === "tournament-canceled") && this._state === "tournament-player")
+				this._state = "connected";
+		});
 	}
 
 	public async joinGame() : Promise<GameInit>
