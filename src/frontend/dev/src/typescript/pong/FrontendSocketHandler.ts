@@ -136,11 +136,11 @@ export class	FrontendSocketHandler
 		return deferred;
 	}
 
-	public joinTournament(tournamentId : TournamentId) : Deferred<Profile[]>
+	public joinTournament(tournamentId : TournamentId) : Deferred<string[]>
 	{
-		const	deferred = new Deferred<Profile[]>();
+		const	deferred = new Deferred<string[]>();
 
-		this._socket.emit("join-tournament", tournamentId, (participants : Result<Profile[]>) => {
+		this._socket.emit("join-tournament", tournamentId, (participants : Result<string[]>) => {
 			if (participants.success)
 				deferred.resolve(participants.value);
 			else

@@ -156,7 +156,7 @@ export class	ServerProxy
 		return deferred.promise;
 	}
 
-	public joinTournament(tournamentId : TournamentId) : Promise<Profile[]>
+	public joinTournament(tournamentId : TournamentId) : Promise<string[]>
 	{
 		this.verifyState("connected");
 		this._state = "tournament-player";

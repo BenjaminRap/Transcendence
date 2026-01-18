@@ -155,7 +155,7 @@ async function start(): Promise<void> {
 
 				ack(descriptions);
 			});
-			socket.on("join-tournament", (tournamentId : TournamentId, ack: (participants : Result<Profile[]>) => void) => {
+			socket.on("join-tournament", (tournamentId : TournamentId, ack: (participants : Result<string[]>) => void) => {
 				const	tournament = tournamentMaker.joinTournament(tournamentId, socket);
 
 				if (!tournament.success)
@@ -164,7 +164,7 @@ async function start(): Promise<void> {
 					return ;
 				}
 				console.log(`${socket.data.getProfile().name} joined the ${tournament.value.getDescription().name} tournament`);
-				ack(success(tournament.value.getParticipantsProfiles()));
+				ack(success(tournament.value.getParticipantsNames()));
 			})
 			socket.on("create-tournament", (data : any, ack : (tournamentId : Result<string>) => void) => {
 				const	parsed = zodTournamentCreationSettings.safeParse(data);

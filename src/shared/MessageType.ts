@@ -1,4 +1,3 @@
-import type { Profile } from "./Profile";
 import type { GameInfos, GameInit, KeysUpdate, TournamentCreationSettings, TournamentDescription, TournamentEvent, TournamentId } from "./ServerMessage";
 import type { Result } from "./utils";
 
@@ -7,7 +6,7 @@ export type ClientMessageData<T extends ClientMessage> =
 	T extends "input-infos" ? [KeysUpdate] :
 	T extends "create-tournament" ? [TournamentCreationSettings, (tournamentId : Result<TournamentId>) => void] :
 	T extends "start-tournament" ? [(result : Result<null>) => void] :
-	T extends "join-tournament" ? [TournamentId, (participants : Result<Profile[]>) => void] :
+	T extends "join-tournament" ? [TournamentId, (participants : Result<string[]>) => void] :
 	T extends "get-tournaments" ? [(descriptions : TournamentDescription[]) => void] :
 	T extends "ban-participant" ? [string] :
 	T extends "kick-participant" ? [string] :

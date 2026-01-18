@@ -1,6 +1,5 @@
 import type { TournamentId } from "@shared/ServerMessage";
 import { initMenu, type IGUI } from "./IGUI";
-import type { Profile } from "@shared/Profile";
 import { OnlineTournamentProfileGUI } from "./OnlineTournamentProfileGUI";
 import { Observable } from "@babylonjs/core";
 
@@ -74,28 +73,28 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 		return this._onKickParticipantObservable;
 	}
 
-	public addParticipant(addKickAndBanButtons : boolean, participant : Profile)
+	public addParticipant(addKickAndBanButtons : boolean, name : string)
 	{
 		if (!this._participantsContainer)
 			return ;
-		const	existingGUI = this._participants.get(participant.name);
+		const	existingGUI = this._participants.get(name);
 
 		if (!existingGUI)
 			return ;
-		const	gui = new OnlineTournamentProfileGUI(addKickAndBanButtons, participant.name);
+		const	gui = new OnlineTournamentProfileGUI(addKickAndBanButtons, name);
 
 		initMenu(gui, {
-			ban: () => this._onBanParticipantObservable.notifyObservers(participant.name),
-			kick: () => this._onKickParticipantObservable.notifyObservers(participant.name),
+			ban: () => this._onBanParticipantObservable.notifyObservers(name),
+			kick: () => this._onKickParticipantObservable.notifyObservers(name),
 		}, this._participantsContainer);
-		this._participants.set(participant.name, gui);
+		this._participants.set(name, gui);
 	}
 
-	public addParticipants(addKickAndBanButtons : boolean, ...participants : Profile[])
+	public addParticipants(addKickAndBanButtons : boolean, ...names : string[])
 	{
 		if (!this._participantsContainer)
 			return ;
-		participants.forEach(profile => this.addParticipant(addKickAndBanButtons, profile));
+		names.forEach(profile => this.addParticipant(addKickAndBanButtons, profile));
 	}
 
 	public removeParticipant(name : string)

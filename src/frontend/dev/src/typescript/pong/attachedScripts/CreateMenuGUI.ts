@@ -366,7 +366,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		{
 			const	areYouCreator = tournamentData.isCreator;
 			const	canKickOrBan = areYouCreator && !tournamentEvent.isCreator;
-			this._onlineTournamentStartGUI.addParticipant(canKickOrBan, tournamentEvent.profile);
+			this._onlineTournamentStartGUI.addParticipant(canKickOrBan, tournamentEvent.name);
 		}
 		else if (tournamentEvent.type === "remove-participant")
 			this._onlineTournamentStartGUI.removeParticipant(tournamentEvent.name);

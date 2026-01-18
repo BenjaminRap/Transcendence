@@ -5,7 +5,7 @@ import { error, success, type Result } from "@shared/utils";
 export class	ServerTournament
 {
 	private	_disposed = false;
-	private _players = new Set<DefaultSocket>();
+	private _players = new Map<string, DefaultSocket>();
 	private _tournamentId : TournamentId;
 	private _started = false;
 
@@ -22,8 +22,20 @@ export class	ServerTournament
 
 			ack(result);
 		});
+		this._creator.once("ban-participant", (name : string) => this.banParticipant(name));
+		this._creator.once("kick-participant", (name : string) => this.kickParticipant(name));
 		this._creator.once("cancel-tournament", () => this.dispose());
 		this._creator.join(this._tournamentId);
+	}
+
+	private	banParticipant(name : string)
+	{
+
+	}
+
+	private	kickParticipant(name : string)
+	{
+
 	}
 
 	private start() : Result<null>
@@ -31,6 +43,8 @@ export class	ServerTournament
 		if (this._players.size < 2)
 			return error("Not enough players !");
 		this._creator.removeAllListeners("cancel-tournament");
+		this._creator.removeAllListeners("ban-participant");
+		this._creator.removeAllListeners("kick-participant");
 		this._started = true;
 		console.log(`${this._settings.name} tournament started !`);
 		return success(null);
@@ -51,6 +65,8 @@ export class	ServerTournament
 			});
 			this._creator.removeAllListeners("start-tournament");
 			this._creator.removeAllListeners("cancel-tournament");
+			this._creator.removeAllListeners("ban-participant");
+			this._creator.removeAllListeners("kick-participant");
 		}
 		this._onTournamentDispose();
 	}
@@ -81,10 +97,10 @@ export class	ServerTournament
 			return error("The tournament is already full !");
 		const	profile = socket.data.getProfile();
 
-		this._players.add(socket);
+		this._players.set(profile.name, socket);
 		this._io.to(this._tournamentId).emit("tournament-event", {
             type: "add-participant",
-			profile: profile,
+			name: profile.name,
 			isCreator: profile === this._creator.data.getProfile()
         });
 		socket.join(this._tournamentId);
@@ -101,15 +117,15 @@ export class	ServerTournament
 					type: "remove-participant",
 					name: profile.name
 				});
-				this._players.delete(socket);
+				this._players.delete(profile.name);
 				socket.leave(this._tournamentId);
 			}
 		});
 		return success(undefined);
 	}
 
-	public getParticipantsProfiles()
+	public getParticipantsNames() : string[]
 	{
-		return [...this._players].map((value) => value.data.getProfile());
+		return Array.from(this._players.keys());
 	}
 }
