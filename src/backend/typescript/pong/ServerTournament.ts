@@ -1,7 +1,6 @@
 import type { TournamentCreationSettings, TournamentDescription, TournamentId } from "@shared/ServerMessage";
 import type { DefaultSocket, ServerType } from "..";
 import { error, success, type Result } from "@shared/utils";
-import type { SocketData } from "./SocketData";
 
 export class	ServerTournament
 {
@@ -32,39 +31,27 @@ export class	ServerTournament
 
 	private	banParticipant(name : string)
 	{
+		if (this._started)
+			return ;
 		const	socket = this._players.get(name);
 
-		if (socket == this._creator)
+		if (!socket || socket === this._creator)
 			return ;
 		this._bannedPlayers.add(name);
-		if (!socket)
-			return ;
-		this._players.delete(name);
 		socket.emit("tournament-event", {type: "banned"});
-		socket.leave(this._tournamentId);
-		this._io.to(this._tournamentId).emit("tournament-event", {
-			type: "remove-participant",
-			name: name
-		});
-		socket.removeAllListeners("leave-tournament");
-		socket.data.leaveTournament();
+		this.removePlayerFromTournament(socket);
 		console.log(`${name} has been banned from the ${this._settings.name} tournament !`);
 	}
 
 	private	kickParticipant(name : string)
 	{
+		if (this._started)
+			return ;
 		const	socket = this._players.get(name);
 		if (!socket || socket === this._creator)
 			return ;
-		this._players.delete(name);
 		socket.emit("tournament-event", {type: "kicked"});
-		socket.leave(this._tournamentId);
-		this._io.to(this._tournamentId).emit("tournament-event", {
-			type: "remove-participant",
-			name: name
-		});
-		socket.removeAllListeners("leave-tournament");
-		socket.data.leaveTournament();
+		this.removePlayerFromTournament(socket);
 		console.log(`${name} has been kicked from the ${this._settings.name} tournament !`);
 	}
 
@@ -92,14 +79,15 @@ export class	ServerTournament
 			return ;
 		console.log(`${this._settings.name} tournamend end`);
 		this._disposed = true;
+		if (!this._started)
+			this._io.to(this._tournamentId).emit("tournament-event", { type: "tournament-canceled" })
 		this._players.forEach((player) => {
-			if (this._started === false)
-				player.emit("tournament-event", { type: "tournament-canceled" });
 			player.removeAllListeners("leave-tournament");
 			player.leave(this._tournamentId);
 			player.data.leaveTournament();
 		});
 		this._creator.leave(this._tournamentId);
+		this._creator.data.leaveTournament();
 		this.removeCreatorEvents();
 		this._onTournamentDispose();
 	}
@@ -114,19 +102,14 @@ export class	ServerTournament
 		}
 	}
 
-	public getDescriptionIfAvailable(askingSocketData: SocketData) : TournamentDescription | null
+	public getDescriptionIfAvailable(socket : DefaultSocket) : TournamentDescription | null
 	{
-		const	isTournamentPrivate = !this._settings.isPublic;
-		const	isTournamentFull = this._players.size === this._settings.maxPlayerCount;
-		const	isInvalidGuest = !askingSocketData.isConnected() && !this._settings.acceptGuests;
-		const	isBanned = this._bannedPlayers.has(askingSocketData.getProfile().name);
-
-		if (isTournamentPrivate || isTournamentFull || isInvalidGuest || isBanned)
+		if (!this._settings.isPublic || !this.canJoinTournament(socket).success)
 			return null;
 		return this.getDescription();
 	}
-
-	public addParticipant(socket : DefaultSocket) : Result<undefined>
+	
+	private	canJoinTournament(socket : DefaultSocket)
 	{
 		if (this._started)
 			return error("The tournament has already started !");
@@ -138,6 +121,16 @@ export class	ServerTournament
 
 		if (this._bannedPlayers.has(profile.name))
 			return error("You have been banned from this tournament !");
+		return success(undefined);
+	}
+
+	public addParticipant(socket : DefaultSocket) : Result<undefined>
+	{
+		const	canJoinTournament = this.canJoinTournament(socket);
+
+		if (!canJoinTournament.success)
+			return canJoinTournament;
+		const	profile = socket.data.getProfile();
 
 		this._players.set(profile.name, socket);
 		this._io.to(this._tournamentId).emit("tournament-event", {
@@ -147,26 +140,29 @@ export class	ServerTournament
         });
 		socket.join(this._tournamentId);
 		socket.data.joinTournament(this);
-		socket.once("leave-tournament", () => {
-			socket.data.leaveTournament();
-			console.log(`${socket.data.getProfile().name} leaved tournament ${this._settings.name}`);
-			if (this._started)
-			{
-				console.log("leave matchamking that has started");
-				socket.leave(this._tournamentId);
-			}
-			else
-			{
-				this._io.to(this._tournamentId).emit("tournament-event", {
-					type: "remove-participant",
-					name: profile.name
-				});
-				this._players.delete(profile.name);
-				if (socket !== this._creator)
-					socket.leave(this._tournamentId);
-			}
-		});
+		socket.once("leave-tournament", () => this.removePlayerFromTournament(socket));
 		return success(undefined);
+	}
+
+	private	removePlayerFromTournament(socket : DefaultSocket)
+	{
+		const	profile = socket.data.getProfile();
+		const	isCreator = socket === this._creator;
+
+		this._players.delete(profile.name);
+		socket.removeAllListeners("leave-tournament");
+		if (!this._started)
+		{
+			this._io.to(this._tournamentId).emit("tournament-event", {
+				type: "remove-participant",
+				name: profile.name
+			});
+		}
+		if (this._started || !isCreator)
+		{
+			socket.data.leaveTournament();
+			socket.leave(this._tournamentId);
+		}
 	}
 
 	public getParticipantsNames() : string[]
@@ -176,21 +172,9 @@ export class	ServerTournament
 
 	public onSocketDisconnect(socket : DefaultSocket)
 	{
-		socket.data.leaveTournament();
-		if (!this._started)
-		{
-			if (socket === this._creator)
-				this.dispose();
-			else
-			{
-				const	name = socket.data.getProfile().name;
-
-				this._io.to(this._tournamentId).emit("tournament-event", {
-					type: "remove-participant",
-					name: name
-				});
-				this._players.delete(name);
-			}
-		}
+		if (socket === this._creator && !this._started)
+			this.dispose();
+		else
+			this.removePlayerFromTournament(socket);
 	}
 }

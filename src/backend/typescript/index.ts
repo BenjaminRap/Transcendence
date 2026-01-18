@@ -151,7 +151,7 @@ async function start(): Promise<void> {
 				socket.data.disconnect();
 			});
 			socket.on("get-tournaments", (ack : (descriptions : TournamentDescription[]) => void) => {
-				const	descriptions = getPublicTournamentsDescriptions(socket.data);
+				const	descriptions = getPublicTournamentsDescriptions(socket);
 
 				ack(descriptions);
 			});

@@ -55,12 +55,12 @@ export class	TournamentMaker
 	}
 }
 
-export function	getPublicTournamentsDescriptions(askingSocketData : SocketData) : TournamentDescription[]
+export function	getPublicTournamentsDescriptions(socket : DefaultSocket) : TournamentDescription[]
 {
 	const	descriptions : TournamentDescription[] = [];
 
 	tournamentsByName.forEach(tournament => {
-		const	description = tournament.getDescriptionIfAvailable(askingSocketData);
+		const	description = tournament.getDescriptionIfAvailable(socket);
 
 		if (description !== null)
 			descriptions.push(description);
