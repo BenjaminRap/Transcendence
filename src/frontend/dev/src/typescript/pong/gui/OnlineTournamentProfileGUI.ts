@@ -30,8 +30,8 @@ export class	OnlineTournamentProfileGUI extends HTMLElement implements IGUI<Onli
 			${this._addKickAndBanButtons ? this.getKickAndBanButtonsHTML() : ""}
 		`;
 		this._inputs = {
-			ban : this.querySelector<HTMLButtonElement>("button.onlineTournamentProfileBan") ?? undefined,
-			kick : this.querySelector<HTMLButtonElement>("button.onlineTournamentProfileKick") ?? undefined,
+			ban : this.querySelector<HTMLButtonElement>("div.onlineTournamentProfileBan") ?? undefined,
+			kick : this.querySelector<HTMLButtonElement>("div.onlineTournamentProfileKick") ?? undefined,
 		}
 	}
 
@@ -39,8 +39,8 @@ export class	OnlineTournamentProfileGUI extends HTMLElement implements IGUI<Onli
 	{
 		return `
 		<div class="flex flex-row">
-			<div class="h-full aspect-square mask-no-repeat mask-contain mask-center bg-(--border-color) mask-(--kick-image) mr-[5%] hover:scale-110 onlineTournamentProfileKick"></div>
-			<div class="h-full aspect-square mask-no-repeat mask-contain mask-center bg-(--border-color) mask-(--ban-image) hover:scale-110 onlineTournamentProfileBan"></div>
+			<div class="h-full aspect-square mask-no-repeat mask-contain mask-center bg-(--border-color) mask-(--kick-image) mr-[5%] hover:scale-125 onlineTournamentProfileKick"></div>
+			<div class="h-full aspect-square mask-no-repeat mask-contain mask-center bg-(--border-color) mask-(--ban-image) hover:scale-125 onlineTournamentProfileBan"></div>
 		</div>`;
 	}
 
