@@ -353,8 +353,8 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		if (!tournamentData)
 			return ;
 		const	message =
-			tournamentEvent.type === "kicked" ? "You have been banned from the tournament" :
-			tournamentEvent.type === "banned" ? "You have been kicked from the tournament" :
+			tournamentEvent.type === "kicked" ? "You have been kicked from the tournament" :
+			tournamentEvent.type === "banned" ? "You have been banned from the tournament" :
 			tournamentEvent.type === "tournament-canceled" ? "The tournament has been canceled" :
 			null;
 		if (message !== null)
