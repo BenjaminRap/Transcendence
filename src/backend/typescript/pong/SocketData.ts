@@ -1,6 +1,7 @@
 import { defaultProfile, type Profile } from "@shared/Profile";
 import type { DefaultSocket } from "../";
 import { Room } from "./Room";
+import type { ServerTournament } from "./ServerTournament";
 
 let	guestProfileId = BigInt(0);
 
@@ -15,8 +16,9 @@ function	getGuestProfile() : Profile
 
 export class	SocketData
 {
-	private _state : "unactive" | "waiting" | "inRoom" = "unactive";
+	private _state : "unactive" | "waiting" | "playing" = "unactive";
 	private _room : Room | null = null;
+	private _tournament : ServerTournament | null = null;
 	private _profile : Profile = getGuestProfile();
 	private _connected : boolean = false;
 
@@ -42,16 +44,29 @@ export class	SocketData
 
 	public joinRoom(room : Room) {
 		this._room = room;
-		this._state = "inRoom";
+		if (!this._tournament)
+			this._state = "playing";
 	}
 
 	public leaveRoom() {
 		this._room = null;
+		if (!this._tournament)
+			this._state = "unactive";
+	}
+
+	public joinTournament(tournament : ServerTournament) {
+		this._tournament = tournament;
+		this._state = "playing";
+	}
+
+	public leaveTournament() {
+		this._tournament = null;
 		this._state = "unactive";
 	}
 
 	public disconnect() {
 		this._room?.onSocketDisconnect(this._socket);
+		this._tournament?.onSocketDisconnect(this._socket);
 	}
 
 	public getProfile() {
