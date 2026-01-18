@@ -1,8 +1,8 @@
 import { PrismaClient, type Match } from "@prisma/client";
 import type { PublicProfile } from "../types/users.types.js";
 import { UsersException, UsersError } from "../error_handlers/Users.error.js";
-import type { GameStats } from "../types/match.types.js";
-import type { MatchSummary } from "../types/suscriber.types.js";
+import type { GameStats, PlayerInfo } from "../types/match.types.js";
+import type { MatchSummary } from "../types/match.types.js";
 import { FriendService } from "./FriendService.js";
 
 
@@ -99,10 +99,9 @@ export class UsersService {
             };
         }));
     }
-    // ==================================== PRIVATE ==================================== //
 
     // --------------------------------------------------------------------------------- //
-    private async checkIfUserExists(id: number): Promise<boolean> {
+    async checkIfUserExists(id: number): Promise<boolean> {
         const user = await this.prisma.user.findUnique({
             where: { id },
             select: { id: true }
@@ -112,6 +111,8 @@ export class UsersService {
         }
         return true;
     }
+
+    // ==================================== PRIVATE ==================================== //
 
     // ----------------------------------------------------------------------------- //
     private calculateStats(matchesWon: number, matchesLost: number): GameStats {
@@ -143,7 +144,20 @@ export class UsersService {
                     username: opponentObj.username,
                     avatar: opponentObj.avatar
                 } : null,
-                match: match as Match,
+                matchResult: {
+                    matchId: match.id,
+                    scoreWinner: match.scoreWinner,
+                    scoreLoser: match.scoreLoser,
+                    duration: match.duration,
+                    winner: {
+                        id: match.winner.id || undefined,
+                        guestName: match.winner.guestName || undefined,
+                    } as PlayerInfo,
+                    loser: {
+                        id: match.loser.id || undefined,
+                        guestName: match.loser.guestName || undefined,
+                    } as PlayerInfo,
+                },
             } as MatchSummary;
         });
     }

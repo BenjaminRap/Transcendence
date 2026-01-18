@@ -19,9 +19,9 @@ export class MatchController {
     // --------------------------------------------------------------------------------- //
     async startMatch(data: StartMatchData): Promise<{ success: boolean, message?: string, matchData?: MatchData }> {
         try {
-            const player1 = await this.checkMatchData(data.player1.level, data.player1.id);
+            const player1 = await this.checkMatchData(data.player1.guestName, data.player1.id);
 
-            const player2 = await this.checkMatchData(data.player2.level, data.player2.id);
+            const player2 = await this.checkMatchData(data.player2.guestName, data.player2.id);
 
             const matchId = await this.matchService.startMatch(player1, player2);
             return {
@@ -75,7 +75,7 @@ export class MatchController {
             return {
                 success: true,
                 matchResult: {
-                    matchId: data.matchId as number,
+                    matchId: Number(data.matchId),
                     winner: data.winner,
                     loser: data.loser,
                     scoreWinner: Number(data.scoreWinner),
@@ -128,16 +128,16 @@ export class MatchController {
 	// ==================================== PRIVATE ==================================== //
 
     // --------------------------------------------------------------------------------- //
-    private async checkMatchData(level: string | undefined, id: number | undefined): Promise<PlayerInfo>
+    private async checkMatchData(guestName: string | undefined, id: number | undefined): Promise<PlayerInfo>
     {
-		if (level) {
-            return { id: undefined, level: this.manageOpponent(level as OPPONENT_LEVEL) }
+		if (guestName) {
+            return { id: undefined, guestName: this.manageOpponent(guestName as OPPONENT_LEVEL) }
 		}
 		else if (id) {
             const user: FriendProfile | null = await this.friendService.getById(Number(id));
             if(!user)
                 throw new MatchException(MatchError.USR_NOT_FOUND, 'User with id ' + id.toString() + ' of the match not found');
-            return { id: user.id, level: this.createAlias(`${user.username}_`) }
+            return { id: user.id, guestName: this.createAlias(`${user.username}_`) }
         }
         else
             throw new MatchException(MatchError.INVALID_OPPONENT, "No opponent define");
@@ -176,21 +176,21 @@ export class MatchController {
         // players identifiers from the match record 
         const p1 = { 
             id: match.player1Id ?? null, 
-            level: match.player1GuestName ?? null 
+            guestName: match.player1GuestName ?? null 
         };
         const p2 = { 
             id: match.player2Id ?? null, 
-            level: match.player2GuestName ?? null 
+            guestName: match.player2GuestName ?? null 
         };
         
         // participants identifiers from the match end data
         const winner = { 
             id: data.winner?.id ?? null, 
-            level: data.winner?.level ?? null 
+            guestName: data.winner?.guestName ?? null 
         };
         const loser = { 
             id: data.loser?.id ?? null, 
-            level: data.loser?.level ?? null 
+            guestName: data.loser?.guestName ?? null 
         };
         
         // Scénario A : Player 1 won, Player 2 lost
@@ -211,11 +211,16 @@ export class MatchController {
 
     // ----------------------------------------------------------------------------- //
     private isSameParticipant(
-        a: { id: number | null, level: string | null }, 
-        b: { id: number | null, level: string | null }
+        a: { id: number | null, guestName: string | null }, 
+        b: { id: number | null, guestName: string | null }
     ): boolean {
         if (a.id !== b.id) return false;
-        if (a.level !== b.level) return false;
+
+        // If it's a registered user (id defined), we don't enforce guestName match
+        // allowing frontend to send simplified data (e.g. only id)
+        if (a.id) return true;
+
+        if (a.guestName !== b.guestName) return false;
 
         return true;
     }

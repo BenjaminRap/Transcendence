@@ -85,13 +85,15 @@ export class Container {
         ));
 
         this.registerService('UsersService', () => new UsersService(
-            prisma
+            prisma,
+            this.getService('FriendService'),
         ));
 
         this.registerService('SuscriberService', () => new SuscriberService(
             prisma,
             this.getService('PasswordHasher'),
-            this.getService('FileService')
+            this.getService('FileService'),
+            this.getService('MatchService')
         ));
 
         this.registerService('FriendService', () => new FriendService(
@@ -99,13 +101,15 @@ export class Container {
         ));
 
         this.registerService('MatchService', () => new MatchService(
-            prisma
+            prisma,
+            this.getService('FriendService')
         ));
 
 		this.registerService('FileService', () => new FileService());
 
-		this.registerService('TournamentService', () => new (TournamentService)(
-			prisma
+		this.registerService('TournamentService', () => new TournamentService(
+			prisma,
+            this.getService('MatchService')
 		));
 
         // Controllers
@@ -137,7 +141,7 @@ export class Container {
 
 		this.registerService('TournamentController', () => new TournamentController(
 			this.getService('TournamentService'),
-			this.getService('MatchService'),
+            this.getService('UsersService')
 		));
 
         // Middleware

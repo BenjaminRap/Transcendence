@@ -11,19 +11,39 @@ export interface Tournament {
 	creatorGuestName?: string;
 }
 
+// NE PAS MODIFIER (sauf nécessité absolue)
+export interface PlayerInfo {
+    id?: number,
+    guestName?: string,
+}
+
 export interface TournamentParticipant {
     alias: string;
     userId?: number;
-	userGuestName?: string;
-    finalRank?: number;
-    isActive: boolean;
-    tournamentId: number;
+    userGuestName?: string;
+    isAdmin?: boolean;
 }
 
 export interface CreateTournament {
-	title: string;
-	adminUserId?: number;
-	adminGuestName?: string;
-	participants: TournamentParticipant[];
-	matchups: StartMatchData[];
+    title: string;
+    adminUserId?: number;
+    adminGuestName?: string; // champ obligatoire si adminUserId non fourni (c'est a dire admin GUEST et le nom doit etre fourni par l'utilisateur dans le front)
+    participants: TournamentParticipant[];
+    matchups: StartMatchData[];
+}
+
+export interface TournamentProgress {
+    tournamentId: number,
+    completedMatches: Array<{
+        matchId: number,
+        winnerId: number | string
+    }>
+}
+
+export interface TournamentState {
+    tournamentId: number,
+    players: Array<{
+        participantAlias: string,
+        currentMatchId: number | null
+    }>
 }

@@ -104,6 +104,9 @@ model Match {
 
   tournament   Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   tournamentId Int?
+  
+  round        Int?    @default(1)
+  matchOrder   Int?    @default(0)
 }
 
 // -------------------------------------------------------------------------------------------- //

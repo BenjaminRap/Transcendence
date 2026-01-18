@@ -1,5 +1,5 @@
 import { type PrismaClient, type Match, MatchStatus } from '@prisma/client';
-import type { GameStats, EndMatchData, MatchResult } from '../types/match.types.js';
+import type { GameStats, EndMatchData } from '../types/match.types.js';
 import type { PlayerInfo } from '../types/match.types.js';
 import type { MatchSummary, OpponentSummary } from '../types/match.types.js';
 import { FriendService } from './FriendService.js';
@@ -15,9 +15,9 @@ export class MatchService {
         const match = await this.prisma.match.create({
             data: {
                 player1Id: player1.id ?? null,
-                player1GuestName: player1.level ?? null,
+                player1GuestName: player1.guestName ?? null,
                 player2Id: player2.id ?? null,
-                player2GuestName: player2.level ?? null,
+                player2GuestName: player2.guestName ?? null,
             }
         });
 
@@ -32,10 +32,10 @@ export class MatchService {
                 status: MatchStatus.FINISHED,
 
                 winnerId: matchData.winner.id ?? null,
-                winnerGuestName: matchData.winner.level ?? null,
+                winnerGuestName: matchData.winner.guestName ?? null,
 
                 loserId: matchData.loser.id ?? null,
-                loserGuestName: matchData.loser.level ?? null,
+                loserGuestName: matchData.loser.guestName ?? null,
                 
                 scoreWinner: Number(matchData.scoreWinner),
                 scoreLoser: Number(matchData.scoreLoser),
@@ -115,7 +115,20 @@ export class MatchService {
 
             return {
                 opponent: opponentSummary,
-                match: match as MatchResult,
+                matchResult: {
+                    matchId: match.id,
+                    scoreWinner: match.scoreWinner,
+                    scoreLoser: match.scoreLoser,
+                    duration: match.duration,
+                    winner: {
+                        id: match.winnerId ?? undefined,
+                        guestName: match.winnerGuestName ?? undefined,
+                    } as PlayerInfo,
+                    loser: {
+                        id: match.loserId ?? undefined,
+                        guestName: match.loserGuestName ?? undefined,
+                    } as PlayerInfo,
+                },
             } as MatchSummary;
         }));
     }
@@ -162,6 +175,39 @@ export class MatchService {
         const stats: GameStats = this.calculateStats(wins, losses);
 
         return { stats };
+    }
+
+	// ----------------------------------------------------------------------------- //
+	async startTournamentMatch(tournamentId: number, round: number, matchOrder: number, player1: PlayerInfo, player2: PlayerInfo) {
+        let match = await this.prisma.match.findFirst({
+            where: {
+                tournamentId,
+                round,
+                matchOrder
+            }
+        });
+
+        const data: any = {
+            tournamentId,
+            round,
+            matchOrder,
+            player1Id: player1.id ?? null,
+            player1GuestName: player1.guestName ?? null,
+            player2Id: player2.id ?? null,
+            player2GuestName: player2.guestName ?? null,
+            status: MatchStatus.IN_PROGRESS
+        };
+
+        if (match) {
+            return this.prisma.match.update({
+                where: { id: match.id },
+                data
+            });
+        } else {
+             return this.prisma.match.create({
+                data: data as any 
+            });
+        }
     }
 
 	// ================================== PRIVATE ================================== //
