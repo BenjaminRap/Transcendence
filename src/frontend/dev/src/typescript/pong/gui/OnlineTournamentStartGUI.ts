@@ -1,5 +1,7 @@
 import type { TournamentId } from "@shared/ServerMessage";
 import type { IGUI } from "./IGUI";
+import type { Profile } from "@shared/Profile";
+import { OnlineTournamentProfileGUI } from "./OnlineTournamentProfileGUI";
 
 export type OnlineTournamentStartGUIInputs =
 {
@@ -13,6 +15,8 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 {
 	private _inputs : OnlineTournamentStartGUIInputs | undefined;
 	private _tournamentId : HTMLParagraphElement | undefined;
+	private _participantsContainer : HTMLDivElement | undefined;
+	private _participants = new Map<string, HTMLElement>();
 
 	constructor()
 	{
@@ -28,7 +32,7 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 			</div>
 			<fieldset class="w-11/12 h-[60%] overflow-y-scroll pointer-events-auto border-solid border-(--border-color) border-(length:--border-width) m-auto scrollbar-thumb-white scrollbar-track-[transparent] cursor-all-scroll">
 				<legend class="m-auto pr-[2%] pl-[2%] text-[3cqw] text-(--text-color) font-(family-name:--font)">Participants</legend>
-				<div class="inline"></div>
+				<div class="inline onlineTournamentStartGUIParticipantsContainer"></div>
 			</fieldset>
 			<div class="flex flex-row w-full justify-around h-1/3 relative b-1/3">
 				${this.getButtonHTML("Start", "onlineTournamentStartGUIStart")}
@@ -44,6 +48,7 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 			cancel: this.querySelector("button.onlineTournamentStartGUICancel")!
 		};
 		this._tournamentId = this.querySelector<HTMLParagraphElement>("p.onlineTournamentStartGUITournamentId")!;
+		this._participantsContainer = this.querySelector<HTMLDivElement>("div.onlineTournamentStartGUIParticipantsContainer")!;
 	}
 
 	private	getButtonHTML(text : string, className : string)
@@ -54,6 +59,39 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 	public getInputs()
 	{
 		return this._inputs;
+	}
+
+	public addParticipant(addKickAndBanButtons : boolean, participant : Profile)
+	{
+		if (!this._participantsContainer)
+			return ;
+		const	existingGUI = this._participants.get(participant.name);
+
+		if (!existingGUI)
+			return ;
+		const	gui = new OnlineTournamentProfileGUI(addKickAndBanButtons, participant.name);
+
+		this._participants.set(participant.name, gui);
+		this._participantsContainer?.appendChild(gui);
+	}
+
+	public addParticipants(addKickAndBanButtons : boolean, ...participants : Profile[])
+	{
+		if (!this._participantsContainer)
+			return ;
+		participants.forEach(profile => this.addParticipant(addKickAndBanButtons, profile));
+	}
+
+	public removeParticipant(profile : Profile)
+	{
+		if (!this._participantsContainer)
+			return ;
+		const	gui = this._participants.get(profile.name);
+
+		if (!gui)
+			return ;
+		this._participantsContainer.removeChild(gui);
+		this._participants.delete(profile.name);
 	}
 
 	public init(type : "creator" | "creator-player" | "player", tournamentId : TournamentId)
@@ -67,6 +105,8 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 		else
 			this.setOnlyInputsVisible("leave");
 		this._tournamentId.textContent = tournamentId;
+		this._participantsContainer?.replaceChildren();
+		this._participants.clear();
 	}
 
 	private	setOnlyInputsVisible(...visibles : (keyof OnlineTournamentStartGUIInputs)[])
