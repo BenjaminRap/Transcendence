@@ -359,7 +359,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			null;
 		if (message !== null)
 		{
-			this._sceneData.pongHTMLElement.onError(new PongError(message, "ignore"));
+			this._sceneData.pongHTMLElement.onError(new PongError(message, "show"));
 			this.switchMenu(this._onlineTournamentChoiceGUI);
 		}
 		else if (tournamentEvent.type === "add-participant")
