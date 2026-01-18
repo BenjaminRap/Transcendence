@@ -8,8 +8,8 @@ export type OnlineTournamentProfileGUIInputs =
 
 export class	OnlineTournamentProfileGUI extends HTMLElement implements IGUI<OnlineTournamentProfileGUIInputs>
 {
-	private static readonly _kickImage = "images/kick.png";
-	private static readonly _banImage = "images/ban.png";
+	private static readonly _kickImage = "url(/images/kick.png)";
+	private static readonly _banImage = "url(/images/ban.png)";
 
 	private _inputs : OnlineTournamentProfileGUIInputs | undefined;
 
@@ -18,13 +18,15 @@ export class	OnlineTournamentProfileGUI extends HTMLElement implements IGUI<Onli
 		private _name = "unkown")
 	{
 		super();
+		this.style.setProperty("--kick-image", OnlineTournamentProfileGUI._kickImage);
+		this.style.setProperty("--ban-image", OnlineTournamentProfileGUI._banImage);
 	}
 
 	public	connectedCallback()
 	{
-		this.classList.add("flex", "flex-row", "aspect", "border-solid", "border-(length:--border-width)", "border-(--border-color)", "justify-between");
+		this.classList.add("flex", "flex-row", "aspect", "border-solid", "border-(length:--border-width)", "border-(--border-color)", this._addKickAndBanButtons ? "justify-between" : "justify-around", "rounded-(--rounded)", "aspect-8/1", "p-[0.3cqw]");
 		this.innerHTML = `
-			<p class="text-(--text-color) font-(family-name:--font) text-[1cqw]" >${this._name}</p>
+			<p class="text-(--text-color) font-(family-name:--font) text-[2cqw] leading-[0.5]" >${this._name}</p>
 			${this._addKickAndBanButtons ? this.getKickAndBanButtonsHTML() : ""}
 		`;
 		this._inputs = {
@@ -36,9 +38,9 @@ export class	OnlineTournamentProfileGUI extends HTMLElement implements IGUI<Onli
 	private	getKickAndBanButtonsHTML()
 	{
 		return `
-		<div>
-			<img class="onlineTournamentProfileKick" src="${OnlineTournamentProfileGUI._kickImage}"/>
-			<img class="onlineTournamentProfileBan" src="${OnlineTournamentProfileGUI._banImage}"/>
+		<div class="flex flex-row">
+			<div class="h-full aspect-square mask-no-repeat mask-contain mask-center bg-(--border-color) mask-(--kick-image) mr-[5%] hover:scale-110 onlineTournamentProfileKick"></div>
+			<div class="h-full aspect-square mask-no-repeat mask-contain mask-center bg-(--border-color) mask-(--ban-image) hover:scale-110 onlineTournamentProfileBan"></div>
 		</div>`;
 	}
 
