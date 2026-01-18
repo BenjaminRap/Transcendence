@@ -46,7 +46,7 @@ export class ServerSync extends CustomScriptComponent {
 	{
 		const	message : GameInfos = {
 			type: "goal",
-			infos: {
+			goal: {
 				side: side,
 				newBallDirection: this._ball.getBallStartDirection()
 			}
@@ -57,7 +57,7 @@ export class ServerSync extends CustomScriptComponent {
     private sendInfos(): void {
 		const	message : GameInfos = {
 			type : "itemsUpdate",
-			infos: {
+			itemsUpdate: {
 				paddleRightPos: this.getXYZ(this._paddleRight.transform.position),
 				paddleLeftPos: this.getXYZ(this._paddleLeft.transform.position),
 				ball: {
@@ -87,7 +87,7 @@ export class ServerSync extends CustomScriptComponent {
 	{
 		const	gameInfos : GameInfos = {
 			type: "input",
-			infos: keysUpdate
+			keysUpdate: keysUpdate
 		};
 
 		this._sceneData.clientProxy.broadcastMessageFromSocket(socketIndex, "game-infos", gameInfos);

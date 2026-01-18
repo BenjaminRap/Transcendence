@@ -12,7 +12,7 @@ export type ClientMessageData<T extends ClientMessage> =
 	T extends "ban-participant" ? [string] :
 	[];
 
-export type ServerEvents = "game-infos" | "joined-game" | "ready" | "forfeit" | "room-closed" | "tournament-event";
+export type ServerEvents = "game-infos" | "joined-game" | "ready" | "tournament-event";
 export type ServerEventsData<T extends ServerEvents> =
 	T extends "game-infos" ? [GameInfos] :
 	T extends "joined-game" ? [GameInit] :

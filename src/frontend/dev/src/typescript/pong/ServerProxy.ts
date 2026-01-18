@@ -1,5 +1,5 @@
-import type { GameInit, KeysUpdate, TournamentCreationSettings, TournamentDescription, TournamentEvent, TournamentId } from "@shared/ServerMessage";
-import { FrontendSocketHandler, type ServerInGameMessage } from "./FrontendSocketHandler";
+import type { GameInfos, GameInit, KeysUpdate, TournamentCreationSettings, TournamentDescription, TournamentEvent, TournamentId } from "@shared/ServerMessage";
+import { FrontendSocketHandler } from "./FrontendSocketHandler";
 import type { Deferred, int, Observable, Observer } from "@babylonjs/core";
 import type { Profile } from "@shared/Profile";
 import { PongError } from "@shared/pongError/PongError";
@@ -23,8 +23,8 @@ export class	ServerProxy
 		private _frontendSocketHandler : FrontendSocketHandler,
 	) {
 		this._state = "connected";
-		this._frontendSocketHandler.onGameMessage().add((gameInfos : ServerInGameMessage) => {
-			if (gameInfos === "room-closed" && this._state === "in-game")
+		this._frontendSocketHandler.onGameMessage().add((gameInfos : GameInfos) => {
+			if (gameInfos.type === "room-closed" && this._state === "in-game")
 				this._state = "connected";
 		});
 		this._disconnectedObserver = this._frontendSocketHandler.onDisconnect().add(() => {
@@ -116,7 +116,7 @@ export class	ServerProxy
 		this._frontendSocketHandler.sendEventWithNoResponse("input-infos", keysUpdate);
 	}
 
-	public onGameMessage() : Observable<ServerInGameMessage>
+	public onGameMessage() : Observable<GameInfos>
 	{
 		return this._frontendSocketHandler.onGameMessage();
 	}

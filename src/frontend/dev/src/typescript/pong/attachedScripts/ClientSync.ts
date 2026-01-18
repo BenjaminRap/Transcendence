@@ -12,8 +12,8 @@ import { Imported } from "@shared/ImportedDecorator";
 import { Ball } from "@shared/attachedScripts/Ball";
 import { Paddle } from "@shared/attachedScripts/Paddle";
 import type { Platform } from "@shared/attachedScripts/Platform";
-import type { ServerInGameMessage } from "../FrontendSocketHandler";
 import { PongError } from "@shared/pongError/PongError";
+import type { GameInfos } from "@shared/ServerMessage";
 
 export class ClientSync extends CustomScriptComponent {
 	@Imported("InputManager") private	_inputManager! : InputManager;
@@ -46,36 +46,34 @@ export class ClientSync extends CustomScriptComponent {
 	
 		if (!serverProxy)
 			return ;
-		serverProxy.onGameMessage().add((gameInfos : ServerInGameMessage) => {
+		serverProxy.onGameMessage().add((gameInfos : GameInfos) => {
 			const	opponentInputs = this._inputManager.getPlayerInput(serverProxy.getOpponentIndex());
 
-			if (gameInfos === "room-closed")
+			switch (gameInfos.type)
 			{
+			case "room-closed":
 				this.updateKey({event: "keyUp"}, opponentInputs.up);
 				this.updateKey({event: "keyUp"}, opponentInputs.up);
-			}
-			else if (gameInfos === "forfeit")
-			{
+				break ;
+			case "forfeit":
 				const	winningSide = (serverProxy.getPlayerIndex() === 0) ? "left" : "right";
 
 				this._sceneData.events.getObservable("forfeit").notifyObservers(winningSide);
-			}
-			else if (gameInfos.type === "input")
-			{
-				this.updateKey(gameInfos.infos.up, opponentInputs.up);
-				this.updateKey(gameInfos.infos.down, opponentInputs.down);
-			}
-			else if (gameInfos.type === "itemsUpdate")
-			{
-				this._ball.transform.position.copyFrom(this.xyzToVector3(gameInfos.infos.ball.pos));
-				this._ball.transform.getPhysicsBody()!.setLinearVelocity(this.xyzToVector3(gameInfos.infos.ball.linearVelocity));
-				this._paddleLeft.transform.position.copyFrom(this.xyzToVector3(gameInfos.infos.paddleLeftPos));
-				this._paddleRight.transform.position.copyFrom(this.xyzToVector3(gameInfos.infos.paddleRightPos));
-			}
-			else if (gameInfos.type === "goal")
-			{
-				this._ball.setBallStartDirection(this.xyzToVector3(gameInfos.infos.newBallDirection));
-				this._gameManager.onGoal(gameInfos.infos.side);
+				break ;
+			case "input":
+				this.updateKey(gameInfos.keysUpdate.up, opponentInputs.up);
+				this.updateKey(gameInfos.keysUpdate.down, opponentInputs.down);
+				break ;
+			case "itemsUpdate":
+				this._ball.transform.position.copyFrom(this.xyzToVector3(gameInfos.itemsUpdate.ball.pos));
+				this._ball.transform.getPhysicsBody()!.setLinearVelocity(this.xyzToVector3(gameInfos.itemsUpdate.ball.linearVelocity));
+				this._paddleLeft.transform.position.copyFrom(this.xyzToVector3(gameInfos.itemsUpdate.paddleLeftPos));
+				this._paddleRight.transform.position.copyFrom(this.xyzToVector3(gameInfos.itemsUpdate.paddleRightPos));
+				break ;
+			case "goal":
+				this._ball.setBallStartDirection(this.xyzToVector3(gameInfos.goal.newBallDirection));
+				this._gameManager.onGoal(gameInfos.goal.side);
+				break ;
 			}
 		});
 	}

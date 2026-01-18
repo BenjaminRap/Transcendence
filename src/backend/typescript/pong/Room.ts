@@ -62,7 +62,7 @@ export class	Room
 		if (this._timeout)
 			clearTimeout(this._timeout);
 		console.log("disposing room !");
-		this._io.to(this._roomId).emit("room-closed");
+		this._io.to(this._roomId).emit("game-infos", { type:"room-closed" });
 		this._disposed = true;
 		this._sockets.forEach((socket : DefaultSocket) => { this.removeSocketFromRoom(socket) });
 		this._serverPongGame?.dispose();
@@ -74,7 +74,7 @@ export class	Room
 	{
 		if (!socket.data.isInRoom(this) || this._ended)
 			return ;
-		socket.broadcast.to(this._roomId).emit("forfeit");
+		socket.broadcast.to(this._roomId).emit("game-infos", { type: "forfeit" });
 		this.gameEnd();
 	}
 
@@ -120,7 +120,7 @@ export class	Room
 		this.sendMessageToRoom("ready");
 		this._sockets.forEach((socket : DefaultSocket, index : int) => {
 			socket.once("forfeit", () => {
-				socket.broadcast.to(this._roomId).emit("forfeit");
+				socket.broadcast.to(this._roomId).emit("game-infos", { type: "forfeit" });
 				const	winningSide = (index === 0) ? "left" : "right";
 
 				this._sceneData!.events.getObservable("forfeit").notifyObservers(winningSide);

@@ -33,16 +33,22 @@ export type KeysUpdate = zod.infer<typeof zodKeysUpdate>;
 
 export const zodGameInfos = zod.discriminatedUnion("type", [
 	zod.object({
+		type: zod.literal("forfeit")
+	}),
+	zod.object({
+		type: zod.literal("room-closed")
+	}),
+	zod.object({
 		type: zod.literal("itemsUpdate"),
-		infos: zodItemsUpdate,
+		itemsUpdate: zodItemsUpdate,
 	}),
 	zod.object({
 		type: zod.literal("goal"),
-		infos: zodGoal,
+		goal: zodGoal,
 	}),
 	zod.object({
 		type: zod.literal("input"),
-		infos: zodKeysUpdate,
+		keysUpdate: zodKeysUpdate,
 	}),
 ]);
 export type GameInfos = zod.infer<typeof zodGameInfos>;

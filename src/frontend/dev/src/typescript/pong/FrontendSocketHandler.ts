@@ -6,7 +6,6 @@ import { type GameInfos, type GameInit, type TournamentCreationSettings, type To
 import type { Result } from "@shared/utils";
 import { io, Socket } from "socket.io-client";
 
-export type ServerInGameMessage = GameInfos | "forfeit" | "room-closed";
 export type EventWithNoResponse = "forfeit" | "input-infos" | "leave-matchmaking" | "ready" | "leave-tournament" | "cancel-tournament";
 type DefaultSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
@@ -15,7 +14,7 @@ export class	FrontendSocketHandler
 	private static readonly _apiUrl = "/api/socket.io/";
 
 	private _socket : DefaultSocket;
-	private _onGameMessageObservable : Observable<ServerInGameMessage>;
+	private _onGameMessageObservable : Observable<GameInfos>;
 	private _onDisconnectObservable  = new Observable<void>();
 	private _onTournamentEventObservable : Observable<TournamentEvent>;
 
@@ -102,7 +101,7 @@ export class	FrontendSocketHandler
 		return deferred;
 	}
 
-	public onGameMessage() : Observable<ServerInGameMessage>
+	public onGameMessage() : Observable<GameInfos>
 	{
 		return this._onGameMessageObservable;
 	}
@@ -163,11 +162,9 @@ export class	FrontendSocketHandler
 
 function	createNewOnGameMessageObservable(socket : DefaultSocket)
 {
-	const	observable = new Observable<ServerInGameMessage>();
+	const	observable = new Observable<GameInfos>();
 
 	socket.on("game-infos", (gameInfos : GameInfos) => { observable.notifyObservers(gameInfos) });
-	socket.on("forfeit", () => { observable.notifyObservers("forfeit") });
-	socket.on("room-closed", () => { observable.notifyObservers("room-closed") });
 	return observable;
 }
 
