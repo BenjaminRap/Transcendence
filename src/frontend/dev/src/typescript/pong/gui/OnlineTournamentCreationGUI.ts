@@ -16,6 +16,7 @@ type CustomInput<T extends "text" | "checkbox" | "number"> = {
 type OnlineTournamentSettingsInputs = {
 	name : CustomInput<"text">,
 	isPublic : CustomInput<"checkbox">,
+	acceptGuests : CustomInput<"checkbox">,
 	maxPlayersCount : CustomInput<"number">
 }
 
@@ -35,7 +36,7 @@ export class	OnlineTournamentCreationGUI extends HTMLElement implements IGUI<Onl
 		this.innerHTML = `
 			<fieldset class="text-(--text-color) font-(family-name:--font) h-3/5 w-11/12 border-(--border-color) border-solid border-(length:--border-width) m-auto mt-[1%] mb-[1%]">
 				<legend class="m-auto pr-[2%] pl-[2%] text-[3.5cqw]">Tournament's settings</legend>
-				<div class="ml-[30%] flex flex-col pointer-events-auto text-[2.5cqw]">
+				<div class="h-full ml-[30%] flex flex-col pointer-events-auto text-[2.5cqw]">
 					${this.getErrorText("onlineTournamentCreationGUINameErrorText")}
 					<label>
 						Name :
@@ -45,6 +46,11 @@ export class	OnlineTournamentCreationGUI extends HTMLElement implements IGUI<Onl
 					<label>
 						Is Public :
 						<input class="ml-[1%] h-1/2 aspect-square accent-(--border-color) onlineTournamentCreationGUIIsPublic" type="checkbox">
+					</label>
+					${this.getErrorText("onlineTournamentCreationGUIAcceptGuestsErrorText")}
+					<label>
+						Accept Guests :
+						<input class="ml-[1%] h-1/2 aspect-square accent-(--border-color) onlineTournamentCreationGUIAcceptGuests" type="checkbox">
 					</label>
 					${this.getErrorText("onlineTournamentCreationGUIMaxPlayersCountErrorText")}
 					<label>
@@ -71,6 +77,10 @@ export class	OnlineTournamentCreationGUI extends HTMLElement implements IGUI<Onl
 				input: this.querySelector("input.onlineTournamentCreationGUIIsPublic")!,
 				errorText: this.querySelector("p.onlineTournamentCreationGUIIsPublicErrorText")!,
 			},
+			acceptGuests: {
+				input: this.querySelector("input.onlineTournamentCreationGUIAcceptGuests")!,
+				errorText: this.querySelector("p.onlineTournamentCreationGUIAcceptGuestsErrorText")!,
+			},
 			maxPlayersCount: {
 				input: this.querySelector("input.onlineTournamentCreationGUIMaxPlayersCount")!,
 				errorText: this.querySelector("p.onlineTournamentCreationGUIMaxPlayersCountErrorText")!,
@@ -80,7 +90,7 @@ export class	OnlineTournamentCreationGUI extends HTMLElement implements IGUI<Onl
 
 	private	getErrorText(className : string)
 	{
-		return `<p class="${className} w-full text-red-900 bg-red-300/25 backdrop-blur-3xl text-center rounded-md invisible -translate-x-[20%]">Error</p>`;
+		return `<p class="${className} w-full h-[10%] text-red-900 bg-red-300/25 backdrop-blur-3xl text-center rounded-md invisible -translate-x-[20%] leading-none">Error</p>`;
 	}
 
 	private	getButtonHTML(text : string, className : string)
@@ -122,6 +132,7 @@ export class	OnlineTournamentCreationGUI extends HTMLElement implements IGUI<Onl
 		const	settings : TournamentCreationSettings = {
 			name : this._settingsInputs.name.input.value,
 			isPublic: this._settingsInputs.isPublic.input.checked,
+			acceptGuests: this._settingsInputs.acceptGuests.input.checked,
 			maxPlayerCount: this._settingsInputs.maxPlayersCount.input.valueAsNumber
 		};
 		return settings;

@@ -2,6 +2,7 @@ import type { TournamentCreationSettings, TournamentDescription, TournamentId } 
 import { ServerTournament } from "./ServerTournament";
 import { error, success, type Result } from "@shared/utils";
 import type { DefaultServer, DefaultSocket } from "..";
+import type { SocketData } from "./SocketData";
 
 const	tournamentsByName = new Map<string, ServerTournament>();
 const	tournamentsById = new Map<string, ServerTournament>();
@@ -54,12 +55,12 @@ export class	TournamentMaker
 	}
 }
 
-export function	getPublicTournamentsDescriptions() : TournamentDescription[]
+export function	getPublicTournamentsDescriptions(askingSocketData : SocketData) : TournamentDescription[]
 {
 	const	descriptions : TournamentDescription[] = [];
 
 	tournamentsByName.forEach(tournament => {
-		const	description = tournament.getDescriptionIfAvailable();
+		const	description = tournament.getDescriptionIfAvailable(askingSocketData);
 
 		if (description !== null)
 			descriptions.push(description);

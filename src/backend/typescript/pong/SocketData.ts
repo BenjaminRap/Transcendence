@@ -18,12 +18,17 @@ export class	SocketData
 	private _state : "unactive" | "waiting" | "inRoom" | "ready" = "unactive";
 	private _room : Room | null = null;
 	private _profile : Profile = getGuestProfile();
+	private _connected : boolean = false;
 
 	public getState() {
 		return this._state;
 	}
 	public isInRoom(room : Room) {
 		return this._room == room;
+	}
+
+	public isConnected() {
+		return this._connected;
 	}
 
 	constructor(private readonly _socket : DefaultSocket)

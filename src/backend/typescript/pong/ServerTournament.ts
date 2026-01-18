@@ -1,6 +1,7 @@
 import type { TournamentCreationSettings, TournamentDescription, TournamentId } from "@shared/ServerMessage";
 import type { DefaultSocket, ServerType } from "..";
 import { error, success, type Result } from "@shared/utils";
+import type { SocketData } from "./SocketData";
 
 export class	ServerTournament
 {
@@ -98,10 +99,14 @@ export class	ServerTournament
 		}
 	}
 
-	public getDescriptionIfAvailable() : TournamentDescription | null
+	public getDescriptionIfAvailable(askingSocketData: SocketData) : TournamentDescription | null
 	{
-		if (!this._settings.isPublic
-			|| this._players.size === this._settings.maxPlayerCount)
+		const	isTournamentPrivate = !this._settings.isPublic;
+		const	isTournamentFull = this._players.size === this._settings.maxPlayerCount;
+		const	isInvalidGuest = !askingSocketData.isConnected() && !this._settings.acceptGuests;
+		const	isBanned = this._bannedPlayers.has(askingSocketData.getProfile().name);
+
+		if (isTournamentPrivate || isTournamentFull || isInvalidGuest || isBanned)
 			return null;
 		return this.getDescription();
 	}
@@ -112,6 +117,8 @@ export class	ServerTournament
 			return error("The tournament has already started !");
 		if (this._players.size === this._settings.maxPlayerCount)
 			return error("The tournament is already full !");
+		if (!socket.data.isConnected() && !this._settings.acceptGuests)
+			return error("The tournament doesn't accept guests, you must log to your account !");
 		const	profile = socket.data.getProfile();
 
 		if (this._bannedPlayers.has(profile.name))

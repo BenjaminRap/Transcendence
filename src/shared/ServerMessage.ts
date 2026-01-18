@@ -69,7 +69,8 @@ export type GameInit = zod.infer<typeof zodGameInit>;
 export const	zodTournamentCreationSettings = zod.object({
 	name: zod.string().trim().max(TournamentHelper.maxNameLength).nonempty(),
 	isPublic: zod.boolean(),
-	maxPlayerCount: zod.number().min(2).max(TournamentHelper.maxTournamentParticipants)
+	maxPlayerCount: zod.number().min(2).max(TournamentHelper.maxTournamentParticipants),
+	acceptGuests: zod.boolean()
 });
 export type TournamentCreationSettings = zod.infer<typeof zodTournamentCreationSettings>;
 
