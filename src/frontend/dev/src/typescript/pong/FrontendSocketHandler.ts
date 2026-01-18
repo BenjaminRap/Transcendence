@@ -6,7 +6,7 @@ import { type GameInfos, type GameInit, type TournamentCreationSettings, type To
 import type { Result } from "@shared/utils";
 import { io, Socket } from "socket.io-client";
 
-export type EventWithNoResponse = "forfeit" | "input-infos" | "leave-matchmaking" | "ready" | "leave-tournament" | "cancel-tournament";
+export type EventWithNoResponse = "forfeit" | "input-infos" | "leave-matchmaking" | "ready" | "leave-tournament" | "cancel-tournament" | "ban-participant" | "kick-participant";
 type DefaultSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 export class	FrontendSocketHandler

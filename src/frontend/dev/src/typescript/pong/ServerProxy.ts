@@ -225,6 +225,16 @@ export class	ServerProxy
 		return deferred.promise;
 	}
 
+	public banPlayerFromTournament(name : string)
+	{
+		this._frontendSocketHandler.sendEventWithNoResponse("ban-participant", name);
+	}
+
+	public kickPlayerFromTournament(name : string)
+	{
+		this._frontendSocketHandler.sendEventWithNoResponse("kick-participant", name);
+	}
+
 	public getTournamentData()
 	{
 		return this._tournamentData;
