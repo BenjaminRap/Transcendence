@@ -82,16 +82,16 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 		participants.forEach(profile => this.addParticipant(addKickAndBanButtons, profile));
 	}
 
-	public removeParticipant(profile : Profile)
+	public removeParticipant(name : string)
 	{
 		if (!this._participantsContainer)
 			return ;
-		const	gui = this._participants.get(profile.name);
+		const	gui = this._participants.get(name);
 
 		if (!gui)
 			return ;
 		this._participantsContainer.removeChild(gui);
-		this._participants.delete(profile.name);
+		this._participants.delete(name);
 	}
 
 	public init(type : "creator" | "creator-player" | "player", tournamentId : TournamentId)
