@@ -1,7 +1,8 @@
 import type { TournamentId } from "@shared/ServerMessage";
-import type { IGUI } from "./IGUI";
+import { initMenu, type IGUI } from "./IGUI";
 import type { Profile } from "@shared/Profile";
 import { OnlineTournamentProfileGUI } from "./OnlineTournamentProfileGUI";
+import { Observable } from "@babylonjs/core";
 
 export type OnlineTournamentStartGUIInputs =
 {
@@ -17,6 +18,8 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 	private _tournamentId : HTMLParagraphElement | undefined;
 	private _participantsContainer : HTMLDivElement | undefined;
 	private _participants = new Map<string, HTMLElement>();
+	private _onBanParticipantObservable = new Observable<string>();
+	private _onKickParticipantObservable = new Observable<string>();
 
 	constructor()
 	{
@@ -61,6 +64,16 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 		return this._inputs;
 	}
 
+	public onBanParticipant()
+	{
+		return this._onBanParticipantObservable;
+	}
+
+	public onKickParticipant()
+	{
+		return this._onKickParticipantObservable;
+	}
+
 	public addParticipant(addKickAndBanButtons : boolean, participant : Profile)
 	{
 		if (!this._participantsContainer)
@@ -71,8 +84,11 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 			return ;
 		const	gui = new OnlineTournamentProfileGUI(addKickAndBanButtons, participant.name);
 
+		initMenu(gui, {
+			ban: () => this._onBanParticipantObservable.notifyObservers(participant.name),
+			kick: () => this._onKickParticipantObservable.notifyObservers(participant.name),
+		}, this._participantsContainer);
 		this._participants.set(participant.name, gui);
-		this._participantsContainer?.appendChild(gui);
 	}
 
 	public addParticipants(addKickAndBanButtons : boolean, ...participants : Profile[])
