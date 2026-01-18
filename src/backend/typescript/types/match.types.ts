@@ -1,5 +1,3 @@
-import type { Match } from "@prisma/client";
-
 export enum OPPONENT_LEVEL
 {
     GUEST = "GUEST",
@@ -16,7 +14,7 @@ export interface GameStats
 
 export interface PlayerInfo {
     id?: number,
-    level?: string,
+    guestName?: string,
 }
 
 export interface StartMatchData {

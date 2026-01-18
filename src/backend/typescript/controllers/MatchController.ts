@@ -1,4 +1,4 @@
-import { type Match } from '@prisma/client';
+import { type Match, MatchStatus } from '@prisma/client';
 import { MatchService } from '../services/MatchService.js';
 import { OPPONENT_LEVEL, type StartMatchData, type EndMatchData, type MatchData } from '../types/match.types.js';
 import { MatchException, MatchError } from '../error_handlers/Match.error.js';
@@ -45,7 +45,7 @@ export class MatchController {
 	// --------------------------------------------------------------------------------- //
     async endMatch(data: EndMatchData): Promise<{ success: boolean, message?: string, matchResult?: MatchResult }> {
         try {
-            const match = await this.matchService.getMatchInProgress(data.matchId as number);
+            const match = await this.matchService.getMatchInProgress(Number(data.matchId));
             if (!match) {
                 return { success: false, message: `Match with id ${data.matchId} not found` };
             }
@@ -78,9 +78,9 @@ export class MatchController {
                     matchId: data.matchId as number,
                     winner: data.winner,
                     loser: data.loser,
-                    scoreWinner: data.scoreWinner as number,
-                    scoreLoser: data.scoreLoser as number,
-                    duration: data.duration,
+                    scoreWinner: Number(data.scoreWinner),
+                    scoreLoser: Number(data.scoreLoser),
+                    duration: Number(data.duration),
                 } as MatchResult
             };
         }
@@ -89,6 +89,9 @@ export class MatchController {
             return { success: false, message: "An error occurred when fetching the database" };
         }
     }
+
+	// ----------------------------------------------------------------------------- //
+	// 
 
     // =================================== PRIVATE ==================================== //
 
@@ -134,8 +137,7 @@ export class MatchController {
             const user: FriendProfile | null = await this.friendService.getById(Number(id));
             if(!user)
                 throw new MatchException(MatchError.USR_NOT_FOUND, 'User with id ' + id.toString() + ' of the match not found');
-            
-            return { id: user.id, level: undefined }
+            return { id: user.id, level: this.createAlias(`${user.username}_`) }
         }
         else
             throw new MatchException(MatchError.INVALID_OPPONENT, "No opponent define");
@@ -164,7 +166,7 @@ export class MatchController {
     private validDataMatch(data: EndMatchData, match: Match) : { success: boolean, message?: string }
     {
         // check if the match is not terminated
-        if (match.status !== 'IN_PROGRESS') {
+        if (match.status !== MatchStatus.IN_PROGRESS) {
             return {
                 success: false,
                 message: 'Match already terminated',
@@ -174,11 +176,11 @@ export class MatchController {
         // players identifiers from the match record 
         const p1 = { 
             id: match.player1Id ?? null, 
-            level: match.player1Level ?? null 
+            level: match.player1GuestName ?? null 
         };
         const p2 = { 
             id: match.player2Id ?? null, 
-            level: match.player2Level ?? null 
+            level: match.player2GuestName ?? null 
         };
         
         // participants identifiers from the match end data

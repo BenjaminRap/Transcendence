@@ -1,4 +1,4 @@
-import type { PrismaClient, Match } from '@prisma/client';
+import { type PrismaClient, type Match, MatchStatus } from '@prisma/client';
 import type { GameStats, EndMatchData, MatchResult } from '../types/match.types.js';
 import type { PlayerInfo } from '../types/match.types.js';
 import type { MatchSummary, OpponentSummary } from '../types/match.types.js';
@@ -15,9 +15,9 @@ export class MatchService {
         const match = await this.prisma.match.create({
             data: {
                 player1Id: player1.id ?? null,
-                player1Level: player1.level ?? null,
+                player1GuestName: player1.level ?? null,
                 player2Id: player2.id ?? null,
-                player2Level: player2.level ?? null,
+                player2GuestName: player2.level ?? null,
             }
         });
 
@@ -29,16 +29,16 @@ export class MatchService {
         await this.prisma.match.update({
             where: { id: matchData.matchId as number },
             data: {
-                status: 'FINISHED',
+                status: MatchStatus.FINISHED,
 
                 winnerId: matchData.winner.id ?? null,
-                winnerLevel: matchData.winner.level ?? null,
+                winnerGuestName: matchData.winner.level ?? null,
 
                 loserId: matchData.loser.id ?? null,
-                loserLevel: matchData.loser.level ?? null,
+                loserGuestName: matchData.loser.level ?? null,
                 
-                scoreWinner: matchData.scoreWinner as number,
-                scoreLoser: matchData.scoreLoser as number,
+                scoreWinner: Number(matchData.scoreWinner),
+                scoreLoser: Number(matchData.scoreLoser),
 
                 duration: matchData.duration,
             }
@@ -50,7 +50,7 @@ export class MatchService {
         return this.prisma.match.findFirst({
             where: {
                 id: matchId,
-                status: 'IN_PROGRESS'
+                status: MatchStatus.IN_PROGRESS
             }
         });
     }
@@ -82,7 +82,8 @@ export class MatchService {
             const isUserWinner = match.winnerId === userId;
             
             const opponentUser = isUserWinner ? match.loser : match.winner;
-            const opponentLevel = isUserWinner ? match.loserLevel : match.winnerLevel;
+            // Use guest name as fallback level/name
+            const opponentGuestName = isUserWinner ? match.loserGuestName : match.winnerGuestName;
 
             let opponentSummary: OpponentSummary;
 
@@ -94,20 +95,20 @@ export class MatchService {
                     avatar: opponentUser.avatar,
                     isFriend: await this.friendService.isFriend(userId, opponentUser.id)
                 };
-            } else if (opponentLevel) {
-                // if opponent is a guest or AI
+            } else if (opponentGuestName) {
+                // if opponent is a guest, AI, OR a deleted user who has a snapshot name
                 opponentSummary = {
                     id: "GUEST",
-                    username: opponentLevel,
-                    avatar: process.env.DEFAULT_AVATAR_URL || "https://8080:localhost/api//static/public/avatarDefault.webp", 
+                    username: opponentGuestName,
+                    avatar: process.env.DEFAULT_AVATAR_URL || "http://localhost:8181/static/public/avatarDefault.webp", 
                     isFriend: false
                 };
             } else {
-                // if user has deleted their account (neither User nor Level if it was a real user before)
+                // Fallback for very old data or errors
                 opponentSummary = {
                     id: "DELETED",
                     username: "Deleted User",
-                    avatar: process.env.DEFAULT_AVATAR_URL || "https://8080:localhost/api//static/public/avatarDefault.webp",
+                    avatar: process.env.DEFAULT_AVATAR_URL || "http://localhost:8181/static/public/avatarDefault.webp",
                     isFriend: false
                 };
             }
