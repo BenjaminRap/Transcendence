@@ -186,7 +186,7 @@ export class	ServerProxy
 		deferred.promise
 			.catch(() => {
 				this._state = "tournament-creator";
-			})
+			});
 		this.replaceCurrentPromise(deferred);
 		return deferred.promise;
 	}
@@ -243,7 +243,7 @@ export class	ServerProxy
 	private verifyState(...allowedStates : SocketState[]) : void
 	{
 		if (!allowedStates.includes(this._state))
-			throw new PongError(`A FrontendSocketHandler method called with an invalid state, current state : ${this._state}, allowed : ${allowedStates}`, "ignore");
+			throw new PongError(`A FrontendSocketHandler method called with an invalid state, current state : ${this._state}, allowed : ${allowedStates}`, "show");
 	}
 
 	private	replaceCurrentPromise(newPromise : Deferred<any>) : void

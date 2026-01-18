@@ -53,8 +53,7 @@ export class PongGame extends HTMLElement {
 		}, this);
 		this._closeGUI = initMenu(new CloseGUI(), {
 			close: () => this.quit()
-		}, this);
-		this._closeGUI.classList.remove("hidden");
+		}, this, false);
 
 		this.append(this._canvas);
 		try {

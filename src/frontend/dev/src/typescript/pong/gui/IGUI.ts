@@ -6,10 +6,11 @@ export interface IGUI<T extends IGUIInputsType>
 }
 
 
-export function	initMenu<K extends HTMLElement, T extends IGUIInputsType>(menu : IGUI<T> & K, callbacks : { [K in keyof T]: () => void }, container : HTMLElement) : K
+export function	initMenu<K extends HTMLElement, T extends IGUIInputsType>(menu : IGUI<T> & K, callbacks : { [K in keyof T]: () => void }, container : HTMLElement, hidden = true) : K
 {
 	container.appendChild(menu);
-	menu.classList.add("hidden");
+	if (hidden)
+		menu.classList.add("hidden");
 	const	inputs = menu.getInputs();
 	
 	if (typeof inputs !== "object")

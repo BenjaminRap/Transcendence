@@ -79,14 +79,14 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 			return ;
 		const	existingGUI = this._participants.get(name);
 
-		if (!existingGUI)
+		if (existingGUI)
 			return ;
 		const	gui = new OnlineTournamentProfileGUI(addKickAndBanButtons, name);
 
 		initMenu(gui, {
 			ban: () => this._onBanParticipantObservable.notifyObservers(name),
 			kick: () => this._onKickParticipantObservable.notifyObservers(name),
-		}, this._participantsContainer);
+		}, this._participantsContainer, false);
 		this._participants.set(name, gui);
 	}
 
@@ -113,15 +113,20 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 	{
 		if (!this._tournamentId)
 			return ;
+		this.setType(type);
+		this._tournamentId.textContent = tournamentId;
+		this._participantsContainer?.replaceChildren();
+		this._participants.clear();
+	}
+
+	public setType(type : "creator" | "creator-player" | "player")
+	{
 		if (type === "creator")
 			this.setOnlyInputsVisible("start", "join", "cancel");
 		else if (type === "creator-player")
 			this.setOnlyInputsVisible("start", "leave", "cancel");
 		else
 			this.setOnlyInputsVisible("leave");
-		this._tournamentId.textContent = tournamentId;
-		this._participantsContainer?.replaceChildren();
-		this._participants.clear();
 	}
 
 	private	setOnlyInputsVisible(...visibles : (keyof OnlineTournamentStartGUIInputs)[])

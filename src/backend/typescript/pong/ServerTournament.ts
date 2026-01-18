@@ -145,7 +145,8 @@ export class	ServerTournament
 					name: profile.name
 				});
 				this._players.delete(profile.name);
-				socket.leave(this._tournamentId);
+				if (socket !== this._creator)
+					socket.leave(this._tournamentId);
 			}
 		});
 		return success(undefined);

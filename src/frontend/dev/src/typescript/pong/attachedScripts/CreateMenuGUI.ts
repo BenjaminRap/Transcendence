@@ -304,9 +304,8 @@ export class CreateMenuGUI extends CustomScriptComponent {
 	{
 		try {
 			await this._sceneData.serverProxy.joinTournamentAsCreator();
-			const	tournamentData = this._sceneData.serverProxy.getTournamentData()!;
 
-			this._onlineTournamentStartGUI.init("creator-player", tournamentData.id);
+			this._onlineTournamentStartGUI.setType("creator-player");
 		} catch (error) {
 			this._sceneData.pongHTMLElement.onError(error);
 		}
@@ -329,8 +328,9 @@ export class CreateMenuGUI extends CustomScriptComponent {
 	{
 		this._sceneData.serverProxy.leaveTournament();
 		const	tournamentData = this._sceneData.serverProxy.getTournamentData();
+
 		if (tournamentData?.isCreator)
-			this._onlineTournamentStartGUI.init("creator", tournamentData.id);
+			this._onlineTournamentStartGUI.setType("creator");
 		else
 			this.switchMenu(this._onlineTournamentChoiceGUI);
 	}
@@ -366,6 +366,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		{
 			const	areYouCreator = tournamentData.isCreator;
 			const	canKickOrBan = areYouCreator && !tournamentEvent.isCreator;
+
 			this._onlineTournamentStartGUI.addParticipant(canKickOrBan, tournamentEvent.name);
 		}
 		else if (tournamentEvent.type === "remove-participant")
