@@ -1,8 +1,10 @@
 import type { TournamentCreationSettings, TournamentDescription, TournamentId } from "@shared/ServerMessage";
 import type { DefaultSocket, ServerType } from "..";
 import { error, success, type Result } from "@shared/utils";
+import { Tournament } from "@shared/Tournament";
+import type { Match } from "@shared/Match";
 
-export class	ServerTournament
+export class	ServerTournament extends Tournament<DefaultSocket>
 {
 	private	_disposed = false;
 	private _players = new Map<string, DefaultSocket>();
@@ -17,6 +19,7 @@ export class	ServerTournament
 		private _creator : DefaultSocket
 	)
 	{
+		super();
 		this._tournamentId = crypto.randomUUID();
 		this._creator.once("start-tournament", (ack : (success : Result<null>) => void) => {
 			const	result = this.start();
@@ -149,6 +152,43 @@ export class	ServerTournament
 			socket.leave(this._tournamentId);
 		}
 	}
+
+    protected override onQualificationsEnd(qualified: DefaultSocket[]): void
+	{
+		this._io.to(this._tournamentId).emit("tournament-event", {
+			type: "tournament-gui-create",
+			qualified: qualified.map(socket => socket.data.getProfile())
+		});
+    }
+
+    protected override onTournamentEnd(winner: DefaultSocket): void
+	{
+		this.dispose();
+    }
+
+    protected override onTournamentShow(): void
+	{
+		this._io.to(this._tournamentId).emit("tournament-event", {
+			type: "show-tournament"
+		});
+    }
+
+    protected override onNewMatches(): void
+	{
+        throw new Error("Method not implemented.");
+    }
+
+    protected override setRoundWinners(round: number, matches: Match<DefaultSocket>[]): void
+	{
+		this._io.to(this._tournamentId).emit("tournament-event", {
+			type: "tournament-gui-set-winners",
+			round: round,
+			matches: matches.map(match => ({
+				winner: match.winner?.data.getProfile(),
+				winnerSide: match.winnerSide
+			}))
+		});
+    }
 
 	public getDescription() : TournamentDescription
 	{
