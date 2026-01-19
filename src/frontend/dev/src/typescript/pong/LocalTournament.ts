@@ -13,20 +13,18 @@ export class	LocalTournament
 	private static readonly _showOpponentsDurationMs = 2000;
 
 	private _round : "qualification" | number = "qualification";
-	private _tournamentMatches : Match[][] = [];
-	private _qualificationMatches : Match[] = [];
+	private _tournamentMatches : Match<Profile>[][] = [];
+	private _qualificationMatches : Match<Profile>[] = [];
 	private _currentMatchIndex = 0;
-	private _qualified : ProfileWithScore[] = [];
+	private _qualified : ProfileWithScore<Profile>[] = [];
 	private _timeout : number | null = null;
 	private _tournamentGUI? : TournamentGUI;
 	private _expectedQualifiedCount : number;
 	private _events! : FrontendEventsManager;
-	private _participants : ProfileWithScore[]
+	private _participants : ProfileWithScore<Profile>[];
 
 	constructor(_participants : Profile[])
 	{
-		if (_participants.length > TournamentHelper.maxTournamentParticipants)
-			throw new PongError(`Too many participants ! : max : ${TournamentHelper.maxTournamentParticipants}`, "quitPong");
 		this._participants = _participants.map(profile => ({...profile, score: 0}));
 		this._expectedQualifiedCount = TournamentHelper.getExpectedQualified(this._participants.length);
 	}
@@ -49,7 +47,7 @@ export class	LocalTournament
 		if (lastRound.length !== 1)
 			throw new PongError("Error, the last round should only be composed of one match !", "quitPong");
 		const	lastMatch = lastRound[0];
-		const	winner = lastMatch.getWinner();
+		const	winner = lastMatch.winner;
 
 		if (winner === undefined)
 			throw new PongError("endTournament called but the tournament isn't finished !", "quitPong");
@@ -66,7 +64,7 @@ export class	LocalTournament
 			{
 				this._round = 0;
 				this._tournamentMatches = TournamentHelper.createTournamentMatches(this._qualified);
-				this._tournamentGUI = new TournamentGUI(this._tournamentMatches, this._qualified);
+				this._tournamentGUI = new TournamentGUI(this._qualified);
 				this._events.getObservable("show-tournament").notifyObservers(this._tournamentGUI);
 				await this.delay(LocalTournament._showTournamentDurationMs);
 				this.startCurrentMatch();
@@ -79,7 +77,7 @@ export class	LocalTournament
 		}
 		else
 		{
-			this._tournamentGUI?.setWinners(this._round);
+			this._tournamentGUI?.setWinners(this._round, this._tournamentMatches[this._round]);
 			this._round++;
 			if (this._round >= this._tournamentMatches.length)
 				this.endTournament();
@@ -103,12 +101,10 @@ export class	LocalTournament
 		if (this._currentMatchIndex >= matches.length)
 			throw new PongError("The current match index is out of bound !", "quitPong");
 		const	match = matches[this._currentMatchIndex];
-		const	left = match.getLeft();
-		const	right = match.getRight();
 
-		if (left === undefined || right === undefined)
+		if (match.left === undefined || match.right === undefined)
 			throw new PongError("A match is started, but the players has'nt finished their match !", "quitPong");
-		this._events.getObservable("set-participants").notifyObservers([left, right]);
+		this._events.getObservable("set-participants").notifyObservers([match.left, match.right]);
 		await this.delay(LocalTournament._showOpponentsDurationMs);
 		this._events.getObservable("game-start").notifyObservers();
 	}

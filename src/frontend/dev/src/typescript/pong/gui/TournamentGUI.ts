@@ -1,10 +1,16 @@
 import { Clamp } from "@babylonjs/core";
 import { MatchGUI } from "./MatchGUI";
 import { OpponentGUI } from "./OpponentGUI";
-import type { Match } from "@shared/Match";
 import type { Profile } from "@shared/Profile";
 import type { IGUI } from "./IGUI";
 import { PongError } from "@shared/pongError/PongError";
+import { isPowerOfTwo } from "@shared/utils";
+
+export interface	MatchWinningDescription
+{
+	readonly winner : Profile | undefined;
+	readonly winnerSide : "left" | "right" | undefined;
+}
 
 export class	TournamentGUI extends HTMLElement implements IGUI<void>
 {
@@ -12,7 +18,6 @@ export class	TournamentGUI extends HTMLElement implements IGUI<void>
 	private static readonly _rounded = "3cqw";
 	private static readonly _opponentFontSize = "10cqw";
 
-	private _matchesByRound : Match[][];
 	private _participants : Profile[];
 	private _matchesByRoundGuis : MatchGUI[][] = [];
 	private _participantsGuis : OpponentGUI[] = [];
@@ -25,10 +30,11 @@ export class	TournamentGUI extends HTMLElement implements IGUI<void>
 	private _top : number = 0;
 	private _stopDraggingListener : (() => void) | null = null;
 
-	constructor(matchesByRound : Match[][] = [], participants : Profile[] = [])
+	constructor(participants : Profile[] = [])
 	{
+		if (participants.length < 2 || !isPowerOfTwo(participants.length))
+			throw new PongError(`The profiles should be a power of two, greater than 1, got ${participants.length}`, "quitPong");
 		super();
-		this._matchesByRound = matchesByRound ?? [];
 		this._participants = participants ?? [];
 	}
 
@@ -64,7 +70,7 @@ export class	TournamentGUI extends HTMLElement implements IGUI<void>
 			if (this._dragging)
 				this.drag(mouseEvent);
 		});
-		this._wheelZoomMax = this._matchesByRound.length;
+		this._wheelZoomMax = Math.log2(this._participants.length);
 
 		this.style.cursor = "grab";
 	}
@@ -80,18 +86,17 @@ export class	TournamentGUI extends HTMLElement implements IGUI<void>
 
 	private	placeMatches()
 	{
-		for (let round = this._matchesByRound.length - 1; round >= 0; round--) {
+		for (let matchesCount = 1; matchesCount < this._participants.length; matchesCount *= 2) {
 			const	matchesGUIs = [];
-			const	matches = this._matchesByRound[round];
 			const	div = document.createElement("div");
-			const	width =  `calc((50% + ${TournamentGUI._lineWidth}) / ${matches.length})`;
-			div.style.setProperty("--opponent-font-size", `calc(${TournamentGUI._opponentFontSize} / 2 / ${matches.length})`);
-			div.style.setProperty("--match-line-width", `calc(${TournamentGUI._lineWidth} / ${matches.length})`);
-			div.style.setProperty("--rounded", `calc(${TournamentGUI._rounded} / ${matches.length})`);
-			div.style.setProperty("--border-width", `calc(${TournamentGUI._lineWidth} / ${matches.length})`);
+			const	width =  `calc((50% + ${TournamentGUI._lineWidth}) / ${matchesCount})`;
+			div.style.setProperty("--opponent-font-size", `calc(${TournamentGUI._opponentFontSize} / 2 / ${matchesCount})`);
+			div.style.setProperty("--match-line-width", `calc(${TournamentGUI._lineWidth} / ${matchesCount})`);
+			div.style.setProperty("--rounded", `calc(${TournamentGUI._rounded} / ${matchesCount})`);
+			div.style.setProperty("--border-width", `calc(${TournamentGUI._lineWidth} / ${matchesCount})`);
 			
 			div.classList.add("flex", "flex-row", "justify-around", "w-full");
-			for (let index = 0; index < matches.length; index++) {
+			for (let index = 0; index < matchesCount; index++) {
 				const matchGUI = new MatchGUI();
 
 				matchGUI.style.width = width;
@@ -174,12 +179,11 @@ export class	TournamentGUI extends HTMLElement implements IGUI<void>
 		this._container.style.transform = `translate(${this._left}px, ${this._top}px) scale(${this._zoomPercent})`;
 	}
 	
-	public setWinners(round : number)
+	public setWinners(round : number, matches : MatchWinningDescription[])
 	{
-		if (round < 0 || round >= this._matchesByRound.length)
+		if (round < 0 || round >= this._matchesByRoundGuis.length)
 			throw new PongError("TournamentGUI setWinners called with an invalid round !", "quitPong");
 		const	matchesGuis = this._matchesByRoundGuis[round];
-		const	matches = this._matchesByRound[round];
 		const	opponentsGuis = (round === 0) ? this._participantsGuis : this._matchesByRoundGuis[round - 1];
 		if (matches.length !== matchesGuis.length || opponentsGuis.length !== matches.length * 2)
 			throw new PongError("Invalid array length in TournamentGUI setWinners !", "quitPong");
@@ -187,8 +191,8 @@ export class	TournamentGUI extends HTMLElement implements IGUI<void>
 		for (let index = 0; index < matchesGuis.length; index++) {
 			const	matchGui = matchesGuis[index];
 			const	match = matches[index];
-			const	winner = match.getWinner();
-			const	winnerSide = match.getWinnerSide();
+			const	winner = match.winner;
+			const	winnerSide = match.winnerSide;
 
 			if (winner === undefined || winnerSide === undefined)
 				throw new PongError("A match hasn't finished but TournamentGUI setWinners has been called !", "quitPong");

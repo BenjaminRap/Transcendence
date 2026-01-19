@@ -2,14 +2,14 @@ import type { EndData } from "./attachedScripts/GameManager";
 import { PongError } from "./pongError/PongError";
 import type { ProfileWithScore } from "./TournamentHelper";
 
-export class	Match
+export class	Match<T>
 {
-	private _winner? : ProfileWithScore;
+	private _winner? : ProfileWithScore<T>;
 	private _winnerSide? : "left" | "right";
 
 	constructor(
-		private _left : Match | ProfileWithScore,
-		private _right : Match | ProfileWithScore) {
+		private _left : Match<T> | ProfileWithScore<T>,
+		private _right : Match<T> | ProfileWithScore<T>) {
 	}
 
 	public setWinner(endData : EndData)
@@ -19,42 +19,42 @@ export class	Match
 		if (endData.winner === "draw")
 			throw new PongError("A game can't be a draw in a tournament !", "quitPong");
 		this._winnerSide = endData.winner;
-		const	winner = (endData.winner === "left") ? this._left : this._right;
+		const	winnerOrMatch = (endData.winner === "left") ? this._left : this._right;
 
-		if (winner instanceof Match)
+		if (winnerOrMatch instanceof Match)
 		{
-			const	winnerProfile = winner.getWinner();
+			const	winnerProfile = winnerOrMatch.winner;
 
 			if (!winnerProfile)
 				throw new PongError("setting the winner of a match while the child matches aren't finished !", "quitPong")
 			this._winner = winnerProfile;
 		}
 		else
-			this._winner = winner;
+			this._winner = winnerOrMatch;
 		this._winner.score += 1;
 	}
 
-	public getWinner()
+	public get winner()
 	{
 		return this._winner;
 	}
 
-	public getWinnerSide()
+	public get winnerSide()
 	{
 		return this._winnerSide;
 	}
 
-	public getRight()
+	public get right()
 	{
 		if (this._right instanceof Match)
-			return this._right.getWinner()
+			return this._right.winner
 		return this._right;
 	}
 
-	public getLeft()
+	public get left()
 	{
 		if (this._left instanceof Match)
-			return this._left.getWinner();
+			return this._left.winner
 		return this._left;
 	}
 }

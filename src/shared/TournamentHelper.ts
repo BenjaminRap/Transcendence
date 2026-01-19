@@ -1,9 +1,8 @@
 import { Match } from "./Match";
 import { PongError } from "./pongError/PongError";
-import type { Profile } from "./Profile";
 import { isPowerOfTwo, shuffle } from "./utils";
 
-export type ProfileWithScore = Profile & {
+export type ProfileWithScore<T> = T & {
 	score : number
 }
 
@@ -12,7 +11,7 @@ export abstract class	TournamentHelper
 	public static readonly maxTournamentParticipants = 64;
 	public static readonly maxNameLength = 20;
 
-	public static createQualificationMatches(participants : ProfileWithScore[])
+	public static createQualificationMatches<T>(participants : ProfileWithScore<T>[])
 	{
 		if (participants.length < 2)
 			throw new PongError(`The profiles should be greater than 1, got ${participants.length}`, "quitPong");
@@ -29,7 +28,7 @@ export abstract class	TournamentHelper
 		return matches;
 	}
 
-	public static	createTournamentMatches(profiles : ProfileWithScore[]) : Match[][]
+	public static	createTournamentMatches<T>(profiles : ProfileWithScore<T>[]) : Match<T>[][]
 	{
 		if (profiles.length < 2 || !isPowerOfTwo(profiles.length))
 			throw new PongError(`The profiles should be a power of two, greater than 1, got ${profiles.length}`, "quitPong");
@@ -37,11 +36,11 @@ export abstract class	TournamentHelper
 		return this.createMatchesByRoundRecursive(profiles);
 	}
 
-	public static createMatchesByRoundRecursive(participants : ProfileWithScore[] | Match[]) : Match[][]
+public static createMatchesByRoundRecursive<T>(participants : ProfileWithScore<T>[] | Match<T>[]) : Match<T>[][]
 	{
 		if (participants.length === 1)
 			return [];
-		const	matches : Match[] = [];
+		const	matches : Match<T>[] = [];
 
 		for (let index = 0; index < participants.length / 2; index++) {
 			matches.push(new Match(participants[index * 2], participants[index * 2 + 1]))
@@ -52,7 +51,7 @@ export abstract class	TournamentHelper
 		return matchesByRounds;
 	}
 
-	public static setQualifiedParticipants(qualified : ProfileWithScore[], participants : ProfileWithScore[], expectedQualified : number)
+	public static setQualifiedParticipants<T>(qualified : ProfileWithScore<T>[], participants : ProfileWithScore<T>[], expectedQualified : number)
 	{
 		if (qualified.length >= expectedQualified)
 			return;
