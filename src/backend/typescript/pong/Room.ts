@@ -146,7 +146,7 @@ export class	Room
 		...args: Parameters<ServerToClientEvents[T]>
 	) {
 		if (socketIndex < 0 || socketIndex >= this._sockets.length)
-			throw new PongError("sendMessageToSocketByIndex called with an invalid index !", "quitPong");
+			return ;
 
 		const	socket = this._sockets[socketIndex];
 
@@ -160,7 +160,7 @@ export class	Room
 		...args: Parameters<ServerToClientEvents[T]>
 	) {
 		if (socketIndex < 0 || socketIndex >= this._sockets.length)
-			throw new PongError("broadcastMessageFromSocket called with an invalid index !", "quitPong");
+			return ;
 
 		const	socket = this._sockets[socketIndex];
 		
