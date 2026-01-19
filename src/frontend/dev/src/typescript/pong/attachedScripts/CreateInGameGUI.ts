@@ -54,7 +54,7 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		const	forfeitEnabled = this._sceneData.tournament === undefined || this._sceneData.gameType === "Multiplayer";
 		const	isOnline = this._sceneData.gameType === "Multiplayer";
 		const	isLocalTournament = this._sceneData.tournament !== undefined;
-		const	isOnlineTournament = this._sceneData.serverProxy.getTournamentData() !== undefined;
+		const	isOnlineTournament = this._sceneData.serverProxy.getTournamentData() !== null;
 		const	isTournament = isLocalTournament || isOnlineTournament;
 
 		this._pauseGUI = initMenu(new PauseGUI(forfeitEnabled), {
