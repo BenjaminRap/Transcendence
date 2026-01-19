@@ -139,7 +139,7 @@ export class	ServerProxy
 		return this._frontendSocketHandler.onGameMessage();
 	}
 
-	public onTournamentMessage() : Observable<TournamentEvent>
+	public onTournamentMessage() : Observable<TournamentEventAndJoinedGame>
 	{
 		return this._frontendSocketHandler.onTournamentMessage();
 	}

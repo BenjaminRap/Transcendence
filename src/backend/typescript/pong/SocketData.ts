@@ -1,7 +1,7 @@
 import { defaultProfile, type Profile } from "@shared/Profile";
-import type { DefaultSocket } from "../";
 import { Room } from "./Room";
 import type { ServerTournament } from "./ServerTournament";
+import type { DefaultSocket } from "../controllers/SocketEventController";
 
 let	guestProfileId = BigInt(0);
 

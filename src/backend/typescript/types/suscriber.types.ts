@@ -1,4 +1,4 @@
-import type { GameStats } from "./match.types"
+import type { GameStats } from "@shared/ServerMessage.js";
 import type { MatchSummary } from "./match.types.js";
 
 export interface UpdateData

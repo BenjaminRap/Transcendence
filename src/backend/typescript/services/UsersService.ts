@@ -1,10 +1,11 @@
 import { PrismaClient, type Match } from "@prisma/client";
 import type { PublicProfile } from "../types/users.types.js";
 import { UsersException, UsersError } from "../error_handlers/Users.error.js";
-import type { GameStats, PlayerInfo } from "../types/match.types.js";
+import type { PlayerInfo } from "../types/match.types.js";
 import type { MatchSummary } from "../types/match.types.js";
 import { FriendService } from "./FriendService.js";
 import { SocketEventController } from "../controllers/SocketEventController.js";
+import type { GameStats } from "@shared/ServerMessage.js";
 
 
 export class UsersService {

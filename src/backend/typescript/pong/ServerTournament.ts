@@ -1,9 +1,10 @@
 import type { TournamentCreationSettings, TournamentDescription, TournamentId } from "@shared/ServerMessage";
-import type { DefaultSocket, ServerType } from "..";
+import type { ServerType } from "..";
 import { error, success, type Result } from "@shared/utils";
 import { Tournament } from "@shared/Tournament";
 import type { Match } from "@shared/Match";
 import { Room } from "./Room";
+import type { DefaultSocket } from "../controllers/SocketEventController";
 
 export class	ServerTournament extends Tournament<DefaultSocket>
 {

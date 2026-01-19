@@ -1,8 +1,9 @@
 import type { TournamentCreationSettings, TournamentDescription, TournamentId } from "@shared/ServerMessage";
 import { ServerTournament } from "./ServerTournament";
 import { error, success, type Result } from "@shared/utils";
-import type { DefaultServer, DefaultSocket } from "..";
+import type { ServerType } from "..";
 import type { SocketData } from "./SocketData";
+import type { DefaultSocket } from "../controllers/SocketEventController";
 
 const	tournamentsByName = new Map<string, ServerTournament>();
 const	tournamentsById = new Map<string, ServerTournament>();
@@ -10,7 +11,7 @@ const	tournamentsById = new Map<string, ServerTournament>();
 export class	TournamentMaker
 {
 	constructor(
-		private _io : DefaultServer
+		private _io : ServerType
 	)
 	{
 

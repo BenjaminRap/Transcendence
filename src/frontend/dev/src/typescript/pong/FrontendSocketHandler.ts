@@ -71,6 +71,11 @@ export class	FrontendSocketHandler
 		return deferred;
 	}
 
+	public get socket() : DefaultSocket
+	{
+		return this._socket;
+	}
+
 	public disconnect()
 	{
 		this._socket.disconnect();

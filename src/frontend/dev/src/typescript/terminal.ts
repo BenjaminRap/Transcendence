@@ -829,20 +829,7 @@ export namespace Terminal {
 	export async function buildTerminal() : Promise<void> {
 		if (TerminalConfigVariables.isBuilded)
 			return;
-		const success = await RequestBackendModule.loadUser();
-		// true --> socket avec tocken, false socket null 
-		if (!success)
-		{
-			const socket = io("/api/socket.io/", {
-			auth: {
-				token: null
-			},
-			transports: ["websocket"],
-			autoConnect: true,
-			});
-			console.log(socket)
-			socketUtils.socket = socket;
-		}
+		await RequestBackendModule.loadUser();
 		TerminalElements.terminal = document.createElement('div');
 		TerminalElements.terminal.id = "terminal";
 		TerminalElements.terminal.className = "terminal-font p-4 m-0 bg-black border-2 border-green-500 float-left text-green-400 text-sm overflow-y-auto focus:outline-none cursor-text relative scroll-smooth"

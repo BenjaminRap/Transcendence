@@ -5,7 +5,7 @@ import { SocketData } from '../pong/SocketData';
 import { Container } from "../container/Container.js";
 import { TokenManager } from "../utils/TokenManager.js";
 import type { FriendService } from "../services/FriendService.js";
-import type { DefaultServer } from "../index.js";
+import type { ServerType } from "../index.js";
 import { getPublicTournamentsDescriptions, TournamentMaker } from "../pong/TournamentMaker.js";
 import { zodTournamentCreationSettings, type TournamentDescription, type TournamentId } from "@shared/ServerMessage.js";
 import { error, success, type Result } from "@shared/utils.js";
@@ -14,7 +14,7 @@ export type DefaultSocket = Socket<ClientToServerEvents, ServerToClientEvents, D
 
 export class SocketEventController {
 	constructor (
-		private io: DefaultServer,
+		private io: ServerType,
 	) {
 		this.matchMaker = new MatchMaker(io);
 		this.sockets = new Set<DefaultSocket>();

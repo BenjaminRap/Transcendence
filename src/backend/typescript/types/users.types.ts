@@ -1,4 +1,5 @@
-import type { GameStats, MatchSummary } from "./match.types"
+import type { GameStats } from "@shared/ServerMessage"
+import type { MatchSummary } from "./match.types"
 
 export interface PublicProfile
 {

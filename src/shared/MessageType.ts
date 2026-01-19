@@ -27,9 +27,9 @@ export type ClientMessageData<T extends ClientMessage> =
 	T extends "get-tournaments" ? [(descriptions : TournamentDescription[]) => void] :
 	T extends "ban-participant" ? [string] :
 	T extends "kick-participant" ? [string] :
-	T extends "get-online-users" ? [(callback: (users: number[]) => void) => void] :
-	T extends "watch-profile" ? [(profileId: number[]) => void] :
-	T extends "unwatch-profile" ? [(profileId: number[]) => void] :
+	T extends "get-online-users" ? [(users: number[]) => void] :
+	T extends "watch-profile" ? [profileId: number[]] :
+	T extends "unwatch-profile" ? [profileId: number[]] :
 	[];
 
 export type ServerEvents = "game-infos" |

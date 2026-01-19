@@ -2,14 +2,14 @@ import { PrismaClient, type User, type Friendship, type Match  } from "@prisma/c
 import { type UpdateData } from "../types/suscriber.types.js";
 import { PasswordHasher } from "../utils/PasswordHasher.js";
 import { FileService } from "./FileService.js";
-import { sanitizeUser, type SanitizedUser } from '../types/auth.types.js'
+import { sanitizeUser } from '../types/auth.types.js'
 import type { SuscriberProfile } from "../types/suscriber.types.js";
-import type { GameStats } from "../types/match.types.js";
 import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
 import path from "path";
 import { SocketEventController } from "../controllers/SocketEventController.js";
 import type { Friend } from "../types/suscriber.types.js";
 import type { MatchService } from "./MatchService.js";
+import type { GameStats, SanitizedUser } from "@shared/ServerMessage.js";
 
 export class SuscriberService {
     constructor(

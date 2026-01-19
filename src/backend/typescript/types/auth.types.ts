@@ -1,4 +1,5 @@
 import type { User } from '@prisma/client';
+import type { SanitizedUser } from '@shared/ServerMessage';
 
 export interface RegisterData
 {

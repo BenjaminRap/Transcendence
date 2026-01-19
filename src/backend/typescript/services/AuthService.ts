@@ -3,7 +3,8 @@ import { PasswordHasher } from '../utils/PasswordHasher.js';
 import { TokenManager } from '../utils/TokenManager.js';
 import { type TokenPair } from '../types/tokenManager.types.js';
 import { AuthException, AuthError } from '../error_handlers/Auth.error.js';
-import { type RegisterData, sanitizeUser, type SanitizedUser } from '../types/auth.types.js';
+import { type RegisterData, sanitizeUser } from '../types/auth.types.js';
+import type { SanitizedUser } from '@shared/ServerMessage.js';
 
 export class AuthService {
     constructor(

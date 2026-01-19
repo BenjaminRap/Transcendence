@@ -5,9 +5,10 @@ import { type GameInit, type KeysUpdate, zodKeysUpdate } from "@shared/ServerMe
 import { ClientProxy } from "./ClientProxy";
 import { type int, Observable } from "@babylonjs/core";
 import type { ServerEvents, ServerToClientEvents } from "@shared/MessageType";
-import type { DefaultServer, DefaultSocket } from "../index";
+import type { ServerType } from "../index";
 import type { Profile } from "@shared/Profile";
 import type { EndData } from "@shared/attachedScripts/GameManager";
+import type { DefaultSocket } from "../controllers/SocketEventController";
 
 export type SocketMessage = {
 	socketIndex : int,
@@ -27,7 +28,7 @@ export class	Room
 	private _timeout : NodeJS.Timeout | null = null;
 	
 	constructor(
-		private readonly _io : DefaultServer,
+		private readonly _io : ServerType,
 		private readonly _onDispose : (endData : EndData) => void,
 		firstSocket : DefaultSocket,
 		secondSocket : DefaultSocket
