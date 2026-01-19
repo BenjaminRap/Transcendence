@@ -126,7 +126,8 @@ export const	zodTournamentEvent = zod.discriminatedUnion("type", [
 		matches: zod.array(zodMatchWinningDescription)
 	}),
 	zod.object({
-		type: zod.literal("win")
+		type: zod.literal("win"),
+		winner: zodProfile
 	}),
 	zod.object({
 		type: zod.literal("lose")

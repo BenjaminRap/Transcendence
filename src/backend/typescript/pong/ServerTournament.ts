@@ -172,7 +172,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 
     protected override onTournamentEnd(winner: DefaultSocket): void
 	{
-		winner.emit("tournament-event", {type: "win"})
+		winner.emit("tournament-event", {type: "win", winner: winner.data.getProfile()})
 		this.dispose();
     }
 

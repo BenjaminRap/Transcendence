@@ -2,7 +2,7 @@ import { Observable } from "@babylonjs/core/Misc/observable";
 import { EventsManager } from "@shared/EventsManager";
 import type { Profile } from "@shared/Profile";
 import type { ClientInput } from "./FrontendSceneData";
-import type { GameInfos, MatchWinningDescription, TournamentEvent } from "@shared/ServerMessage";
+import type { GameInfos, TournamentEvent } from "@shared/ServerMessage";
 
 export class	FrontendEventsManager extends EventsManager
 {
@@ -18,10 +18,6 @@ export class	FrontendEventsManager extends EventsManager
 			"set-participants" : new Observable<[Profile, Profile]>,
 			"tournament-event": new Observable<TournamentEvent>,
 			"game-infos": new Observable<GameInfos>,
-			"tournament-gui-create": new Observable<Profile[]>,
-			"tournament-gui-set-winners": new Observable<[number, MatchWinningDescription[]]>,
-			"show-tournament": new Observable<void>,
-			"local-tournament-end" : new Observable<Profile>,
 		};
 		this._allEvents = { ...this._events, ...additionalEvents }
 	}

@@ -93,25 +93,28 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		this._sceneData.events.getObservable("game-unpaused").add(() => {
 			this._sceneData.pongHTMLElement.focusOnCanvas();
 		})
-		this._sceneData.events.getObservable("local-tournament-end").add((winner) => { 
-			this._tournamentWinnerGUI.setWinner(winner);
-			this.switchToGUI(this._tournamentWinnerGUI);
-		});
 		this._sceneData.events.getObservable("input-change").add(clientInputs => {
 			this._matchOpponentsGUI.setInputs(clientInputs);
 		});
-		this._sceneData.events.getObservable("show-tournament").add(() => {
-			if (!this._tournamentGUI)
-				return ;
-			this.switchToGUI(this._tournamentGUI);
-		});
-		this._sceneData.events.getObservable("tournament-gui-create").add((participants) => {
-			if (this._tournamentGUI)
-				return ;
-			this._tournamentGUI = initMenu(new TournamentGUI(participants), undefined, this._menuParent);
-		});
-		this._sceneData.events.getObservable("tournament-gui-set-winners").add(([round, winners]) => {
-			this._tournamentGUI?.setWinners(round, winners);
+		this._sceneData.events.getObservable("tournament-event").add(tournamentEvent => {
+			switch (tournamentEvent.type)
+			{
+				case "win":
+					this._tournamentWinnerGUI.setWinner(tournamentEvent.winner);
+					this.switchToGUI(this._tournamentWinnerGUI);
+					break ;
+				case "show-tournament":
+					if (this._tournamentGUI)
+						this.switchToGUI(this._tournamentGUI);
+					break ;
+				case "tournament-gui-create":
+					if (!this._tournamentGUI)
+						this._tournamentGUI = initMenu(new TournamentGUI(tournamentEvent.qualified), undefined, this._menuParent);
+					break ;
+				case "tournament-gui-set-winners":
+					this._tournamentGUI?.setWinners(tournamentEvent.round, tournamentEvent.matches);
+					break ;
+			}
 		});
 	}
 
