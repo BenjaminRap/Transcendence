@@ -68,6 +68,8 @@ export class	ServerTournament
 		if (this._players.size < 2)
 			return error("Not enough players !");
 		this.removeCreatorEvents();
+		if (!this._players.has(this._creator.data.getProfile().name))
+			this._creator.leave(this._tournamentId);
 		this._started = true;
 		console.log(`${this._settings.name} tournament started !`);
 		return success(null);
