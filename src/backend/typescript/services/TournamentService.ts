@@ -1,4 +1,4 @@
-import type { PrismaClient } from '@prisma/client';
+import { type PrismaClient, MatchStatus, TournamentStatus } from '@prisma/client';
 import { TournamentException, TournamentError } from '../error_handlers/Tournament.error.js';
 import type { CreateTournament, TournamentState, PlayerInfo } from '../types/tournament.types.js';
 import { MatchService } from './MatchService.js';
@@ -22,7 +22,7 @@ export class TournamentService {
 		const tournament = await this.prisma.tournament.create({
 			data: {
 				title: data.title,
-				status: 'ONGOING',
+				status: TournamentStatus.ONGOING,
 				creatorId: data.adminUserId ?? null,
                 creatorGuestName: data.adminGuestName,
 				participants: {
@@ -50,25 +50,25 @@ export class TournamentService {
         }
 
         // Subsequent Rounds placeholders
-        const count = participants.length;
-        const totalRounds = Math.log2(count);
+        const pcount = participants.length;
+        const totalRounds = Math.log2(pcount);
 
-        let matchesInRound = count / 2;
-        for (let round = 2; round <= totalRounds; round++) {
+        let matchesInRound = pcount / 2;
+        for (let round = 2; round <= totalRounds; round++)
+        {
             matchesInRound /= 2;
+
             for (let i = 0; i < matchesInRound; i++) {
-                 await this.prisma.match.create({
-                    data: {
-                        tournamentId: tournament.id,
-                        round: round,
-                        matchOrder: i,
-                        status: 'IN_PROGRESS' 
-                    } as any 
-                });
+                await this.matchService.createBracketMatch(
+                    tournament.id,
+                    round,
+                    i
+                );
             }
         }
         
         // Construct return state
+        // thats a table with each player alias and their current match id
         const playersState = data.participants.map(participant => {
              let currentMatchId = null;
              // Check in created matches (Round 1)
@@ -111,21 +111,67 @@ export class TournamentService {
 
 	// ----------------------------------------------------------------------------- //
     async updateTournamentProgress(tournamentId: number, matchData: EndMatchData) {
-        const match = await this.prisma.match.findUnique({ where: { id: matchData.matchId } });
-        if (!match || match.tournamentId !== tournamentId) {
+        if (matchData.matchId <= 0 || tournamentId <= 0) {
+            throw new TournamentException(TournamentError.INVALID_MATCH_ID);
+        }
+
+        // 1. Check Tournament Status FIRST
+        const tournament = await this.prisma.tournament.findUnique({
+            where: { id: tournamentId },
+            select: { status: true, participants: true }
+        });
+
+        if (!tournament)
+            throw new TournamentException(TournamentError.TOURNAMENT_NOT_FOUND);
+        if (tournament.status !== TournamentStatus.ONGOING) {
+            throw new TournamentException(TournamentError.UNAUTHORIZED, `Cannot update match: Tournament is ${tournament.status}`);
+        }
+
+        // 2. Strict Match Retrieval (Security & Validation)
+        const match = await this.prisma.match.findFirst({
+            where: {
+                id: matchData.matchId,
+                tournamentId: tournamentId,
+                OR: [
+                    { player1GuestName: matchData.winner.guestName, player2GuestName: matchData.loser.guestName },
+                    { player1GuestName: matchData.loser.guestName, player2GuestName: matchData.winner.guestName }
+                ]
+            }
+        });
+
+        if (!match) {
+            throw new TournamentException(TournamentError.MATCH_NOT_FOUND, 
+               `Match ${matchData.matchId} not found or players mismatch in tournament ${tournamentId}.`);
+        }
+
+        // 3. Structural Validation
+        const m: any = match; 
+        if (!m.round || m.matchOrder === null || m.matchOrder === undefined) {
+             console.error(`Tournament match ${match.id} integrity error: missing round/order.`);
             throw new TournamentException(TournamentError.MATCH_NOT_FOUND);
         }
-        
+
+        // 4. Save Match Result
         await this.matchService.endMatch(matchData);
 
-        // Determine next match
-        // Using 'any' to bypass TS check until schema regeneration
-        const m: any = match; 
-        if (!m.round || m.matchOrder === null || m.matchOrder === undefined) return; 
+        // 5. Update Loser Rank (Optional - Implementation depends on ranking logic preference)
+        await this.setParticipantRank(tournamentId, matchData.loser, m.round, false, tournament.participants.length);
 
+        // 6. Advancement Logic
         const currentRound = m.round;
         const currentOrder = m.matchOrder;
         
+        const totalParticipants = tournament.participants.length;
+        const totalRounds = Math.ceil(Math.log2(totalParticipants));
+
+        if (currentRound >= totalRounds) {
+            // Check for tournament finish (Final Match)
+            // Winner gets Rank 1
+            await this.setParticipantRank(tournamentId, matchData.winner, currentRound, true, totalParticipants);
+            await this.finishTournament(tournamentId);
+            return;
+        }
+
         const nextRound = currentRound + 1;
         const nextMatchOrder = Math.floor(currentOrder / 2);
         const isPlayer1InNext = (currentOrder % 2 === 0);
@@ -153,23 +199,16 @@ export class TournamentService {
                 data: updateData
             });
         } else {
-            // Check for tournament finish
-            const tournament = await this.getTournamentById(tournamentId);
-            const totalParticipants = tournament.participants.length;
-            const totalRounds = Math.log2(totalParticipants);
-            
-            if (currentRound === totalRounds) {
-                await this.finishTournament(tournamentId);
-            }
+            console.error(`CRITICAL: Next match not found for Tournament ${tournamentId}: Round ${nextRound}, Order ${nextMatchOrder}. Bracket is broken.`);
         }
     }
     
 	// ----------------------------------------------------------------------------- //
-    async startNextMatch(tournamentId: number, player1: PlayerInfo, player2: PlayerInfo) {
-        const match = await this.prisma.match.findFirst({
+    async startNextMatch(tournamentId: number, player1: PlayerInfo, player2: PlayerInfo): Promise<{ matchId: number }> {
+        const matchId = await this.prisma.match.findFirst({
             where: {
                 tournamentId,
-                status: 'IN_PROGRESS',
+                status: MatchStatus.IN_PROGRESS,
                 OR: [
                     {
                         player1Id: player1.id,
@@ -183,17 +222,18 @@ export class TournamentService {
                         player2Id: player1.id,
                         player2GuestName: player1.guestName
                     }
-                ]
+                ],
+                select: { id: true }
             } as any
         });
         
-        if (!match)
+        if (!matchId)
             throw new TournamentException(TournamentError.MATCH_NOT_FOUND);
-        return match;
+        return { matchId: matchId.id};
     }
 
 	// ----------------------------------------------------------------------------- //
-	private async updateTournamentStatus(tournamentId: number, status: string) {
+	private async updateTournamentStatus(tournamentId: number, status: TournamentStatus) {
 		const tournament = await this.prisma.tournament.update({
 			where: { id: tournamentId },
 			data: { status } as any,
@@ -202,8 +242,33 @@ export class TournamentService {
 	}
 
 	// ----------------------------------------------------------------------------- //
-	private async finishTournament(tournamentId: number) {
-		const tournament = await this.updateTournamentStatus(tournamentId, 'FINISHED');
+    /**
+     * verifier que tous les matchs sont bien termines au debut de la fonction
+     * 
+     */
+	async finishTournament(tournamentId: number) {
+        // Log consistency check
+        const remainingMatches = await this.prisma.match.count({
+            where: { tournamentId, status: MatchStatus.IN_PROGRESS }
+        });
+        
+        if (remainingMatches > 0) {
+            console.warn(`Tournament ${tournamentId} finished with ${remainingMatches} matches still IN_PROGRESS. Cancelling them.`);
+        }
+
+        // Force cleanup of any zombie matches to CANCELLED instead of FINISHED
+        // because they were not played.
+        await this.prisma.match.updateMany({
+            where: {
+                tournamentId,
+                status: MatchStatus.IN_PROGRESS
+            } as any,
+            data: {
+                status: MatchStatus.CANCELLED
+            } as any
+        });
+		
+        const tournament = await this.updateTournamentStatus(tournamentId, TournamentStatus.FINISHED);
 		return tournament;
 	}
 
@@ -211,26 +276,77 @@ export class TournamentService {
     async cancelTournament(tournamentId: number, adminId: number | null, adminGuestName: string) {
         const tournament = await this.getTournamentById(tournamentId);
 
-        const isCreator = (tournament.creatorId === adminId) ||
+        if (tournament.status === TournamentStatus.FINISHED || tournament.status === TournamentStatus.CANCELLED) {
+             return tournament;
+        }
+
+        const isCreator = (tournament.creatorId === adminId) &&
                           (tournament.creatorGuestName === adminGuestName);
 
         if (!isCreator)
             throw new TournamentException(TournamentError.UNAUTHORIZED);
 
+        // Cancel ALL matches (InProgress AND placeholders to lock the bracket)
         await this.prisma.match.updateMany({
             where: {
                 tournamentId,
-                status: 'IN_PROGRESS'
+                status: MatchStatus.IN_PROGRESS
             } as any,
             data: {
-                status: 'CANCELLED'
+                status: MatchStatus.CANCELLED
             } as any
         });
 
-        // il faut peut etre reflechir aux matchs en cours
-        // For now, we just set the tournament status to CANCELLED
-        // TODO: Notify players in ongoing matches about cancellation
+        // Notify players logic should go here (Websockets)
 
-        return this.updateTournamentStatus(tournamentId, 'CANCELLED');
+        return await this.updateTournamentStatus(tournamentId, TournamentStatus.CANCELLED);
     }
+
+    // ----------------------------------------------------------------------------- //
+    private async setParticipantRank(tournamentId: number, player: PlayerInfo, round: number, isWinner: boolean, totalParticipants: number) {
+        // Simple ranking logic:
+        // Winner = Rank 1
+        // Loser Final = Rank 2
+        // Losers Semis = Rank 3-4 ...
+        // We can approximate rank = (TotalParticipants / (2^(Round))) + 1
+        // Or simplified: just store them. 
+        // Since we don't have updateMany with Join in Prisma easily for this specific logic without raw query, 
+        // we skip complex math and just update if we found the participant.
+        
+        let rank = 0;
+        if (isWinner) {
+            rank = 1;
+        } else {
+             // Example: 8 players. 3 Rounds.
+             // Round 1 losers (4 people) -> Rank 5-8
+             // Round 2 losers (2 people) -> Rank 3-4
+             // Round 3 loser (1 person)  -> Rank 2
+             // Formula: Rank is roughly Top X.
+             // X = 2^(TotalRounds - Round + 1)
+             const exponent = Math.ceil(Math.log2(totalParticipants)) - round + 1;
+             rank = Math.pow(2, exponent - 1) + 1;
+        }
+
+        try {
+            // Finding the unique ID for the participant row
+            const whereCondition: any = { tournamentId };
+            if (player.id) {
+                whereCondition.userId = player.id;
+            } else {
+                whereCondition.guestName = player.guestName;
+            }
+            
+            // Note: Prisma updateMany doesn't allow updating unique constraints easily if not selected by unique,
+            // but here we filter by tournamentId + userId/guestName which is unique in schema.
+            // However, updateMany is safer if we don't have the primary key (id) of TournamentParticipant.
+            
+            await this.prisma.tournamentParticipant.updateMany({
+                where: whereCondition,
+                data: { finalRank: rank }
+            });
+        } catch (error) {
+            console.warn(`Failed to set rank for user ${player.guestName}:`, error);
+        }
+    }
+
 }

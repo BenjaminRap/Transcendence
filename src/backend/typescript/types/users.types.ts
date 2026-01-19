@@ -1,5 +1,4 @@
 import type { GameStats, MatchSummary } from "./match.types"
-import type { Match } from "@prisma/client"
 
 export interface PublicProfile
 {

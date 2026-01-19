@@ -46,6 +46,26 @@ export class MatchService {
     }
 
 	// ----------------------------------------------------------------------------- //
+    async getTournamentMatch(tournamentId: number, matchData: EndMatchData): Promise<Match | null> {
+        return await this.prisma.match.findFirst({
+            where: {
+                id: matchData.matchId,
+                tournamentId: tournamentId,
+                OR: [
+                    {
+                        player1GuestName: matchData.winner.guestName,
+                        player2GuestName: matchData.loser.guestName
+                    },
+                    {
+                        player1GuestName: matchData.loser.guestName,
+                        player2GuestName: matchData.winner.guestName
+                    }
+                ]
+            }
+        });
+    }
+
+	// ----------------------------------------------------------------------------- //
 	async getMatchInProgress(matchId: number): Promise<Match | null> {
         return this.prisma.match.findFirst({
             where: {
@@ -170,35 +190,30 @@ export class MatchService {
 
 	// ----------------------------------------------------------------------------- //
 	async startTournamentMatch(tournamentId: number, round: number, matchOrder: number, player1: PlayerInfo, player2: PlayerInfo) {
-        let match = await this.prisma.match.findFirst({
-            where: {
+        return this.prisma.match.create({
+            data: {
                 tournamentId,
                 round,
-                matchOrder
+                matchOrder,
+                player1Id: player1.id ?? null,
+                player1GuestName: player1.guestName,
+                player2Id: player2.id ?? null,
+                player2GuestName: player2.guestName,
+                status: MatchStatus.IN_PROGRESS
             }
         });
+    }
 
-        const data: any = {
-            tournamentId,
-            round,
-            matchOrder,
-            player1Id: player1.id ?? null,
-            player1GuestName: player1.guestName ?? null,
-            player2Id: player2.id ?? null,
-            player2GuestName: player2.guestName ?? null,
-            status: MatchStatus.IN_PROGRESS
-        };
-
-        if (match) {
-            return this.prisma.match.update({
-                where: { id: match.id },
-                data
-            });
-        } else {
-             return this.prisma.match.create({
-                data: data as any 
-            });
-        }
+    // ----------------------------------------------------------------------------- //
+    async createBracketMatch(tournamentId: number, round: number, matchOrder: number) {
+        return this.prisma.match.create({
+            data: {
+                tournamentId,
+                round,
+                matchOrder,
+                status: MatchStatus.IN_PROGRESS
+            }
+        });
     }
 
 	// ================================== PRIVATE ================================== //

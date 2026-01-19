@@ -1,10 +1,11 @@
-import type { StartMatchData } from './match.types.js';
+import type { StartMatchData, EndMatchData } from './match.types.js';
+import { TournamentStatus } from '@prisma/client';
 
 export interface Tournament {
     id: number;
     title: string;
     maxParticipants: number;
-    status: 'ONGOING' | 'FINISHED' | 'CANCELED';
+    status: TournamentStatus;
     createdAt: Date;
     updatedAt: Date;
     creatorId?: number;
@@ -33,10 +34,7 @@ export interface CreateTournament {
 
 export interface TournamentProgress {
     tournamentId: number,
-    completedMatches: Array<{
-        matchId: number,
-        winnerId: number | string
-    }>
+    matchsResults: EndMatchData[]
 }
 
 export interface TournamentState {
