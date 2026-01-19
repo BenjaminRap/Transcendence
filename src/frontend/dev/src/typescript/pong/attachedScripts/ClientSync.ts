@@ -2,7 +2,6 @@ import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager } from "@babylonjs-toolkit/next";
 import { FrontendSceneData } from "../FrontendSceneData";
-import type { GameInfos } from "@shared/ServerMessage";
 import { GameManager } from "@shared/attachedScripts/GameManager";
 import { InputKey } from "@shared/InputKey";
 import { InputManager } from "@shared/attachedScripts/InputManager";
@@ -13,6 +12,8 @@ import { Imported } from "@shared/ImportedDecorator";
 import { Ball } from "@shared/attachedScripts/Ball";
 import { Paddle } from "@shared/attachedScripts/Paddle";
 import type { Platform } from "@shared/attachedScripts/Platform";
+import { PongError } from "@shared/pongError/PongError";
+import type { GameInfos } from "@shared/ServerMessage";
 
 export class ClientSync extends CustomScriptComponent {
 	@Imported("InputManager") private	_inputManager! : InputManager;
@@ -41,35 +42,35 @@ export class ClientSync extends CustomScriptComponent {
 	
 	private	listenToGameInfos()
 	{
-		const	serverProxy = this._sceneData.serverProxy;
-	
-		if (!serverProxy)
-			return ;
-		serverProxy.onServerMessage()!.add((gameInfos : GameInfos | "room-closed" | "server-error" | "forfeit") => {
-			if (gameInfos === "room-closed" || gameInfos === "server-error")
-				return ;
-			if (gameInfos === "forfeit")
+		this._sceneData.events.getObservable("game-infos").add((gameInfos : GameInfos) => {
+			const	opponentInputs = this._inputManager.getPlayerInput(this._sceneData.serverProxy.getOpponentIndex());
+
+			switch (gameInfos.type)
 			{
-				const	winningSide = (serverProxy.getPlayerIndex() === 0) ? "left" : "right";
+			case "room-closed":
+				this.updateKey({event: "keyUp"}, opponentInputs.up);
+				this.updateKey({event: "keyUp"}, opponentInputs.up);
+				break ;
+			case "forfeit":
+				const	winningSide = (this._sceneData.serverProxy.getPlayerIndex() === 0) ? "left" : "right";
 
 				this._sceneData.events.getObservable("forfeit").notifyObservers(winningSide);
+				break ;
+			case "input":
+				this.updateKey(gameInfos.keysUpdate.up, opponentInputs.up);
+				this.updateKey(gameInfos.keysUpdate.down, opponentInputs.down);
+				break ;
+			case "itemsUpdate":
+				this._ball.transform.position.copyFrom(this.xyzToVector3(gameInfos.itemsUpdate.ball.pos));
+				this._ball.transform.getPhysicsBody()!.setLinearVelocity(this.xyzToVector3(gameInfos.itemsUpdate.ball.linearVelocity));
+				this._paddleLeft.transform.position.copyFrom(this.xyzToVector3(gameInfos.itemsUpdate.paddleLeftPos));
+				this._paddleRight.transform.position.copyFrom(this.xyzToVector3(gameInfos.itemsUpdate.paddleRightPos));
+				break ;
+			case "goal":
+				this._ball.setBallStartDirection(this.xyzToVector3(gameInfos.goal.newBallDirection));
+				this._gameManager.onGoal(gameInfos.goal.side);
+				break ;
 			}
-			else if (gameInfos.type === "input")
-			{
-				const	opponentInputs = this._inputManager.getPlayerInput(serverProxy.getOpponentIndex());
-
-				this.updateKey(gameInfos.infos.up, opponentInputs.up);
-				this.updateKey(gameInfos.infos.down, opponentInputs.down);
-			}
-			else if (gameInfos.type === "itemsUpdate")
-			{
-				this._ball.transform.position.copyFrom(this.xyzToVector3(gameInfos.infos.ball.pos));
-				this._ball.transform.getPhysicsBody()!.setLinearVelocity(this.xyzToVector3(gameInfos.infos.ball.linearVelocity));
-				this._paddleLeft.transform.position.copyFrom(this.xyzToVector3(gameInfos.infos.paddleLeftPos));
-				this._paddleRight.transform.position.copyFrom(this.xyzToVector3(gameInfos.infos.paddleRightPos));
-			}
-			else if (gameInfos.type === "goal")
-				this._gameManager.onGoal(gameInfos.infos.side);
 		});
 	}
 	
@@ -103,7 +104,7 @@ export class ClientSync extends CustomScriptComponent {
 		const	colliderScript = this.getPlatformScript(transform) ?? this.getPaddleScript(transform);;
 
 		if (!colliderScript)
-			throw new Error("The getNewPosition raycast hit an unexpected collider !");
+			throw new PongError("The getNewPosition raycast hit an unexpected collider !", "quitScene");
 		const	newVelocity = colliderScript.getNewVelocity(velocity);
 
 		return this.getNewPosition(hitPoint, newVelocity, newRemainingTime);

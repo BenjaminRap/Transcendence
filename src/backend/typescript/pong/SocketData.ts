@@ -1,16 +1,36 @@
-import type { DefaultSocket } from "../controllers/SocketEventController.js";
+import { defaultProfile, type Profile } from "@shared/Profile";
 import { Room } from "./Room";
+import type { ServerTournament } from "./ServerTournament";
+import type { DefaultSocket } from "../controllers/SocketEventController";
+
+let	guestProfileId = BigInt(0);
+
+function	getGuestProfile() : Profile
+{
+	guestProfileId++;
+	return {
+		name: `guest${guestProfileId}`,
+		image: defaultProfile.image
+	}
+}
 
 export class	SocketData
 {
-	private _state : "unactive" | "waiting" | "inRoom" | "ready" = "unactive";
+	private _state : "unactive" | "waiting" | "playing" | "tournament-waiting" | "tournament-playing" = "unactive";
 	private _room : Room | null = null;
+	private _tournament : ServerTournament | null = null;
+	private _profile : Profile = getGuestProfile();
+	private _connected : boolean = false;
 
-	public getState = () => this._state;
-	public isInRoom = (room : Room) => this._room == room;
-	public getUserId = () => this._userId;
+	public getState() {
+		return this._state;
+	}
 
-	constructor(private readonly _socket : DefaultSocket, private readonly _userId : number)
+	public isConnected() {
+		return this._connected;
+	}
+
+	constructor(private readonly _socket : DefaultSocket, public userId : number)
 	{
 	}
 
@@ -18,24 +38,42 @@ export class	SocketData
 		this._state = "waiting";
 	}
 
-	public joinRoom(room : Room) {
-		this._room = room;
-		this._state = "inRoom";
+	public setOutWaitingQueue() {
+		this._state = "unactive";
 	}
 
-	public	setReady()
-	{
-		if (this._state !== "inRoom")
-			throw new Error("A socket has been set ready while not being in a room !");
-		this._state = "ready";
+	public joinRoom(room : Room) {
+		this._room = room;
+		if (this._state === "tournament-waiting")
+			this._state = "tournament-playing";
+		else
+			this._state = "playing";
 	}
 
 	public leaveRoom() {
 		this._room = null;
+		if (this._state === "tournament-playing")
+			this._state = "tournament-waiting";
+		else
+			this._state = "unactive";
+	}
+
+	public joinTournament(tournament : ServerTournament) {
+		this._tournament = tournament;
+		this._state = "tournament-waiting";
+	}
+
+	public leaveTournament() {
+		this._tournament = null;
 		this._state = "unactive";
 	}
 
 	public disconnect() {
 		this._room?.onSocketDisconnect(this._socket);
+		this._tournament?.onSocketDisconnect(this._socket);
+	}
+
+	public getProfile() {
+		return this._profile;
 	}
 }

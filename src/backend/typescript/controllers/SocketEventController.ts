@@ -5,19 +5,27 @@ import { SocketData } from '../pong/SocketData';
 import { Container } from "../container/Container.js";
 import { TokenManager } from "../utils/TokenManager.js";
 import type { FriendService } from "../services/FriendService.js";
+import type { ServerType } from "../index.js";
+import { getPublicTournamentsDescriptions, TournamentMaker } from "../pong/TournamentMaker.js";
+import { zodTournamentCreationSettings, type TournamentDescription, type TournamentId } from "@shared/ServerMessage.js";
+import { error, success, type Result } from "@shared/utils.js";
 
 export type DefaultSocket = Socket<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>;
 
 export class SocketEventController {
 	constructor (
-		private io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>,
+		private io: ServerType,
 	) {
 		this.matchMaker = new MatchMaker(io);
+		this.sockets = new Set<DefaultSocket>();
+		this.tournamentMaker = new TournamentMaker(io);
 		this.initSocket();
 	}
 	private static connectedUsers: Map<number, number> = new Map();
 	private static socketInstance: SocketEventController;
 	private matchMaker: MatchMaker;
+	private sockets : Set<DefaultSocket>;
+	private tournamentMaker : TournamentMaker;
     
     // =================================== STATIC ==================================== //
 	
@@ -92,12 +100,12 @@ export class SocketEventController {
 	// ----------------------------------------------------------------------------- //
 	private async initMiddleware()
 	{
-		this.io.use(async (socket, next) => {
+		this.io.use(async (socket : DefaultSocket, next) => {
 			const token = socket.handshake.auth.token;
 
 			// guest user
 			if (!token) {
-				(socket.data as any).userId = -1;
+				socket.data.userId = -1;
 				return next();
 			}
 
@@ -105,7 +113,7 @@ export class SocketEventController {
 				const tokenManager: TokenManager = Container.getInstance().getService('TokenManager');
 				const decoded = await tokenManager.verify(token, false);
 
-				(socket.data as any).userId = decoded.userId;
+				socket.data.userId = decoded.userId;
 				
 				next();
 			} catch (err) {
@@ -122,6 +130,18 @@ export class SocketEventController {
 		this.initMiddleware();
 		this.io.on('connection', (socket : DefaultSocket) => {
 			this.handleConnection(socket);
+
+			socket.on("get-tournaments", (ack : (descriptions : TournamentDescription[]) => void) => {
+				this.handleGetTournaments(socket, ack);
+			});
+
+			socket.on("join-tournament", (tournamentId : TournamentId, ack: (participants : Result<string[]>) => void) => {
+				this.handleJoinTournament(socket, tournamentId, ack);
+			});
+
+			socket.on("create-tournament", (data : any, ack : (tournamentId : Result<string>) => void) => {
+				this.handleCreateTournament(socket, data, ack);
+			});
 
 			socket.on("join-matchmaking", () => {
 				this.handleMatchMakingRequest(socket);
@@ -149,6 +169,7 @@ export class SocketEventController {
 	private async handleConnection(socket: DefaultSocket)
 	{
 		
+		this.sockets.add(socket);
 		const userId = (socket.data as any).userId;
 
 		socket.data = new SocketData(socket, userId);
@@ -175,6 +196,48 @@ export class SocketEventController {
 		if (newCount === 1) {
 			this.io.emit('user-status-change', { userId: userId, status: 'online' });
 		}
+	}
+
+	private handleGetTournaments(socket : DefaultSocket, ack : (descriptions : TournamentDescription[]) => void)
+	{
+		const	descriptions = getPublicTournamentsDescriptions(socket);
+
+		ack(descriptions);
+	}
+
+	private	handleCreateTournament(socket : DefaultSocket, data : any, ack : (tournamentId : Result<string>) => void)
+	{
+		const	parsed = zodTournamentCreationSettings.safeParse(data);
+
+		if (!parsed.success)
+		{
+			ack(error("Invalid Data !"));
+			return ;
+		}
+		const	tournament = this.tournamentMaker.createTournament(parsed.data, socket);
+
+		if (!tournament.success)
+		{
+			ack(tournament);
+			return ;
+		}
+		const	description = tournament.value.getDescription();
+
+		console.log(`tournament created : ${description.name}`);
+		ack(success(description.id));
+	}
+	
+	private	handleJoinTournament(socket : DefaultSocket, tournamentId : TournamentId, ack: (participants : Result<string[]>) => void)
+	{
+			const	tournament = this.tournamentMaker.joinTournament(tournamentId, socket);
+
+			if (!tournament.success)
+			{
+				ack(tournament);
+				return ;
+			}
+			console.log(`${socket.data.getProfile().name} joined the ${tournament.value.getDescription().name} tournament`);
+			ack(success(tournament.value.getParticipantsNames()));
 	}
 
 	// ----------------------------------------------------------------------------- //
@@ -213,6 +276,7 @@ export class SocketEventController {
 	// ----------------------------------------------------------------------------- //
 	private handleDisconnect(socket: DefaultSocket)
 	{
+		this.sockets.delete(socket);
 		// clean MatchMaking
         // attention, le joueur peut ne jamais avoir demande a rejoindre le matchmaking
 		this.matchMaker.removeUserFromMatchMaking(socket);
@@ -220,7 +284,7 @@ export class SocketEventController {
 		// clean socket data
 		socket.data.disconnect();
 		
-		const userId = socket.data.getUserId();
+		const userId = socket.data.userId;
 
         // decompte ne nb de connexion du user (plusieurs onglets...)
 		if (userId != -1) {

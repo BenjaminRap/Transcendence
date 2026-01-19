@@ -120,7 +120,7 @@ export class GameManager extends CustomScriptComponent {
 
 	public pause()
 	{
-		if (this._isGamePaused || this._sceneData.gameType === "Multiplayer")
+		if (this._isGamePaused || this._sceneData.gameType === "Multiplayer" || this._ended)
 			return ;
 		this._isGamePaused = true;
 		this._sceneData.havokPlugin.setTimeStep(0);

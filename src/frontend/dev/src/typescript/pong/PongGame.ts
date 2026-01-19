@@ -8,13 +8,19 @@ import { HavokPlugin } from "@babylonjs/core/Physics";
 
 import HavokPhysics from "@babylonjs/havok";
 import { type ClientInput, FrontendSceneData } from "./FrontendSceneData";
-import { Color4 } from "@babylonjs/core";
+import { Color4, type int } from "@babylonjs/core";
 import { type FrontendGameType, getSceneData } from "@shared/SceneData";
-import { MultiplayerHandler } from "./MultiplayerHandler";
 import { Settings } from "./Settings";
 import { ServerProxy } from "./ServerProxy";
-import type { GameInfos } from "@shared/ServerMessage";
-import type { Tournament } from "@shared/Tournament";
+import type { LocalTournament } from "./LocalTournament";
+import { frontendSocketHandler } from "../index";
+import { ErrorGUI } from "./gui/ErrorGUI";
+import { initMenu } from "./gui/IGUI";
+import { CloseGUI } from "./gui/CloseGUI";
+import { PongError } from "@shared/pongError/PongError";
+import type { Profile } from "@shared/Profile";
+import type { GameInfos, GameInit } from "@shared/ServerMessage";
+import type { TournamentEventAndJoinedGame } from "./FrontendEventsManager";
 
 import { PongUtils } from '../terminal'
 
@@ -22,35 +28,49 @@ import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
 
 export type SceneFileName = "Magic.gltf" | "Basic.gltf" | "Terminal.gltf";
+export type TournamentType<T extends FrontendGameType> =
+	T extends "Local" ? LocalTournament :
+	undefined
 
 export class PongGame extends HTMLElement {
 	private _canvas! : HTMLCanvasElement;
 	private _engine! : Engine;
 	private _scene : Scene | undefined;
-	private _multiplayerHandler : MultiplayerHandler;
 	private _settings : Settings;
+	private _errorGUI! : ErrorGUI;
+	private _closeGUI! : CloseGUI;
+	private _serverProxy : ServerProxy;
 
 	public constructor() {
 		super();
+		this._serverProxy = new ServerProxy(frontendSocketHandler);
 		this.classList.add("block", "overflow-hidden", "container-inline", "aspect-video");
 		this._settings = new Settings();
-		this._multiplayerHandler = new MultiplayerHandler();
 	}
 
 	public async connectedCallback() : Promise<void> {
 		this._canvas = document.createElement("canvas");
 		this._canvas.classList.add("size-full");
-		this.appendChild(this._canvas);
+		this._errorGUI = initMenu(new ErrorGUI(), {
+			close: () => this._errorGUI.classList.add("hidden")
+		}, this);
+		this._closeGUI = initMenu(new CloseGUI(), {
+			close: () => this.quit()
+		}, this, false);
+
+		this.append(this._canvas);
 		try {
 			this._engine = this.createEngine();
 			globalThis.HK = await HavokPhysics();
 			await SceneManager.InitializeRuntime(this._engine, { showDefaultLoadingScreen: true, hideLoadingUIWithEngine: false });
-			this._scene = await this.getNewScene("Menu.gltf", "Menu", []);
+			this._scene = await this.getNewScene("Menu.gltf", "Menu");
 			this._engine.runRenderLoop(this.renderScene.bind(this));
 		} catch (error) {
 			console.error(`Could not initialize the scene : ${error}`)
 		}
-	}
+		this._serverProxy.onTournamentMessage().add(tournamentEvent => this.onTournamentMessage(tournamentEvent));
+		this._serverProxy.onGameMessage().add(gameEvent => this.onGameMessage(gameEvent));
+    }
 
 	private renderScene() : void
 	{
@@ -78,136 +98,155 @@ export class PongGame extends HTMLElement {
 			lockstepMaxSteps: 4
 		});
 
-		engine.renderEvenInBackground = false;
+		// engine.renderEvenInBackground = false;
 		return engine;
 	}
 
-	private async changeScene(newSceneName : string, gameType : FrontendGameType, clientInputs : readonly ClientInput[], serverCommunicationHandler? : ServerProxy, tournament? : Tournament) : Promise<void>
+	private async changeScene<T extends FrontendGameType>(
+		newSceneName : string,
+		gameType : T,
+		tournament? : TournamentType<T>) : Promise<void>
 	{
-		if (this._scene)
-			this._scene.dispose();
-		this._scene = await this.getNewScene(newSceneName, gameType, clientInputs, serverCommunicationHandler, tournament);
+		this.disposeScene();
+		this._scene = await this.getNewScene(newSceneName, gameType, tournament);
 	}
 
-	public quit() : void
+	private	isInMenu()
 	{
-		this.remove();
-		PongUtils.removePongDiv();
+		if (this._scene === undefined)
+			return false;
+		const	sceneData = getFrontendSceneData(this._scene);
+		
+		return sceneData.gameType === "Menu";
 	}
 
 	public async goToMenuScene()
 	{
-		this._multiplayerHandler.disconnect();
+		if (this.isInMenu())
+			return ;
+		this._serverProxy.leaveScene();
 		if (!this._scene || getSceneData(this._scene).gameType !== "Menu")
-			await this.changeScene("Menu.gltf", "Menu", []);
+			await this.changeScene("Menu.gltf", "Menu");
 	}
 
-	public startBotGame(sceneName : SceneFileName)
+	public async startBotGame(sceneName : SceneFileName)
 	{
-		this.startBotGameAsync(sceneName);
-	}
-
-	private async startBotGameAsync(sceneName : SceneFileName)
-	{
-		this._multiplayerHandler.disconnect();
-		const	inputs = [this._settings._playerInputs[0]];
-		await this.changeScene(sceneName, "Bot", inputs);
+		if (this.isInMenu())
+			await this.changeScene(sceneName, "Bot");
 		const	sceneData = getFrontendSceneData(this._scene!);
 
 		await sceneData.readyPromise.promise;
+		this.setInputs(sceneData, 0);
 		sceneData.events.getObservable("game-start").notifyObservers();
 	}
 
-	public startLocalGame(sceneName : SceneFileName, tournament? : Tournament)
+	public async startLocalGame(sceneName : SceneFileName, tournament? : LocalTournament)
 	{
-		this.startLocalGameAsync(sceneName, tournament);
-	}
-
-	private async startLocalGameAsync(sceneName : SceneFileName, tournament? : Tournament)
-	{
-		this._multiplayerHandler.disconnect();
-		await this.changeScene(sceneName, "Local", this._settings._playerInputs, undefined, tournament);
+		if (this.isInMenu())
+			await this.changeScene(sceneName, "Local", tournament);
 		const	sceneData = getFrontendSceneData(this._scene!);
 
 		await sceneData.readyPromise.promise;
-		sceneData.events.getObservable("game-start").notifyObservers();
-	}
-
-	public startOnlineGame(sceneName : SceneFileName, tournament? : Tournament)
-	{
-		this.startOnlineGameAsync(sceneName, tournament);
-	}
-
-	private async startOnlineGameAsync(sceneName : SceneFileName, tournament? : Tournament) : Promise<void>
-	{
-		try {
-			await this._multiplayerHandler.joinGame();
-			const	playerIndex = this._multiplayerHandler.getplayerIndex()!;
-			const	inputs = this._settings._playerInputs.filter((value : ClientInput) => value.index === playerIndex);
-			const	serverProxy = new ServerProxy(this._multiplayerHandler);
-
-			await this.changeScene(sceneName, "Multiplayer", inputs, serverProxy, tournament);
-			const	sceneData = getFrontendSceneData(this._scene!);
-
-			await sceneData.readyPromise.promise;
-			this._multiplayerHandler.setReady();
-			await this._multiplayerHandler.onGameReady();
+		this.setInputs(sceneData, 0, 1);
+		if (tournament)
+			tournament.setEventsAndStart(sceneData.events);
+		else
 			sceneData.events.getObservable("game-start").notifyObservers();
-			this._multiplayerHandler.onServerMessage()!.add((gameInfos : GameInfos | "server-error" | "forfeit" | "room-closed") => {
-				if (gameInfos === "server-error")
-				{
-					console.log("Server Error !");
-					this.goToMenuScene();
-				}
-			});
-		} catch (error) {
-			if (error !== "io client disconnect") // meaning we disconnected ourselves
-				console.error(error);
-			this.goToMenuScene();
-		}
 	}
 
-	public	async restartOnlineGameAsync() : Promise<void>
+	public async startOnlineGame(sceneName? : SceneFileName) : Promise<void>
+	{
+		const	gameInit = await this._serverProxy.joinGame();
+
+		this.joinOnlineGame(gameInit, sceneName);
+	}
+
+	public async joinOnlineGame(gameInit : GameInit, sceneName? : SceneFileName) : Promise<void>
+	{
+		if (this.isInMenu())
+		{
+			if (!sceneName)
+				return ;
+			await this.changeScene(sceneName, "Multiplayer");
+		}
+		const	sceneData = getFrontendSceneData(this._scene!);
+
+		await sceneData.readyPromise.promise;
+		this.setInputs(sceneData, gameInit.playerIndex);
+		this._serverProxy.setReady();
+		const	participants = gameInit.participants as [Profile, Profile];
+		sceneData.events.getObservable("set-participants").notifyObservers(participants);
+		await this._serverProxy.onGameReady();
+		sceneData.events.getObservable("game-start").notifyObservers();
+	}
+
+	private onTournamentMessage(tournamentEvent : TournamentEventAndJoinedGame)
 	{
 		if (!this._scene)
-			throw new Error("restartOnlineGameAsync called without a scene !");
-		try {
-			await this._multiplayerHandler.joinGame();
+			return ;
+		getFrontendSceneData(this._scene).events.getObservable("tournament-event").notifyObservers(tournamentEvent);
+	}
 
-			const	playerIndex = this._multiplayerHandler.getplayerIndex()!;
-			const	inputs = this._settings._playerInputs.filter((value : ClientInput) => value.index === playerIndex);
-			const	sceneData = getFrontendSceneData(this._scene);
+	private onGameMessage(gameInfos : GameInfos)
+	{
+		if (!this._scene)
+			return ;
+		getFrontendSceneData(this._scene).events.getObservable("game-infos").notifyObservers(gameInfos);
+	}
 
-			sceneData.inputs = inputs;
-			sceneData.events.getObservable("input-change").notifyObservers();
-			sceneData.serverProxy?.sendServerMessage("ready");
-			await this._multiplayerHandler.onGameReady();
-			sceneData.events.getObservable("game-start").notifyObservers();
-		} catch (error) {
-			if (error !== "io client disconnect") // meaning we disconnected ourselves
-				console.error(error);
-			this.goToMenuScene();
+	private setInputs(sceneData : FrontendSceneData, ...inputIndexes : int[])
+	{
+		const	inputs = this._settings._playerInputs.filter((value : ClientInput) => inputIndexes.includes(value.index));
+
+		sceneData.events.getObservable("input-change").notifyObservers(inputs);
+	}
+
+	private	showError(errorText : string)
+	{
+		this._errorGUI.setErrorText(errorText);
+		this._errorGUI.classList.remove("hidden");
+	}
+
+	public onError(error : any)
+	{
+		let		severity = (error instanceof PongError) ? error.getSeverity() : "quitPong";
+		const	message = (error instanceof Error) ? error.message : error;
+
+		if (severity === "quitScene" && this.isInMenu())
+			severity = "quitPong";
+		switch (severity)
+		{
+			case "ignore":
+				break;
+			case "show":
+				this.showError(message);
+				break;
+			case "quitScene":
+				this.showError(message);
+				this.goToMenuScene();
+				break;
+			case "quitPong":
+				this.quit();
+				break;
 		}
 	}
 
-	public	cancelMatchmaking()
-	{
-		this._multiplayerHandler.disconnect();
-	}
-
-	private	async getNewScene(sceneName : string, gameType : FrontendGameType, clientInputs : readonly ClientInput[], serverCommunicationHandler? : ServerProxy, tournament? : Tournament) : Promise<Scene>
+	private	async getNewScene<T extends FrontendGameType>(
+		sceneName : string,
+		gameType : T,
+		tournament? : TournamentType<T>) : Promise<Scene>
 	{
 		const	scene = new Scene(this._engine);
 
 		if (!scene.metadata)
 			scene.metadata = {};
 		globalThis.HKP = new HavokPlugin(false);
-		scene.metadata.sceneData = new FrontendSceneData(globalThis.HKP, this, gameType, clientInputs, serverCommunicationHandler, tournament);
+		scene.metadata.sceneData = new FrontendSceneData(globalThis.HKP, this, gameType, this._serverProxy, tournament);
 		const	cam = new FreeCamera("camera1", Vector3.Zero(), scene);
 		const	assetsManager = new AssetsManager(scene);
 
 		if (!scene.enablePhysics(Vector3.Zero(), globalThis.HKP))
-			throw new Error("The physics engine hasn't been initialized !");
+			throw new PongError("The physics engine hasn't been initialized !", "quitPong");
 
 		assetsManager.addMeshTask("scene", null, "/scenes/", sceneName)
 
@@ -228,30 +267,46 @@ export class PongGame extends HTMLElement {
 		// scene.activeCameras[0].attachControl();
 	}
 
-	public focus()
+	private disposeScene()
+	{
+		if (this._scene === undefined)
+			return ;
+		const	sceneData = getFrontendSceneData(this._scene);
+
+		sceneData.dispose();
+		this._scene.dispose();
+		this._scene = undefined;
+	}
+
+	public disconnectedCallback() : void {
+		this._serverProxy.dispose();
+		if (globalThis.HKP)
+			delete globalThis.HKP;
+		if (globalThis.HKP)
+			delete globalThis.HKP;
+		this.disposeScene();
+		this._engine.dispose();
+	}
+
+	public focusOnCanvas()
 	{
 		this._canvas.focus();
 	}
 
-	public disconnectedCallback() : void {
-		this._multiplayerHandler.disconnect();
-		if (globalThis.HKP)
-			delete globalThis.HKP;
-		if (globalThis.HKP)
-			delete globalThis.HKP;
-		this._engine.dispose();
-		this._scene?.dispose();
+	public quit()
+	{
+		PongUtils.removePongDiv();
 	}
 }
 
 export function	getFrontendSceneData(scene : Scene) : FrontendSceneData
 {
 	if (!scene.metadata)
-		throw new Error("Scene metadata is undefined !");
+		throw new PongError("Scene metadata is undefined !", "quitPong");
 
 	const	sceneData = scene.metadata.sceneData;
 	if (!(sceneData instanceof FrontendSceneData))
-		throw new Error("Scene is not of the type FrontendSceneData !");
+		throw new PongError("Scene is not of the type FrontendSceneData !", "quitPong");
 	return sceneData;
 }
 

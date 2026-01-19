@@ -1,11 +1,3 @@
-export interface GameStats
-{
-	wins:		number,
-	losses:    	number,
-	total:     	number,
-	winRate:	number,
-}
-
 export interface PlayerInfo {
     id:         number | undefined,
     guestName:  string,

@@ -1,6 +1,7 @@
 import { ScriptComponent } from "@babylonjs-toolkit/next";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import { Scene } from "@babylonjs/core/scene";
+import { PongError } from "./pongError/PongError";
 
 export class	CustomScriptComponent extends ScriptComponent
 {
@@ -12,20 +13,25 @@ export class	CustomScriptComponent extends ScriptComponent
 		if (typeof awake === "function" && awake.length === 0)
 		{
 			instance["awake"] = () => {
-				const	imported = (Reflect.getMetadata("custom:imported", this) as string[] ?? [])
-					.sort((a, b) => a.localeCompare(b));
-				const	auto = Object.keys(properties)
-					.filter((key) => key.startsWith("auto__"))
-					.map((key) => key.slice(6, key.length))
-					.sort((a, b) => a.localeCompare(b));
-				if (imported.length !== auto.length)
-					throw new Error(`Wrong imported injections, expected : ${imported}, got : ${auto}`);
-				for (let index = 0; index < imported.length; index++) {
-					if (imported[index] != auto[index])
-						throw new Error(`Wrong imported injections, expected : ${imported}, got : ${auto}`);
-				}
+				this.verifyImports(properties);
 				awake.call(this);
 			};
+		}
+	}
+
+	private  verifyImports(properties: any)
+	{
+		const	imported = (Reflect.getMetadata("custom:imported", this) as string[] ?? [])
+			.sort((a, b) => a.localeCompare(b));
+		const	auto = Object.keys(properties)
+			.filter((key) => key.startsWith("auto__"))
+			.map((key) => key.slice(6, key.length))
+			.sort((a, b) => a.localeCompare(b));
+		if (imported.length !== auto.length)
+			throw new PongError(`Wrong imported injections, expected : ${imported}, got : ${auto}`, "quitScene");
+		for (let index = 0; index < imported.length; index++) {
+			if (imported[index] != auto[index])
+				throw new PongError(`Wrong imported injections, expected : ${imported}, got : ${auto}`, "quitScene");
 		}
 	}
 };

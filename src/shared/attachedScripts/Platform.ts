@@ -8,6 +8,7 @@ import { getSceneData } from "@shared/SceneData";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { Imported } from "@shared/ImportedDecorator";
 import type { Ball } from "./Ball";
+import { PongError } from "@shared/pongError/PongError";
 
 export class Platform extends CustomScriptComponent {
 	@Imported("Ball") private _ball! : Ball;
@@ -52,7 +53,7 @@ export class Platform extends CustomScriptComponent {
 		const	physicsBody = this.transform.getPhysicsBody();
 
 		if (!physicsBody)
-			throw new Error("The Platform script should be attached to a mesh with a physic body !");
+			throw new PongError("The Platform script should be attached to a mesh with a physic body !", "quitScene");
 		this._physicsBody = physicsBody;
 	}
 }

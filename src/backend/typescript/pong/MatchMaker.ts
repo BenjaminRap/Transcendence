@@ -1,6 +1,8 @@
-import { type DefaultEventsMap, Server } from "socket.io";
 import { Room } from "./Room";
-import type { DefaultSocket } from "../controllers/SocketEventController.js";
+import type { ServerType } from "../index";
+import type { DefaultSocket } from "../controllers/SocketEventController";
+
+const	rooms = new Set<Room>();
 
 export class	MatchMaker
 {
@@ -8,7 +10,7 @@ export class	MatchMaker
 
 
 	constructor(
-		private readonly _io : Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>
+		private readonly _io : ServerType
 	) {
 	}
 
@@ -25,9 +27,10 @@ export class	MatchMaker
 
 	public	removeUserFromMatchMaking(socket : DefaultSocket)
 	{
-		if (socket.data.getState() === "unactive")
+		if (socket.data.getState() !== "waiting")
 			return ;
-		console.log("removing user from matchmaking !");
+		socket.data.setOutWaitingQueue();
+		console.log("user removed from matchmaking !");
 		const	index = this._waitingSockets.indexOf(socket);
 
 		if (index < 0)
@@ -42,6 +45,8 @@ export class	MatchMaker
 		console.log("creating party");
 		const	firstSocket = this._waitingSockets.pop()!;
 		const	secondSocket = this._waitingSockets.pop()!;
-		new Room(this._io, firstSocket, secondSocket); // referenced in the sockets data so it isn't garbaged collected
+		const	room = new Room(this._io, () => rooms.delete(room), firstSocket, secondSocket);
+
+		rooms.add(room);
 	}
 }

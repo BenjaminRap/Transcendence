@@ -8,6 +8,7 @@ import zod from "zod";
 import { Imported } from "@shared/ImportedDecorator";
 import { zodVector3 } from "@shared/ServerMessage";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
+import { PongError } from "@shared/pongError/PongError";
 
 const	zodSerializedShape = zod.object({
 	type: zod.int(),
@@ -40,7 +41,7 @@ export class ColliderGenerator extends CustomScriptComponent {
 	private getPhysicsShape() : PhysicsShape
 	{
 		if (this._shapeProperties.length == 0)
-			throw new Error("GetPhysicsShape called with an empty shapeProperties list !");
+			throw new PongError("GetPhysicsShape called with an empty shapeProperties list !", "quitScene");
 		if (this._shapeProperties.length == 1)
 			return (this.getShapeFromSerializable(this._shapeProperties[0]));
 		let	parentShape = new PhysicsShapeContainer(this.scene);

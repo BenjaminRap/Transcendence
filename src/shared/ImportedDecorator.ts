@@ -3,6 +3,7 @@ import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import zod from "zod";
 import { CustomScriptComponent } from "./CustomScriptComponent";
 import { AbstractMesh, Color4, Material, Texture, Vector2, Vector3, Vector4 } from "@babylonjs/core";
+import { PongError } from "./pongError/PongError";
 
 export type Constructor<T> = abstract new (...args : any[]) => T;
 export type ToolkitExported = Vector2 | Vector3 | Vector4 | Color4 | TransformNode | Material | Texture | AbstractMesh;
@@ -12,7 +13,7 @@ export function	ImportedCustom<Checker extends zod.ZodType, Return>(zodChecker :
 {
 	return (target : any, key : string) => {
 		if (!(target instanceof CustomScriptComponent))
-			throw new Error("The Imported decorator should only be used in CustomScriptComponent !");
+			throw new PongError("The Imported decorator should only be used in CustomScriptComponent !", "quitScene");
 		updateImportedMetadata(target, key);
 		const	internalKey = `imported__${key}`;
 		Object.defineProperty(target, key, {
@@ -26,7 +27,9 @@ export function	ImportedCustom<Checker extends zod.ZodType, Return>(zodChecker :
 
 					this[internalKey] = castedValue;
 				} catch (error) {
-					throw new Error(`Error importing ${key}, error : ${error}`);
+					if (error instanceof PongError)
+						throw new PongError(`Error importing ${key}, error : ${error}`, error.getSeverity());
+					throw error;
 				}
 			},
 			configurable: true,
@@ -39,7 +42,7 @@ export function	Imported<T extends ToolkitExported>(importedType : ImportedType<
 {
 	return (target : any, key : string) => {
 		if (!(target instanceof CustomScriptComponent))
-			throw new Error("The Imported decorator should only be used in CustomScriptComponent !");
+			throw new PongError("The Imported decorator should only be used in CustomScriptComponent !", "quitScene");
 		updateImportedMetadata(target, key);
 		const	internalKey = `imported__${key}`;
 		Object.defineProperty(target, key, {
@@ -52,7 +55,8 @@ export function	Imported<T extends ToolkitExported>(importedType : ImportedType<
 
 					this[internalKey] = parsedValue;
 				} catch (error) {
-					throw new Error(`Error importing ${key}, error : ${error}`);
+					if (error instanceof PongError)
+						throw new PongError(`Error importing ${key}, error : ${error}`, error.getSeverity());
 				}
 			},
 			configurable: true,
@@ -94,24 +98,26 @@ function	parseZodType(importedType : zod.ZodType, value : any) : any
 	const	parsed = importedType.safeParse(value);
 
 	if (!parsed.success)
-		throw new Error(`The value passed to the setter doesn't correspond to the zod type, error : ${parsed.error}`)
+		throw new PongError(`The value passed to the setter doesn't correspond to the zod type, error : ${parsed.error}`, "quitScene")
 	return parsed.data;
 }
 
 function	parseCustomScriptComponent(importedType : string, value : any) : CustomScriptComponent
 {
 	if (!(value instanceof TransformNode))
-		throw new Error(`Imported CustomScriptComponent variable assigned with the wrong type, expecting TransformNode`);
+		throw new PongError(`Imported CustomScriptComponent variable assigned with the wrong type, expecting TransformNode`, "quitScene");
 	const	component = SceneManager.GetComponent(value, importedType, false);
 
 	if (component === null)
-		throw new Error(`The TransformNode ${value} doesn't have the ${importedType} component !`);
+		throw new PongError(`The TransformNode ${value} doesn't have the ${importedType} component !`, "quitScene");
+	if (!(component instanceof CustomScriptComponent))
+		throw new PongError(`The component ${component.getClassName()} doesn't derive from CustomScriptComponent !`, "quitScene");
 	return component;
 }
 
 function	parseToolkitExported<T extends ToolkitExported>(importedType : Constructor<T>, value : any)
 {
 	if (!(value instanceof importedType))
-		throw new Error(`The value assigned isn't of the right class, expecting ${importedType.name} !`);
+		throw new PongError(`The value assigned isn't of the right class, expecting ${importedType.name} !`, "quitScene");
 	return value;
 }

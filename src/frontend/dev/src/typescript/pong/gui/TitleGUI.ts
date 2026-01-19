@@ -1,4 +1,6 @@
-export class	TitleGUI extends HTMLElement
+import type { IGUI } from "./IGUI";
+
+export class	TitleGUI extends HTMLElement implements IGUI<void>
 {
 	constructor()
 	{
@@ -11,6 +13,10 @@ export class	TitleGUI extends HTMLElement
 		this.innerHTML = `
 			<p class="absolute text-[15cqw] top-0 left-(--title-left) text-(--title-color) -translate-x-1/2 font-(family-name:--font) text-shadow-(--title-shadow) transition-all duration-[1s]">PONG</p>
 		`;
+	}
+
+	public getInputs() {
+		return undefined;
 	}
 }
 

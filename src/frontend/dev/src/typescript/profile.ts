@@ -7,7 +7,6 @@ import { RequestBackendModule } from './terminalUtils/requestBackend';
 import { PongUtils, TerminalFileSystem, TerminalUserManagement, socketUtils } from './terminal'
 import { io } from "socket.io-client";
 import { WriteOnTerminal } from './terminalUtils/writeOnTerminal';
-import { name } from '@babylonjs/gui/2D';
 
 
 export interface GameStats
@@ -20,11 +19,12 @@ export interface GameStats
 
 export interface Friend
 {
-	avatar:     string,
-	username:   string,
-	id:         string,
-	status:     "ACCEPTED" | "PENDING",
-	isOnline:   boolean,
+	avatar:         string,
+	username:       string,
+	id:             number,
+	status:         string,
+	isOnline:       boolean,
+	requesterId:    number,
 }
 
 
@@ -60,112 +60,31 @@ export interface SuscriberProfile
 
 
 
-let profile: SuscriberProfile = {
-	id: 1,
-	avatar: "https://i.pravatar.cc/150?img=12",
-	username: "User",
-	gameStats: {
-		wins: 5,
-		losses: 10,
-		total: 15,
-		winRate: 33.33
-	},
-	lastMatchs: [
-		{
-			opponent: { id: "2", username: "Opponent2", avatar: "https://i.pravatar.cc/150?img=2" },
-			match: {
-				id: 1,
-				createdAt: new Date(),
-				winnerId: 1,
-				winnerLevel: "Gold",
-				loserId: 2,
-				loserLevel: "Silver",
-				scoreWinner: 1,
-				scoreLoser: 0,
-				duration: 300,
-				tournamentId: null
-			}
-		},
-		{
-			opponent: { id: "3", username: "Opponent3", avatar: "https://i.pravatar.cc/150?img=3" },
-			match: {
-				id: 2,
-				createdAt: new Date(),
-				winnerId: 1,
-				winnerLevel: "Gold",
-				loserId: 3,
-				loserLevel: "Bronze",
-				scoreWinner: 2,
-				scoreLoser: 1,
-				duration: 400,
-				tournamentId: null
-			}
-		},
-		{
-			opponent: { id: "4", username: "Opponent4", avatar: "https://i.pravatar.cc/150?img=4" },
-			match: {
-				id: 3,
-				createdAt: new Date(),
-				winnerId: 1,
-				winnerLevel: "Gold",
-				loserId: 4,
-				loserLevel: "Silver",
-				scoreWinner: 3,
-				scoreLoser: 2,
-				duration: 500,
-				tournamentId: null
-			}
-		},
-		{
-			opponent: { id: "5", username: "Opponent5", avatar: "https://i.pravatar.cc/150?img=5" },
-			match: {
-				id: 4,
-				createdAt: new Date(),
-				winnerId: 5,
-				winnerLevel: "Gold",
-				loserId: 1,
-				loserLevel: "Silver",
-				scoreWinner: 4,
-				scoreLoser: 3,
-				duration: 600,
-				tournamentId: null
-			}
-		}
-	],
-	friends: [
-		{
-			avatar: "https://i.pravatar.cc/150?img=6",
-			username: "Friend1",
-			id: "6",
-			status: "ACCEPTED",
-			isOnline: true
-		},
-		{
-			avatar: "https://i.pravatar.cc/150?img=7",
-			username: "Friend2",
-			id: "7",
-			status: "ACCEPTED",
-			isOnline: false
-		},
-		{
-			avatar: "https://i.pravatar.cc/150?img=8",
-			username: "Friend3",
-			id: "8",
-			status: "PENDING",
-			isOnline: true
-		},
-		{
-			avatar: "https://i.pravatar.cc/150?img=9",
-			username: "Friend4",
-			id: "9",
-			status: "PENDING",
-			isOnline: false
-		}
-	]
-};
+let profile: SuscriberProfile;
 
 let profileDiv: HTMLDivElement | null = null;
 
+
+function sortFriendList()
+{
+	// Online > Pending > Offline
+	let pendingFriends = [];
+	let onlineFriends = [];
+	let offlineFriends = [];
+
+	for (const friend of profile.friends) {
+		if (friend.isOnline) {
+			onlineFriends.push(friend);
+		} else if (friend.status === "pending") {
+			pendingFriends.push(friend);
+		} else {
+			offlineFriends.push(friend);
+		}
+	}
+
+	profile.friends = [...onlineFriends, ...pendingFriends, ...offlineFriends];
+	console.log("Sorted friend list:", profile.friends);
+}
 
 
 export namespace ProfileUpdater {
@@ -173,11 +92,10 @@ export namespace ProfileUpdater {
 		console.log("Updating profile:", username, linkofavatar);
 		profile.username = username;
 		profile.avatar = linkofavatar;
-		updateProfileCard(profile);
+		ProfileUpdater.updateProfileCard(profile);
 	}
-}
 
-function updateProfileCard(profile: SuscriberProfile) {
+	export function updateProfileCard(profile: SuscriberProfile) {
 	if (!profileDiv)
 		return;
 	profileDiv.innerHTML = `<img src="${profile.avatar}" alt="Avatar" class="w-[12vh] h-[12vh] border border-green-500 object-cover"></img>
@@ -187,9 +105,88 @@ function updateProfileCard(profile: SuscriberProfile) {
 								<p>Loss: ${profile.gameStats.losses}</p>
 								<p>W/L: ${(profile.gameStats.wins / (profile.gameStats.losses + profile.gameStats.wins)).toFixed(2)}</p>
 							</div>`;
+	}
+
+	export function updateFriendList(id: number, status: string) {
+		const friend = profile.friends.find(friend => friend.id === id);
+		let online;
+		if (status === "online") {
+			online = true;
+		} else {
+			online = false;
+		}
+		if (friend) {
+			friend.isOnline = online;
+		}
+		sortFriendList();
+		updateFriendDiv();
+	}
+
+	export function updateFriendProfile(userID: number, username: string, avatar: string)
+	{
+		if (userID === profile.id)
+			ProfileUpdater.updateProfile(username, avatar);
+		else
+		{
+			console.log("Salut " + userID)
+			const index = profile.friends.findIndex(friend => friend.id === userID);
+			if (index !== -1) {
+				profile.friends[index].username = username;
+				profile.friends[index].avatar = avatar;
+			}
+			if (index < 4)
+			{
+				sortFriendList();
+				updateFriendDiv();
+			}
+		}
+	}
+
+	export function removeFriend(id: number) {
+		profile.friends = profile.friends.filter(friend => friend.id !== id);
+		sortFriendList();
+		updateFriendDiv();
+	}
 }
 
-function createProfileCard(profileElement: HTMLElement | null) {
+
+function updateFriendDiv()
+{
+	if (!profileDiv)
+		return;
+	const newFriendListElement = createFriendElement();
+	if (!newFriendListElement)
+		return;
+	const oldFriendListElement = document.getElementById('friend-list');
+	if (oldFriendListElement && oldFriendListElement.parentElement) {
+		oldFriendListElement.parentElement.replaceChild(newFriendListElement, oldFriendListElement);
+	} else if (oldFriendListElement) {
+		oldFriendListElement.remove();
+		profileDiv.appendChild(newFriendListElement);
+	} else {
+		profileDiv.appendChild(newFriendListElement);
+	}
+}
+
+function updateMatchDiv()
+{
+	if (!profileDiv)
+		return;
+	const newMatchListElement = createMatchElement();
+	if (!newMatchListElement)
+		return;
+	const oldMatchListElement = document.getElementById('match-list');
+	if (oldMatchListElement && oldMatchListElement.parentElement) {
+		oldMatchListElement.parentElement.replaceChild(newMatchListElement, oldMatchListElement);
+	} else if (oldMatchListElement) {
+		oldMatchListElement.remove();
+		profileDiv.appendChild(newMatchListElement);
+	} else {
+		profileDiv.appendChild(newMatchListElement);
+	}
+}
+
+function createProfileCard(profileElement: HTMLElement | null): HTMLElement | void {
 	if (!profileElement)
 		return;
 	const profileCard = document.createElement('div');
@@ -203,10 +200,11 @@ function createProfileCard(profileElement: HTMLElement | null) {
 							</div>`;
 	profileElement.appendChild(profileCard);
 	profileDiv = profileCard;
+	return profileCard;
 }
 
 
-function createButtons(profileElement: HTMLElement | null) {
+function createButtons(profileElement: HTMLElement | null): HTMLElement | void {
 	if (!profileElement)
 		return;
 	const buttonContainer = document.createElement('div');
@@ -224,26 +222,16 @@ function createButtons(profileElement: HTMLElement | null) {
 	const deleteAccountButton = buttonContainer.querySelector('#deleteAccountButton');
 	deleteAccountButton?.addEventListener('click', DeleteAccount);
 	profileElement.appendChild(buttonContainer);
+	return buttonContainer;
 }
 
-function createMatchHistory(profileElement: HTMLElement | null) {
-	if (!profileElement)
-		return;
-	const matchHistory = document.createElement('div');
-	matchHistory.className = "flex flex-col h-[31.5%]"; 
-	matchHistory.innerHTML = `<div class="flex w-full place-content-between">
-								<p class="text-center">Last match</p>
-								<button id="moreMatch" class="cursor-pointer hover:underline hover:underline-offset-2">View More</button>
-							</div>`
-	const moreMatchButton = matchHistory.querySelector('#moreMatch');
-	moreMatchButton?.addEventListener('click', () => {
-		ExtendedView.makeExtendedView('match', '');
-	});
+
+
+function createMatchElement() : HTMLElement
+{
 	const matchElement = document.createElement('div');
 	matchElement.className = "border py-4 border-green-500 flex flex-col gap-y-4 h-full";
-
-	profileElement.appendChild(matchHistory);
-
+	matchElement.id = "match-list";
 	for (let i = 0; i < Math.min(profile.lastMatchs.length, 4); i++) {
 		const match = profile.lastMatchs[i];
 		const matchDiv = document.createElement('div');
@@ -290,11 +278,89 @@ function createMatchHistory(profileElement: HTMLElement | null) {
 		noMatchMessage.innerText = "Aucun match trouvé.";
 		matchElement.appendChild(noMatchMessage);
 	}
-	matchHistory.appendChild(matchElement);
-	profileElement.appendChild(matchHistory);
+	return matchElement;
 }
 
-function createFriendList(profileElement: HTMLElement | null) {
+function createMatchHistory(profileElement: HTMLElement | null): HTMLElement | void {
+	if (!profileElement)
+		return;
+	const matchHistory = document.createElement('div');
+	matchHistory.className = "flex flex-col h-[31.5%]"; 
+	matchHistory.innerHTML = `<div class="flex w-full place-content-between">
+								<p class="text-center">Last match</p>
+								<button id="moreMatch" class="cursor-pointer hover:underline hover:underline-offset-2">View More</button>
+							</div>`
+	const moreMatchButton = matchHistory.querySelector('#moreMatch');
+	moreMatchButton?.addEventListener('click', () => {
+		ExtendedView.makeExtendedView('match', '');
+	});
+	profileElement.appendChild(matchHistory);
+	const matchElement = createMatchElement();
+	matchHistory.appendChild(matchElement);
+	profileElement.appendChild(matchHistory);
+	return matchHistory;
+}
+
+function createFriendElement() : HTMLElement
+{
+	const friendElement = document.createElement('div');
+	friendElement.className = "border border-green-500 py-4 flex flex-col gap-y-4 h-full";
+	friendElement.id = "friend-list";
+	for (let i = 0; i < Math.min(profile.friends.length, 4); i++) {
+		const friend = profile.friends[i];
+		const friendDiv = document.createElement('div');
+		let status;
+		if (friend.status === "PENDING")
+			status = "Pending...";
+		else if (friend.isOnline)
+			status = "Online.";
+		else
+			status = "Offline.";
+		friendDiv.className = "flex items-center px-4 gap-x-4 min-w-0";
+		friendDiv.innerHTML = `
+		<img src="${friend.avatar}" alt="Avatar"
+					class="w-8 h-8 sm:w-10 sm:h-10 border border-green-500 object-cover shrink-0"></img>
+				<div class="flex flex-col gap-y-0 min-w-0 flex-1">
+					<p class="truncate">${friend.username}</p>
+					<p class="truncate" style="font-size: 10px;">${status}</p>
+				</div>
+		`
+		if (friend.status === "PENDING" && friend.requesterId !== profile.id) {
+			const pendingTag = document.createElement('div');
+			pendingTag.className = "flex gap-x-2";
+			pendingTag.innerHTML = `
+				<button id="AcceptRequest" class="ml-auto p-1 border border-green-500 hover:underline hover:underline-offset-2 cursor-pointer">Accept</button>
+				<button id="RefuseRequest" class="ml-auto p-1 border border-green-500 hover:underline hover:underline-offset-2 cursor-pointer">Refuse</button>
+			`
+			const buttonAccept = pendingTag.querySelector('#AcceptRequest');
+			const buttonRefuse = pendingTag.querySelector('#RefuseRequest');
+			buttonAccept?.addEventListener('click', () => {
+				acceptFriendRequest(friend.id);
+			});
+			buttonRefuse?.addEventListener('click', () => {
+				removeFriend(friend.id);
+			});
+			friendDiv.appendChild(pendingTag);
+		}
+		else
+		{
+			const pendingTag = document.createElement('div');
+			pendingTag.className = "flex gap-x-2";
+			pendingTag.innerHTML = `
+				<button id="removeFriendButton" class="ml-auto p-1 border border-green-500 hover:underline hover:underline-offset-2 cursor-pointer">Remove</button>
+			`
+			const removeButton = pendingTag.querySelector('#removeFriendButton');
+			removeButton?.addEventListener('click', () => {
+				removeFriend(friend.id);
+			});
+			friendDiv.appendChild(pendingTag);
+		}
+		friendElement.appendChild(friendDiv);
+	}
+	return friendElement;
+}
+
+function createFriendDiv(profileElement: HTMLElement | null): HTMLElement | void {
 	if (!profileElement)
 		return;
 	const friendList = document.createElement('div');
@@ -309,61 +375,10 @@ function createFriendList(profileElement: HTMLElement | null) {
 	moreFriendsButton?.addEventListener('click', () => {
 		ExtendedView.makeExtendedView('friend', '');
 	});
-	const friendElement = document.createElement('div');
-	friendElement.className = "border border-green-500 py-4 flex flex-col gap-y-4 h-full";
-	for (let i = 0; i < Math.min(profile.friends.length, 4); i++) {
-		const friend = profile.friends[i];
-		const friendDiv = document.createElement('div');
-		let status;
-		if (friend.isOnline) {
-			status = "Online.";
-		} else {
-			status = "Offline.";
-		}
-		friendDiv.className = "flex items-center px-4 gap-x-4 min-w-0";
-		friendDiv.innerHTML = `
-		<img src="${friend.avatar}" alt="Avatar"
-					class="w-8 h-8 sm:w-10 sm:h-10 border border-green-500 object-cover shrink-0"></img>
-				<div class="flex flex-col gap-y-0 min-w-0 flex-1">
-					<p class="truncate">${friend.username}</p>
-					<p class="truncate" style="font-size: 10px;">${status}</p>
-				</div>
-		`
-		if (friend.status === "PENDING") {
-			const pendingTag = document.createElement('div');
-			pendingTag.className = "flex gap-x-2";
-			pendingTag.innerHTML = `
-				<button id="AcceptRequest" class="ml-auto p-1 border border-green-500 hover:underline hover:underline-offset-2 cursor-pointer">Accept</button>
-				<button id="RefuseRequest" class="ml-auto p-1 border border-green-500 hover:underline hover:underline-offset-2 cursor-pointer">Refuse</button>
-			`
-			const buttonAccept = pendingTag.querySelector('#AcceptRequest');
-			const buttonRefuse = pendingTag.querySelector('#RefuseRequest');
-			buttonAccept?.addEventListener('click', () => {
-				acceptFriendRequest(friend.username);
-			});
-			buttonRefuse?.addEventListener('click', () => {
-				refuseFriendRequest(friend.username);
-			});
-			friendDiv.appendChild(pendingTag);
-		}
-		else
-		{
-			const pendingTag = document.createElement('div');
-			pendingTag.className = "flex gap-x-2";
-			pendingTag.innerHTML = `
-				<button id="removeFriendButton" class="ml-auto p-1 border border-green-500 hover:underline hover:underline-offset-2 cursor-pointer">Remove</button>
-			`
-			const removeButton = pendingTag.querySelector('#removeFriendButton');
-			removeButton?.addEventListener('click', () => {
-				removeFriend(friend.username);
-			});
-			friendDiv.appendChild(pendingTag);
-		}
-		friendElement.appendChild(friendDiv);
-	}
-
+	const friendElement = createFriendElement();
 	friendList.appendChild(friendElement);
 	profileElement.appendChild(friendList);
+	return friendList;
 }
 
 async function fetchProfileData(user: string): Promise<string> {
@@ -381,7 +396,7 @@ async function fetchProfileData(user: string): Promise<string> {
 		});
 		const data = await response.json();
 		if (data.success) {
-			// profile = data.user;
+			profile = data.user;
 			console.log(profile);
 			return "OK";
 		}
@@ -413,17 +428,40 @@ export namespace ProfileBuilder {
 		createProfileCard(profileElement);
 		createButtons(profileElement);
 		createMatchHistory(profileElement);
-		createFriendList(profileElement);
-		
+		createFriendDiv(profileElement);
+
 		document.body.appendChild(profileElement);
 		history.pushState({}, '', `/profile/${user}`);
 		isActive = true;
 		if (socketUtils && socketUtils.socket)
 		{
-			socketUtils.socket.on("profile-update", (data: { userID: number; username: string; avatar: string }) => {
-				// const info = data.user;
-				// ProfileUpdater.updateProfile(info.username, info.avatar); (compile pas mais marche a voir)
+			socketUtils.socket.on("profile-update", (data : {user: { id: string; username: string; avatar: string }}) => {
+				console.log("Profile updated:", data.user.id);
+				ProfileUpdater.updateFriendProfile(parseInt(data.user.id), data.user.username, data.user.avatar);
 			});
+			socketUtils.socket.on("user-status-change", (data: { userId: string; status: string }) => {
+				ProfileUpdater.updateFriendList(parseInt(data.userId), data.status);
+			});
+
+			socketUtils.socket.on("friend-status-update", (data: {requester: {id: number, username: string, avatar: string, isOnline: boolean, requesterId: number}, status: string}) => {
+				console.log("Friend status updated:", data.requester.id, data.status);
+				let friendToAdd: Friend = {
+					avatar: data.requester.avatar,
+					username: data.requester.username,
+					id: data.requester.id,
+					status: data.status,
+					isOnline: data.requester.isOnline,
+					requesterId: data.requester.requesterId,
+				};
+				profile.friends.push(friendToAdd);
+				sortFriendList();
+				updateFriendDiv();
+			});
+
+
+
+
+
 		}
 		return 'Profil ouvert. Tapez "kill profile" pour le fermer.';
 	}
@@ -606,14 +644,72 @@ function DeleteAccount() {
 	});
 }
 
-function acceptFriendRequest(username: string) {
-	console.log(`Accepted friend request from: ${username}`);
+async function acceptFriendRequest(id: number): Promise<boolean> {
+	try {
+		const response = await fetch(`/api/friend/accept/${id}`, {
+			method: 'PUT',
+			headers: {
+				'Authorization': 'Bearer ' + TerminalUtils.getCookie('accessToken')
+			}
+		});
+		if (response.status === 204) {
+			const friend = profile.friends.find(friend => friend.id === id);
+			if (friend) {
+				friend.status = "ACCEPTED";
+			}
+			sortFriendList();
+			updateFriendDiv();
+			return true;
+		}
+		const data = await response.json();
+		if (data.success) {
+			WriteOnTerminal.printErrorOnTerminal("Friend request accepted");
+			return true;
+		}
+		if (data.message === 'Invalid or expired token') {
+			const refreshed = await RequestBackendModule.tryRefreshToken();
+			if (!refreshed) {
+				WriteOnTerminal.printErrorOnTerminal("Veuillez vous connecter.");
+				return false;
+			}
+			return await acceptFriendRequest(id);
+		}
+		return false;
+	} catch (error) {
+		console.error("Error:", error);
+		return false;
+	}
 }
 
-function refuseFriendRequest(username: string) {
-	console.log(`Refused friend request from: ${username}`);
-}
+async function removeFriend(id: number): Promise<boolean> {
+	try {
+		const response = await fetch(`/api/friend/delete/${id}`, {
+			method: 'DELETE',
+			headers: {
+				'Authorization': 'Bearer ' + TerminalUtils.getCookie('accessToken')
+			}
+		});
+		if (response.status === 204) {
+			console.log("Friend removed successfully");
+			ProfileUpdater.removeFriend(id);
+			return true;
+		}
+		const data = await response.json();
+		if (data.success) {
 
-function removeFriend(username: string) {
-	console.log(`Removing friend: ${username}`);
+			return true;
+		}
+		if (data.message === 'Invalid or expired token') {
+			const refreshed = await RequestBackendModule.tryRefreshToken();
+			if (!refreshed) {
+				WriteOnTerminal.printErrorOnTerminal("Veuillez vous connecter.");
+				return false;
+			}
+			return await removeFriend(id);
+		}
+		return false;
+	} catch (error) {
+		console.error("Error:", error);
+		return false;
+	}
 }

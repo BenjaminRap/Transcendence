@@ -1,7 +1,7 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager, type IPhysicsShapeCastQuery } from "@babylonjs-toolkit/next";
-import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
 import { getSceneData, SceneData } from "@shared/SceneData";
 import { TimerManager } from "@shared/attachedScripts/TimerManager";
@@ -9,8 +9,11 @@ import { Imported } from "@shared/ImportedDecorator";
 import { zodNumber } from "@shared/ImportedHelpers";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { ShapeCastResult } from "@babylonjs/core/Physics/shapeCastResult";
+import { PongError } from "@shared/pongError/PongError";
 
 export class Ball extends CustomScriptComponent {
+	private static readonly _startMaxAngleRadian = Math.PI / 6;
+
 	@Imported("TimerManager") private _timerManager! : TimerManager;
 	@Imported(zodNumber) private _initialSpeed! : number;
 	@Imported(zodNumber) private _goalTimeoutMs! : number;
@@ -20,6 +23,7 @@ export class Ball extends CustomScriptComponent {
 	private _startsRight : boolean = true;
 	private	_ballStartTimeout : number | null = null;
 	private _sceneData : SceneData;
+	private _startDirection : Vector3 = Vector3.Right();
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "Ball") {
 		super(transform, scene, properties, alias);
@@ -27,6 +31,7 @@ export class Ball extends CustomScriptComponent {
 
 		this._sceneData = getSceneData(this.scene);
 
+		this.setBallRandomStartDirection();
 		this._sceneData.events.getObservable("game-start").add(() => {
 			this.launch();
 		});
@@ -37,7 +42,7 @@ export class Ball extends CustomScriptComponent {
 		const	physicsBody = this.transform.getPhysicsBody();
 
 		if (!physicsBody)
-			throw new Error("The Ball script should be attached to a mesh with a physic body !");
+			throw new PongError("The Ball script should be attached to a mesh with a physic body !", "quitScene");
 		this._physicsBody = physicsBody;
 		this._physicsBody.disablePreStep = false;
 	}
@@ -47,11 +52,11 @@ export class Ball extends CustomScriptComponent {
 		this.reset();
 		this._ballStartTimeout = this._timerManager.setTimeout(() => {
 			this.transform.position.copyFrom(this._initialPosition);
-			const	direction = this.getBallStartDirection();
-			const	velocity = direction.scale(this._initialSpeed);
+			const	velocity = this._startDirection.scale(this._initialSpeed);
 
+			if (this._sceneData.gameType !== "Multiplayer")
+				this.setBallRandomStartDirection();
 			this._physicsBody.setLinearVelocity(velocity);
-			this._startsRight = !this._startsRight;
 			this._ballStartTimeout = null;
 		}, this._goalTimeoutMs);
 	}
@@ -64,7 +69,6 @@ export class Ball extends CustomScriptComponent {
 		const	ballWidth = this.transform.absoluteScaling.x;
 		const	colliderPenetration = (ballPos < colliderPos) ?
 			(colliderPos - colliderWidth / 2) - (ballPos + ballWidth / 2) :
-			
 			(colliderPos + colliderWidth / 2) - (ballPos - ballWidth / 2)
 	
 		return colliderPenetration;
@@ -98,12 +102,22 @@ export class Ball extends CustomScriptComponent {
 		this._physicsBody.setLinearVelocity(Vector3.Zero());
 	}
 
-	private getBallStartDirection() : Vector3
+	private	setBallRandomStartDirection()
 	{
-		if (this._startsRight)
-			return Vector3.Right();
-		else
-			return Vector3.Left();
+		const	sideVector = this._startsRight ? Vector3.Right() : Vector3.Left();
+		const	angle = (Math.random() - 0.5) * Ball._startMaxAngleRadian * 2;
+		const	rotation = Quaternion.RotationAxis(Vector3.LeftHandedForwardReadOnly, angle);
+
+		this._startDirection = sideVector.applyRotationQuaternion(rotation);
+		this._startsRight = !this._startsRight;
+	}
+
+	public setBallStartDirection(direction : Vector3) {
+		this._startDirection = direction;
+	}
+
+	public getBallStartDirection() : Vector3 {
+		return this._startDirection;
 	}
 
 	public	shapeCast(startPosition : Vector3, endPosition : Vector3) : ShapeCastResult

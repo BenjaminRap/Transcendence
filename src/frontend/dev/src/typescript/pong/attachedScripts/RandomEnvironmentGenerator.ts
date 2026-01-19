@@ -74,7 +74,7 @@ export class RandomEnvironmentGenerator extends CustomScriptComponent {
 			const	rotation = Quaternion.RotationAxis(Vector3.UpReadOnly, Math.random() * 2 * Math.PI);
 			const	matrix = Matrix.Compose(scale, rotation, worldPosition);
 
-			lodLevel.thinInstanceAdd(matrix, true)
+			lodLevel.thinInstanceAdd(matrix, false);
 		}
 		this.syncThinInstancesBuffer(lod);
 	}

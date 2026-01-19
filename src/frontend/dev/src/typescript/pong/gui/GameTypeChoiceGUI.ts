@@ -1,10 +1,12 @@
+import type { IGUI } from "./IGUI";
+
 export type GameTypeChoiceGUIInputs = {
 	twoVersusTwo : HTMLButtonElement,
 	tournament : HTMLButtonElement,
 	cancel : HTMLButtonElement
 }
 
-export class	GameTypeChoiceGUI extends HTMLElement
+export class	GameTypeChoiceGUI extends HTMLElement implements IGUI<GameTypeChoiceGUIInputs>
 {
 	private _inputs? : GameTypeChoiceGUIInputs;
 
@@ -37,7 +39,7 @@ export class	GameTypeChoiceGUI extends HTMLElement
 
 	private	getButtonHTML(text : string, className : string)
 	{
-		return `<button class="${className} font-(family-name:--font) text-[3cqw] w-full mt-[22%] pointer-events-auto grow menu-button">${text}</button>`;
+		return `<button class="${className} text-[3cqw] w-full mt-[22%] grow menu-button">${text}</button>`;
 	}
 }
 

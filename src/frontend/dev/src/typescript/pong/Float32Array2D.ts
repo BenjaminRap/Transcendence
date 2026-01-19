@@ -1,4 +1,5 @@
 import type { float, int } from "@babylonjs/core/types";
+import { PongError } from "@shared/pongError/PongError";
 
 export class	Float32Array2D {
 	private _data : Float32Array;
@@ -46,7 +47,7 @@ export class	Float32Array2D {
 	private coordinates2DToIndex(x : int, y : int) : int
 	{
 		if (!this.isInBounds(x, y))
-			throw new Error(`Coordinates out of bounds : [${x},${y}], the Float32Array2D size is [${this.width}, ${this.height}]`)
+			throw new PongError(`Coordinates out of bounds : [${x},${y}], the Float32Array2D size is [${this.width}, ${this.height}]`, "quitPong");
 		const	index = y * this.width + x;
 
 		return index;

@@ -1,5 +1,6 @@
 import "reflect-metadata"
-import { Terminal, TerminalFileSystem } from './terminal'
+import { FrontendSocketHandler } from "./pong/FrontendSocketHandler"
+import { Terminal, TerminalFileSystem, socketUtils } from './terminal'
 import { ProfileBuilder } from './profile'
 import { WriteOnTerminal } from './terminalUtils/writeOnTerminal'
 import { TerminalUtils } from './terminalUtils/terminalUtils'
@@ -7,6 +8,9 @@ import { TerminalUserManagement } from './terminal'
 import { HELP_MESSAGE_NOT_LOG } from './terminalUtils/helpText/help'
 import { ExtProfileBuilder } from "./extprofile"
 
+export const	frontendSocketHandler = await FrontendSocketHandler.createFrontendSocketHandler();
+
+socketUtils.socket = frontendSocketHandler.socket;
 const url = new URL( window.location.href);
 const path = url.pathname;
 
@@ -20,14 +24,11 @@ function getUrlVar(varName: string) : string | null {
 	return varValue;
 }
 
-
 function Error404() {
 	WriteOnTerminal.displayOnTerminal(`cat error404.html`, true);
 	WriteOnTerminal.printErrorOnTerminal(errors404[Math.floor(Math.random() * errors404.length)]);
 	history.pushState({}, '', `/`);
 }
-
-
 
 async function auth42Callback() {
 	const code = getUrlVar('code');
@@ -63,9 +64,7 @@ async function auth42Callback() {
 	}
 }
 
-
 await auth42Callback();
-
 
 await Terminal.buildTerminal();
 

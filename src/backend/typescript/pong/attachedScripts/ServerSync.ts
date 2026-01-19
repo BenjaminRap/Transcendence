@@ -8,7 +8,7 @@ import { InputKey } from "@shared/InputKey";
 import type { SocketMessage } from "../Room";
 import type { int } from "@babylonjs/core/types";
 import { Vector3 } from "@babylonjs/core";
-import { getSceneData } from "../ServerPongGame";
+import { getServerSceneData } from "../ServerPongGame";
 import { TimerManager } from "@shared/attachedScripts/TimerManager";
 import { Paddle } from "@shared/attachedScripts/Paddle";
 import { Imported } from "@shared/ImportedDecorator";
@@ -29,7 +29,7 @@ export class ServerSync extends CustomScriptComponent {
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "ServerSync") {
         super(transform, scene, properties, alias);
 
-		this._sceneData = getSceneData(this.scene);
+		this._sceneData = getServerSceneData(this.scene);
     }
 
 
@@ -46,8 +46,9 @@ export class ServerSync extends CustomScriptComponent {
 	{
 		const	message : GameInfos = {
 			type: "goal",
-			infos: {
-				side: side
+			goal: {
+				side: side,
+				newBallDirection: this._ball.getBallStartDirection()
 			}
 		}
 		this._sceneData.clientProxy.sendMessageToRoom("game-infos", message);
@@ -56,7 +57,7 @@ export class ServerSync extends CustomScriptComponent {
     private sendInfos(): void {
 		const	message : GameInfos = {
 			type : "itemsUpdate",
-			infos: {
+			itemsUpdate: {
 				paddleRightPos: this.getXYZ(this._paddleRight.transform.position),
 				paddleLeftPos: this.getXYZ(this._paddleLeft.transform.position),
 				ball: {
@@ -86,7 +87,7 @@ export class ServerSync extends CustomScriptComponent {
 	{
 		const	gameInfos : GameInfos = {
 			type: "input",
-			infos: keysUpdate
+			keysUpdate: keysUpdate
 		};
 
 		this._sceneData.clientProxy.broadcastMessageFromSocket(socketIndex, "game-infos", gameInfos);

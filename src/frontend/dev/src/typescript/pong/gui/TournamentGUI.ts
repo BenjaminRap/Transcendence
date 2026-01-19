@@ -1,77 +1,105 @@
 import { Clamp } from "@babylonjs/core";
-import type { Match, Profile } from "../FrontendTournament";
 import { MatchGUI } from "./MatchGUI";
 import { OpponentGUI } from "./OpponentGUI";
-import { Range } from "@shared/Range";
+import type { Profile } from "@shared/Profile";
+import type { IGUI } from "./IGUI";
+import { PongError } from "@shared/pongError/PongError";
 import { isPowerOfTwo } from "@shared/utils";
+import type { MatchWinningDescription } from "@shared/ServerMessage";
 
-export class	TournamentGUI extends HTMLElement
+export class	TournamentGUI extends HTMLElement implements IGUI<void>
 {
-	private _matchesByRound : Match[][];
+	private static readonly _lineWidth = "1.5cqw";
+	private static readonly _rounded = "3cqw";
+	private static readonly _opponentFontSize = "10cqw";
+
 	private _participants : Profile[];
+	private _matchesByRoundGuis : MatchGUI[][] = [];
+	private _participantsGuis : OpponentGUI[] = [];
 	private _container! : HTMLDivElement;
 	private	_zoomPercent : number = 1;
-	private _wheelZoomAdd : number = 0.01;
-	private _wheelZoomRange = new Range(1, 2);
+	private _wheelZoomAdd : number = 0.025;
+	private _wheelZoomMax : number = 2;
 	private _dragging : boolean = false;
 	private _left : number = 0;
 	private _top : number = 0;
+	private _stopDraggingListener : (() => void) | null = null;
 
-	constructor(matchesByRound : Match[][] = [], participants : Profile[] = [])
+	constructor(participants : Profile[] = [])
 	{
-		if (participants.length <= 1 || !isPowerOfTwo(participants.length))
-			throw new Error(`Invalid participants count : ${participants.length}, it should be power of two, greater than one !`);
+		if (participants.length < 2 || !isPowerOfTwo(participants.length))
+			throw new PongError(`The profiles should be a power of two, greater than 1, got ${participants.length}`, "quitPong");
 		super();
-		this._matchesByRound = matchesByRound ?? [];
 		this._participants = participants ?? [];
 	}
 
 	connectedCallback()
 	{
-		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none");
+		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-auto", "backdrop-blur-sm", "flex", "items-center");
+		this.innerHTML = `
+			<div class="absolute w-1/5 left-[3cqw] top-[3cqw] border-solid border-(--border-color) border-(length:--border-width) rounded-(--rounded) p-[1%]">
+				<p class="text-(--text-color) text-[1.8cqw] font-(family-name:--font)">Scrool to zoom or dezoom</p>
+				<p class="text-(--text-color) text-[1.8cqw] font-(family-name:--font)">Click and drag to move</p>
+			</div>
+		`;
 		this._container = this.createContainer();
 		this.placeMatches();
 		this.placeParticipants();
-		this.addEventListener("wheel", this.zoom.bind(this));
-		this.addEventListener("mousedown", () => this._dragging = true);
-		window.addEventListener("mouseup", () => this._dragging = false);
-		this.addEventListener("mousemove", (mouseEvent : MouseEvent) => {
-			if (!this._dragging)
-				return ;
-			this._left += mouseEvent.movementX;
-			this._top += mouseEvent.movementY;
-			this._container.style.left = this._left.toString() + "px";
-			this._container.style.top = this._top.toString() + "px";
-		});
-
+		this.addZoomAndGrab();
 		this.appendChild(this._container);
+	}
+
+	private	addZoomAndGrab()
+	{
+		this.addEventListener("wheel", this.zoom.bind(this));
+		this.addEventListener("mousedown", () => {
+			this.style.cursor = "grabbing";
+			this._dragging = true
+		});
+		this._stopDraggingListener = () => {
+			this.style.cursor = "grab";
+			this._dragging = false;
+		};
+		window.addEventListener("mouseup", this._stopDraggingListener);
+		this.addEventListener("mousemove", (mouseEvent : MouseEvent) => {
+			if (this._dragging)
+				this.drag(mouseEvent);
+		});
+		this._wheelZoomMax = Math.log2(this._participants.length);
+
+		this.style.cursor = "grab";
 	}
 
 	private	createContainer() : HTMLDivElement
 	{
 		const	div = document.createElement("div");
 
-		div.classList.add("absolute", "inset-0", "size-full", "flex", "flex-col", "relative");
-		div.style.minWidth = `calc(${this._participants.length} * 1.1 * 10cqw)`;
+		div.classList.add("inset-0", "w-full", "flex", "flex-col", "relative");
 
 		return div;
 	}
 
 	private	placeMatches()
 	{
-		for (let round = this._matchesByRound.length - 1; round >= 0; round--) {
-			const	matches = this._matchesByRound[round];
+		for (let matchesCount = 1; matchesCount < this._participants.length; matchesCount *= 2) {
+			const	matchesGUIs = [];
 			const	div = document.createElement("div");
+			const	width =  `calc((50% + ${TournamentGUI._lineWidth}) / ${matchesCount})`;
+			div.style.setProperty("--opponent-font-size", `calc(${TournamentGUI._opponentFontSize} / 2 / ${matchesCount})`);
+			div.style.setProperty("--match-line-width", `calc(${TournamentGUI._lineWidth} / ${matchesCount})`);
+			div.style.setProperty("--rounded", `calc(${TournamentGUI._rounded} / ${matchesCount})`);
+			div.style.setProperty("--border-width", `calc(${TournamentGUI._lineWidth} / ${matchesCount})`);
 			
-			div.classList.add("flex", "flex-row", "justify-around");
-			for (let index = 0; index < matches.length; index++) {
+			div.classList.add("flex", "flex-row", "justify-around", "w-full");
+			for (let index = 0; index < matchesCount; index++) {
 				const matchGUI = new MatchGUI();
 
-				matchGUI.classList.add("w-[10cqw]");
-				matchGUI.style.width = `calc(50% / ${matches.length} + 1cqw)`;
+				matchGUI.style.width = width;
 				
+				matchesGUIs.push(matchGUI);
 				div.appendChild(matchGUI);
 			}
+			this._matchesByRoundGuis.unshift(matchesGUIs);
 			this._container.appendChild(div);
 		}
 	}
@@ -79,16 +107,20 @@ export class	TournamentGUI extends HTMLElement
 	private	placeParticipants()
 	{
 		const	div = document.createElement("div");
+		const	width =  `calc((50% + ${TournamentGUI._lineWidth}) / ${this._participants.length})`;
 
 		div.classList.add("flex", "flex-row", "justify-around");
+		div.style.setProperty("--opponent-font-size", `calc(${TournamentGUI._opponentFontSize} / ${this._participants.length})`);
+		div.style.setProperty("--rounded", `calc(${TournamentGUI._rounded} / ${this._participants.length})`);
+		div.style.setProperty("--border-width", `calc(${TournamentGUI._lineWidth} / ${this._participants.length})`);
 		for (let index = 0; index < this._participants.length; index++) {
 			const participant = this._participants[index];
-			const matchGUI = new OpponentGUI(participant);
+			const opponentGUI = new OpponentGUI(participant);
 
-			matchGUI.classList.add("w-[10cqw]");
-			matchGUI.style.width = `calc(50% / ${this._participants.length} + 1cqw)`;
+			opponentGUI.style.width = width;
 			
-			div.appendChild(matchGUI);
+			this._participantsGuis.push(opponentGUI)
+			div.appendChild(opponentGUI);
 		}
 		this._container.appendChild(div);
 	}
@@ -96,12 +128,80 @@ export class	TournamentGUI extends HTMLElement
 	private	zoom(event : WheelEvent)
 	{
 		event.preventDefault();
+		let	newZoomPercent = this._zoomPercent;
+
 		if (event.deltaY > 0)
-			this._zoomPercent -= this._wheelZoomAdd;
+		{
+			const	frameBounds = this.getBoundingClientRect();
+			const	elementBounds = this._container.getBoundingClientRect();
+
+			if (elementBounds.width < frameBounds.width && elementBounds.height < frameBounds.height)
+				return 
+			newZoomPercent -= this._wheelZoomAdd;
+		}
 		else
-			this._zoomPercent += this._wheelZoomAdd;
-		this._zoomPercent = Clamp(this._zoomPercent, this._wheelZoomRange.min, this._wheelZoomRange.max);
-		this._container.style.transform = `scale(${this._zoomPercent})`;
+			newZoomPercent += this._wheelZoomAdd;
+		newZoomPercent = Math.min(newZoomPercent, this._wheelZoomMax);
+		const	bounds = this._container.getBoundingClientRect();
+		const center = {
+			x: bounds.width / 2 + bounds.x,
+			y: bounds.height / 2 + bounds.y
+		};
+		const zoomPointDiffToCenter = {
+			x: center.x - event.clientX,
+			y : center.y - event.clientY
+		};
+
+		this._left += zoomPointDiffToCenter.x * (newZoomPercent - this._zoomPercent) / this._zoomPercent;
+		this._top += zoomPointDiffToCenter.y * (newZoomPercent - this._zoomPercent) / this._zoomPercent;
+		this._zoomPercent = newZoomPercent;
+		this.updateTransform();
+	}
+
+	private	drag(mouseEvent : MouseEvent)
+	{
+		this._left += mouseEvent.movementX;
+		this._top += mouseEvent.movementY;
+		this.updateTransform();
+	}
+
+	private	updateTransform()
+	{
+		const	bounds = this._container.getBoundingClientRect();
+
+		this._left = Clamp(this._left, -bounds.width / 2, bounds.width / 2);
+		this._top = Clamp(this._top, -bounds.height / 2, bounds.height / 2);
+		this._container.style.transform = `translate(${this._left}px, ${this._top}px) scale(${this._zoomPercent})`;
+	}
+	
+	public setWinners(round : number, matches : MatchWinningDescription[])
+	{
+		if (round < 0 || round >= this._matchesByRoundGuis.length)
+			throw new PongError("TournamentGUI setWinners called with an invalid round !", "quitPong");
+		const	matchesGuis = this._matchesByRoundGuis[round];
+		const	opponentsGuis = (round === 0) ? this._participantsGuis : this._matchesByRoundGuis[round - 1];
+		if (matches.length !== matchesGuis.length || opponentsGuis.length !== matches.length * 2)
+			throw new PongError("Invalid array length in TournamentGUI setWinners !", "quitPong");
+
+		for (let index = 0; index < matchesGuis.length; index++) {
+			const	matchGui = matchesGuis[index];
+			const	match = matches[index];
+			const	winner = match.winner;
+			const	winnerSide = match.winnerSide;
+
+			if (winner === undefined || winnerSide === undefined)
+				throw new PongError("A match hasn't finished but TournamentGUI setWinners has been called !", "quitPong");
+			matchGui.setWinner(winner.profile);
+		}
+	}
+
+	public getInputs() {
+		return undefined;
+	}
+
+	disconnectedCallback() {
+		if (this._stopDraggingListener)
+			window.removeEventListener("mouseup", this._stopDraggingListener);
 	}
 }
 

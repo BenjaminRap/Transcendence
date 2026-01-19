@@ -4,9 +4,11 @@ import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
 import { type GameInit, type KeysUpdate, zodKeysUpdate } from "@shared/ServerMessage"
 import { ClientProxy } from "./ClientProxy";
 import { type int, Observable } from "@babylonjs/core";
-import { type DefaultEventsMap, Server } from "socket.io";
 import type { ServerEvents, ServerToClientEvents } from "@shared/MessageType";
-import type { DefaultSocket } from "../controllers/SocketEventController.js";
+import type { ServerType } from "../index";
+import type { Profile } from "@shared/Profile";
+import type { EndData } from "@shared/attachedScripts/GameManager";
+import type { DefaultSocket } from "../controllers/SocketEventController";
 
 export type SocketMessage = {
 	socketIndex : int,
@@ -15,6 +17,7 @@ export type SocketMessage = {
 
 export class	Room
 {
+	private static readonly _showParticipantsTimeoutMs = 2000;
 	private _sockets : DefaultSocket[] = [];
 	private _serverPongGame : ServerPongGame | undefined;
 	private _disposed : boolean = false;
@@ -22,10 +25,11 @@ export class	Room
 	private _observers : Map<string, Observable<SocketMessage>>;
 	private _socketsReadyCount : int = 0;
 	private _sceneData : ServerSceneData | undefined;
-	private _ended : boolean = false;
+	private _timeout : NodeJS.Timeout | null = null;
 	
 	constructor(
-		private readonly _io : Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>,
+		private readonly _io : ServerType,
+		private readonly _onDispose : (endData : EndData) => void,
 		firstSocket : DefaultSocket,
 		secondSocket : DefaultSocket
 	) {
@@ -38,10 +42,12 @@ export class	Room
 
 	private	async init()
 	{
+		const	participants = this._sockets.map((socket) => socket.data.getProfile());
+
 		for (let index = 0; index < this._sockets.length; index++) {
 			const socket = this._sockets[index];
 
-			await this.addSocketToRoom(socket, index);
+			await this.addSocketToRoom(socket, index, participants);
 		}
 
 		const	clientProxy = new ClientProxy(this);
@@ -49,58 +55,55 @@ export class	Room
 		this._serverPongGame = new ServerPongGame(this._sceneData);
 	}
 
-	private dispose()
+	private dispose(endData : EndData)
 	{
 		if (this._disposed)
 			return ;
+		if (this._timeout)
+			clearTimeout(this._timeout);
 		console.log("disposing room !");
-		this._io.to(this._roomId).emit("room-closed");
+		this._io.to(this._roomId).emit("game-infos", { type:"room-closed" });
 		this._disposed = true;
 		this._sockets.forEach((socket : DefaultSocket) => { this.removeSocketFromRoom(socket) });
 		this._serverPongGame?.dispose();
 		this._serverPongGame = undefined;
+		this._onDispose(endData);
 	}
 
 	public onSocketDisconnect(socket : DefaultSocket)
 	{
-		if (!socket.data.isInRoom(this) || this._ended)
+		if (this._disposed)
 			return ;
-		socket.broadcast.to(this._roomId).emit("forfeit");
-		this.gameEnd();
+		socket.broadcast.to(this._roomId).emit("game-infos", { type: "forfeit" });
+		const	winningSide = (socket === this._sockets[0]) ? "left" : "right";
+
+		this._sceneData!.events.getObservable("forfeit").notifyObservers(winningSide);
 	}
 
 	private removeSocketFromRoom(socket : DefaultSocket)
 	{
-		if (!socket.data.isInRoom(this))
-			return ;
 		socket.data.leaveRoom();
 		socket.leave(this._roomId);
 		socket.removeAllListeners("ready");
 		socket.removeAllListeners("input-infos");
 		socket.removeAllListeners("forfeit");
-		if (socket.data.getState() === "ready")
-			this._socketsReadyCount--;
 	}
 
-	private async addSocketToRoom(socket : DefaultSocket, playerIndex : number)
+	private async addSocketToRoom(socket : DefaultSocket, playerIndex : number, participants : Profile[])
 	{
-		if (socket.data.isInRoom(this))
-			return ;
 		socket.data.joinRoom(this);
 		await socket.join(this._roomId);
 		const	gameInit : GameInit = {
-			playerIndex: playerIndex
-		}
+            playerIndex: playerIndex,
+            participants: participants
+        }
 		socket.emit("joined-game", gameInit);
-		socket.once("ready", () => { this.setSocketReady(socket) } );
+		socket.once("ready", () => { this.setSocketReady() } );
 	}
 
-	private	setSocketReady(socket : DefaultSocket)
+	private	setSocketReady()
 	{
-		if (socket.data.getState() === "ready")
-			return ;
 		this._socketsReadyCount++;
-		socket.data.setReady();
 		if (this._socketsReadyCount === 2)
 			this.startGame();
 	}
@@ -108,12 +111,13 @@ export class	Room
 	private	async startGame()
 	{
 		await this._sceneData!.readyPromise.promise;
+		await this.delay(Room._showParticipantsTimeoutMs);
 		this._sceneData!.events.getObservable("game-start").notifyObservers();
-		this._sceneData!.events.getObservable("end").add(() => { this.gameEnd() });
+		this._sceneData!.events.getObservable("end").add(endData => { this.gameEnd(endData) });
 		this.sendMessageToRoom("ready");
 		this._sockets.forEach((socket : DefaultSocket, index : int) => {
 			socket.once("forfeit", () => {
-				socket.broadcast.to(this._roomId).emit("forfeit");
+				socket.broadcast.to(this._roomId).emit("game-infos", { type: "forfeit" });
 				const	winningSide = (index === 0) ? "left" : "right";
 
 				this._sceneData!.events.getObservable("forfeit").notifyObservers(winningSide);
@@ -121,11 +125,10 @@ export class	Room
 		});
 	}
 
-	private gameEnd()
+	private gameEnd(endData : EndData)
 	{
-		this._ended = true;
 		setTimeout(() => {
-			this.dispose();
+			this.dispose(endData);
 		}, 0);
 	}
 
@@ -144,7 +147,7 @@ export class	Room
 		...args: Parameters<ServerToClientEvents[T]>
 	) {
 		if (socketIndex < 0 || socketIndex >= this._sockets.length)
-			throw new Error("sendMessageToSocketByIndex called with an invalid index !");
+			return ;
 
 		const	socket = this._sockets[socketIndex];
 
@@ -158,7 +161,7 @@ export class	Room
 		...args: Parameters<ServerToClientEvents[T]>
 	) {
 		if (socketIndex < 0 || socketIndex >= this._sockets.length)
-			throw new Error("broadcastMessageFromSocket called with an invalid index !");
+			return ;
 
 		const	socket = this._sockets[socketIndex];
 		
@@ -185,10 +188,7 @@ export class	Room
 			socket.on(event, (data : any) => {
 				const	keysUpdate = zodKeysUpdate.safeParse(data);
 				if (!keysUpdate.success)
-				{
-					this.removeSocketFromRoom(socket);
 					return ;
-				}
 				const	clientMessage : SocketMessage = {
 					socketIndex : index,
 					data : keysUpdate.data
@@ -197,5 +197,20 @@ export class	Room
 			});
 		});
 		return observable;
+	}
+
+	private async delay(durationMs : number)
+	{
+		return new Promise<void>((resolve, reject) => {
+			if (this._timeout !== null)
+			{
+				reject();
+				return ;
+			}
+			this._timeout = setTimeout(() => {
+				this._timeout = null;
+				resolve();
+			}, durationMs);
+		})
 	}
 }

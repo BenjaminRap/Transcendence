@@ -3,6 +3,7 @@ import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager } from "@babylonjs-toolkit/next";
 import { Camera } from "@babylonjs/core/Cameras/camera";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
+import { PongError } from "@shared/pongError/PongError";
 
 export class BackgroundCamera extends CustomScriptComponent {
 	private _camera : Camera;
@@ -12,7 +13,7 @@ export class BackgroundCamera extends CustomScriptComponent {
 
 		this._camera = this.getCameraRig();
 		if (this._camera === null)
-			throw new Error("BackgroundCamera script not attached to a camera !");
+			throw new PongError("BackgroundCamera script not attached to a camera !", "quitScene");
     }
 
     protected awake(): void {

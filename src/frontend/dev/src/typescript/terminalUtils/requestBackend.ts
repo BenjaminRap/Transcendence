@@ -69,30 +69,18 @@ export namespace RequestBackendModule {
 
 	export async function createWebSocket(token: string)
 	{
-		const socket = io("http://localhost:8181", {
-			path: "/socket.io",
-			auth: {
-				token: token
-			},
-			transports: ["websocket", "polling"],
-			autoConnect: true,
-		});
-		socketUtils.socket = socket;
-		socket.on('connect_error', (err: any) => {
-			console.error('Socket connect_error:', err);
-		});
-		socket.on('connect', () => {
-			console.log('Socket connected:', socket.id);
-		});
-		socket.onAny((event, ...args) => {
+		if (socketUtils.socket === null)
+			return ;
+		socketUtils.socket.emit('authenticate', { token: token });
+		socketUtils.socket.onAny((event, ...args) => {
 			console.log(`Événement reçu '${event}': ${JSON.stringify(args)}`);
 		});
 	}
 
-	export async function loadUser(): Promise<boolean> {
+	export async function loadUser(): Promise<void> {
 		const token = TerminalUtils.getCookie('accessToken') || '';
 		if (token === '') {
-			return false;
+			return ;
 		}
 		try {
 			const response = await fetch('/api/suscriber/profile', {
@@ -108,20 +96,20 @@ export namespace RequestBackendModule {
 				TerminalUtils.updatePromptText( TerminalUserManagement.username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ " );
 				TerminalUserManagement.isLoggedIn = true;
 				createWebSocket(token);
-				return true;
+				return ;
 			}
 			if (data.message === 'Invalid or expired token') {
 				const refreshed = await tryRefreshToken();
 				if (!refreshed) {
 					WriteOnTerminal.printErrorOnTerminal("Veuillez vous connecter.");
-					return false;
+					return ;
 				}
 				return await loadUser();
 			}
-			return false;
+			return ;
 		} catch (error) {
 			console.error("Error:", error);
-			return false;
+			return ;
 		}
 	}
 

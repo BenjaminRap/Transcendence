@@ -4,6 +4,7 @@ import type { Ball } from "@shared/attachedScripts/Ball";
 import type { Paddle } from "@shared/attachedScripts/Paddle";
 import type { Platform } from "@shared/attachedScripts/Platform";
 import { Shot } from "./Shot";
+import { PongError } from "@shared/pongError/PongError";
 
 export class	ShotFactory
 {
@@ -47,7 +48,7 @@ export class	ShotFactory
 	private	getShotAtHeightWithRebound(reboundCount : number, firstRebound : "top" | "bottom", height : number, paddleMiddle : number, terrainWidth : number)
 	{
 		if (reboundCount < 1)
-			throw new Error("reboundCount should be greater to 1 in getAngleShootAtHeightWithRebound");
+			throw new PongError("reboundCount should be greater to 1 in getAngleShootAtHeightWithRebound", "quitPong");
 		const	colliderY = (firstRebound === "top") ? this._topCollisionY : this._bottomCollisionY;
 		const	distEndToCollider = Math.abs(height - colliderY);
 		const	distStartToCollider = Math.abs(paddleMiddle - colliderY);

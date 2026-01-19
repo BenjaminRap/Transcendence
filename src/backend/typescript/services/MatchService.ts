@@ -1,8 +1,9 @@
 import { type PrismaClient, type Match, MatchStatus } from '@prisma/client';
-import type { GameStats, EndMatchData } from '../types/match.types.js';
+import type { EndMatchData } from '../types/match.types.js';
 import type { PlayerInfo } from '../types/match.types.js';
 import type { MatchSummary, OpponentSummary } from '../types/match.types.js';
 import { FriendService } from './FriendService.js';
+import type { GameStats } from '@shared/ServerMessage.js';
 
 export class MatchService {
 	constructor(

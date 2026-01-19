@@ -4,6 +4,7 @@ import { SceneManager } from "@babylonjs-toolkit/next";
 import { InputKey } from "../InputKey";
 import type { int } from "@babylonjs/core";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
+import { PongError } from "@shared/pongError/PongError";
 
 export class PlayerInput
 {
@@ -24,7 +25,7 @@ export class InputManager extends CustomScriptComponent {
 	public getPlayerInput(playerIndex : int) : PlayerInput
 	{
 		if (playerIndex > this._playersInputs.length)
-			throw new Error("The player index is too big !");
+			throw new PongError("The player index is too big !", "quitPong");
 		return this._playersInputs[playerIndex];
 	}
 

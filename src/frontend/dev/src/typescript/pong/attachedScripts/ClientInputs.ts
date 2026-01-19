@@ -26,12 +26,10 @@ export class ClientInputs extends CustomScriptComponent {
 
 	protected start()
 	{
-		this.setInputsListener();
-		this.setMultiplayerEvents();
 		this.scene.onKeyboardObservable.add(this.onKeyboardInput.bind(this));
-		this._sceneData.events.getObservable("input-change").add(() => {
+		this._sceneData.events.getObservable("input-change").add((inputs) => {
 			this.clear();
-			this.setInputsListener();
+			this.setInputsListener(inputs);
 			this.setMultiplayerEvents();
 		})
 	}
@@ -40,10 +38,10 @@ export class ClientInputs extends CustomScriptComponent {
 	{
 		const	serverProxy = this._sceneData.serverProxy;
 
-		if (this._sceneData.gameType !== "Multiplayer" || !serverProxy)
+		if (this._sceneData.gameType !== "Multiplayer")
 			return ;
 
-		this._mainPlayerInput = this._inputManager.getPlayerInput(serverProxy.getPlayerIndex()!);
+		this._mainPlayerInput = this._inputManager.getPlayerInput(serverProxy.getPlayerIndex());
 		this._upCallback = (event : "keyDown" | "keyUp") => {
 			serverProxy!.keyUpdate("up", event);
 		};
@@ -54,9 +52,9 @@ export class ClientInputs extends CustomScriptComponent {
 		this._mainPlayerInput.down.addKeyObserver(this._downCallback);
 	}
 
-	private	setInputsListener()
+	private	setInputsListener(inputs : ClientInput[])
 	{
-		this._sceneData.inputs.forEach((clientInput : ClientInput) => {
+		inputs.forEach((clientInput : ClientInput) => {
 			const	playerInput = this._inputManager.getPlayerInput(clientInput.index);
 
 			this._inputsMap.set(clientInput.upKey, playerInput.up);

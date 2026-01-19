@@ -1,5 +1,6 @@
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 import { Scene } from "@babylonjs/core/scene";
+import { PongError } from "@shared/pongError/PongError";
 import zod from "zod";
 
 export const zodLodLevel = zod.object({
@@ -27,7 +28,7 @@ export class	Lod
 	private	getLodLevelsProcessed(lodLevels : LodLevel[], scene : Scene)
 	{
 		if (lodLevels.length === 0)
-			throw new Error("Lod created with 0 levels !");
+			throw new PongError("Lod created with 0 levels !", "quitScene");
 		lodLevels.sort((a: LodLevel, b: LodLevel) => a.distance - b.distance);
 		return lodLevels.map((lodLevel : LodLevel) => {
 			const	mesh = lodLevel.meshName ? this.findMesh(scene, lodLevel.meshName) : null;
@@ -43,9 +44,9 @@ export class	Lod
 		const	mesh = scene.getMeshByName(name);
 
 		if (mesh === null)
-			throw new Error(`Can't find an lod mesh, id : ${name}!`);
+			throw new PongError(`Can't find an lod mesh, id : ${name}!`, "quitScene");
 		if (!(mesh instanceof Mesh))
-			throw new Error(`The lod AbstractMesh is not a Mesh, id :  ${name}`);
+			throw new PongError(`The lod AbstractMesh is not a Mesh, id :  ${name}`, "quitScene");
 
 		return mesh;
 	}

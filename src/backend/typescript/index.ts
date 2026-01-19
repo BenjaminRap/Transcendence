@@ -7,12 +7,14 @@ import staticPlugin from './plugins/static.js';
 import { registerRoutes } from './plugins/registerRoutes.js';
 import "reflect-metadata";
 import { fpSqlitePlugin } from 'fastify-sqlite-typed';
-import { Server } from 'socket.io';
+import { Server, type DefaultEventsMap } from 'socket.io';
 import fs from 'fs';
 import path from 'path';
 import HavokPhysics from "@babylonjs/havok";
-import { Container } from './container/Container.js';
+import type { ClientToServerEvents, ServerToClientEvents } from '@shared/MessageType';
 import { SocketEventController } from './controllers/SocketEventController.js';
+import type { SocketData } from './pong/SocketData.js';
+import { Container } from './container/Container.js';
 
 const fastify = Fastify({
 	logger: true
@@ -23,6 +25,7 @@ async function	init() : Promise<void>
 	await loadHavokPhysics();
 }
 
+
 async function	loadHavokPhysics()
 {
 	const wasmPath = path.resolve('./node_modules/@babylonjs/havok/lib/esm/HavokPhysics.wasm');
@@ -32,7 +35,9 @@ async function	loadHavokPhysics()
 	});
 }
 
-const	io = new Server(fastify.server, {
+export type ServerType = Server<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>
+
+const	io : ServerType = new Server(fastify.server, {
 	cors: {
 		origin: true,		// accept requests from any origin
 		credentials: true,	// allow cookies to be sent
@@ -74,8 +79,6 @@ async function start(): Promise<void> {
         await init();
 		SocketEventController.initInstance(io);
         await fastify.listen({ port: port, host: host });
-        // fastify.log.info(`Server listening at ${ host }:${ port }`);
-
     } catch (error) {
         fastify.log.error(`Could not launch the server: ${error}`);
         process.exit(1);
