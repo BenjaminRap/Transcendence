@@ -1,8 +1,8 @@
 import type { GameInfos, GameInit, KeysUpdate, TournamentCreationSettings, TournamentDescription, TournamentEvent, TournamentId } from "@shared/ServerMessage";
 import { FrontendSocketHandler } from "./FrontendSocketHandler";
 import type { Deferred, int, Observable, Observer } from "@babylonjs/core";
-import type { Profile } from "@shared/Profile";
 import { PongError } from "@shared/pongError/PongError";
+import type { TournamentEventAndJoinedGame } from "./FrontendEventsManager";
 
 type SocketState = "not-connected" | "connected" | "in-matchmaking" | "in-game" | "tournament-creator" | "tournament-player" | "tournament-creator-player" | "in-tournament";
 
@@ -31,13 +31,24 @@ export class	ServerProxy
 			this._state = "not-connected";
 			this._currentPromise?.reject(new PongError("canceled", "ignore"));
 		});
-		this._frontendSocketHandler.onTournamentMessage().add((tournamentEvent : TournamentEvent) => {
+		this._frontendSocketHandler.onTournamentMessage().add((tournamentEvent : TournamentEventAndJoinedGame) => {
 			const	removeFromTournament = ["banned", "kicked", "tournament-canceled"].includes(tournamentEvent.type);
 			const	tournamentEnd = ["win", "lose"].includes(tournamentEvent.type);
 
 			if ((removeFromTournament && this._state === "tournament-player")
 				|| (tournamentEnd && this._state === "in-tournament"))
 				this._state = "connected";
+			else if ((this._state === "tournament-player" || this._state === "tournament-creator-player")
+				&& tournamentEvent.type === "tournament-start")
+				this._state = "in-tournament";
+		});
+		this._frontendSocketHandler.onJoinGame().add(gameInit => {
+			if (this._state !== "in-tournament")
+				return ;
+			this._frontendSocketHandler.onTournamentMessage().notifyObservers({
+				type: "joined-game",
+				gameInit: gameInit
+			});
 		});
 	}
 
@@ -264,6 +275,7 @@ export class	ServerProxy
 	{
 		this._frontendSocketHandler.onGameMessage().clear();
 		this._frontendSocketHandler.onTournamentMessage().clear();
+		this._frontendSocketHandler.onJoinGame().clear();
 		this._frontendSocketHandler.onDisconnect().remove(this._disconnectedObserver);
 		try {
 			this.leaveScene();

@@ -135,5 +135,8 @@ export const	zodTournamentEvent = zod.discriminatedUnion("type", [
 	zod.object({
 		type: zod.literal("lose")
 	}),
+	zod.object({
+		type: zod.literal("tournament-start")
+	})
 ]);
 export type TournamentEvent = zod.infer<typeof zodTournamentEvent>;

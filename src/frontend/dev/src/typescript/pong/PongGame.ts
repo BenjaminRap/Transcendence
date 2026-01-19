@@ -19,7 +19,8 @@ import { initMenu } from "./gui/IGUI";
 import { CloseGUI } from "./gui/CloseGUI";
 import { PongError } from "@shared/pongError/PongError";
 import type { Profile } from "@shared/Profile";
-import type { GameInfos, TournamentEvent } from "@shared/ServerMessage";
+import type { GameInfos, GameInit } from "@shared/ServerMessage";
+import type { TournamentEventAndJoinedGame } from "./FrontendEventsManager";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
@@ -151,12 +152,21 @@ export class PongGame extends HTMLElement {
 			sceneData.events.getObservable("game-start").notifyObservers();
 	}
 
-	public async startOnlineGame(sceneName : SceneFileName = "Terminal.gltf") : Promise<void>
+	public async startOnlineGame(sceneName? : SceneFileName) : Promise<void>
 	{
 		const	gameInit = await this._serverProxy.joinGame();
 
+		this.joinOnlineGame(gameInit, sceneName);
+	}
+
+	public async joinOnlineGame(gameInit : GameInit, sceneName? : SceneFileName) : Promise<void>
+	{
 		if (this.isInMenu())
+		{
+			if (!sceneName)
+				return ;
 			await this.changeScene(sceneName, "Multiplayer");
+		}
 		const	sceneData = getFrontendSceneData(this._scene!);
 
 		await sceneData.readyPromise.promise;
@@ -168,7 +178,7 @@ export class PongGame extends HTMLElement {
 		sceneData.events.getObservable("game-start").notifyObservers();
 	}
 
-	private onTournamentMessage(tournamentEvent : TournamentEvent)
+	private onTournamentMessage(tournamentEvent : TournamentEventAndJoinedGame)
 	{
 		if (!this._scene)
 			return ;

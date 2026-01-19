@@ -22,7 +22,6 @@ import type { ClientToServerEvents, ServerToClientEvents } from '@shared/Message
 import { getPublicTournamentsDescriptions, TournamentMaker } from './pong/TournamentMaker';
 import { zodTournamentCreationSettings, type TournamentDescription, type TournamentId } from '@shared/ServerMessage.js';
 import { error, success, type Result } from '@shared/utils.js';
-import type { Profile } from '@shared/Profile.js';
 
 export type DefaultSocket = Socket<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>;
 export type DefaultServer = Server<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>;

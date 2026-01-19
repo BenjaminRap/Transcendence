@@ -53,7 +53,9 @@ export class CreateInGameGUI extends CustomScriptComponent {
 	{
 		const	forfeitEnabled = this._sceneData.tournament === undefined || this._sceneData.gameType === "Multiplayer";
 		const	isOnline = this._sceneData.gameType === "Multiplayer";
-		const	isTournament = this._sceneData.tournament !== undefined;
+		const	isLocalTournament = this._sceneData.tournament !== undefined;
+		const	isOnlineTournament = this._sceneData.serverProxy.getTournamentData() !== undefined;
+		const	isTournament = isLocalTournament || isOnlineTournament;
 
 		this._pauseGUI = initMenu(new PauseGUI(forfeitEnabled), {
 			continue: () => this.togglePause(),
@@ -103,6 +105,9 @@ export class CreateInGameGUI extends CustomScriptComponent {
 					this._tournamentWinnerGUI.setWinner(tournamentEvent.winner);
 					this.switchToGUI(this._tournamentWinnerGUI);
 					break ;
+				case "lose":
+					this.switchToGUI(this._tournamentWinnerGUI);
+					break ;
 				case "show-tournament":
 					if (this._tournamentGUI)
 						this.switchToGUI(this._tournamentGUI);
@@ -113,6 +118,9 @@ export class CreateInGameGUI extends CustomScriptComponent {
 					break ;
 				case "tournament-gui-set-winners":
 					this._tournamentGUI?.setWinners(tournamentEvent.round, tournamentEvent.matches);
+					break ;
+				case "joined-game":
+					this._sceneData.pongHTMLElement.joinOnlineGame(tournamentEvent.gameInit);
 					break ;
 			}
 		});

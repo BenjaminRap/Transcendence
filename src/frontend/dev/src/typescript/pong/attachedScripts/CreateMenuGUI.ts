@@ -23,7 +23,7 @@ import { OnlineTournamentJoinPublicGUI } from "../gui/OnlineTournamentJoinPublic
 import { OnlineTournamentChoiceGUI } from "../gui/OnlineTournamentChoiceGUI";
 import { OnlineTournamentStartGUI } from "../gui/OnlineTournamentStartGUI";
 import { PongError } from "@shared/pongError/PongError";
-import type { TournamentEvent } from "@shared/ServerMessage";
+import type { TournamentEventAndJoinedGame } from "../FrontendEventsManager";
 
 type EnemyType = "Local" | "Multiplayer" | "Bot";
 
@@ -346,7 +346,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		}
 	}
 
-	private	onTournamentEvent(tournamentEvent : TournamentEvent)
+	private	onTournamentEvent(tournamentEvent : TournamentEventAndJoinedGame)
 	{
 		const	tournamentData = this._sceneData.serverProxy.getTournamentData();
 
@@ -371,6 +371,8 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		}
 		else if (tournamentEvent.type === "remove-participant")
 			this._onlineTournamentStartGUI.removeParticipant(tournamentEvent.name);
+		else if (tournamentEvent.type === "joined-game")
+			this._sceneData.pongHTMLElement.joinOnlineGame(tournamentEvent.gameInit, this._currentSceneFileName);
 	}
 
 	private	switchMenu(newGUI : HTMLElement)
