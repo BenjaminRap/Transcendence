@@ -12,7 +12,8 @@ export class	LocalTournament extends Tournament<Profile>
 
 	constructor(participants : Profile[])
 	{
-		super(participants);
+		super();
+		this.setParticipants(participants);
 	}
 
 	private	async startCurrentGame()

@@ -11,16 +11,14 @@ export abstract class	Tournament<T>
 	private _tournamentMatches : Match<T>[][] = [];
 	private _qualified : ProfileWithScore<T>[] = [];
 	private _timeout : ReturnType<typeof setTimeout> | null = null;
-	private _expectedQualifiedCount : number;
-	private _participants : ProfileWithScore<T>[];
+	private _expectedQualifiedCount : number = 0;
+	private _participants : ProfileWithScore<T>[] = [];
 	private _matchesFinished : number = 0;
 
 	protected _currentMatches : Match<T>[] = [];
 
-	constructor(participants : T[])
+	constructor()
 	{
-		this._participants = participants.map(profile => ({...profile, score: 0}));
-		this._expectedQualifiedCount = TournamentHelper.getExpectedQualified(this._participants.length);
 	}
 
 	private	endTournament()
@@ -83,6 +81,12 @@ export abstract class	Tournament<T>
 				resolve();
 			}, durationMs);
 		});
+	}
+
+	protected	setParticipants(participants : T[])
+	{
+		this._participants = participants.map(profile => ({...profile, score: 0}));
+		this._expectedQualifiedCount = TournamentHelper.getExpectedQualified(this._participants.length);
 	}
 
 	protected createMatches()
