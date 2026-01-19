@@ -77,6 +77,8 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 			this._creator.leave(this._tournamentId);
 		this._started = true;
 		console.log(`${this._settings.name} tournament started !`);
+		this.setParticipants([...this._players.values()]);
+		this.createMatches();
 		return success(null);
 	}
 
