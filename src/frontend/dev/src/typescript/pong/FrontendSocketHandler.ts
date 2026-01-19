@@ -4,6 +4,7 @@ import { PongError } from "@shared/pongError/PongError";
 import { type GameInfos, type GameInit, type TournamentCreationSettings, type TournamentDescription, type TournamentEvent, type TournamentId, zodGameInit } from "@shared/ServerMessage";
 import type { Result } from "@shared/utils";
 import { io, Socket } from "socket.io-client";
+import type { TournamentEventAndJoinedGame } from "./FrontendEventsManager";
 
 export type EventWithNoResponse = "forfeit" | "input-infos" | "leave-matchmaking" | "ready" | "leave-tournament" | "cancel-tournament" | "ban-participant" | "kick-participant";
 type DefaultSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
@@ -13,15 +14,17 @@ export class	FrontendSocketHandler
 	private static readonly _apiUrl = "/api/socket.io/";
 
 	private _socket : DefaultSocket;
-	private _onGameMessageObservable : Observable<GameInfos>;
+	private _onGameMessageObservable = new Observable<GameInfos>();
 	private _onDisconnectObservable  = new Observable<void>();
-	private _onTournamentEventObservable : Observable<TournamentEvent>;
+	private _onTournamentEventObservable = new Observable<TournamentEventAndJoinedGame>();
+	private _onGameJoinObservable = new Observable<GameInit>();
 
 	private constructor(socket : DefaultSocket)
 	{
 		this._socket = socket;
-		this._onGameMessageObservable = createNewOnGameMessageObservable(socket);
-		this._onTournamentEventObservable = createNewOnTournamentMessageObservable(socket);
+		socket.on("game-infos", gameInfos => { this._onGameMessageObservable.notifyObservers(gameInfos) });
+		socket.on("tournament-event", tournamentEvent => this._onTournamentEventObservable.notifyObservers(tournamentEvent));
+		socket.on("joined-game", gameInit => this._onGameJoinObservable.notifyObservers(gameInit));
 		this._onDisconnectObservable.add(() => {
 			this.onDisconnectEvent();
 		})
@@ -104,6 +107,11 @@ export class	FrontendSocketHandler
 	{
 		return this._onGameMessageObservable;
 	}
+	
+	public onJoinGame() : Observable<GameInit>
+	{
+		return this._onGameJoinObservable;
+	}
 
 	public sendEventWithNoResponse<T extends EventWithNoResponse>(event : T, ...args: Parameters<ClientToServerEvents[T]>)
 	{
@@ -157,20 +165,4 @@ export class	FrontendSocketHandler
 	{
 		return this._onTournamentEventObservable;
 	}
-}
-
-function	createNewOnGameMessageObservable(socket : DefaultSocket)
-{
-	const	observable = new Observable<GameInfos>();
-
-	socket.on("game-infos", (gameInfos : GameInfos) => { observable.notifyObservers(gameInfos) });
-	return observable;
-}
-
-function	createNewOnTournamentMessageObservable(socket : DefaultSocket)
-{
-	const	observable = new Observable<TournamentEvent>();
-
-	socket.on("tournament-event", tournamentEvent => observable.notifyObservers(tournamentEvent));
-	return observable;
 }
