@@ -168,6 +168,24 @@ function updateFriendDiv()
 	}
 }
 
+function updateMatchDiv()
+{
+	if (!profileDiv)
+		return;
+	const newMatchListElement = createMatchElement();
+	if (!newMatchListElement)
+		return;
+	const oldMatchListElement = document.getElementById('match-list');
+	if (oldMatchListElement && oldMatchListElement.parentElement) {
+		oldMatchListElement.parentElement.replaceChild(newMatchListElement, oldMatchListElement);
+	} else if (oldMatchListElement) {
+		oldMatchListElement.remove();
+		profileDiv.appendChild(newMatchListElement);
+	} else {
+		profileDiv.appendChild(newMatchListElement);
+	}
+}
+
 function createProfileCard(profileElement: HTMLElement | null): HTMLElement | void {
 	if (!profileElement)
 		return;
@@ -207,24 +225,13 @@ function createButtons(profileElement: HTMLElement | null): HTMLElement | void {
 	return buttonContainer;
 }
 
-function createMatchHistory(profileElement: HTMLElement | null): HTMLElement | void {
-	if (!profileElement)
-		return;
-	const matchHistory = document.createElement('div');
-	matchHistory.className = "flex flex-col h-[31.5%]"; 
-	matchHistory.innerHTML = `<div class="flex w-full place-content-between">
-								<p class="text-center">Last match</p>
-								<button id="moreMatch" class="cursor-pointer hover:underline hover:underline-offset-2">View More</button>
-							</div>`
-	const moreMatchButton = matchHistory.querySelector('#moreMatch');
-	moreMatchButton?.addEventListener('click', () => {
-		ExtendedView.makeExtendedView('match', '');
-	});
+
+
+function createMatchElement() : HTMLElement
+{
 	const matchElement = document.createElement('div');
 	matchElement.className = "border py-4 border-green-500 flex flex-col gap-y-4 h-full";
-
-	profileElement.appendChild(matchHistory);
-
+	matchElement.id = "match-list";
 	for (let i = 0; i < Math.min(profile.lastMatchs.length, 4); i++) {
 		const match = profile.lastMatchs[i];
 		const matchDiv = document.createElement('div');
@@ -271,13 +278,28 @@ function createMatchHistory(profileElement: HTMLElement | null): HTMLElement | v
 		noMatchMessage.innerText = "Aucun match trouvé.";
 		matchElement.appendChild(noMatchMessage);
 	}
+	return matchElement;
+}
+
+function createMatchHistory(profileElement: HTMLElement | null): HTMLElement | void {
+	if (!profileElement)
+		return;
+	const matchHistory = document.createElement('div');
+	matchHistory.className = "flex flex-col h-[31.5%]"; 
+	matchHistory.innerHTML = `<div class="flex w-full place-content-between">
+								<p class="text-center">Last match</p>
+								<button id="moreMatch" class="cursor-pointer hover:underline hover:underline-offset-2">View More</button>
+							</div>`
+	const moreMatchButton = matchHistory.querySelector('#moreMatch');
+	moreMatchButton?.addEventListener('click', () => {
+		ExtendedView.makeExtendedView('match', '');
+	});
+	profileElement.appendChild(matchHistory);
+	const matchElement = createMatchElement();
 	matchHistory.appendChild(matchElement);
 	profileElement.appendChild(matchHistory);
 	return matchHistory;
 }
-
-
-
 
 function createFriendElement() : HTMLElement
 {
@@ -420,8 +442,24 @@ export namespace ProfileBuilder {
 			socketUtils.socket.on("user-status-change", (data: { userId: string; status: string }) => {
 				ProfileUpdater.updateFriendList(parseInt(data.userId), data.status);
 			});
-			// friend-status-update
-			// Ajouter / Remove a profile.friends > Sort > Rebuild
+
+			socketUtils.socket.on("friend-status-update", (data: {requester: {id: number, username: string, avatar: string, isOnline: boolean, requesterId: number}, status: string}) => {
+				console.log("Friend status updated:", data.requester.id, data.status);
+				let friendToAdd: Friend = {
+					avatar: data.requester.avatar,
+					username: data.requester.username,
+					id: data.requester.id,
+					status: data.status,
+					isOnline: data.requester.isOnline,
+					requesterId: data.requester.requesterId,
+				};
+				profile.friends.push(friendToAdd);
+				sortFriendList();
+				updateFriendDiv();
+			});
+
+
+
 
 
 		}
@@ -646,7 +684,7 @@ async function acceptFriendRequest(id: number): Promise<boolean> {
 async function removeFriend(id: number): Promise<boolean> {
 	try {
 		const response = await fetch(`/api/friend/delete/${id}`, {
-			method: 'PUT',
+			method: 'DELETE',
 			headers: {
 				'Authorization': 'Bearer ' + TerminalUtils.getCookie('accessToken')
 			}

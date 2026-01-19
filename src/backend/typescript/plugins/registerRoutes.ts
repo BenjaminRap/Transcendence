@@ -41,7 +41,7 @@ export async function registerRoutes(fastify: FastifyInstance): Promise<void> {
 			},
 		);
 		done();
-	}, { prefix: '/subscriber' });
+	}, { prefix: '/suscriber' });
 
     // friend :
     // POST: /request/:id - PUT: /accept/:id - PUT: /delete/:id - GET: /search/myfriends - GET: /search/pendinglist
