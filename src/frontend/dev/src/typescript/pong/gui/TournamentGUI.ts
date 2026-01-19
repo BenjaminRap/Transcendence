@@ -5,12 +5,7 @@ import type { Profile } from "@shared/Profile";
 import type { IGUI } from "./IGUI";
 import { PongError } from "@shared/pongError/PongError";
 import { isPowerOfTwo } from "@shared/utils";
-
-export interface	MatchWinningDescription
-{
-	readonly winner : Profile | undefined;
-	readonly winnerSide : "left" | "right" | undefined;
-}
+import type { MatchWinningDescription } from "@shared/ServerMessage";
 
 export class	TournamentGUI extends HTMLElement implements IGUI<void>
 {

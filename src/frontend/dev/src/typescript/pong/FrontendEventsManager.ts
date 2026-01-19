@@ -2,8 +2,7 @@ import { Observable } from "@babylonjs/core/Misc/observable";
 import { EventsManager } from "@shared/EventsManager";
 import type { Profile } from "@shared/Profile";
 import type { ClientInput } from "./FrontendSceneData";
-import type { GameInfos, TournamentEvent } from "@shared/ServerMessage";
-import type { MatchWinningDescription } from "./gui/TournamentGUI";
+import type { GameInfos, MatchWinningDescription, TournamentEvent } from "@shared/ServerMessage";
 
 export class	FrontendEventsManager extends EventsManager
 {

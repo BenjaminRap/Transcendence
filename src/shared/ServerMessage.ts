@@ -88,6 +88,12 @@ export const	zodTournamentDescription = zod.object({
 });
 export type TournamentDescription = zod.infer<typeof zodTournamentDescription>;
 
+export const	zodMatchWinningDescription = zod.object({
+	winner: zodProfile.optional(),
+	winnerSide: zod.literal(["left", "right"]).optional()
+});
+export type MatchWinningDescription = zod.infer<typeof zodMatchWinningDescription>;
+
 export const	zodTournamentEvent = zod.discriminatedUnion("type", [
 	zod.object({
 		type: zod.literal("add-participant"),
@@ -106,6 +112,18 @@ export const	zodTournamentEvent = zod.discriminatedUnion("type", [
 	}),
 	zod.object({
 		type: zod.literal("tournament-canceled")
+	}),
+	zod.object({
+		type: zod.literal("tournament-gui-create"),
+		qualified: zod.array(zodProfile)
+	}),
+	zod.object({
+		type: zod.literal("show-tournament")
+	}),
+	zod.object({
+		type: zod.literal("tournament-gui-set-winners"),
+		round: zod.number(),
+		matches: zod.array(zodMatchWinningDescription)
 	})
 ]);
 export type TournamentEvent = zod.infer<typeof zodTournamentEvent>;
