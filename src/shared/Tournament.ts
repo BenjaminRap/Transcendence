@@ -17,10 +17,6 @@ export abstract class	Tournament<T>
 
 	protected _currentMatches : Match<T>[] = [];
 
-	constructor()
-	{
-	}
-
 	private	endTournament()
 	{
 		const	lastRound = this._tournamentMatches[this._tournamentMatches.length - 1];
@@ -112,9 +108,9 @@ export abstract class	Tournament<T>
 			clearTimeout(this._timeout);
 	}
 
-	public abstract	onQualificationsEnd(qualified : T[]) : void;
-	public abstract	onTournamentEnd(winner : T) : void;
-	public abstract	onTournamentShow() : void;
-	public abstract onNewMatches() : void;
-	public abstract	setRoundWinners(round : number, matches : Match<T>[]) : void;
+	protected abstract	onQualificationsEnd(qualified : T[]) : void;
+	protected abstract	onTournamentEnd(winner : T) : void;
+	protected abstract	onTournamentShow() : void;
+	protected abstract onNewMatches() : void;
+	protected abstract	setRoundWinners(round : number, matches : Match<T>[]) : void;
 }

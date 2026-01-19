@@ -54,28 +54,28 @@ export class	LocalTournament extends Tournament<Profile>
 		super.dispose();
 	}
 
-	public onQualificationsEnd(qualified: Profile[]): void
+	protected override onQualificationsEnd(qualified: Profile[]): void
 	{
 		this._events?.getObservable("tournament-gui-create").notifyObservers(qualified);
 	}
 
-    public onTournamentEnd(winner: Profile): void
+    protected override onTournamentEnd(winner: Profile): void
 	{
 		this._events?.getObservable("tournament-end").notifyObservers(winner);
     }
 
-    public onTournamentShow(): void
+    protected override onTournamentShow(): void
 	{
 		this._events?.getObservable("show-tournament").notifyObservers();
     }
 
-    public onNewMatches(): void
+    protected override onNewMatches(): void
 	{
 		this._currentMatchIndex = 0;
 		this.startCurrentGame();
     }
 
-    public setRoundWinners(round: number, matches: Match<Profile>[]): void
+    protected override setRoundWinners(round: number, matches: Match<Profile>[]): void
 	{
 		this._events?.getObservable("tournament-gui-set-winners").notifyObservers([round, matches]);
     }
