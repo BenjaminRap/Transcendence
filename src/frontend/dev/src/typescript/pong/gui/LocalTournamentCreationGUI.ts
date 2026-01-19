@@ -115,6 +115,7 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 
 	public reset()
 	{
+		this._currentPlayerId = 0;
 		this._profiles = [];
 		this._profileContainer.replaceChildren();
 		for (let index = 0; index < 2; index++) {
