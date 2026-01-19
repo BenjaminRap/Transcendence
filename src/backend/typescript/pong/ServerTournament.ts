@@ -3,6 +3,7 @@ import type { DefaultSocket, ServerType } from "..";
 import { error, success, type Result } from "@shared/utils";
 import { Tournament } from "@shared/Tournament";
 import type { Match } from "@shared/Match";
+import { Room } from "./Room";
 
 export class	ServerTournament extends Tournament<DefaultSocket>
 {
@@ -11,6 +12,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 	private _bannedPlayers = new Set<string>();
 	private _tournamentId : TournamentId;
 	private _started = false;
+	private _rooms = new Set<Room>();
 
 	constructor(
 		private _onTournamentDispose : () => void,
@@ -175,7 +177,22 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 
     protected override onNewMatches(): void
 	{
-        throw new Error("Method not implemented.");
+		this._currentMatches.forEach(match => {
+			const	left = match.left;
+			const	right = match.right;
+
+			if (match.winner !== undefined
+				|| left?.data.getState() !== "tournament-waiting"
+				|| right?.data.getState() !== "tournament-waiting")
+				return ;
+			const	room = new Room(this._io, endData => {
+				this._rooms.delete(room);
+				match.setWinner(endData);
+				this.onNewMatches();
+				this.onMatchEnd();
+			}, left, right);
+			this._rooms.add(room);
+		});
     }
 
     protected override setRoundWinners(round: number, matches: Match<DefaultSocket>[]): void
