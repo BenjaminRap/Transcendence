@@ -84,11 +84,20 @@ export class Container {
             this.getService('TokenManager')
         ));
 
+        this.registerService('FriendService', () => new FriendService(
+            prisma
+        ));
+
         this.registerService('UsersService', () => new UsersService(
             prisma,
             this.getService('FriendService'),
         ));
 
+        this.registerService('MatchService', () => new MatchService(
+            prisma,
+            this.getService('FriendService')
+        ));
+		
         this.registerService('SuscriberService', () => new SuscriberService(
             prisma,
             this.getService('PasswordHasher'),
@@ -96,16 +105,6 @@ export class Container {
             this.getService('MatchService')
         ));
 
-        this.registerService('FriendService', () => new FriendService(
-            prisma
-        ));
-
-        this.registerService('MatchService', () => new MatchService(
-            prisma,
-            this.getService('FriendService')
-        ));
-
-		this.registerService('FileService', () => new FileService());
 
 		this.registerService('TournamentService', () => new TournamentService(
 			prisma,
@@ -134,10 +133,6 @@ export class Container {
             this.getService('MatchService'),
 			this.getService('FriendService')
         ));
-
-		this.registerService('FileController', () => new FileController(
-			this.getService('FileService'),
-		));
 
 		this.registerService('TournamentController', () => new TournamentController(
 			this.getService('TournamentService'),

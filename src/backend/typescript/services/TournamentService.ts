@@ -304,27 +304,22 @@ export class TournamentService {
 
     // ----------------------------------------------------------------------------- //
     private async setParticipantRank(tournamentId: number, player: PlayerInfo, round: number, isWinner: boolean, totalParticipants: number) {
-        // Simple ranking logic:
-        // Winner = Rank 1
-        // Loser Final = Rank 2
-        // Losers Semis = Rank 3-4 ...
-        // We can approximate rank = (TotalParticipants / (2^(Round))) + 1
-        // Or simplified: just store them. 
-        // Since we don't have updateMany with Join in Prisma easily for this specific logic without raw query, 
-        // we skip complex math and just update if we found the participant.
-        
         let rank = 0;
+
         if (isWinner) {
-            rank = 1;
+            // Attention : Ne mettre true que si c'est le vainqueur de la GRANDE FINALE
+            rank = 1; 
         } else {
-             // Example: 8 players. 3 Rounds.
-             // Round 1 losers (4 people) -> Rank 5-8
-             // Round 2 losers (2 people) -> Rank 3-4
-             // Round 3 loser (1 person)  -> Rank 2
-             // Formula: Rank is roughly Top X.
-             // X = 2^(TotalRounds - Round + 1)
-             const exponent = Math.ceil(Math.log2(totalParticipants)) - round + 1;
-             rank = Math.pow(2, exponent - 1) + 1;
+            // Formule simplifiée : Rank = (Nombre de joueurs éliminés avant moi + ceux qui restent) ...
+            // Plus simple : Si je perds au Round R, il y a (Total / 2^R) joueurs qui sont meilleurs que moi.
+            // Donc mon rang est (Total / 2^R) + 1.
+            
+            // Ex: 8 joueurs. Round 1. 8 / 2^1 = 4. Rang = 5.
+            // Ex: 8 joueurs. Round 2. 8 / 2^2 = 2. Rang = 3.
+            // Ex: 8 joueurs. Round 3. 8 / 2^3 = 1. Rang = 2.
+            
+            const betterPlayersCount = totalParticipants / Math.pow(2, round);
+            rank = Math.floor(betterPlayersCount) + 1;
         }
 
         try {

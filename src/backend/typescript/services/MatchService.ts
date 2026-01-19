@@ -18,6 +18,8 @@ export class MatchService {
                 player1GuestName: player1.guestName,
                 player2Id: player2.id ?? null,
                 player2GuestName: player2.guestName,
+                winnerGuestName: "",
+                loserGuestName: "",
             }
         });
 
@@ -162,10 +164,10 @@ export class MatchService {
 		});
         
 		const stats = playerIds.map(id => {
-			const won = wins.find(w => w.winnerId === id)?._count ?? 0;
-			const lost = losses.find(l => l.loserId === id)?._count ?? 0;
+			const won = wins.find((w: any) => w.winnerId === id)?._count ?? 0;
+			const lost = losses.find((l: any) => l.loserId === id)?._count ?? 0;
 
-			return this.calculateStats(won, lost);;
+			return this.calculateStats(won, lost);
 		});
 		return { stats }
 	}
@@ -199,6 +201,8 @@ export class MatchService {
                 player1GuestName: player1.guestName,
                 player2Id: player2.id ?? null,
                 player2GuestName: player2.guestName,
+                winnerGuestName: "",
+                loserGuestName: "",
                 status: MatchStatus.IN_PROGRESS
             }
         });
@@ -211,6 +215,10 @@ export class MatchService {
                 tournamentId,
                 round,
                 matchOrder,
+                player1GuestName: "",
+                player2GuestName: "",
+                winnerGuestName: "",
+                loserGuestName: "",
                 status: MatchStatus.IN_PROGRESS
             }
         });
@@ -225,7 +233,7 @@ export class MatchService {
 			select: { id: true }
 		});
 
-		const existingIds = existingUsers.map(u => u.id);
+		const existingIds = existingUsers.map((u: { id: number }) => u.id);
 
 		const missingIds = ids.filter(ids => !existingIds.includes(ids));
 
