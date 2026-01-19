@@ -197,7 +197,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 				this._rooms.delete(room);
 				match.setWinner(endData);
 				this.onNewMatches();
-				this.onMatchEnd();
+				this.onMatchEnd(match);
 			}, left, right);
 			this._rooms.add(room);
 		});
