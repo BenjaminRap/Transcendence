@@ -52,6 +52,7 @@ export class	TournamentWinnerGUI extends HTMLElement implements IGUI<TournamentW
 		const	winnerGUI = new OpponentGUI(profile);
 
 		winnerGUI.classList.add("h-1/2")
+		winnerGUI.style.setProperty("--opponent-font-size", "3cqw");
 		this._winText.insertAdjacentElement("afterend", winnerGUI);
 	}
 }
