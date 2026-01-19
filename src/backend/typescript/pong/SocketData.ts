@@ -16,7 +16,7 @@ function	getGuestProfile() : Profile
 
 export class	SocketData
 {
-	private _state : "unactive" | "waiting" | "playing" = "unactive";
+	private _state : "unactive" | "waiting" | "playing" | "tournament-waiting" | "tournament-playing" = "unactive";
 	private _room : Room | null = null;
 	private _tournament : ServerTournament | null = null;
 	private _profile : Profile = getGuestProfile();
@@ -44,19 +44,23 @@ export class	SocketData
 
 	public joinRoom(room : Room) {
 		this._room = room;
-		if (!this._tournament)
+		if (this._state === "tournament-waiting")
+			this._state = "tournament-playing";
+		else
 			this._state = "playing";
 	}
 
 	public leaveRoom() {
 		this._room = null;
-		if (!this._tournament)
+		if (this._state === "tournament-playing")
+			this._state = "tournament-waiting";
+		else
 			this._state = "unactive";
 	}
 
 	public joinTournament(tournament : ServerTournament) {
 		this._tournament = tournament;
-		this._state = "playing";
+		this._state = "tournament-waiting";
 	}
 
 	public leaveTournament() {
