@@ -29,6 +29,7 @@ export class	MatchOpponentsGUI extends HTMLElement implements IGUI<void>
 
 	public setOpponents(leftOpponent : Profile, rightOpponent : Profile)
 	{
+		this.replaceChildren();
 		const	mainDiv = document.createElement("div");
 		mainDiv.classList.add("flex", "flex-row", "justify-between", "items-center", "h-full", "w-4/5", "absolute", "left-1/2", "-translate-x-1/2");
 
