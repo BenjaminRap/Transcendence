@@ -21,10 +21,12 @@ export class	LocalTournament extends Tournament<Profile>
 		if (this._currentMatchIndex >= this._currentMatches.length)
 			return ;
 		const	match = this._currentMatches[this._currentMatchIndex];
+		const	left = match.left;
+		const	right = match.right;
 
-		if (match.left === undefined || match.right === undefined)
+		if (left === undefined || right === undefined)
 			throw new PongError("A match is started, but the players has'nt finished their match !", "quitPong");
-		this._events?.getObservable("set-participants").notifyObservers([match.left, match.right]);
+		this._events?.getObservable("set-participants").notifyObservers([left, right]);
 		await this.delay(Tournament._showOpponentsDurationMs);
 		this._events?.getObservable("game-start").notifyObservers();
 	}
