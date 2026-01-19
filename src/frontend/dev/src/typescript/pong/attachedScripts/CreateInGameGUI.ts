@@ -15,6 +15,7 @@ import type { ThemeName } from "../menuStyles";
 import { MatchOpponentsGUI } from "../gui/MatchOpponentsGUI";
 import { TournamentWinnerGUI } from "../gui/TournamentWinnerGUI";
 import { initMenu } from "../gui/IGUI";
+import { TournamentGUI } from "../gui/TournamentGUI";
 
 export class CreateInGameGUI extends CustomScriptComponent {
 	@Imported("InputManager") private _inputManager! : InputManager;
@@ -26,6 +27,7 @@ export class CreateInGameGUI extends CustomScriptComponent {
 	private _inMatchmakingGUI! : InMatchmakingGUI;
 	private _tournamentWinnerGUI! : TournamentWinnerGUI;
 	private _matchOpponentsGUI! : MatchOpponentsGUI;
+	private _tournamentGUI? : TournamentGUI;
 
 	private _sceneData : FrontendSceneData;
 	private _currentGUI? : HTMLElement;
@@ -91,11 +93,6 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		this._sceneData.events.getObservable("game-unpaused").add(() => {
 			this._sceneData.pongHTMLElement.focusOnCanvas();
 		})
-		this._sceneData.events.getObservable("show-tournament").add((tournamentGUI) => {
-			if (tournamentGUI.parentNode === null)
-				this._menuParent.appendChild(tournamentGUI);
-			this.switchToGUI(tournamentGUI)
-		});
 		this._sceneData.events.getObservable("tournament-end").add((winner) => { 
 			this._tournamentWinnerGUI.setWinner(winner);
 			this.switchToGUI(this._tournamentWinnerGUI);
@@ -103,13 +100,26 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		this._sceneData.events.getObservable("input-change").add(clientInputs => {
 			this._matchOpponentsGUI.setInputs(clientInputs);
 		});
+		this._sceneData.events.getObservable("show-tournament").add(() => {
+			if (!this._tournamentGUI)
+				return ;
+			this.switchToGUI(this._tournamentGUI);
+		});
+		this._sceneData.events.getObservable("tournament-gui-create").add((participants) => {
+			if (this._tournamentGUI)
+				return ;
+			this._tournamentGUI = new TournamentGUI(participants);
+		});
+		this._sceneData.events.getObservable("tournament-gui-set-winners").add(([round, winners]) => {
+			this._tournamentGUI?.setWinners(round, winners);
+		});
 	}
 
 	private	onGameEnd(endData : EndData)
 	{
 		this._endGUI.setWinner(endData.winner, endData.forfeit, this._sceneData.serverProxy.getPlayerIndex());
 		this.switchToGUI(this._endGUI);
-		this._sceneData.tournament?.onGameEnd(endData);
+		this._sceneData.tournament?.onCurrentMatchEnd(endData);
 	}
 
 	private	togglePause() : void

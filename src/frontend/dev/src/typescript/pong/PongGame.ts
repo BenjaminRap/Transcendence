@@ -146,7 +146,7 @@ export class PongGame extends HTMLElement {
 		await sceneData.readyPromise.promise;
 		this.setInputs(sceneData, 0, 1);
 		if (tournament)
-			tournament.start(sceneData.events);
+			tournament.setEventsAndStart(sceneData.events);
 		else
 			sceneData.events.getObservable("game-start").notifyObservers();
 	}

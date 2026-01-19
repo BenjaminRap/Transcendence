@@ -1,7 +1,6 @@
 import { Deferred, Observable } from "@babylonjs/core";
 import type { ClientToServerEvents, ServerToClientEvents } from "@shared/MessageType";
 import { PongError } from "@shared/pongError/PongError";
-import type { Profile } from "@shared/Profile";
 import { type GameInfos, type GameInit, type TournamentCreationSettings, type TournamentDescription, type TournamentEvent, type TournamentId, zodGameInit } from "@shared/ServerMessage";
 import type { Result } from "@shared/utils";
 import { io, Socket } from "socket.io-client";

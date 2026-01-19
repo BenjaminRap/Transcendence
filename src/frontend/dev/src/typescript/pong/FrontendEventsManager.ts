@@ -3,6 +3,7 @@ import { EventsManager } from "@shared/EventsManager";
 import type { Profile } from "@shared/Profile";
 import type { ClientInput } from "./FrontendSceneData";
 import type { GameInfos, TournamentEvent } from "@shared/ServerMessage";
+import type { MatchWinningDescription } from "./gui/TournamentGUI";
 
 export class	FrontendEventsManager extends EventsManager
 {
@@ -12,13 +13,15 @@ export class	FrontendEventsManager extends EventsManager
 	{
 		super();
 		const additionalEvents = {
-			"show-tournament": new Observable<HTMLElement>,
 			"input-change": new Observable<ClientInput[]>,
 			"enemy-type-change" : new Observable<[string, string]>,
 			"scene-change" : new Observable<[string, string]>,
 			"set-participants" : new Observable<[Profile, Profile]>,
 			"tournament-event": new Observable<TournamentEvent>,
-			"game-infos": new Observable<GameInfos>
+			"game-infos": new Observable<GameInfos>,
+			"tournament-gui-create": new Observable<Profile[]>,
+			"tournament-gui-set-winners": new Observable<[number, MatchWinningDescription[]]>,
+			"show-tournament": new Observable<void>,
 		};
 		this._allEvents = { ...this._events, ...additionalEvents }
 	}

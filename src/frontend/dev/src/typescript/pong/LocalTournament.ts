@@ -1,166 +1,77 @@
-import { TournamentHelper, type ProfileWithScore} from "@shared/TournamentHelper";
 import type { Profile } from "@shared/Profile";
 import type { Match } from "@shared/Match";
-import { TournamentGUI } from "./gui/TournamentGUI";
 import type { EndData } from "@shared/attachedScripts/GameManager";
 import type { FrontendEventsManager } from "./FrontendEventsManager";
-import { isPowerOfTwo } from "@shared/utils";
 import { PongError } from "@shared/pongError/PongError";
+import { Tournament } from "@shared/Tournament";
 
-export class	LocalTournament
+export class	LocalTournament extends Tournament<Profile>
 {
-	private static readonly _showTournamentDurationMs = 5000;
-	private static readonly _showOpponentsDurationMs = 2000;
-
-	private _round : "qualification" | number = "qualification";
-	private _tournamentMatches : Match<Profile>[][] = [];
-	private _qualificationMatches : Match<Profile>[] = [];
 	private _currentMatchIndex = 0;
-	private _qualified : ProfileWithScore<Profile>[] = [];
-	private _timeout : number | null = null;
-	private _tournamentGUI? : TournamentGUI;
-	private _expectedQualifiedCount : number;
-	private _events! : FrontendEventsManager;
-	private _participants : ProfileWithScore<Profile>[];
+	private _events? : FrontendEventsManager;
 
-	constructor(_participants : Profile[])
+	constructor(participants : Profile[])
 	{
-		this._participants = _participants.map(profile => ({...profile, score: 0}));
-		this._expectedQualifiedCount = TournamentHelper.getExpectedQualified(this._participants.length);
+		super(participants);
 	}
 
-	private	getMatchList()
+	public setEventsAndStart(events : FrontendEventsManager)
 	{
-		if (this._round === "qualification")
-			return this._qualificationMatches;
-		else if (this._round >= this._tournamentMatches.length)
-			return null;
-		else
-			return this._tournamentMatches[this._round];
+		this._events = events;
+		this.start();
 	}
 
-	private	endTournament()
+	public	onCurrentMatchEnd(endData : EndData)
 	{
-		if (this._tournamentMatches.length === 0)
-			throw new PongError("Error the tournament matches are empty !", "quitPong");
-		const	lastRound = this._tournamentMatches[this._tournamentMatches.length - 1];
-		if (lastRound.length !== 1)
-			throw new PongError("Error, the last round should only be composed of one match !", "quitPong");
-		const	lastMatch = lastRound[0];
-		const	winner = lastMatch.winner;
+		const	match = this._currentMatches[this._currentMatchIndex];
 
-		if (winner === undefined)
-			throw new PongError("endTournament called but the tournament isn't finished !", "quitPong");
-		this._events.getObservable("tournament-end").notifyObservers(winner);
+		match.setWinner(endData);
+		this.onMatchEnd();
 	}
 
-	private async endRound()
+	public async startNextGame()
 	{
-		this._currentMatchIndex = 0;
-		if (this._round === "qualification")
-		{
-			TournamentHelper.setQualifiedParticipants(this._qualified, this._participants, this._expectedQualifiedCount);
-			if (this._qualified.length === this._expectedQualifiedCount)
-			{
-				this._round = 0;
-				this._tournamentMatches = TournamentHelper.createTournamentMatches(this._qualified);
-				this._tournamentGUI = new TournamentGUI(this._qualified);
-				this._events.getObservable("show-tournament").notifyObservers(this._tournamentGUI);
-				await this.delay(LocalTournament._showTournamentDurationMs);
-				this.startCurrentMatch();
-			}
-			else
-			{
-				this._qualificationMatches = TournamentHelper.createQualificationMatches(this._participants);
-				this.startCurrentMatch();
-			}
-		}
-		else
-		{
-			this._tournamentGUI?.setWinners(this._round, this._tournamentMatches[this._round]);
-			this._round++;
-			if (this._round >= this._tournamentMatches.length)
-				this.endTournament();
-			else
-			{
-				this._events.getObservable("show-tournament").notifyObservers(this._tournamentGUI!);
-				await this.delay(LocalTournament._showTournamentDurationMs);
-				this.startCurrentMatch();
-			}
-		}
-	}
+		if (this._currentMatchIndex >= this._currentMatches.length - 1)
+			return ;
+		this._currentMatchIndex++;
 
-	private	async startCurrentMatch()
-	{
-		if (this._timeout !== null)
-			throw new PongError("The current timeout hasn't finished !", "quitPong");
-		const	matches = this.getMatchList();
-
-		if (matches === null)
-			throw new PongError("Current match list is null in LocalTournament !", "quitPong");
-		if (this._currentMatchIndex >= matches.length)
-			throw new PongError("The current match index is out of bound !", "quitPong");
-		const	match = matches[this._currentMatchIndex];
+		const	match = this._currentMatches[this._currentMatchIndex];
 
 		if (match.left === undefined || match.right === undefined)
 			throw new PongError("A match is started, but the players has'nt finished their match !", "quitPong");
-		this._events.getObservable("set-participants").notifyObservers([match.left, match.right]);
-		await this.delay(LocalTournament._showOpponentsDurationMs);
-		this._events.getObservable("game-start").notifyObservers();
-	}
-
-	private async delay(durationMs : number)
-	{
-		return new Promise<void>((resolve, reject) => {
-			if (this._timeout !== null)
-			{
-				reject();
-				return ;
-			}
-			this._timeout = window.setTimeout(() => {
-				this._timeout = null;
-				resolve();
-			}, durationMs);
-		})
-	}
-
-	public start(events : FrontendEventsManager)
-	{
-		this._events = events;
-		if (isPowerOfTwo(this._participants.length))
-		{
-			this._qualified = this._participants;
-			this._participants = [];
-		}
-		this.endRound();
-	}
-
-	public	onGameEnd(endData : EndData)
-	{
-		const	matches = this.getMatchList();
-		if (matches === null)
-			throw new PongError("Current match list is null in LocalTournament !", "quitPong");
-		const	match = matches[this._currentMatchIndex];
-
-		match.setWinner(endData);
-	}
-
-	public startNextGame()
-	{
-		this._currentMatchIndex++;
-
-		const	matches = this.getMatchList();
-		if (matches === null)
-			throw new PongError("Current match list is null in LocalTournament !", "quitPong");
-		if (this._currentMatchIndex >= matches.length)
-			this.endRound();
-		else
-			this.startCurrentMatch();
+		this._events?.getObservable("set-participants").notifyObservers([match.left, match.right]);
+		await this.delay(Tournament._showOpponentsDurationMs);
+		this._events?.getObservable("game-start").notifyObservers();
 	}
 
 	public dispose()
 	{
-		if (this._timeout !== null)
-			clearTimeout(this._timeout);
+		super.dispose();
 	}
+
+	public onQualificationsEnd(qualified: Profile[]): void
+	{
+		this._events?.getObservable("tournament-gui-create").notifyObservers(qualified);
+	}
+
+    public onTournamentEnd(winner: Profile): void
+	{
+		this._events?.getObservable("tournament-end").notifyObservers(winner);
+    }
+
+    public onTournamentShow(): void
+	{
+		this._events?.getObservable("show-tournament").notifyObservers();
+    }
+
+    public onNewMatches(): void
+	{
+		this._currentMatchIndex = 0;
+    }
+
+    public setRoundWinners(round: number, matches: Match<Profile>[]): void
+	{
+		this._events?.getObservable("tournament-gui-set-winners").notifyObservers([round, matches]);
+        throw new Error("Method not implemented.");
+    }
 }
