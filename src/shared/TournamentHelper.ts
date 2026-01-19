@@ -51,7 +51,7 @@ public static createMatchesByRoundRecursive<T>(participants : ProfileWithScore<T
 		return matchesByRounds;
 	}
 
-	public static setQualifiedParticipants<T>(qualified : ProfileWithScore<T>[], participants : ProfileWithScore<T>[], expectedQualified : number)
+	public static setQualifiedParticipants<T>(qualified : ProfileWithScore<T>[], participants : ProfileWithScore<T>[], disqualified : ProfileWithScore<T>[], expectedQualified : number)
 	{
 		if (qualified.length >= expectedQualified)
 			return;
@@ -67,12 +67,12 @@ public static createMatchesByRoundRecursive<T>(participants : ProfileWithScore<T
 		if (lastQualifiedIndex === lastWithSameScore)
 		{
 			qualified.push(...participants.splice(0, participantsToQualify));
-			participants = [];
+			disqualified.push(...participants.splice(0, participants.length));
 		}
 		else
 		{
 			qualified.push(...participants.splice(0, firstWithSameScore));
-			participants.splice(lastWithSameScore + 1);
+			disqualified.push(...participants.splice(lastWithSameScore - firstWithSameScore + 1));
 		}
 	}
 

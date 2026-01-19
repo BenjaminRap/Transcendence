@@ -124,6 +124,12 @@ export const	zodTournamentEvent = zod.discriminatedUnion("type", [
 		type: zod.literal("tournament-gui-set-winners"),
 		round: zod.number(),
 		matches: zod.array(zodMatchWinningDescription)
-	})
+	}),
+	zod.object({
+		type: zod.literal("win")
+	}),
+	zod.object({
+		type: zod.literal("lose")
+	}),
 ]);
 export type TournamentEvent = zod.infer<typeof zodTournamentEvent>;

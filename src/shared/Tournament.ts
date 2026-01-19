@@ -1,6 +1,7 @@
 import { TournamentHelper, type ProfileWithScore } from "@shared/TournamentHelper";
 import type { Match } from "@shared/Match";
 import { isPowerOfTwo } from "@shared/utils";
+import type { EndData } from "./attachedScripts/GameManager";
 
 export abstract class	Tournament<T>
 {
@@ -29,7 +30,9 @@ export abstract class	Tournament<T>
 	{
 		if (this._round === "qualification")
 		{
-			TournamentHelper.setQualifiedParticipants(this._qualified, this._participants, this._expectedQualifiedCount);
+			const	disqualified : ProfileWithScore<T>[] = [];
+			TournamentHelper.setQualifiedParticipants(this._qualified, this._participants, disqualified, this._expectedQualifiedCount);
+			disqualified.forEach(participant => this.onParticipantLose(participant));
 			if (this._qualified.length === this._expectedQualifiedCount)
 			{
 				this.onQualificationsEnd(this._qualified);
@@ -95,8 +98,14 @@ export abstract class	Tournament<T>
 		this.endRound();
 	}
 
-	protected	onMatchEnd()
+	protected	onMatchEnd(match : Match<T>)
 	{
+		const	loser = match.loser;
+
+		if (!loser)
+			return ;
+		if (this._round !== "qualification")
+			this.onParticipantLose(match.loser);
 		this._matchesFinished++;
 		if (this._matchesFinished === this._currentMatches.length)
 			this.endRound();
@@ -108,6 +117,7 @@ export abstract class	Tournament<T>
 			clearTimeout(this._timeout);
 	}
 
+	protected abstract	onParticipantLose(loser : T) : void;
 	protected abstract	onQualificationsEnd(qualified : T[]) : void;
 	protected abstract	onTournamentEnd(winner : T) : void;
 	protected abstract	onTournamentShow() : void;

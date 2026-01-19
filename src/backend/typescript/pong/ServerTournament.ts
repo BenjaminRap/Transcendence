@@ -157,6 +157,11 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		}
 	}
 
+	protected override onParticipantLose(loser : DefaultSocket)
+	{
+		loser.emit("tournament-event", {type: "lose"})
+	}
+
     protected override onQualificationsEnd(qualified: DefaultSocket[]): void
 	{
 		this._io.to(this._tournamentId).emit("tournament-event", {
@@ -167,6 +172,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 
     protected override onTournamentEnd(winner: DefaultSocket): void
 	{
+		winner.emit("tournament-event", {type: "win"})
 		this.dispose();
     }
 

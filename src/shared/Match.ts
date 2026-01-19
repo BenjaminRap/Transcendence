@@ -57,5 +57,17 @@ export class	Match<T>
 			return this._left.winner
 		return this._left;
 	}
+
+	public get loser()
+	{
+		const	left = this.left;
+		const	right = this.right;
+
+		if (this._winner === left)
+			return right;
+		if (this._winner === right)
+			return left;
+		return undefined;
+	}
 }
 

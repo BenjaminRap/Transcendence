@@ -46,7 +46,11 @@ export class	LocalTournament extends Tournament<Profile>
 
 	public async startNextGame()
 	{
-		this.onMatchEnd();
+		if (this._currentMatchIndex >= this._currentMatches.length)
+			return ;
+		const	match = this._currentMatches[this._currentMatchIndex];
+
+		this.onMatchEnd(match);
 		this._currentMatchIndex++;
 		this.startCurrentGame();
 	}
@@ -54,6 +58,10 @@ export class	LocalTournament extends Tournament<Profile>
 	public dispose()
 	{
 		super.dispose();
+	}
+
+	protected override onParticipantLose(loser: Profile): void
+	{
 	}
 
 	protected override onQualificationsEnd(qualified: Profile[]): void
