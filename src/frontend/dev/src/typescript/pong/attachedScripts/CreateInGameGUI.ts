@@ -93,7 +93,7 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		this._sceneData.events.getObservable("game-unpaused").add(() => {
 			this._sceneData.pongHTMLElement.focusOnCanvas();
 		})
-		this._sceneData.events.getObservable("tournament-end").add((winner) => { 
+		this._sceneData.events.getObservable("local-tournament-end").add((winner) => { 
 			this._tournamentWinnerGUI.setWinner(winner);
 			this.switchToGUI(this._tournamentWinnerGUI);
 		});

@@ -71,7 +71,7 @@ export class	LocalTournament extends Tournament<Profile>
 
     protected override onTournamentEnd(winner: Profile): void
 	{
-		this._events?.getObservable("tournament-end").notifyObservers(winner);
+		this._events?.getObservable("local-tournament-end").notifyObservers(winner);
     }
 
     protected override onTournamentShow(): void

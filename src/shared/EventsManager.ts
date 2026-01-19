@@ -16,7 +16,7 @@ export abstract class	EventsManager
 			"forfeit": new Observable<"left" | "right" | "highestScore">,
 			"game-paused" : new Observable<void>,
 			"game-unpaused": new Observable<void>,
-			"tournament-end" : new Observable<Profile>,
+			"local-tournament-end" : new Observable<Profile>,
 		}
 	}
 
