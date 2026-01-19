@@ -4,6 +4,7 @@ import { isPowerOfTwo } from "@shared/utils";
 
 export abstract class	Tournament<T>
 {
+	protected static readonly _showOpponentsDurationMs = 2000;
 	private static readonly _showTournamentDurationMs = 5000;
 
 	private _round : "qualification" | number = "qualification";
@@ -37,6 +38,7 @@ export abstract class	Tournament<T>
 			TournamentHelper.setQualifiedParticipants(this._qualified, this._participants, this._expectedQualifiedCount);
 			if (this._qualified.length === this._expectedQualifiedCount)
 			{
+				this.onQualificationsEnd(this._qualified);
 				this.onTournamentShow();
 				await this.delay(Tournament._showTournamentDurationMs);
 				this._round = 0;
@@ -68,7 +70,7 @@ export abstract class	Tournament<T>
 		this.onNewMatches();
 	}
 
-	private async delay(durationMs : number)
+	protected async delay(durationMs : number)
 	{
 		return new Promise<void>((resolve, reject) => {
 			if (this._timeout !== null)
@@ -93,7 +95,7 @@ export abstract class	Tournament<T>
 		this.endRound();
 	}
 
-	protected	onGameEnd()
+	protected	onMatchEnd()
 	{
 		this._matchesFinished++;
 		if (this._matchesFinished === this._currentMatches.length)
@@ -106,6 +108,7 @@ export abstract class	Tournament<T>
 			clearTimeout(this._timeout);
 	}
 
+	public abstract	onQualificationsEnd(qualified : T[]) : void;
 	public abstract	onTournamentEnd(winner : T) : void;
 	public abstract	onTournamentShow() : void;
 	public abstract onNewMatches() : void;
