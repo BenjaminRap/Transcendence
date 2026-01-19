@@ -6,8 +6,8 @@ import { ClientProxy } from "./ClientProxy";
 import { type int, Observable } from "@babylonjs/core";
 import type { ServerEvents, ServerToClientEvents } from "@shared/MessageType";
 import type { DefaultServer, DefaultSocket } from "../index";
-import { PongError } from "@shared/pongError/PongError";
 import type { Profile } from "@shared/Profile";
+import type { EndData } from "@shared/attachedScripts/GameManager";
 
 export type SocketMessage = {
 	socketIndex : int,
@@ -24,12 +24,11 @@ export class	Room
 	private _observers : Map<string, Observable<SocketMessage>>;
 	private _socketsReadyCount : int = 0;
 	private _sceneData : ServerSceneData | undefined;
-	private _ended : boolean = false;
 	private _timeout : NodeJS.Timeout | null = null;
 	
 	constructor(
 		private readonly _io : DefaultServer,
-		private readonly _onDispose : () => void,
+		private readonly _onDispose : (endData : EndData) => void,
 		firstSocket : DefaultSocket,
 		secondSocket : DefaultSocket
 	) {
@@ -55,7 +54,7 @@ export class	Room
 		this._serverPongGame = new ServerPongGame(this._sceneData);
 	}
 
-	private dispose()
+	private dispose(endData : EndData)
 	{
 		if (this._disposed)
 			return ;
@@ -67,15 +66,17 @@ export class	Room
 		this._sockets.forEach((socket : DefaultSocket) => { this.removeSocketFromRoom(socket) });
 		this._serverPongGame?.dispose();
 		this._serverPongGame = undefined;
-		this._onDispose();
+		this._onDispose(endData);
 	}
 
 	public onSocketDisconnect(socket : DefaultSocket)
 	{
-		if (this._ended)
+		if (this._disposed)
 			return ;
 		socket.broadcast.to(this._roomId).emit("game-infos", { type: "forfeit" });
-		this.gameEnd();
+		const	winningSide = (socket === this._sockets[0]) ? "left" : "right";
+
+		this._sceneData!.events.getObservable("forfeit").notifyObservers(winningSide);
 	}
 
 	private removeSocketFromRoom(socket : DefaultSocket)
@@ -111,7 +112,7 @@ export class	Room
 		await this._sceneData!.readyPromise.promise;
 		await this.delay(Room._showParticipantsTimeoutMs);
 		this._sceneData!.events.getObservable("game-start").notifyObservers();
-		this._sceneData!.events.getObservable("end").add(() => { this.gameEnd() });
+		this._sceneData!.events.getObservable("end").add(endData => { this.gameEnd(endData) });
 		this.sendMessageToRoom("ready");
 		this._sockets.forEach((socket : DefaultSocket, index : int) => {
 			socket.once("forfeit", () => {
@@ -123,11 +124,10 @@ export class	Room
 		});
 	}
 
-	private gameEnd()
+	private gameEnd(endData : EndData)
 	{
-		this._ended = true;
 		setTimeout(() => {
-			this.dispose();
+			this.dispose(endData);
 		}, 0);
 	}
 
