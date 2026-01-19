@@ -7,5 +7,6 @@ export interface PublicProfile
     username:   string,
 	stats: 		GameStats,
 	lastMatchs: MatchSummary[],
-    isFriend:   boolean
+    isFriend:   boolean,
+    isOnline:   boolean
 }

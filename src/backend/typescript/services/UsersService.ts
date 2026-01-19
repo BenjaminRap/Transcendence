@@ -4,6 +4,7 @@ import { UsersException, UsersError } from "../error_handlers/Users.error.js";
 import type { GameStats, PlayerInfo } from "../types/match.types.js";
 import type { MatchSummary } from "../types/match.types.js";
 import { FriendService } from "./FriendService.js";
+import { SocketEventController } from "../controllers/SocketEventController.js";
 
 
 export class UsersService {
@@ -48,6 +49,7 @@ export class UsersService {
             stats: this.calculateStats(user._count.matchesWons, user._count.matchesLoses),
             lastMatchs: this.getLastMatches(user.matchesWons, user.matchesLoses, 4),
             isFriend: await this.friendService.isFriend(user.id, userId),
+            isOnline: SocketEventController.isUserOnline(user.id),
         }
     }
 
@@ -96,6 +98,7 @@ export class UsersService {
                 stats: this.calculateStats(user._count.matchesWons, user._count.matchesLoses),
                 lastMatchs: this.getLastMatches(user.matchesWons, user.matchesLoses, 4),
                 isFriend: await this.friendService.isFriend(user.id, userId),
+                isOnline: SocketEventController.isUserOnline(user.id),
             };
         }));
     }

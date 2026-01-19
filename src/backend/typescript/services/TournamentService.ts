@@ -1,6 +1,6 @@
 import { type PrismaClient, MatchStatus, TournamentStatus } from '@prisma/client';
 import { TournamentException, TournamentError } from '../error_handlers/Tournament.error.js';
-import type { CreateTournament, TournamentState, PlayerInfo } from '../types/tournament.types.js';
+import type { CreateTournament, TournamentState, PlayerInfo, UserTournament, TournamentRanking, TournamentMatchResult } from '../types/tournament.types.js';
 import { MatchService } from './MatchService.js';
 import type { EndMatchData } from '../types/match.types.js';
 
@@ -344,4 +344,72 @@ export class TournamentService {
         }
     }
 
+	// ----------------------------------------------------------------------------- //
+    async getUserTournaments(userId: number): Promise<UserTournament[]> {
+        /**
+         * les participants peuvent etre des guests, on doit aussi les recuperer
+         * donc user peut etre null et on doit le gerer correctement
+         */
+        const tournaments = await this.prisma.tournament.findMany({
+            where: {
+                participants: {
+                    some: { userId: userId }
+                }
+            },
+            include: {
+                participants: {
+                    include: {
+                        user: {
+                            select: { avatar: true }
+                        }
+                    },
+                    orderBy: {
+                        finalRank: 'asc'
+                    }
+                },
+                matches: {
+                    where: {
+                        status: MatchStatus.FINISHED
+                    },
+                    orderBy: {
+                        updatedAt: 'desc'
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
+
+        return tournaments.map((t: any) => {
+            const ranking: TournamentRanking[] = t.participants.map((p: any) => ({
+                rank: p.finalRank ?? 0,
+                alias: p.alias,
+                avatar: p.user?.avatar || process.env.DEFAULT_AVATAR_URL || "http://localhost:8181/static/public/avatarDefault.webp"
+            }));
+
+            const matches: TournamentMatchResult[] = t.matches.map((m: any) => {
+                const p1Winner = m.player1GuestName === m.winnerGuestName;
+                
+                return {
+                    player1Name: m.player1GuestName,
+                    player2Name: m.player2GuestName,
+                    scoreP1: p1Winner ? (m.scoreWinner ?? 0) : (m.scoreLoser ?? 0),
+                    scoreP2: p1Winner ? (m.scoreLoser ?? 0) : (m.scoreWinner ?? 0),
+                    round: m.round ?? 0
+                }
+            });
+
+            return {
+                id: t.id,
+                title: t.title,
+                status: t.status,
+                createdAt: t.createdAt,
+                ranking,
+                matches
+            };
+        });
+    }
+
+    // ----------------------------------------------------------------------------- //
 }

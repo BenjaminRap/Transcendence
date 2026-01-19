@@ -1,8 +1,9 @@
+import type { FastifyRequest, FastifyReply } from 'fastify';
 import { TournamentService } from '../services/TournamentService.js';
 import { TournamentException, TournamentError } from '../error_handlers/Tournament.error.js';
-import type { CreateTournament, TournamentProgress, PlayerInfo, TournamentState } from '../types/tournament.types.js';
+import type { CreateTournament, TournamentProgress, PlayerInfo, TournamentState, UserTournament } from '../types/tournament.types.js';
 import type { UsersService } from '../services/UsersService.js';
-
+import { CommonSchema } from "../schemas/common.schema.js";
 
 export class TournamentController {
     constructor(
@@ -78,6 +79,27 @@ export class TournamentController {
     async cancelTournament(tournamentId: number, adminId: number | null, adminGuestName: string): Promise<{ success: boolean }> {
         await this.tournamentService.cancelTournament(tournamentId, adminId, adminGuestName);
         return { success: true };
+    }
+
+    // ----------------------------------------------------------------------------- //
+    /**
+     * faire une fonction simple qui permet de recuperer les tournois d'un user
+     * avec en reponse un champ pour la liste des joueur dans l'ordre du gagnant au perdant
+     * un autre champs avec lescore des matchs, et l'avatar et l'aliasde chaque joueur
+     */
+    async getUserTournaments(request: FastifyRequest<{ Params: {id: string} }>, reply: FastifyReply): Promise<{ success: boolean, tournaments?: UserTournament[], message?: string }> {
+        const userId = parseInt(request.params.id);
+        const valid = CommonSchema.id.parse(userId);
+        if (!valid) {
+            return { success: false, message: 'Invalid user ID.' };
+        }
+        try {
+            const tournaments = await this.tournamentService.getUserTournaments(valid);
+            return { success: true, tournaments };
+        } catch (error) {
+            console.error(error);
+            return { success: false, message: 'Failed to retrieve user tournaments.' };
+        }
     }
 
     // ==================================== PRIVATE ==================================== //

@@ -44,3 +44,26 @@ export interface TournamentState {
         currentMatchId: number | null
     }>
 }
+
+export interface TournamentMatchResult {
+    player1Name: string;
+    player2Name: string;
+    scoreP1: number;
+    scoreP2: number;
+    round: number;
+}
+
+export interface TournamentRanking {
+    rank: number | null;
+    alias: string;
+    avatar: string;
+}
+
+export interface UserTournament {
+    id: number;
+    title: string;
+    status: TournamentStatus;
+    createdAt: Date;
+    ranking: TournamentRanking[];
+    matches: TournamentMatchResult[];
+}
