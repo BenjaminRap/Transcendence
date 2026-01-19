@@ -2,7 +2,8 @@ import { Match } from "./Match";
 import { PongError } from "./pongError/PongError";
 import { isPowerOfTwo, shuffle } from "./utils";
 
-export type ProfileWithScore<T> = T & {
+export type ProfileWithScore<T> = {
+	profile: T,
 	score : number
 }
 

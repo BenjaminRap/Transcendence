@@ -191,7 +191,7 @@ export class	TournamentGUI extends HTMLElement implements IGUI<void>
 
 			if (winner === undefined || winnerSide === undefined)
 				throw new PongError("A match hasn't finished but TournamentGUI setWinners has been called !", "quitPong");
-			matchGui.setWinner(winner);
+			matchGui.setWinner(winner.profile);
 		}
 	}
 

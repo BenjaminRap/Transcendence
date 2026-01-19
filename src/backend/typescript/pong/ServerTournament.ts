@@ -186,8 +186,8 @@ export class	ServerTournament extends Tournament<DefaultSocket>
     protected override onNewMatches(): void
 	{
 		this._currentMatches.forEach(match => {
-			const	left = match.left;
-			const	right = match.right;
+			const	left = match.left?.profile;
+			const	right = match.right?.profile;
 
 			if (match.winner !== undefined
 				|| left?.data.getState() !== "tournament-waiting"
@@ -209,7 +209,10 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 			type: "tournament-gui-set-winners",
 			round: round,
 			matches: matches.map(match => ({
-				winner: match.winner?.data.getProfile(),
+				winner: match.winner ? {
+					profile: match.winner.profile.data.getProfile(),
+					score: match.winner.score
+				} : undefined,
 				winnerSide: match.winnerSide
 			}))
 		});

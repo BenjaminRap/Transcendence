@@ -89,7 +89,10 @@ export const	zodTournamentDescription = zod.object({
 export type TournamentDescription = zod.infer<typeof zodTournamentDescription>;
 
 export const	zodMatchWinningDescription = zod.object({
-	winner: zodProfile.optional(),
+	winner: zod.object({
+		profile: zodProfile,
+		score: zod.number()
+	}).optional(),
 	winnerSide: zod.literal(["left", "right"]).optional()
 });
 export type MatchWinningDescription = zod.infer<typeof zodMatchWinningDescription>;

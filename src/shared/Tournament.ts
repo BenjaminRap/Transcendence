@@ -1,7 +1,6 @@
 import { TournamentHelper, type ProfileWithScore } from "@shared/TournamentHelper";
 import type { Match } from "@shared/Match";
 import { isPowerOfTwo } from "@shared/utils";
-import type { EndData } from "./attachedScripts/GameManager";
 
 export abstract class	Tournament<T>
 {
@@ -23,7 +22,7 @@ export abstract class	Tournament<T>
 		const	lastRound = this._tournamentMatches[this._tournamentMatches.length - 1];
 		const	lastMatch = lastRound[0];
 
-		this.onTournamentEnd(lastMatch.winner!);
+		this.onTournamentEnd(lastMatch.winner!.profile);
 	}
 
 	private async endRound()
@@ -32,10 +31,10 @@ export abstract class	Tournament<T>
 		{
 			const	disqualified : ProfileWithScore<T>[] = [];
 			TournamentHelper.setQualifiedParticipants(this._qualified, this._participants, disqualified, this._expectedQualifiedCount);
-			disqualified.forEach(participant => this.onParticipantLose(participant));
+			disqualified.forEach(participant => this.onParticipantLose(participant.profile));
 			if (this._qualified.length === this._expectedQualifiedCount)
 			{
-				this.onQualificationsEnd(this._qualified);
+				this.onQualificationsEnd(this._qualified.map(value => value.profile));
 				this.onTournamentShow();
 				await this.delay(Tournament._showTournamentDurationMs);
 				this._round = 0;
@@ -84,7 +83,7 @@ export abstract class	Tournament<T>
 
 	protected	setParticipants(participants : T[])
 	{
-		this._participants = participants.map(profile => ({...profile, score: 0}));
+		this._participants = participants.map(profile => ({profile, score: 0}));
 		this._expectedQualifiedCount = TournamentHelper.getExpectedQualified(this._participants.length);
 	}
 
@@ -105,7 +104,7 @@ export abstract class	Tournament<T>
 		if (!loser)
 			return ;
 		if (this._round !== "qualification")
-			this.onParticipantLose(match.loser);
+			this.onParticipantLose(match.loser.profile);
 		this._matchesFinished++;
 		if (this._matchesFinished === this._currentMatches.length)
 			this.endRound();

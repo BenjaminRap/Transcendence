@@ -26,7 +26,7 @@ export class	LocalTournament extends Tournament<Profile>
 
 		if (left === undefined || right === undefined)
 			throw new PongError("A match is started, but the players has'nt finished their match !", "quitPong");
-		this._events?.getObservable("set-participants").notifyObservers([left, right]);
+		this._events?.getObservable("set-participants").notifyObservers([left.profile, right.profile]);
 		await this.delay(Tournament._showOpponentsDurationMs);
 		this._events?.getObservable("game-start").notifyObservers();
 	}
