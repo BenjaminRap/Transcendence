@@ -93,23 +93,6 @@ export class	ServerTournament
 		this.removeCreatorEvents();
 		this._onTournamentDispose();
 	}
-
-	public getDescription() : TournamentDescription
-	{
-		return {
-			name: this._settings.name,
-			currentPlayerCount: this._players.size,
-			maxPlayerCount: this._settings.maxPlayerCount,
-			id: this._tournamentId
-		}
-	}
-
-	public getDescriptionIfAvailable(socket : DefaultSocket) : TournamentDescription | null
-	{
-		if (!this._settings.isPublic || !this.canJoinTournament(socket).success)
-			return null;
-		return this.getDescription();
-	}
 	
 	private	canJoinTournament(socket : DefaultSocket)
 	{
@@ -165,6 +148,23 @@ export class	ServerTournament
 			socket.data.leaveTournament();
 			socket.leave(this._tournamentId);
 		}
+	}
+
+	public getDescription() : TournamentDescription
+	{
+		return {
+			name: this._settings.name,
+			currentPlayerCount: this._players.size,
+			maxPlayerCount: this._settings.maxPlayerCount,
+			id: this._tournamentId
+		}
+	}
+
+	public getDescriptionIfAvailable(socket : DefaultSocket) : TournamentDescription | null
+	{
+		if (!this._settings.isPublic || !this.canJoinTournament(socket).success)
+			return null;
+		return this.getDescription();
 	}
 
 	public getParticipantsNames() : string[]
