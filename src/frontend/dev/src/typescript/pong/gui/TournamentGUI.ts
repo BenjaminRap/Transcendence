@@ -187,16 +187,12 @@ export class	TournamentGUI extends HTMLElement implements IGUI<void>
 		for (let index = 0; index < matchesGuis.length; index++) {
 			const	matchGui = matchesGuis[index];
 			const	match = matches[index];
-			const	left = opponentsGuis[index * 2];
-			const	right = opponentsGuis[index * 2 + 1];
 			const	winner = match.getWinner();
 			const	winnerSide = match.getWinnerSide();
 
 			if (winner === undefined || winnerSide === undefined)
 				throw new PongError("A match hasn't finished but TournamentGUI setWinners has been called !", "quitPong");
 			matchGui.setWinner(winner);
-			left.setHasWon(winnerSide === "left");
-			right.setHasWon(winnerSide === "right");
 		}
 	}
 

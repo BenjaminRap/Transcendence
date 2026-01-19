@@ -41,13 +41,6 @@ export class	MatchGUI extends HTMLElement
 		this._matchOrOpponent.replaceWith(opponentGUI);
 		this._matchOrOpponent = opponentGUI;
 	}
-
-	public setHasWon(hasWon : boolean)
-	{
-		if (this._matchOrOpponent === undefined || this._matchOrOpponent instanceof HTMLDivElement)
-			throw new PongError("MatchGUI setHasWon has been called before setWinner !", "quitPong");
-		this._matchOrOpponent.setHasWon(hasWon);
-	}
 }
 
 customElements.define("match-gui", MatchGUI);
