@@ -21,6 +21,7 @@ export class	FrontendEventsManager extends EventsManager
 			"tournament-gui-create": new Observable<Profile[]>,
 			"tournament-gui-set-winners": new Observable<[number, MatchWinningDescription[]]>,
 			"show-tournament": new Observable<void>,
+			"local-tournament-end" : new Observable<Profile>,
 		};
 		this._allEvents = { ...this._events, ...additionalEvents }
 	}

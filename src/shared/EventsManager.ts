@@ -1,6 +1,5 @@
 import { type int, Observable } from "@babylonjs/core";
 import type { EndData } from "./attachedScripts/GameManager";
-import type { Profile } from "./Profile";
 
 export abstract class	EventsManager
 {
@@ -16,7 +15,6 @@ export abstract class	EventsManager
 			"forfeit": new Observable<"left" | "right" | "highestScore">,
 			"game-paused" : new Observable<void>,
 			"game-unpaused": new Observable<void>,
-			"local-tournament-end" : new Observable<Profile>,
 		}
 	}
 
