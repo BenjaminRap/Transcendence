@@ -37,7 +37,7 @@ export class	LocalTournament extends Tournament<Profile>
 		this.createMatches();
 	}
 
-	public	onCurrentMatchEnd(endData : EndData)
+	public	setMatchWinner(endData : EndData)
 	{
 		const	match = this._currentMatches[this._currentMatchIndex];
 

@@ -119,7 +119,7 @@ export class CreateInGameGUI extends CustomScriptComponent {
 	{
 		this._endGUI.setWinner(endData.winner, endData.forfeit, this._sceneData.serverProxy.getPlayerIndex());
 		this.switchToGUI(this._endGUI);
-		this._sceneData.tournament?.onCurrentMatchEnd(endData);
+		this._sceneData.tournament?.setMatchWinner(endData);
 	}
 
 	private	togglePause() : void
