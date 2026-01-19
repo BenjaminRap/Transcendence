@@ -15,26 +15,10 @@ export class	LocalTournament extends Tournament<Profile>
 		super(participants);
 	}
 
-	public setEventsAndStart(events : FrontendEventsManager)
+	private	async startCurrentGame()
 	{
-		this._events = events;
-		this.start();
-	}
-
-	public	onCurrentMatchEnd(endData : EndData)
-	{
-		const	match = this._currentMatches[this._currentMatchIndex];
-
-		match.setWinner(endData);
-		this.onMatchEnd();
-	}
-
-	public async startNextGame()
-	{
-		if (this._currentMatchIndex >= this._currentMatches.length - 1)
+		if (this._currentMatchIndex >= this._currentMatches.length)
 			return ;
-		this._currentMatchIndex++;
-
 		const	match = this._currentMatches[this._currentMatchIndex];
 
 		if (match.left === undefined || match.right === undefined)
@@ -42,6 +26,26 @@ export class	LocalTournament extends Tournament<Profile>
 		this._events?.getObservable("set-participants").notifyObservers([match.left, match.right]);
 		await this.delay(Tournament._showOpponentsDurationMs);
 		this._events?.getObservable("game-start").notifyObservers();
+	}
+
+	public setEventsAndStart(events : FrontendEventsManager)
+	{
+		this._events = events;
+		this.createMatches();
+	}
+
+	public	onCurrentMatchEnd(endData : EndData)
+	{
+		const	match = this._currentMatches[this._currentMatchIndex];
+
+		match.setWinner(endData);
+	}
+
+	public async startNextGame()
+	{
+		this.onMatchEnd();
+		this._currentMatchIndex++;
+		this.startCurrentGame();
 	}
 
 	public dispose()
@@ -67,11 +71,11 @@ export class	LocalTournament extends Tournament<Profile>
     public onNewMatches(): void
 	{
 		this._currentMatchIndex = 0;
+		this.startCurrentGame();
     }
 
     public setRoundWinners(round: number, matches: Match<Profile>[]): void
 	{
 		this._events?.getObservable("tournament-gui-set-winners").notifyObservers([round, matches]);
-        throw new Error("Method not implemented.");
     }
 }

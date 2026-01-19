@@ -85,7 +85,7 @@ export abstract class	Tournament<T>
 		});
 	}
 
-	protected start()
+	protected createMatches()
 	{
 		if (isPowerOfTwo(this._participants.length))
 		{

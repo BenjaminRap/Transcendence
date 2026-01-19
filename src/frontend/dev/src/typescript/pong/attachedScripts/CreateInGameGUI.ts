@@ -108,7 +108,7 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		this._sceneData.events.getObservable("tournament-gui-create").add((participants) => {
 			if (this._tournamentGUI)
 				return ;
-			this._tournamentGUI = new TournamentGUI(participants);
+			this._tournamentGUI = initMenu(new TournamentGUI(participants), undefined, this._menuParent);
 		});
 		this._sceneData.events.getObservable("tournament-gui-set-winners").add(([round, winners]) => {
 			this._tournamentGUI?.setWinners(round, winners);
