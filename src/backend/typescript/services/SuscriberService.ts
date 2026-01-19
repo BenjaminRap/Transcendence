@@ -8,20 +8,22 @@ import type { GameStats } from "../types/match.types.js";
 import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
 import path from "path";
 import { SocketEventController } from "../controllers/SocketEventController.js";
-import type { Friend, MatchSummary } from "../types/suscriber.types.js";
+import type { Friend } from "../types/suscriber.types.js";
+import type { MatchService } from "./MatchService.js";
 
 export class SuscriberService {
     constructor(
         private prisma: PrismaClient,
         private passwordHasher: PasswordHasher,
-        private fileService: FileService
+        private fileService: FileService,
+        private matchService: MatchService,
     ) {}
     private api_url = process.env.API_URL || 'https://localhost:8080/api';
     private default_avatar_filename = 'avatarDefault.webp';
     private default_avatar_url = this.api_url + '/static/public/' + this.default_avatar_filename;
     // ----------------------------------------------------------------------------- //
     async getProfile(id: number): Promise<SuscriberProfile> {
-        // we are limited to 10 matches won and 10 matches lost to calculate stats and get last matches
+        // we are limited to 10 matches won and 10 matches lost to get last matches
         const takeLimit = 10; 
 
         // we count matches won and lost for stats calculation
@@ -50,15 +52,13 @@ export class SuscriberService {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
         }
 
-		const stats: GameStats = this.calculateStats(user._count.matchesWons, user._count.matchesLoses);
+		const stats: GameStats = this.matchService.calculateStats(user._count.matchesWons, user._count.matchesLoses);
 
 		// Get last 4 matches
-        const allMatches = this.getLastMatches(user.matchesWons, user.matchesLoses, 4);
-
+        const allMatches = await this.matchService.getLastMatches(user.id, user.matchesWons, user.matchesLoses, 4);
+        
 		// Sorted 4 friends
         const sortedFriends = this.getSortedFriendlist(user.sentRequests, user.receivedRequests, 4, user.id);
-
-        // afficher la liste des amis dans le terminal pour debug
 
         return {
             id: user.id,
@@ -81,7 +81,7 @@ export class SuscriberService {
             throw new SuscriberException(SuscriberError.INVALID_CREDENTIALS, SuscriberError.INVALID_CREDENTIALS);
         }
 
-        if (user.password === newPassword) {
+        if (await this.passwordHasher.verify(newPassword, user.password)) {
             throw new SuscriberException(SuscriberError.PASSWD_ERROR, SuscriberError.PASSWD_ERROR);
         }
 
@@ -200,54 +200,6 @@ export class SuscriberService {
     // ----------------------------------------------------------------------------- //
     private hasChanged(user: User, data: UpdateData) : boolean {
 		return user.username != data.username;
-    }
-
-	// --------------------------------------- -------------------------------------- //
-	private calculateStats(matchesWons: number, matchesLoses: number): GameStats {
-		const totalMatches = matchesWons + matchesLoses;
-		const ratio = totalMatches > 0 ? (matchesWons / totalMatches * 100).toFixed(2) : "0.00";
-
-		return {
-			wins: matchesWons,
-			losses: matchesLoses,
-			total: totalMatches,
-			winRate: parseFloat(ratio),
-		};
-	}
-
-	// ----------------------------------------------------------------------------- //
-    private getLastMatches(matchesWons: any[], matchesLoses: any[], limit: number): MatchSummary[] {
-        /**
-         * On combine les deux listes de matchs (gagnés et perdus),
-         * on les trie par date de création décroissante,
-         * puis on prend les 'limit' premiers.
-         * on retourne une structure combinée { opponent, match }
-         * 
-         * on prend en compte que l'utilisateur peut ne pas avoir de match
-         * ou bien aucun match gagne
-         * ou bien aucun perdu
-         * 
-         */
-        const allMatches = [
-            ...(matchesWons || []),
-            ...(matchesLoses || []),
-        ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, limit);
-
-        // Transformation des données pour le front
-        return allMatches.map(match => {
-            // si l'utilisateur est supprimé (SetNull), opponentObj peut être null.
-            const opponentObj = match.loser || match.winner;
-
-            return {
-                opponent: opponentObj ? {
-                    id: opponentObj.id.toString(),
-                    username: opponentObj.username,
-                    avatar: opponentObj.avatar
-                } : null, // Cas où l'adversaire a supprimé son compte
-                match: match as Match,
-            } as MatchSummary;
-        });
     }
 
     // ----------------------------------------------------------------------------- //

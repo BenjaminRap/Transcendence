@@ -6,50 +6,52 @@ export interface GameStats
 	winRate:	number,
 }
 
-export interface MatchStats
-{
-	playerId:	number,
-	stats:		GameStats,
+export interface PlayerInfo {
+    id:         number | undefined,
+    guestName:  string,
 }
 
-interface OpponentInfo
-{
-	id:			number,
-	username:	string,
-	avatar:		string,
-}
-
-export interface MatchHistoryEntry
-{
-	matchId:	number,
-	opponent:	OpponentInfo,
-	userResult:	'win' | 'loss',
-	date:		Date,
-}
-
-export enum OPPONENT_LEVEL
-{
-    GUEST = "GUEST",
-    AI_EASY = "AI_EASY",
-    AI_MEDIUM = "AI_MEDIUM",
-    AI_HARD = "AI_HARD"
+export interface StartMatchData {
+    player1: PlayerInfo,
+    player2: PlayerInfo,
 }
 
 export interface MatchData
 {
-    winnerId?:      number | undefined,
-    winnerLevel?:   OPPONENT_LEVEL | string | undefined,
-
-    loserId?:       number | undefined,
-    loserLevel?:    OPPONENT_LEVEL | string | undefined,
-    
-    scoreWinner:    number,
-    scoreLoser:     number,
-    
-    duration:       number,
+    matchId:        number,
+    player1Info:  PlayerInfo,
+    player2Info:  PlayerInfo,
 }
 
-export interface MatchTournamentData extends MatchData
+export interface EndMatchData {
+    matchId:	    number,
+    winner:         PlayerInfo,
+    loser:          PlayerInfo,
+    scoreWinner:	number,
+    scoreLoser:	    number,
+    duration:	    number,
+}
+
+export interface OpponentSummary
 {
-    tournamentId:  number,
+    id: number | undefined,
+    username: string,
+    avatar: string,
+    isFriend: boolean,
+}
+
+export interface MatchResult
+{
+    matchId: number,
+    scoreWinner: number,
+    scoreLoser: number,
+    duration: number,
+    winner: PlayerInfo,
+    loser: PlayerInfo,
+}
+
+export interface MatchSummary
+{
+    opponent?: OpponentSummary,
+    matchResult: MatchResult,
 }

@@ -15,7 +15,7 @@ export function friendRoute(
         preHandler: middleware.authenticate
     }, controller.acceptFriendRequest.bind(controller));
 
-    fastify.put<{ Params: {id: string} }>('/delete/:id', {
+    fastify.delete<{ Params: {id: string} }>('/delete/:id', {
         preHandler: middleware.authenticate
     }, controller.deleteFriend.bind(controller));
 

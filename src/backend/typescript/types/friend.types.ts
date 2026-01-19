@@ -1,13 +1,15 @@
 export interface FriendProfile
 {
-    id:         string,
-    username:   string,
-    avatar:     string
+    id:             number,
+    username:       string,
+    avatar:         string,
+    isOnline:       boolean,
+    requesterId:    number,
 }
 
 export interface ListFormat
 {
     status:     string,
     updatedAt:  string,
-    user:       FriendProfile,
+    user:       FriendProfile | null,
 }

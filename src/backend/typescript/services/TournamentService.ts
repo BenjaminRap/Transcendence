@@ -1,34 +1,347 @@
-import type { PrismaClient } from '@prisma/client';
+import { type PrismaClient, MatchStatus, TournamentStatus } from '@prisma/client';
 import { TournamentException, TournamentError } from '../error_handlers/Tournament.error.js';
+import type { CreateTournament, TournamentState, PlayerInfo } from '../types/tournament.types.js';
+import { MatchService } from './MatchService.js';
+import type { EndMatchData } from '../types/match.types.js';
 
 export class TournamentService {
 	constructor(
 		private prisma: PrismaClient,
+        private matchService: MatchService,
 	) {}
 
-	// ----------------------------------------------------------------------------- //
-	async updateMatchResult(tournamentId: number, matchId: number): Promise<void> {
-		await this.prisma.tournament.update({
-			where: { id: tournamentId },
+    // ----------------------------------------------------------------------------- //
+	async createTournament(data: CreateTournament): Promise<TournamentState> {
+        // Create Tournament
+        const participants = data.participants.map(participant => ({
+						alias: participant.alias,
+						userId: participant.userId ?? null,
+                        guestName: participant.userGuestName
+					}))
+
+		const tournament = await this.prisma.tournament.create({
 			data: {
-				matches: {
-					connect: { id: matchId },
+				title: data.title,
+				status: TournamentStatus.ONGOING,
+				creatorId: data.adminUserId ?? null,
+                creatorGuestName: data.adminGuestName,
+				participants: {
+					create: participants,
 				},
-			},
+			} as any,
 		});
+
+        // Generate Bracket & Start Initial Matches
+        
+        // We create ALL matches for the bracket structure now to have IDs
+        const matchesCreated: any[] = [];
+
+        // Round 1
+        for (let i = 0; i < data.matchups.length; i++) {
+            const matchup = data.matchups[i];
+            const match = await this.matchService.startTournamentMatch(
+                tournament.id,
+                1,
+                i,
+                matchup.player1,
+                matchup.player2
+            );
+            matchesCreated.push(match);
+        }
+
+        // Subsequent Rounds placeholders
+        const pcount = participants.length;
+        const totalRounds = Math.log2(pcount);
+
+        let matchesInRound = pcount / 2;
+        for (let round = 2; round <= totalRounds; round++)
+        {
+            matchesInRound /= 2;
+
+            for (let i = 0; i < matchesInRound; i++) {
+                await this.matchService.createBracketMatch(
+                    tournament.id,
+                    round,
+                    i
+                );
+            }
+        }
+        
+        // Construct return state
+        // thats a table with each player alias and their current match id
+        const playersState = data.participants.map(participant => {
+             let currentMatchId = null;
+             // Check in created matches (Round 1)
+             for(const match of matchesCreated) {
+                 if ((match.player1Id === participant.userId && match.player1GuestName === participant.userGuestName) ||
+                     (match.player2Id === participant.userId && match.player2GuestName === participant.userGuestName)) {
+                     currentMatchId = match.id;
+                     break;
+                 }
+             }
+             
+             return {
+                 participantAlias: participant.alias,
+                 currentMatchId
+             };
+        });
+
+		return {
+            tournamentId: tournament.id,
+            players: playersState
+        };
 	}
 
-	// ==================================== PRIVATE ==================================== //
-	
 	// ----------------------------------------------------------------------------- //
-	async validateTournament(tournamentId: number): Promise<boolean> {
-		const tournemant = await this.prisma.tournament.findUnique({
+	async getTournamentById(tournamentId: number) {
+		const tournament = await this.prisma.tournament.findUnique({
 			where: { id: tournamentId },
-			select: { id: true },
+			include: {
+				participants: true,
+				matches: true,
+			},
 		});
-		if (!tournemant)
-			return false;
-		return true;
+
+		if (!tournament) {
+			throw new TournamentException(TournamentError.TOURNAMENT_NOT_FOUND);
+		}
+
+		return tournament;
 	}
+
+	// ----------------------------------------------------------------------------- //
+    async updateTournamentProgress(tournamentId: number, matchData: EndMatchData) {
+        if (matchData.matchId <= 0 || tournamentId <= 0) {
+            throw new TournamentException(TournamentError.INVALID_MATCH_ID);
+        }
+
+        // 1. Check Tournament Status FIRST
+        const tournament = await this.prisma.tournament.findUnique({
+            where: { id: tournamentId },
+            select: { status: true, participants: true }
+        });
+
+        if (!tournament)
+            throw new TournamentException(TournamentError.TOURNAMENT_NOT_FOUND);
+        if (tournament.status !== TournamentStatus.ONGOING) {
+            throw new TournamentException(TournamentError.UNAUTHORIZED, `Cannot update match: Tournament is ${tournament.status}`);
+        }
+
+        // 2. Strict Match Retrieval (Security & Validation)
+        const match = await this.prisma.match.findFirst({
+            where: {
+                id: matchData.matchId,
+                tournamentId: tournamentId,
+                OR: [
+                    { player1GuestName: matchData.winner.guestName, player2GuestName: matchData.loser.guestName },
+                    { player1GuestName: matchData.loser.guestName, player2GuestName: matchData.winner.guestName }
+                ]
+            }
+        });
+
+        if (!match) {
+            throw new TournamentException(TournamentError.MATCH_NOT_FOUND, 
+               `Match ${matchData.matchId} not found or players mismatch in tournament ${tournamentId}.`);
+        }
+
+        // 3. Structural Validation
+        const m: any = match; 
+        if (!m.round || m.matchOrder === null || m.matchOrder === undefined) {
+             console.error(`Tournament match ${match.id} integrity error: missing round/order.`);
+            throw new TournamentException(TournamentError.MATCH_NOT_FOUND);
+        }
+
+        // 4. Save Match Result
+        await this.matchService.endMatch(matchData);
+
+        // 5. Update Loser Rank (Optional - Implementation depends on ranking logic preference)
+        await this.setParticipantRank(tournamentId, matchData.loser, m.round, false, tournament.participants.length);
+
+        // 6. Advancement Logic
+        const currentRound = m.round;
+        const currentOrder = m.matchOrder;
+        
+        const totalParticipants = tournament.participants.length;
+        const totalRounds = Math.ceil(Math.log2(totalParticipants));
+
+        if (currentRound >= totalRounds) {
+            // Check for tournament finish (Final Match)
+            // Winner gets Rank 1
+            await this.setParticipantRank(tournamentId, matchData.winner, currentRound, true, totalParticipants);
+            await this.finishTournament(tournamentId);
+            return;
+        }
+
+        const nextRound = currentRound + 1;
+        const nextMatchOrder = Math.floor(currentOrder / 2);
+        const isPlayer1InNext = (currentOrder % 2 === 0);
+
+        // Find next match
+        const nextMatch = await this.prisma.match.findFirst({
+            where: {
+                tournamentId,
+                round: nextRound,
+                matchOrder: nextMatchOrder
+            } as any
+        });
+
+        if (nextMatch) {
+            const updateData: any = {};
+            if (isPlayer1InNext) {
+                updateData.player1Id = matchData.winner.id;
+                updateData.player1GuestName = matchData.winner.guestName;
+            } else {
+                updateData.player2Id = matchData.winner.id;
+                updateData.player2GuestName = matchData.winner.guestName;
+            }
+            await this.prisma.match.update({
+                where: { id: nextMatch.id },
+                data: updateData
+            });
+        } else {
+            console.error(`CRITICAL: Next match not found for Tournament ${tournamentId}: Round ${nextRound}, Order ${nextMatchOrder}. Bracket is broken.`);
+        }
+    }
+    
+	// ----------------------------------------------------------------------------- //
+    async startNextMatch(tournamentId: number, player1: PlayerInfo, player2: PlayerInfo): Promise<{ matchId: number }> {
+        const matchId = await this.prisma.match.findFirst({
+            where: {
+                tournamentId,
+                status: MatchStatus.IN_PROGRESS,
+                OR: [
+                    {
+                        player1Id: player1.id,
+                        player1GuestName: player1.guestName,
+                        player2Id: player2.id,
+                        player2GuestName: player2.guestName
+                    },
+                    {
+                        player1Id: player2.id,
+                        player1GuestName: player2.guestName,
+                        player2Id: player1.id,
+                        player2GuestName: player1.guestName
+                    }
+                ],
+                select: { id: true }
+            } as any
+        });
+        
+        if (!matchId)
+            throw new TournamentException(TournamentError.MATCH_NOT_FOUND);
+        return { matchId: matchId.id};
+    }
+
+	// ----------------------------------------------------------------------------- //
+	private async updateTournamentStatus(tournamentId: number, status: TournamentStatus) {
+		const tournament = await this.prisma.tournament.update({
+			where: { id: tournamentId },
+			data: { status } as any,
+		});
+		return tournament;
+	}
+
+	// ----------------------------------------------------------------------------- //
+    /**
+     * verifier que tous les matchs sont bien termines au debut de la fonction
+     * 
+     */
+	async finishTournament(tournamentId: number) {
+        // Log consistency check
+        const remainingMatches = await this.prisma.match.count({
+            where: { tournamentId, status: MatchStatus.IN_PROGRESS }
+        });
+        
+        if (remainingMatches > 0) {
+            console.warn(`Tournament ${tournamentId} finished with ${remainingMatches} matches still IN_PROGRESS. Cancelling them.`);
+        }
+
+        // Force cleanup of any zombie matches to CANCELLED instead of FINISHED
+        // because they were not played.
+        await this.prisma.match.updateMany({
+            where: {
+                tournamentId,
+                status: MatchStatus.IN_PROGRESS
+            } as any,
+            data: {
+                status: MatchStatus.CANCELLED
+            } as any
+        });
+		
+        const tournament = await this.updateTournamentStatus(tournamentId, TournamentStatus.FINISHED);
+		return tournament;
+	}
+
+	// ----------------------------------------------------------------------------- //
+    async cancelTournament(tournamentId: number, adminId: number | null, adminGuestName: string) {
+        const tournament = await this.getTournamentById(tournamentId);
+
+        if (tournament.status === TournamentStatus.FINISHED || tournament.status === TournamentStatus.CANCELLED) {
+             return tournament;
+        }
+
+        const isCreator = (tournament.creatorId === adminId) &&
+                          (tournament.creatorGuestName === adminGuestName);
+
+        if (!isCreator)
+            throw new TournamentException(TournamentError.UNAUTHORIZED);
+
+        // Cancel ALL matches (InProgress AND placeholders to lock the bracket)
+        await this.prisma.match.updateMany({
+            where: {
+                tournamentId,
+                status: MatchStatus.IN_PROGRESS
+            } as any,
+            data: {
+                status: MatchStatus.CANCELLED
+            } as any
+        });
+
+        // Notify players logic should go here (Websockets)
+
+        return await this.updateTournamentStatus(tournamentId, TournamentStatus.CANCELLED);
+    }
+
+    // ----------------------------------------------------------------------------- //
+    private async setParticipantRank(tournamentId: number, player: PlayerInfo, round: number, isWinner: boolean, totalParticipants: number) {
+        let rank = 0;
+
+        if (isWinner) {
+            // Attention : Ne mettre true que si c'est le vainqueur de la GRANDE FINALE
+            rank = 1; 
+        } else {
+            // Formule simplifiée : Rank = (Nombre de joueurs éliminés avant moi + ceux qui restent) ...
+            // Plus simple : Si je perds au Round R, il y a (Total / 2^R) joueurs qui sont meilleurs que moi.
+            // Donc mon rang est (Total / 2^R) + 1.
+            
+            // Ex: 8 joueurs. Round 1. 8 / 2^1 = 4. Rang = 5.
+            // Ex: 8 joueurs. Round 2. 8 / 2^2 = 2. Rang = 3.
+            // Ex: 8 joueurs. Round 3. 8 / 2^3 = 1. Rang = 2.
+            
+            const betterPlayersCount = totalParticipants / Math.pow(2, round);
+            rank = Math.floor(betterPlayersCount) + 1;
+        }
+
+        try {
+            // Finding the unique ID for the participant row
+            const whereCondition: any = { tournamentId };
+            if (player.id) {
+                whereCondition.userId = player.id;
+            } else {
+                whereCondition.guestName = player.guestName;
+            }
+            
+            // Note: Prisma updateMany doesn't allow updating unique constraints easily if not selected by unique,
+            // but here we filter by tournamentId + userId/guestName which is unique in schema.
+            // However, updateMany is safer if we don't have the primary key (id) of TournamentParticipant.
+            
+            await this.prisma.tournamentParticipant.updateMany({
+                where: whereCondition,
+                data: { finalRank: rank }
+            });
+        } catch (error) {
+            console.warn(`Failed to set rank for user ${player.guestName}:`, error);
+        }
+    }
 
 }

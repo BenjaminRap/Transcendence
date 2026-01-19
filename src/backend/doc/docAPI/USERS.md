@@ -1,110 +1,112 @@
+# 🔍 Users API Documentation
 
+Cette API permet de rechercher des utilisateurs et de récupérer leurs profils publics, incluant leurs statistiques de jeu et leur historique.
 
-**PAS TOUT A JOUR (SAUF LES ROUTES)**
+## 🔒 Authentication
 
+Tous les endpoints nécessitent une authentification via **Bearer Token**.
 
+| Header | Type | Value |
+| :--- | :--- | :--- |
+| `Authorization` | String | `Bearer <YOUR_JWT_TOKEN>` |
+| `Content-Type` | String | `application/json` |
 
+---
 
-**GET users/search/id/:id**
+## 📡 Endpoints
 
-_Description :_ renvoie le profile de l'utilisateur avec l'id passe en parametre
+### 1. Recherche et Profils
 
-_Mandatory headers :_
-  Content-Type: application/json,
-  Authorization: Bearer <TOKEN>
+#### 🆔 Récupérer un profil par ID
+Récupère les informations complètes d'un utilisateur spécifique via son ID.
 
-_Possibles responses:_
+- **URL** : `GET /users/search/id/:id`
+- **Params** : `id` (integer) - L'ID de l'utilisateur recherché.
 
-✅ 200 OK
-  {
-    success:  true,
-    message:  'Profile retrieved successfully',
-    user: {
-      id,       -> string
-      username, -> string
-      avatar    -> string
+**Réponses :**
+
+**200 OK**
+```json
+{
+  "success": true,
+  "message": "Profile retrieved successfully",
+  "user": {
+    "id": 42,
+    "avatar": "http://localhost:8181/static/public/avatarDefault.webp",
+    "username": "Zaphod",
+    "stats": {
+      "wins": 10,
+      "losses": 5,
+      "total": 15,
+      "winRate": 66.67
+    },
+    "lastMatchs": [
+      {
+        "opponent": {
+          "id": 21,
+          "username": "Arthur",
+          "avatar": "http://...",
+          "isFriend": false
+        },
+        "matchResult": {
+          "matchId": 101,
+          "scoreWinner": 11,
+          "scoreLoser": 5,
+          "duration": 300,
+          "winner": { "id": 42, "guestName": null },
+          "loser": { "id": null, "guestName": "Guest_2337" }
+         }
+      }
+    ],
+    "isFriend": false
+  }
+}
+```
+
+| Code | Description | Body Example |
+| :--- | :--- | :--- |
+| **400** | ⚠️ ID Invalide | `{ "success": false, "message": "Invalid param" }` |
+| **404** | ❌ Introuvable | `{ "success": false, "message": "User not found" }` |
+
+---
+
+#### 🔍 Rechercher par nom d'utilisateur
+Recherche une liste d'utilisateurs dont le pseudo contient la chaîne fournie.
+
+- **URL** : `GET /users/search/username/:username`
+- **Params** : `username` (string) - Le terme de recherche.
+
+**Réponses :**
+
+**200 OK**
+```json
+{
+  "success": true,
+  "message": "Profiles successfully retrieved",
+  "user": [
+    {
+      "id": 42,
+      "username": "Zaphod",
+      "avatar": "http://...",
+      "stats": { ... },
+      "lastMatchs": [ ... ],
+      "isFriend": true
+    },
+    ...
+  ]
+}
+```ts
+    },
+    {
+      "id": 84,
+      "username": "Ford",
+      ...
     }
-  }
+  ]
+}
+```
 
-❌ 401 Unauthorized :
-  {
-    "success": false,
-    "message": "Invalid or missing token JWT"
-  }
-
-❌ 400 Bad Request :
-  {
-    "success": false,
-    "message": "invalid input in the body"
-  }
-
-
-❌ 404 Not Found :
-  {
-    "success": false,
-    "message": "User not found or suscriber not found",
-x  }
-
-❌ 500 Internal Server Error :
-  {
-    "success": false,
-    "message": "Internal Server Error"
-  }
-
--------------------------------------------------------------------------------------------------------------------------
-
-**GET users/search/username/:username**
-
-_Description :_ retourne un tableau avec 10 utilisateurs maximum venant de la DB dont le nom a une occurence avec le paramere username
-
-_Mandatory headers :_
-  Content-Type: application/json,
-  Authorization: Bearer <TOKEN>
-
-_Mandatory url param :_
-  username: 
-
-_Possibles responses:_
-
-✅ 200 Ok
-  {
-    success: true,
-    message: 'user update successful',
-    usersFound: [
-      {
-        id,       -> string
-        username, -> string
-        avatar    -> string        
-      },
-      {
-        id,       -> string
-        username, -> string
-        avatar    -> string        
-      }, ...
-    ] **tableau de users**
-  }
-
-❌ 401 Unauthorized :
-  {
-    "success": false,
-    "message": "Invalid or missing token JWT"
-  }
-
-❌ 400 Bad Request :
-  {
-    "success": false,
-    "message": "invalid username format in the body"
-  }
-
-❌ 404 Not Found :
-  {
-    "success": false,
-    "message": "no profile found"
-  }
-
-❌ 500 Internal Server Error :
-  {
-    "success": false,
-    "message": "Internal Server Error"
-  }
-
+| Code | Description | Body Example |
+| :--- | :--- | :--- |
+| **400** | ⚠️ Format Invalide | `{ "success": false, "message": "Invalid input" }` |
+| **404** | ❌ Aucun résultat | `{ "success": false, "message": "No one was found" }` |
