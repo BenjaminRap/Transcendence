@@ -60,12 +60,12 @@ export class UsersController {
             }
 
             // fetch user list or empty list if nothing match
-            const user = await this.usersService.getByName(searchedUser.data, userId);
+            const users = await this.usersService.getByName(searchedUser.data, userId);
 
             return reply.status(200).send({
                 success: true,
                 message: 'Profiles successfully retrieved',
-                user
+                user: users
             });
         } catch (error) {
             if (error instanceof UsersException) {

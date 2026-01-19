@@ -140,3 +140,18 @@ export const	zodTournamentEvent = zod.discriminatedUnion("type", [
 	})
 ]);
 export type TournamentEvent = zod.infer<typeof zodTournamentEvent>;
+
+export const zodSanitizedUser = zod.object({
+	id: zod.string(),
+	username: zod.string(),
+	avatar: zod.string()
+});
+export type SanitizedUser = zod.infer<typeof zodSanitizedUser>;
+
+export const zodGameStats = zod.object({
+	wins: zod.number(),
+	losses: zod.number(),
+	total: zod.number(),
+	winRate: zod.number()
+});
+export type GameStats = zod.infer<typeof zodGameStats>;

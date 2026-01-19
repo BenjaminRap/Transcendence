@@ -58,9 +58,21 @@ export namespace Modal {
 		changeNameButton.id = "changeNameButton";
 		changeNameButton.className = "terminal-font border-green-500 border-2 w-full p-2 hover:underline hover:underline-offset-2";
 		changeNameButton.textContent = "Change";
-		changeNameButton.addEventListener('click', () => {
-			exec(textarea.value);
-		});
+		if (inputType === 'file') {
+			changeNameButton.addEventListener('click', () => {
+				const fileInput = document.getElementById('modalInput') as HTMLInputElement;
+				if (fileInput && fileInput.files && fileInput.files[0]) {
+					exec(fileInput.files[0]);
+				} else {
+					WriteOnTerminal.printErrorOnTerminal("No file selected.");
+				}
+			});
+		}
+		else {
+			changeNameButton.addEventListener('click', () => {
+				exec(textarea.value);
+			});
+	}
 
 		modal.addEventListener('keydown', (event: KeyboardEvent) => {
 			if (event.key === 'Enter') {

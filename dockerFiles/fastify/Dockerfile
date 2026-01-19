@@ -13,6 +13,8 @@ RUN [ "npm", "install" ]
 
 # create necessary directories
 RUN [ "mkdir", "/app/backend" ]
+COPY ./public /app/backend/public
+
 RUN [ "mkdir", "-p", "/app/uploads/avatars" ]
 RUN ["chmod", "-R", "755", "/app/uploads"]
 

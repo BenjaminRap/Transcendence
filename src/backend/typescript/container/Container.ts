@@ -6,6 +6,7 @@ import { SuscriberService } from '../services/SuscriberService.js';
 import { FriendService } from '../services/FriendService.js';
 import { MatchService } from '../services/MatchService.js';
 import { FileService } from '../services/FileService.js';
+import { TournamentService } from '../services/TournamentService.js';
 
 import { AuthController } from '../controllers/AuthController.js';
 import { UsersController } from '../controllers/UsersController.js';
@@ -13,14 +14,13 @@ import { SuscriberController } from '../controllers/SuscriberController.js';
 import { FriendController } from '../controllers/FriendController.js';
 import { MatchController } from '../controllers/MatchController.js';
 import { FileController } from '../controllers/FileController.js';
+import { TournamentController } from '../controllers/TournamentController.js';
 
 import { PasswordHasher } from '../utils/PasswordHasher.js';
 import { TokenManager } from '../utils/TokenManager.js';
 
 import { AuthMiddleware } from '../middleware/AuthMiddleware.js';
 import { HeaderMiddleware } from '../middleware/HeaderMiddleware.js';
-
-import { GameInterface } from '../interfaces/GameInterface.js';
 
 export class Container {
     private constructor() {}
@@ -84,23 +84,32 @@ export class Container {
             this.getService('TokenManager')
         ));
 
-        this.registerService('UsersService', () => new UsersService(
-            prisma
-        ));
-
-        this.registerService('SuscriberService', () => new SuscriberService(
-            prisma,
-            this.getService('PasswordHasher'),
-            this.getService('FileService')
-        ));
-
         this.registerService('FriendService', () => new FriendService(
             prisma
         ));
 
-        this.registerService('MatchService', () => new MatchService(
-            prisma
+        this.registerService('UsersService', () => new UsersService(
+            prisma,
+            this.getService('FriendService'),
         ));
+
+        this.registerService('MatchService', () => new MatchService(
+            prisma,
+            this.getService('FriendService')
+        ));
+		
+        this.registerService('SuscriberService', () => new SuscriberService(
+            prisma,
+            this.getService('PasswordHasher'),
+            this.getService('FileService'),
+            this.getService('MatchService')
+        ));
+
+
+		this.registerService('TournamentService', () => new TournamentService(
+			prisma,
+            this.getService('MatchService')
+		));
 
         // Controllers
         this.registerService('AuthController', () => new AuthController(
@@ -121,8 +130,14 @@ export class Container {
         ));
 
         this.registerService('MatchController', () => new MatchController(
-            this.getService('MatchService')
+            this.getService('MatchService'),
+			this.getService('FriendService')
         ));
+
+		this.registerService('TournamentController', () => new TournamentController(
+			this.getService('TournamentService'),
+            this.getService('UsersService')
+		));
 
         // Middleware
         this.registerService('AuthMiddleware', () => new AuthMiddleware(
@@ -132,10 +147,6 @@ export class Container {
         this.registerService('HeaderMiddleware', () => new HeaderMiddleware(
         ));
 
-        // Interfaces
-        this.registerService('GameService', () => new GameInterface(
-            this.getService('MatchController')
-        ));
     }
 }
 

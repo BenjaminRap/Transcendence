@@ -1,5 +1,5 @@
 import type { GameStats } from "./match.types"
-import type { Match, Friendship } from "@prisma/client";
+import type { MatchSummary } from "./match.types.js";
 
 export interface UpdateData
 {
@@ -20,19 +20,22 @@ export interface DeleteAccount
     confirmChoice:  boolean,
 }
 
-export interface SuscriberStats
+export interface Friend
 {
-    gamesPlayed: number,
-    gamesWon:    number,
-    winRate:     number,
+    avatar:         string,
+    username:       string,
+    id:             number,
+    status:         string,
+    isOnline:       boolean,
+    requesterId:    number,
 }
 
 export interface SuscriberProfile
 {
-    id:         string,
+    id:         number,
     avatar:     string,
     username:   string,
     gameStats:  GameStats,
-    lastMatchs: Match[],
-    friends:    Friendship[],
+    lastMatchs: MatchSummary[],
+    friends:    Friend[],
 }

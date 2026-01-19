@@ -7,13 +7,35 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// -------------------------------------------------------------------------------------------- //
+// ------------------------------------ ENUMS ------------------------------------------ //
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+enum MatchStatus {
+  IN_PROGRESS
+  FINISHED
+  CANCELLED
+}
+
+enum TournamentStatus {
+  ONGOING
+  FINISHED
+  CANCELLED
+}
+
+// ------------------------------------ TABLES ----------------------------------------- //
 
 model User {
   id        Int         @id @default(autoincrement())
   username  String      @unique
   email     String      @unique
   password  String
+
+  // URL DANGER !!!
   avatar    String      @default("http://localhost:8181/static/public/avatarDefault.webp")
 
   createdAt DateTime @default(now())
@@ -25,6 +47,9 @@ model User {
   matchesWons       Match[]   @relation("matchWinner")
   matchesLoses      Match[]   @relation("matchLoser")
 
+  matchesAsPlayer1  Match[]   @relation("Player1")
+  matchesAsPlayer2  Match[]   @relation("Player2")
+
   tournamentsCreated       Tournament[]     @relation("tournamentCreator")
   tournamentParticipations TournamentParticipant[]
 }
@@ -33,7 +58,7 @@ model User {
 
 model Friendship {
   id          Int       @id @default(autoincrement())
-  status      String    @default("PENDING")
+  status      FriendshipStatus @default(PENDING)
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
@@ -50,19 +75,28 @@ model Friendship {
 // -------------------------------------------------------------------------------------------- //
 
 model Match {
-  id          Int           @id @default(autoincrement())
+  id          Int       @id @default(autoincrement())
+  
+  status      MatchStatus  @default(IN_PROGRESS)
 
-  createdAt   DateTime      @default(now())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  winner      User?    @relation("matchWinner", fields: [winnerId], references: [id], onDelete: Cascade)
+  player1Id         Int?
+  player1           User?     @relation("Player1", fields: [player1Id], references: [id], onDelete: SetNull)
+  player1GuestName  String
+
+  player2Id         Int?
+  player2           User?     @relation("Player2", fields: [player2Id], references: [id], onDelete: SetNull)
+  player2GuestName  String
+
   winnerId    Int?
-  winnerLevel String?  // "Guest_XXX" or "AI_LEVEL" if winnerId is null
+  winner      User?    @relation("matchWinner", fields: [winnerId], references: [id], onDelete: SetNull)
+  winnerGuestName String
 
   loserId     Int?
-  loser       User?    @relation("matchLoser", fields: [loserId], references: [id], onDelete: Cascade)
-  loserLevel  String?
-
-
+  loser       User?    @relation("matchLoser", fields: [loserId], references: [id], onDelete: SetNull)
+  loserGuestName  String
 
   scoreWinner Int     @default(0)
   scoreLoser  Int     @default(0)
@@ -70,38 +104,47 @@ model Match {
 
   tournament   Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   tournamentId Int?
+  
+  round        Int?    @default(1)
+  matchOrder   Int?    @default(0)
 }
+
 // -------------------------------------------------------------------------------------------- //
 
 model Tournament {
-  id          Int       @id @default(autoincrement())
-  title       String
+  id              Int       @id @default(autoincrement())
 
-  state       String    @default("INGAME")
+  title           String	@unique
+  
+  status          TournamentStatus  @default(ONGOING)
 
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  creatorId       Int?
+  creatorGuestName String?
+  creator         User?     @relation("tournamentCreator", fields: [creatorId], references: [id], onDelete: SetNull)
 
-  creator     User      @relation("tournamentCreator", fields: [creatorId], references: [id], onDelete: Cascade)
-  creatorId   Int
+  participants    TournamentParticipant[]
+  matches         Match[]
 
-  participants TournamentParticipant[]
-  matches      Match[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
+
 // -------------------------------------------------------------------------------------------- //
 
 model TournamentParticipant {
   id            Int       @id @default(autoincrement())
-  alias         String    // user alias
 
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId        Int
+  alias         String
+  user          User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId        Int?
+  guestName     String?
 
   finalRank     Int?
 
-  tournament    Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   tournamentId  Int
+  tournament    Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, tournamentId]) // no duplicate user
-  @@unique([tournamentId, alias])  // no duplicate alias
+  @@unique([userId, tournamentId])
+  @@unique([alias, tournamentId])
+  @@unique([guestName, tournamentId])
 }

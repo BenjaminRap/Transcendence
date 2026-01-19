@@ -16,7 +16,7 @@ export class FileService {
     async normalizeAvatar(buffer: Buffer) {
         try {
             // check if the file is not corrupt (sharp)
-            const metadata = await sharp(buffer).metadata();
+            await sharp(buffer).metadata();
     
             // resize, convert to webp (compress lossless), return buffer
             const cleanBuffer = await sharp(buffer)

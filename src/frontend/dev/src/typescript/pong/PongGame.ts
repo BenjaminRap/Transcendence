@@ -22,6 +22,8 @@ import type { Profile } from "@shared/Profile";
 import type { GameInfos, GameInit } from "@shared/ServerMessage";
 import type { TournamentEventAndJoinedGame } from "./FrontendEventsManager";
 
+import { PongUtils } from '../terminal'
+
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
 
@@ -39,7 +41,7 @@ export class PongGame extends HTMLElement {
 	private _closeGUI! : CloseGUI;
 	private _serverProxy : ServerProxy;
 
-    public constructor() {
+	public constructor() {
 		super();
 		this._serverProxy = new ServerProxy(frontendSocketHandler);
 		this.classList.add("block", "overflow-hidden", "container-inline", "aspect-video");
@@ -293,7 +295,7 @@ export class PongGame extends HTMLElement {
 
 	public quit()
 	{
-		this.remove();
+		PongUtils.removePongDiv();
 	}
 }
 

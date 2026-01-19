@@ -56,7 +56,7 @@ export class AuthController {
             // Check if the username or email address is in the correct format
             if (!CommonSchema.email.safeParse(validation.data.identifier).success &&
                 !CommonSchema.username.safeParse(validation.data.identifier).success) {
-                throw new AuthException(AuthError.INVALID_CREDENTIALS, 'Bad email or username format');
+                throw new AuthException(AuthError.INVALID_CREDENTIALS, 'Bad identifier');
             }
 
             // Finds the user and generates the tokens, returns the sanitized user + tokens
@@ -79,6 +79,27 @@ export class AuthController {
             });
         }
     }
+
+    // --------------------------------------------------------------------------------- //
+	// POST auth/logout
+	async logout(request: FastifyRequest, reply: FastifyReply) {
+		try {
+			const user = (request as any).user;
+
+			await this.authService.logout(user.userId);
+
+			return reply.status(200).send({
+				success: true,
+				message: 'Logout successful',
+			});
+		} catch (error) {
+			request.log.error(error);
+			return reply.status(500).send({
+				success: false,
+				message: 'Internal server error',
+			});
+		}
+	}
 
     // --------------------------------------------------------------------------------- //
     // GET auth/refresh
@@ -109,6 +130,7 @@ export class AuthController {
 
     // --------------------------------------------------------------------------------- //
     // GET auth/callback
+    // a revoir
 	async callback42(request: FastifyRequest<{ Querystring: VerifData }>, reply: FastifyReply) {
 		try {
             const { code } = request.query;

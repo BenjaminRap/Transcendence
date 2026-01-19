@@ -16,8 +16,7 @@ export const CommonSchema = {
             .trim()
             .min(3, 'username should have 3 characters minimum')
             .max(20, 'Username can\'t exceed 20 characters')
-            .regex(/^[a-zA-Z0-9]+$/, 'Username can only contain letters and numbers')
-            .trim(),
+            .regex(/^[a-zA-Z0-9]+$/, 'Username can only contain letters and numbers'),
 
     id: z.number()
 	    	.int()

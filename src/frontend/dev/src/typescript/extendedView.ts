@@ -1,4 +1,6 @@
 import { WriteOnTerminal } from "./terminalUtils/writeOnTerminal";
+import { PongUtils } from './terminal'
+
 
 interface Match {
 	state: string;
@@ -418,7 +420,7 @@ export namespace ExtendedView {
 	export var isExtendedViewIsActive = false;
 
 	export function makeExtendedView(dataType: 'match' | 'friend', username: string | '') {
-		if (isExtendedViewIsActive)
+		if (isExtendedViewIsActive || PongUtils.isPongLaunched)
 			return;
 		type = dataType;
 		const view = document.createElement('div');

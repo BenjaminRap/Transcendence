@@ -30,7 +30,7 @@ export class	SocketData
 		return this._connected;
 	}
 
-	constructor(private readonly _socket : DefaultSocket)
+	constructor(private readonly _socket : DefaultSocket, public userId : number)
 	{
 	}
 

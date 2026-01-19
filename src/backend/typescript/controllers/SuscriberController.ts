@@ -4,6 +4,8 @@ import { FileController } from "../controllers/FileController.js";
 import type { UpdatePassword } from "../types/suscriber.types.js";
 import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
 import { SuscriberSchema } from "../schemas/suscriber.schema.js";
+import { SocketEventController } from "./SocketEventController.js";
+import { sanitizeUser } from "../types/auth.types.js";
 
 export class SuscriberController {
     constructor(
@@ -54,12 +56,14 @@ export class SuscriberController {
             }
             
             const userId = (request as any).user.userId;
-            const { newPassword, currentPassword } = request.body;
+            const { newPassword, currentPassword } = validation.data;
 
             // check if user exists, if password is different then hash and update or throw exception
             await this.suscriberService.updatePassword(userId, currentPassword, newPassword);
 
-            return reply.status(204).send();
+            return reply.status(200).send({
+                success: true
+            });
 
         } catch (error) {
             if (error instanceof SuscriberException) {
@@ -93,18 +97,20 @@ export class SuscriberController {
                 return reply.status(400).send({
                     success: false,
                     message: validation.error?.issues?.[0]?.message || 'Invalid input',
-                    redirectTo: '/suscriber/updateprofile'
+                    redirectTo: '/suscriber/update/profile'
                 });
             }
 
-            // check data, user existence, mail and username availability then update and returns user or throw exception
+            // check data, user existence, username availability then update and returns user or throw exception
             const user = await this.suscriberService.updateUsername(id, validation.data);
+
+            SocketEventController.notifyProfileChange(Number(id), 'profile-update', { user: sanitizeUser(user) });
     
             return reply.status(200).send({
                 success: true,
                 message: 'Profile successfully updated',
                 redirectTo: '/suscriber/profile',
-                user
+                user: sanitizeUser(user)
             }); 
         } catch (error) {
             if (error instanceof SuscriberException) {
@@ -150,6 +156,9 @@ export class SuscriberController {
                     redirectTo: '/suscriber/profile'
                 });
             }
+
+            SocketEventController.notifyProfileChange(Number(id), 'profile-update', { user: updatedUser });
+
             return reply.status(200).send({
                 success: true,
                 message: 'Avatar successfully updated',
@@ -185,7 +194,9 @@ export class SuscriberController {
             const id = (request as any).user.userId;
 
             // delete avatar or throw exception USER NOT FOUND
-            await this.suscriberService.deleteAvatar(Number(id));
+            const user = await this.suscriberService.deleteAvatar(Number(id));
+
+            SocketEventController.notifyProfileChange(Number(id), 'profile-update', { user });
 
             return reply.status(204).send();
 
@@ -218,6 +229,9 @@ export class SuscriberController {
             // delete user or throw exception USER NOT FOUND
             await this.suscriberService.deleteAccount(Number(id));
 
+            // envoyer un event a la room 'user-{id}' pour que tous les processus front se deconnectent
+            SocketEventController.notifyProfileChange(Number(id), 'account-deleted', undefined);
+
             return reply.status(204).send();
 
         } catch (error) {
@@ -233,6 +247,4 @@ export class SuscriberController {
             });
         }
     }
-
-    // ================================== PRIVATE ================================== //
 }

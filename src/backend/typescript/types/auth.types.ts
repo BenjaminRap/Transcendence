@@ -13,13 +13,6 @@ export interface LoginData
     password:   string
 }
 
-export interface SanitizedUser
-{
-    id:         string,
-    username:   string,
-    avatar:     string
-}
-
 export interface VerifData
 {
     code:       string
