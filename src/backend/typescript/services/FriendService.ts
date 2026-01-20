@@ -57,7 +57,7 @@ export class FriendService {
             throw new FriendException(FriendError.INVALID_ID, "the user can't accept this friend request");
 
         await this.prisma.friendship.update({
-            where: { id: friendship.id },
+            where: { id: Number(friendship.id) },
             data: { status: 'ACCEPTED' }
         });
 
@@ -83,7 +83,7 @@ export class FriendService {
             throw new FriendException(FriendError.NO_LINK, FriendError.NO_LINK);
 
         await this.prisma.friendship.delete({ 
-            where: { id: friendship.id }
+            where: { id: Number(friendship.id) }
         });
 
     }
@@ -98,8 +98,8 @@ export class FriendService {
         const friendList = await this.prisma.friendship.findMany({
             where: {
                 OR: [
-                    { receiverId: userId },
-                    { requesterId: userId },
+                    { receiverId: Number(userId) },
+                    { requesterId: Number(userId) },
                 ],
                 status: 'ACCEPTED',
             },
@@ -141,8 +141,8 @@ export class FriendService {
             where: {
                 status: 'ACCEPTED',
                 OR: [
-                    { requesterId: userId },
-                    { receiverId: userId }
+                    { requesterId: Number(userId) },
+                    { receiverId: Number(userId) }
                 ]
             },
             select: {
@@ -168,8 +168,8 @@ export class FriendService {
         const pendingList =  await this.prisma.friendship.findMany({
             where: {
                 OR: [
-                    { receiverId: userId },
-                    { requesterId: userId },
+                    { receiverId: Number(userId) },
+                    { requesterId: Number(userId) },
                 ],
                 status: 'PENDING',
             },
@@ -199,7 +199,7 @@ export class FriendService {
     // ----------------------------------------------------------------------------- //
     async getById(id: number): Promise<FriendProfile> {
         return await this.prisma.user.findUnique({
-            where: { id },
+            where: { id: Number(id) },
             select: {
                 id: true,
                 username: true,
@@ -212,7 +212,7 @@ export class FriendService {
 
     // ----------------------------------------------------------------------------- //
     private async checkId(id: number): Promise<boolean> {
-        if (await this.prisma.user.findFirst({where: { id }, select: { id: true }}))
+        if (await this.prisma.user.findFirst({where: { id: Number(id) }, select: { id: true }}))
             return true;
         return false;
     }
@@ -222,8 +222,8 @@ export class FriendService {
         const friendship = await this.prisma.friendship.findFirst({
             where: {
                 OR: [
-                    { requesterId: friendId, receiverId: userId },
-                    { requesterId: userId, receiverId: friendId }
+                    { requesterId: Number(friendId), receiverId: Number(userId) },
+                    { requesterId: Number(userId), receiverId: Number(friendId) }
                 ]
             }
         })

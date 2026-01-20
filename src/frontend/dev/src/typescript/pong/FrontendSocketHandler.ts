@@ -32,10 +32,10 @@ export class	FrontendSocketHandler
 
 	public static async createFrontendSocketHandler()
 	{
-		const socket = io("/", {
-			path: FrontendSocketHandler._apiUrl,
-			autoConnect: false
-		});
+        const socket = io("/", {
+            path: FrontendSocketHandler._apiUrl,
+            autoConnect: false,
+        });
 
 		const	connectionPromise = new Promise<void>((resolve, reject) => {
 			socket.once("connect", () => {

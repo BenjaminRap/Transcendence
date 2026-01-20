@@ -4,6 +4,7 @@ import { TerminalFileSystem, TerminalUserManagement } from "../terminal";
 import { CommandHelpMessage } from './helpText/help';
 import { io } from "socket.io-client";
 import { socketUtils } from '../terminal'
+import type { Result } from "@shared/utils";
 
 
 export namespace RequestBackendModule {
@@ -71,7 +72,15 @@ export namespace RequestBackendModule {
 	{
 		if (socketUtils.socket === null)
 			return ;
-		socketUtils.socket.emit('authenticate', { token: token });
+		// socketUtils.socket.emit('authenticate', { token: token });
+
+        socketUtils.socket.emit("authenticate", { token: token }, (result: Result<null>) => {
+            if (result.success) {
+                console.log("Connecté en tant qu'utilisateur !");
+            } else {
+                console.error("Échec auth:", result.error);
+            }
+        });
 		socketUtils.socket.onAny((event, ...args) => {
 			console.log(`Événement reçu '${event}': ${JSON.stringify(args)}`);
 		});

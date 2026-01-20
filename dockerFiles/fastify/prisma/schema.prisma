@@ -35,8 +35,7 @@ model User {
   email     String      @unique
   password  String
 
-  // URL DANGER !!!
-  avatar    String      @default("http://localhost:8181/static/public/avatarDefault.webp")
+  avatar    String      @default("https://localhost:8080/api/static/public/avatarDefault.webp")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
