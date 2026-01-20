@@ -21,7 +21,11 @@ certificates:
 	  -out ./dockerFiles/secrets/ssl/selfsigned.crt \
 	  -subj "/C=FR/ST=Auvergne-Rhône-Alpes/L=Brignais/O=42/CN=brappo"
 
-build: compile
+cp-scenes:
+	mkdir -p ./dockerFiles/fastify/app_src/dev/scenes
+	cp -r ./src/backend/dev/scenes ./dockerFiles/fastify/app_src/dev/scenes
+
+build: compile cp-scenes
 ifeq ($(PROFILE), prod)
 	npx vite build
 endif
@@ -75,6 +79,7 @@ fclean: clean
 	-rm -rf ./node_modules/
 	-rm ./package-lock.json
 	-rm -r ./dockerFiles/secrets/ssl/*
+	-rm -rf ./dockerFiles/fastify/app_src/dev/*
 
 re: clean all
 fre: fclean all

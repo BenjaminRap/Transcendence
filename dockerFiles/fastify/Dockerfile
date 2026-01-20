@@ -7,16 +7,12 @@ RUN [ "rm", "-rf", "/var/lib/apt/lists*" ]
 
 # copy package files
 COPY ./package.json ./package.json
+COPY ./app_src .
+
+RUN ["chmod", "-R", "755", "/app/uploads"]
 
 # install dependencies including prisma
 RUN [ "npm", "install" ]
-
-# create necessary directories
-RUN [ "mkdir", "/app/backend" ]
-COPY ./public /app/backend/public
-
-RUN [ "mkdir", "-p", "/app/uploads/avatars" ]
-RUN ["chmod", "-R", "755", "/app/uploads"]
 
 # generate prisma before cleaning cache
 ENV PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
@@ -24,15 +20,14 @@ ENV PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
 COPY ./prisma ./prisma
 RUN ["npx", "prisma", "generate"]
 
-
 # clean cache
 RUN [ "npm", "cache", "clean", "--force" ]
 
-RUN [ "mkdir", "/app/dev/" ]
 # copy entrypoint script
-COPY    ./entrypoint.sh /entrypoint.sh
-RUN     chmod +x /entrypoint.sh
+RUN [ "mkdir", "/app/scripts/" ]
+COPY    ./entrypoint.sh /app/scripts/entrypoint.sh
+RUN     chmod +x /app/scripts/entrypoint.sh
 
-EXPOSE 8181
+# EXPOSE 8181
 
-ENTRYPOINT ["/entrypoint.sh"]
+ENTRYPOINT ["./scripts/entrypoint.sh"]
