@@ -16,6 +16,7 @@ import { MatchOpponentsGUI } from "../gui/MatchOpponentsGUI";
 import { initMenu } from "../gui/IGUI";
 import { TournamentGUI } from "../gui/TournamentGUI";
 import { TournamentEndGUI } from "../gui/TournamentEndGUI";
+import type { FrontendGameSceneName, SceneName } from "@shared/SceneData";
 
 export class CreateInGameGUI extends CustomScriptComponent {
 	@Imported("InputManager") private _inputManager! : InputManager;
@@ -121,7 +122,9 @@ export class CreateInGameGUI extends CustomScriptComponent {
 					this._tournamentGUI?.setWinners(tournamentEvent.round, tournamentEvent.matches);
 					break ;
 				case "joined-game":
-					this._sceneData.pongHTMLElement.joinOnlineGame(tournamentEvent.gameInit);
+					const	sceneName = this._sceneData.sceneName as FrontendGameSceneName;
+
+					this._sceneData.pongHTMLElement.joinOnlineGame(tournamentEvent.gameInit, sceneName);
 					break ;
 			}
 		});
@@ -168,7 +171,8 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		{
 			this._endGUI.classList.add("hidden");
 			this._inMatchmakingGUI.classList.remove("hidden");
-			this._sceneData.pongHTMLElement.startOnlineGame().then(() => {
+			const	newSceneName = this._sceneData.sceneName as FrontendGameSceneName;
+			this._sceneData.pongHTMLElement.searchOnlineGame(newSceneName).then(() => {
 				this._inMatchmakingGUI.classList.add("hidden");
 			});
 		}

@@ -4,6 +4,11 @@ import { PongError } from "./pongError/PongError";
 
 export type ServerGameType = "Server";
 export type FrontendGameType = "Local" | "Multiplayer" | "Bot" | "Menu";
+export type FrontendGameSceneName = "Magic.gltf" | "Basic.gltf" | "Terminal.gltf";
+export type FrontendMenuSceneName = "Menu.gltf";
+export type FrontendSceneName = FrontendGameSceneName | FrontendMenuSceneName;
+export type ServerSceneName = "Server.gltf";
+export type SceneName = FrontendSceneName | ServerSceneName;
 export type GameType = ServerGameType | FrontendGameType;
 
 export abstract class	SceneData
@@ -11,6 +16,7 @@ export abstract class	SceneData
 	public readonly readyPromise;
 
 	constructor(
+		public readonly sceneName : SceneName,
 		public readonly havokPlugin : HavokPlugin,
 		public readonly gameType : GameType,
 		protected readonly _events : EventsManager

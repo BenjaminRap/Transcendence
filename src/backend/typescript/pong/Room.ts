@@ -70,7 +70,7 @@ export class	Room
 		this._onDispose(endData);
 	}
 
-	public onSocketDisconnect(socket : DefaultSocket)
+	public onSocketQuit(socket : DefaultSocket)
 	{
 		if (this._disposed)
 			return ;

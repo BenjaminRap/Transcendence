@@ -64,13 +64,20 @@ export class	SocketData
 	}
 
 	public leaveTournament() {
+		if (this._room !== null)
+		{
+			this._room.onSocketQuit(this._socket);
+			this._room = null;
+		}
 		this._tournament = null;
 		this._state = "unactive";
 	}
 
 	public disconnect() {
-		this._room?.onSocketDisconnect(this._socket);
-		this._tournament?.onSocketDisconnect(this._socket);
+		this._room?.onSocketQuit(this._socket);
+		this._room = null;
+		this._tournament?.onSocketQuit(this._socket);
+		this._tournament = null;
 	}
 
 	public getProfile() {

@@ -242,7 +242,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		return Array.from(this._players.keys());
 	}
 
-	public onSocketDisconnect(socket : DefaultSocket)
+	public onSocketQuit(socket : DefaultSocket)
 	{
 		if (socket === this._creator && !this._started)
 			this.dispose();

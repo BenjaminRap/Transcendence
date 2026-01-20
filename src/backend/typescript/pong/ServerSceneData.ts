@@ -10,7 +10,7 @@ export class	ServerSceneData extends SceneData
 		public readonly clientProxy : ClientProxy
 
 	) {
-		super(havokPlugin, "Server", new ServerEventsManager());
+		super("Server.gltf", havokPlugin, "Server", new ServerEventsManager());
 	}
 
 	public get events()

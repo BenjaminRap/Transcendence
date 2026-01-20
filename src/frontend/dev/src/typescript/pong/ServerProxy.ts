@@ -70,15 +70,13 @@ export class	ServerProxy
 
 	public leaveScene() : void
 	{
-		this.verifyState("connected", "in-matchmaking", "in-game", "in-tournament");
-		if (this._state === "in-matchmaking")
-			this._frontendSocketHandler.sendEventWithNoResponse("leave-matchmaking");
-		else if (this._state === "in-game")
+		this.verifyState("connected", "in-game", "in-tournament");
+		if (this._state === "in-game")
 			this._frontendSocketHandler.sendEventWithNoResponse("forfeit");
 		else if (this._state === "in-tournament")
 			this._frontendSocketHandler.sendEventWithNoResponse("leave-tournament");
-		this._state = "connected";
 		this._currentPromise?.reject(new PongError("canceled", "ignore"));
+		this._state = "connected";
 	}
 
 	public onGameReady() : Promise<void>
@@ -277,9 +275,5 @@ export class	ServerProxy
 		this._frontendSocketHandler.onTournamentMessage().clear();
 		this._frontendSocketHandler.onJoinGame().clear();
 		this._frontendSocketHandler.onDisconnect().remove(this._disconnectedObserver);
-		try {
-			this.leaveScene();
-		} catch (error) {
-		}
 	}
 }
