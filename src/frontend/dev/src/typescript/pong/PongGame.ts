@@ -168,7 +168,7 @@ export class PongGame extends HTMLElement {
 
 	public async startOnlineTournament(sceneName : FrontendGameSceneName)
 	{
-		this.changeScene(sceneName, "Multiplayer");
+		await this.changeScene(sceneName, "Multiplayer");
 
 		this._serverProxy.setReady();
 	}
