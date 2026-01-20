@@ -43,6 +43,7 @@ export class	ServerProxy
 				this._state = "in-tournament";
 		});
 		this._frontendSocketHandler.onJoinGame().add(gameInit => {
+			this._playerIndex = gameInit.playerIndex;
 			if (this._state !== "in-tournament")
 				return ;
 			this._frontendSocketHandler.onTournamentMessage().notifyObservers({
@@ -59,9 +60,8 @@ export class	ServerProxy
 
 		this.replaceCurrentPromise(deferred);
 		this._state = "in-matchmaking";
-		deferred.promise.then((gameInit : GameInit) => {
+		deferred.promise.then(() => {
 			this._state = "in-game";
-			this._playerIndex = gameInit.playerIndex;
 		}).catch(() => {
 			this._state = "connected";
 		});
