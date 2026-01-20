@@ -8,12 +8,15 @@ import { type ThemeName, zodThemeName } from "../menuStyles";
 import { Imported } from "@shared/ImportedDecorator";
 import { ImportedComponentOptional, zodBoolean, zodString } from "@shared/ImportedHelpers";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
-import type { SceneFileName } from "../PongGame";
 import { PongError } from "@shared/pongError/PongError";
+import type { FrontendGameSceneName } from "@shared/SceneData";
+import * as zod from "zod";
+
+export const zodSceneFileName = zod.literal(["Magic.gltf", "Basic.gltf", "Terminal.gltf"]);
 
 export class SceneMenuData extends CustomScriptComponent {
 	@Imported(zodString) private _sceneName! : string;
-	@Imported(zodString) private _sceneFileName! : string;
+	@Imported(zodSceneFileName) private _sceneFileName! : zod.infer<typeof zodSceneFileName>;
 	@Imported(zodThemeName) private _theme! : ThemeName;
 	@ImportedComponentOptional(CreateSkybox) private _skyboxCreator! : CreateSkybox | null;
 	@Imported(zodBoolean) private _defaultSkybox! : boolean;
@@ -63,9 +66,9 @@ export class SceneMenuData extends CustomScriptComponent {
 		return this._sceneName;
 	}
 
-	public getSceneFileName()
+	public getSceneFileName() : FrontendGameSceneName
 	{
-		return this._sceneFileName as SceneFileName;
+		return this._sceneFileName;
 	}
 
 	public getTheme()
