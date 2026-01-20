@@ -285,16 +285,18 @@ export class SocketEventController {
 		socket.data.disconnect();
 		
 		const userId = socket.data.userId;
-
-        // decompte ne nb de connexion du user (plusieurs onglets...)
-		if (userId != -1) {
+        if (userId == -1)
+            console.log(`GUEST disconnected !`);
+        else {
+            // decompte ne nb de connexion du user (plusieurs onglets...)
 			const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
 			const newCount = currentCount - 1;
-            console.log(`User ${userId} disconnected !`);
+            console.log(`USER ${userId} disconnected !`);
 			
 			if (newCount <= 0) {
 				SocketEventController.connectedUsers.delete(userId);
-				this.io.emit('user-status-change', { userId: userId, status: 'offline' });
+                SocketEventController.sendToProfileWatchers(userId, 'user-status-change', { userId: userId });
+                SocketEventController.sendToFriends(userId, 'user-status-change', { userId: userId });
 			}
 			else {
 				SocketEventController.connectedUsers.set(userId, newCount);
