@@ -23,7 +23,7 @@ export class GameManager extends CustomScriptComponent {
 
 	private _scoreRight : int = 0;
 	private _scoreLeft : int = 0;
-	private _ended : boolean = false;
+	private _ended : boolean = true;
 	private _sceneData : SceneData;
 	private _isGamePaused : boolean = false;
 	private _defaultTimeStep : number;
