@@ -8,10 +8,6 @@ export class	MatchInputGUI extends HTMLElement
 	constructor(private _upKey : string = "z", private _downKey : string = "s")
 	{
 		super();
-	}
-
-	public connectedCallback()
-	{
 		this.classList.add("flex", "flex-col", "aspect-3/7", "justify-between");
 		this.innerHTML = `
 			${this.getKeyHTML(this._upKey)}

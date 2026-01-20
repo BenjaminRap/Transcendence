@@ -9,17 +9,13 @@ export type TournamentEndGUIInputs =
 
 export class	TournamentEndGUI extends HTMLElement implements IGUI<TournamentEndGUIInputs>
 {
-	private _inputs : TournamentEndGUIInputs | undefined;
-	private _text? : HTMLParagraphElement;
-	private _winnerContainer? : HTMLDivElement;
+	private _inputs : TournamentEndGUIInputs;
+	private _text : HTMLParagraphElement;
+	private _winnerContainer : HTMLDivElement;
 
 	constructor()
 	{
 		super();
-	}
-
-	public	connectedCallback()
-	{
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm");
 		this.innerHTML = `
 			<div class="tournamentEndGUIMainDiv flex flex-col h-full w-[45%] m-auto items-center">
@@ -49,8 +45,6 @@ export class	TournamentEndGUI extends HTMLElement implements IGUI<TournamentEndG
 
 	public setWinner(profile : Profile)
 	{
-		if (!this._text)
-			return ;
 		const	winnerGUI = new OpponentGUI(profile);
 
 		this._text.textContent = "WIN";
@@ -61,9 +55,7 @@ export class	TournamentEndGUI extends HTMLElement implements IGUI<TournamentEndG
 
 	public setLoser(isQualifications : boolean, roundMatchCount : number)
 	{
-		if (!this._text || !this._winnerContainer)
-			return ;
-		this._winnerContainer?.replaceChildren();
+		this._winnerContainer.replaceChildren();
 		const	roundName =
 			isQualifications ? "Qualifications" :
 			roundMatchCount === 1 ? "The Final" :

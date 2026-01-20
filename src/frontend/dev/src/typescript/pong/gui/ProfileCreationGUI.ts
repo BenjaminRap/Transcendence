@@ -9,16 +9,12 @@ export type	ProfileCreationInputs = {
 
 export class	ProfileCreationGUI extends HTMLElement
 {
-	private _inputs? : ProfileCreationInputs;
-	private _errorText? : HTMLParagraphElement;
+	private _inputs : ProfileCreationInputs;
+	private _errorText : HTMLParagraphElement;
 
 	constructor()
 	{
 		super();
-	}
-
-	connectedCallback()
-	{
 		this.classList.add("inline-flex", "flex-col");
 		this.innerHTML = `
 			<p class="profileCreationGUIErrorText w-full text-red-900 bg-red-300/25 backdrop-blur-3xl mb-[0.5cqw] text-center rounded-md invisible">Error</p>
@@ -47,15 +43,13 @@ export class	ProfileCreationGUI extends HTMLElement
 
 	public setErrorText(errorText : string)
 	{
-		if (!this._errorText)
-			return ;
 		this._errorText.textContent = `❌${errorText}`;
 		this._errorText.classList.remove("invisible");
 	}
 
 	public clearError()
 	{
-		this._errorText?.classList.add("invisible");
+		this._errorText.classList.add("invisible");
 	}
 
 	public createProfile() : Profile

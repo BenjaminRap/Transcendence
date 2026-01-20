@@ -9,17 +9,11 @@ export type PauseGUIInputs =
 
 export class	PauseGUI extends HTMLElement implements IGUI<PauseGUIInputs>
 {
-	private _inputs : PauseGUIInputs | undefined;
-	private _forfeitEnabled : boolean;
+	private _inputs : PauseGUIInputs;
 
-	constructor(forfeitEnabled? : boolean)
+	constructor(private _forfeitEnabled : boolean = true)
 	{
 		super();
-		this._forfeitEnabled = forfeitEnabled ?? true;
-	}
-
-	public	connectedCallback()
-	{
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm");
 		this.innerHTML = `
 			<div class="flex flex-col size-full h-4/6 w-1/3 left-1/2 -translate-1/2 top-1/2 absolute">

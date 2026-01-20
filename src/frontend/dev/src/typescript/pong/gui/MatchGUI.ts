@@ -5,16 +5,12 @@ import { PongError } from "@shared/pongError/PongError";
 export class	MatchGUI extends HTMLElement
 {
 	private static readonly _fightMask : string = "url(/images/fight.png)";
-	private _matchOrOpponent? : HTMLDivElement | OpponentGUI;
+	private _matchOrOpponent : HTMLDivElement | OpponentGUI;
 
 	constructor()
 	{
 		super();
 		this.style.setProperty("--fight-mask", MatchGUI._fightMask);
-	}
-
-	connectedCallback()
-	{
 		this.classList.add("flex", "flex-col");
 		this.innerHTML = `
 			<div class="block border-solid border-(--border-color) border-(length:--match-line-width) rounded-(--rounded) aspect-2/3 w-1/2 m-auto bg-(--background-color) bg-(image:--background-image) MatchGUICard">
@@ -30,8 +26,6 @@ export class	MatchGUI extends HTMLElement
 
 	public setWinner(profile : Profile)
 	{
-		if (this._matchOrOpponent === undefined)
-			throw new PongError("MatchGUI setWinner called before the connectedCallback !", "quitPong");
 		if (this._matchOrOpponent instanceof OpponentGUI)
 			throw new PongError("MatchGUI setWinner has been called twice !", "quitPong");
 		const	opponentGUI = new OpponentGUI(profile);

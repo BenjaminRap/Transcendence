@@ -9,10 +9,6 @@ export class	OpponentGUI extends HTMLElement
 		if (_profile.image === "")
 			_profile.image = defaultProfile.image;
 		super();
-	}
-
-	connectedCallback()
-	{
 		this.classList.add("block", "border-solid", "rounded-(--rounded)", "aspect-2/3", "border-(--border-color)", "border-(length:--border-width)", "bg-(image:--background-image)", "bg-(--background-color)");
 		this.innerHTML = `
 			<img src="${this._profile.image}" class="m-auto mt-[5%] w-4/5 aspect-square pointer-events-none" />

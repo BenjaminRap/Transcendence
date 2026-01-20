@@ -13,40 +13,45 @@ export class	TournamentGUI extends HTMLElement implements IGUI<void>
 	private static readonly _rounded = "3cqw";
 	private static readonly _opponentFontSize = "10cqw";
 
-	private _participants : Profile[];
 	private _matchesByRoundGuis : MatchGUI[][] = [];
 	private _participantsGuis : OpponentGUI[] = [];
-	private _container! : HTMLDivElement;
+	private _container : HTMLDivElement;
 	private	_zoomPercent : number = 1;
 	private _wheelZoomAdd : number = 0.025;
 	private _wheelZoomMax : number = 2;
 	private _dragging : boolean = false;
 	private _left : number = 0;
 	private _top : number = 0;
-	private _stopDraggingListener : (() => void) | null = null;
+	private _stopDraggingListener! : (() => void);
 
-	constructor(participants : Profile[] = [])
+	constructor(private _participants : Profile[] = [])
 	{
-		if (participants.length < 2 || !isPowerOfTwo(participants.length))
-			throw new PongError(`The profiles should be a power of two, greater than 1, got ${participants.length}`, "quitPong");
 		super();
-		this._participants = participants ?? [];
-	}
-
-	connectedCallback()
-	{
+		if (this._participants.length < 2 || !isPowerOfTwo(this._participants.length))
+			throw new PongError(`The profiles should be a power of two, greater than 1, got ${this._participants.length}`, "quitPong");
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-auto", "backdrop-blur-sm", "flex", "items-center", "overflow-hidden");
 		this.innerHTML = `
 			<div class="absolute w-1/5 left-[3cqw] top-[3cqw] border-solid border-(--border-color) border-(length:--border-width) rounded-(--rounded) p-[1%]">
 				<p class="text-(--text-color) text-[1.8cqw] font-(family-name:--font)">Scrool to zoom or dezoom</p>
 				<p class="text-(--text-color) text-[1.8cqw] font-(family-name:--font)">Click and drag to move</p>
 			</div>
+			<div class="inset-0 w-full flex flex-col relative tournamentGUIContainer"></div>
 		`;
-		this._container = this.createContainer();
+		this._container = this.querySelector<HTMLDivElement>("div.tournamentGUIContainer")!;
 		this.placeMatches();
 		this.placeParticipants();
 		this.addZoomAndGrab();
 		this.appendChild(this._container);
+	}
+
+	connectedCallback()
+	{
+		window.addEventListener("mouseup", this._stopDraggingListener);
+	}
+
+	disconnectedCallback()
+	{
+		window.removeEventListener("mouseup", this._stopDraggingListener);
 	}
 
 	private	addZoomAndGrab()
@@ -60,7 +65,6 @@ export class	TournamentGUI extends HTMLElement implements IGUI<void>
 			this.style.cursor = "grab";
 			this._dragging = false;
 		};
-		window.addEventListener("mouseup", this._stopDraggingListener);
 		this.addEventListener("mousemove", (mouseEvent : MouseEvent) => {
 			if (this._dragging)
 				this.drag(mouseEvent);
@@ -68,15 +72,6 @@ export class	TournamentGUI extends HTMLElement implements IGUI<void>
 		this._wheelZoomMax = Math.log2(this._participants.length);
 
 		this.style.cursor = "grab";
-	}
-
-	private	createContainer() : HTMLDivElement
-	{
-		const	div = document.createElement("div");
-
-		div.classList.add("inset-0", "w-full", "flex", "flex-col", "relative");
-
-		return div;
 	}
 
 	private	placeMatches()
@@ -197,11 +192,6 @@ export class	TournamentGUI extends HTMLElement implements IGUI<void>
 
 	public getInputs() {
 		return undefined;
-	}
-
-	disconnectedCallback() {
-		if (this._stopDraggingListener)
-			window.removeEventListener("mouseup", this._stopDraggingListener);
 	}
 }
 

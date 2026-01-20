@@ -11,17 +11,13 @@ export type OnlineTournamentJoinPublicGUIInputs =
 
 export class	OnlineTournamentJoinPublicGUI extends HTMLElement implements IGUI<OnlineTournamentJoinPublicGUIInputs>
 {
-	private _inputs : OnlineTournamentJoinPublicGUIInputs | undefined;
-	private _descriptionsContainer : HTMLDivElement | undefined;
+	private _inputs : OnlineTournamentJoinPublicGUIInputs;
+	private _descriptionsContainer : HTMLDivElement;
 	private _onTournamentJoinObservable = new Observable<string>();
 
 	constructor()
 	{
 		super();
-	}
-
-	public	connectedCallback()
-	{
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm");
 		this.innerHTML = `
 			<fieldset class="w-11/12 h-3/5 overflow-y-scroll pointer-events-auto border-solid border-(--border-color) border-(length:--border-width) m-auto mt-[1%] scrollbar-thumb-white scrollbar-track-[transparent] cursor-all-scroll">
@@ -62,7 +58,7 @@ export class	OnlineTournamentJoinPublicGUI extends HTMLElement implements IGUI<O
 			})
 			nodes.push(tournamentDescriptionGUI);
 		});
-		this._descriptionsContainer?.replaceChildren(...nodes);
+		this._descriptionsContainer.replaceChildren(...nodes);
 	}
 
 	public onTournamentJoin()
@@ -72,7 +68,7 @@ export class	OnlineTournamentJoinPublicGUI extends HTMLElement implements IGUI<O
 
 	public reset()
 	{
-		this._descriptionsContainer?.replaceChildren();
+		this._descriptionsContainer.replaceChildren();
 	}
 }
 

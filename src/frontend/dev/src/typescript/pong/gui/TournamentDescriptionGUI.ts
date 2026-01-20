@@ -9,16 +9,9 @@ const	defaultDescription : TournamentDescription = {
 
 export class	TournamentDescriptionGUI extends HTMLElement
 {
-	private readonly _description : TournamentDescription;
-
-	constructor(description? : TournamentDescription)
+	constructor(private _description : TournamentDescription = defaultDescription)
 	{
 		super();
-		this._description = description ?? defaultDescription;
-	}
-
-	public	connectedCallback()
-	{
 		this.classList.add("menu-button", "mt-[3%]", "block");
 		this.innerHTML = `
 				<div class="flex flex-row justify-between w-11/12 m-auto">

@@ -1,7 +1,6 @@
 import { TournamentHelper } from "@shared/TournamentHelper";
 import type { IGUI } from "./IGUI";
 import type { TournamentCreationSettings } from "@shared/ServerMessage";
-import { PongError } from "@shared/pongError/PongError";
 
 export type OnlineTournamentCreationGUIInputs = {
 	create: HTMLButtonElement,
@@ -22,16 +21,12 @@ type OnlineTournamentSettingsInputs = {
 
 export class	OnlineTournamentCreationGUI extends HTMLElement implements IGUI<OnlineTournamentCreationGUIInputs>
 {
-	private _inputs : OnlineTournamentCreationGUIInputs | undefined;
-	private _settingsInputs : OnlineTournamentSettingsInputs | undefined;
+	private _inputs : OnlineTournamentCreationGUIInputs;
+	private _settingsInputs : OnlineTournamentSettingsInputs;
 
 	constructor()
 	{
 		super();
-	}
-
-	public	connectedCallback()
-	{
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm");
 		this.innerHTML = `
 			<fieldset class="text-(--text-color) font-(family-name:--font) h-3/5 w-11/12 border-(--border-color) border-solid border-(length:--border-width) m-auto mt-[1%] mb-[1%]">
@@ -105,8 +100,6 @@ export class	OnlineTournamentCreationGUI extends HTMLElement implements IGUI<Onl
 
 	private	validate()
 	{
-		if (this._settingsInputs === undefined)
-			throw new PongError("getOnlineTournamentSettings called before begin connected !", "quitPong");
 		let	isValid = true;
 
 		Object.values(this._settingsInputs).forEach(elem => {
@@ -125,8 +118,6 @@ export class	OnlineTournamentCreationGUI extends HTMLElement implements IGUI<Onl
 
 	public getOnlineTournamentSettings() : TournamentCreationSettings | null
 	{
-		if (this._settingsInputs === undefined)
-			throw new PongError("getOnlineTournamentSettings called before begin connected !", "quitPong");
 		if (!this.validate())
 			return null;
 		const	settings : TournamentCreationSettings = {
@@ -140,8 +131,6 @@ export class	OnlineTournamentCreationGUI extends HTMLElement implements IGUI<Onl
 
 	public reset()
 	{
-		if (!this._settingsInputs)
-			return ;
 		Object.values(this._settingsInputs).forEach(elem => {
 			elem.errorText.classList.add("invisible");
 			elem.input.value = elem.input.defaultValue;

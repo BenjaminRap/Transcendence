@@ -7,15 +7,11 @@ export type CloseGUIInputs =
 
 export class	CloseGUI extends HTMLElement implements IGUI<CloseGUIInputs>
 {
-	private _inputs : CloseGUIInputs | undefined;
+	private _inputs : CloseGUIInputs;
 
 	constructor()
 	{
 		super();
-	}
-
-	public	connectedCallback()
-	{
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none", "z-20");
 		this.innerHTML = `
 			<button class="aspect-square w-[4%] closeGUIClose bg-(--background-color) bg-(image:--background-color) border-(--border-color) border-(length:--border-width) rounded-[20%] absolute right-[2cqw] top-[2cqw] pointer-events-auto hover:scale-(--hover-scale)">
@@ -31,7 +27,7 @@ export class	CloseGUI extends HTMLElement implements IGUI<CloseGUIInputs>
 		}
 	}
 
-	public getInputs() : CloseGUIInputs | undefined
+	public getInputs() : CloseGUIInputs
 	{
 		return this._inputs;
 	}

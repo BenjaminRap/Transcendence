@@ -19,10 +19,6 @@ export class	MenuGUI extends HTMLElement
 		this._sceneSwitch = sceneSwitch ?? {items : [], currentItemIndex: 0, onItemChange: null};
 		this._enemyTypeSwitch = enemyTypeSwitch ?? {items : [], currentItemIndex: 0, onItemChange: null};
 		this._onPlay = onPlay ?? null;
-	}
-
-	public connectedCallback()
-	{
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none");
 		this.innerHTML = `
 				<div class="bottom-1/5 absolute flex flex-row items-center w-full h-1/12 justify-between">

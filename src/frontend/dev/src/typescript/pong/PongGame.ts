@@ -37,7 +37,6 @@ export class PongGame extends HTMLElement {
 	private _scene : Scene | undefined;
 	private _settings : Settings;
 	private _errorGUI! : ErrorGUI;
-	private _closeGUI! : CloseGUI;
 	private _serverProxy : ServerProxy;
 
 	public constructor() {
@@ -45,19 +44,22 @@ export class PongGame extends HTMLElement {
 		this._serverProxy = new ServerProxy(frontendSocketHandler);
 		this.classList.add("block", "overflow-hidden", "container-inline", "aspect-video");
 		this._settings = new Settings();
-	}
-
-	public async connectedCallback() : Promise<void> {
 		this._canvas = document.createElement("canvas");
 		this._canvas.classList.add("size-full");
 		this._errorGUI = initMenu(new ErrorGUI(), {
 			close: () => this._errorGUI.classList.add("hidden")
 		}, this);
-		this._closeGUI = initMenu(new CloseGUI(), {
+		initMenu(new CloseGUI(), {
 			close: () => this.quit()
 		}, this, false);
 
 		this.append(this._canvas);
+		this._serverProxy.onTournamentMessage().add(tournamentEvent => this.onTournamentMessage(tournamentEvent));
+		this._serverProxy.onGameMessage().add(gameEvent => this.onGameMessage(gameEvent));
+		this.loadGame();
+	}
+
+	private async loadGame() : Promise<void> {
 		try {
 			this._engine = this.createEngine();
 			globalThis.HK = await HavokPhysics();
@@ -67,8 +69,6 @@ export class PongGame extends HTMLElement {
 		} catch (error) {
 			console.error(`Could not initialize the scene : ${error}`)
 		}
-		this._serverProxy.onTournamentMessage().add(tournamentEvent => this.onTournamentMessage(tournamentEvent));
-		this._serverProxy.onGameMessage().add(gameEvent => this.onGameMessage(gameEvent));
     }
 
 	private renderScene() : void
@@ -283,7 +283,9 @@ export class PongGame extends HTMLElement {
 		this._scene = undefined;
 	}
 
-	public disconnectedCallback() : void {
+	public dispose()
+	{
+		this._serverProxy.leave();
 		this._serverProxy.dispose();
 		if (globalThis.HKP)
 			delete globalThis.HKP;
@@ -300,7 +302,7 @@ export class PongGame extends HTMLElement {
 
 	public quit()
 	{
-		this._serverProxy.leave();
+		this.dispose();
 		PongUtils.removePongDiv();
 	}
 }
