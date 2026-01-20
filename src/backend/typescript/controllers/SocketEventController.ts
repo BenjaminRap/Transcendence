@@ -41,6 +41,7 @@ export class SocketEventController {
     // ----------------------------------------------------------------------------- //
 	static sendToUser(userId: number, event: string, data: any): void
 	{
+        console.log(`\nSending event ${event} to user ${userId}`);
 		try {
 			if (SocketEventController.socketInstance) {
 				SocketEventController.socketInstance.io.to('user-' + Number(userId)).emit(event as any, data);
@@ -54,6 +55,7 @@ export class SocketEventController {
     // ----------------------------------------------------------------------------- //
     static sendToProfileWatchers(userId: number, event: string, data: any): void
     {
+        console.log(`\nSending event ${event} to watchers of profile ${userId}`);
         SocketEventController.socketInstance.io.to('watching-' + userId).emit(event as any, data);
     }
 
@@ -61,6 +63,7 @@ export class SocketEventController {
     // ----------------------------------------------------------------------------- //
     static sendToFriends(userId: number, event: string, data: any): void
     {
+        console.log(`\nSending event ${event} to friends of user ${userId}`);
         try {
             if (SocketEventController.socketInstance)
             {
@@ -123,14 +126,17 @@ export class SocketEventController {
 			});
 
             socket.on("get-online-users", (callback) => {
+                console.log( `${socket.data.userId} requested online users list`);
 				this.handleGetStatus(socket, callback);
             });
 
             socket.on("watch-profile", (profileId: number[]) => {
+                console.log( `${socket.data.userId} is watching profiles: `, profileId);
                 this.addProfileToWatch(socket, profileId);
             });
 
             socket.on("unwatch-profile", (profileId: number[]) => {
+                console.log( `${socket.data.userId} stopped watching profiles: `, profileId);
                 this.removeProfileToWatch(socket, profileId);
             });
 
@@ -166,11 +172,12 @@ export class SocketEventController {
             const tokenManager: TokenManager = Container.getInstance().getService('TokenManager');
             const decoded = await tokenManager.verify(token, false);
             userId = decoded.userId;
-            socket.data.userId = userId;
+            socket.data.userId = Number(userId);
         } catch (err) {
             ack(error("Invalid token"));
             return;
         }
+        ack(success(null));
 
         // system to count multiple connections from the same user
         const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
@@ -178,17 +185,15 @@ export class SocketEventController {
 
         SocketEventController.connectedUsers.set(userId, newCount);
 
-        // oublie de creer la room user-<id>
         socket.join('user-' + userId);
+        console.log(`User ${userId} authenticated and joined his own socket room !`);
 
-        // notifie everyone only if it's the first connection of the user
+        // notifie watchers and friends only if it's the first connection of the user
         if (newCount === 1) {
             SocketEventController.sendToProfileWatchers(userId, 'user-status-change', { userId: userId, status: 'online' });
             SocketEventController.sendToFriends(userId, 'user-status-change', { userId: userId, status: 'online' });
         }
         
-        console.log(`User ${userId} authenticated !`);
-        ack(success(null));
     }
 
 	// ----------------------------------------------------------------------------- //
@@ -282,12 +287,12 @@ export class SocketEventController {
 		
 		const userId = socket.data.userId;
         if (userId == -1)
-            console.log(`GUEST disconnected !`);
+            console.log(`Guest disconnected !`);
         else {
             // decompte ne nb de connexion du user (plusieurs onglets...)
 			const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
 			const newCount = currentCount - 1;
-            console.log(`USER ${userId} disconnected !`);
+            console.log(`User ${userId} disconnected !`);
 			
 			if (newCount <= 0) {
 				SocketEventController.connectedUsers.delete(userId);

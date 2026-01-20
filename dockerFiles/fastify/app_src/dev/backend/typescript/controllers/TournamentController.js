@@ -105,10 +105,6 @@ export class TournamentController {
         if ((pCount & (pCount - 1)) !== 0) {
             return { success: false, message: 'Tournament are allowed with 4, 8, 16, 32, 64 players.' };
         }
-        // and not exceed the limit
-        if (pCount > this.tournamentLimitMax || pCount < this.tournamentLimitMin) {
-            return { success: false, message: 'Participant limit exceeded. Tournament are allowed with 4, 8, 16, 32, 64 players.' };
-        }
         // check Admin validity
         if (data.adminUserId) {
             if (typeof data.adminUserId !== 'number' || data.adminUserId <= 0) {
@@ -117,44 +113,6 @@ export class TournamentController {
             // check if user exist
             if (!await this.userService.checkIfUserExists(data.adminUserId)) {
                 return { success: false, message: 'Admin user does not exist.' };
-            }
-        }
-        // Player Uniqueness
-        const participantAliases = new Set();
-        const participantIds = new Set();
-        for (const p of data.participants) {
-            if (!p.alias)
-                return { success: false, message: 'Participant alias is required.' };
-            p.alias = p.alias.trim();
-            if (p.alias.length < 3 || p.alias.length > 20) {
-                return { success: false, message: 'Participant alias must be between 3 and 20 characters.' };
-            }
-            if (participantAliases.has(p.alias))
-                return { success: false, message: `Duplicate participant alias: ${p.alias}` };
-            participantAliases.add(p.alias);
-            if (p.userId) {
-                if (typeof p.userId !== 'number' || p.userId <= 0) {
-                    return { success: false, message: 'Invalid participant user ID.' };
-                }
-                // check if user exist
-                if (!await this.userService.checkIfUserExists(p.userId)) {
-                    return { success: false, message: `Participant user with ID ${p.userId} does not exist.` };
-                }
-            }
-            const idKey = p.userId ? `U_${p.userId}` : `G_${p.userGuestName}`;
-            if (participantIds.has(idKey))
-                return { success: false, message: `Duplicate participant ID/guest name: ${idKey}` };
-            participantIds.add(idKey);
-        }
-        // Matchup Validation
-        if (data.matchups.length !== data.participants.length / 2) {
-            return { success: false, message: `Invalid number of matchups. Expected ${data.participants.length / 2}, got ${data.matchups.length}.` };
-        }
-        for (const m of data.matchups) {
-            const p1Key = m.player1.id ? `U_${m.player1.id}` : `G_${m.player1.guestName}`;
-            const p2Key = m.player2.id ? `U_${m.player2.id}` : `G_${m.player2.guestName}`;
-            if (!participantIds.has(p1Key) || !participantIds.has(p2Key)) {
-                return { success: false, message: `Invalid matchup between ${p1Key} and ${p2Key}` };
             }
         }
         return { success: true };

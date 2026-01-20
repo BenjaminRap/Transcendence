@@ -435,6 +435,7 @@ export namespace ProfileBuilder {
 		isActive = true;
 		if (socketUtils && socketUtils.socket)
 		{
+            console.log("\nEN ECOUTE PROFILE UPDATE, STATUS CHANGE ET FRIEND STATUS UPDATE\n");
 			socketUtils.socket.on("profile-update", (data : {user: { id: string; username: string; avatar: string }}) => {
 				console.log("Profile updated:", data.user.id);
 				ProfileUpdater.updateFriendProfile(parseInt(data.user.id), data.user.username, data.user.avatar);
