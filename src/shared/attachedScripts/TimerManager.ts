@@ -1,9 +1,7 @@
 import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager } from "@babylonjs-toolkit/next";
-import { GameManager } from "./GameManager";
 import type { int } from "@babylonjs/core/types";
-import { Imported } from "@shared/ImportedDecorator";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { getSceneData } from "@shared/SceneData";
 
