@@ -22,6 +22,8 @@ export class	SocketData
 	private _profile : Profile = getGuestProfile();
 	private _connected : boolean = false;
 
+	public ready : boolean = false;
+
 	public getState() {
 		return this._state;
 	}

@@ -8,11 +8,10 @@ import type { DefaultSocket } from "../controllers/SocketEventController";
 
 export class	ServerTournament extends Tournament<DefaultSocket>
 {
-	private	_disposed = false;
+	private	_state : "creation" | "waiting-ready" | "started" | "disposed" = "creation";
 	private _players = new Map<string, DefaultSocket>();
 	private _bannedPlayers = new Set<string>();
 	private _tournamentId : TournamentId;
-	private _started = false;
 	private _rooms = new Set<Room>();
 	private _socketReadyCount = 0;
 
@@ -38,7 +37,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 
 	private	banParticipant(name : string)
 	{
-		if (this._started)
+		if (this._state !== "creation")
 			return ;
 		const	socket = this._players.get(name);
 
@@ -52,7 +51,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 
 	private	kickParticipant(name : string)
 	{
-		if (this._started)
+		if (this._state !== "creation")
 			return ;
 		const	socket = this._players.get(name);
 		if (!socket || socket === this._creator)
@@ -77,30 +76,41 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		this.removeCreatorEvents();
 		if (!this._players.has(this._creator.data.getProfile().name))
 			this._creator.leave(this._tournamentId);
-		this._started = true;
+		this._state = "waiting-ready";
 		console.log(`${this._settings.name} tournament started !`);
 		this._io.to(this._tournamentId).emit("tournament-event", {type:"tournament-start"});
-		this._players.forEach(socket => socket.once("ready", () => {
-			this._socketReadyCount++;
-			if (this._socketReadyCount === this._players.size)
-			{
-				this.setParticipants([...this._players.values()]);
-				this.createMatches();
-			}
-		}));
+		this._players.forEach(socket => {
+			socket.data.ready = false;
+			socket.once("ready", () => {
+				socket.data.ready = true;
+				this._socketReadyCount++;
+				this.startMatchesIfReady();
+			});
+		});
 		return success(null);
+	}
+
+	startMatchesIfReady()
+	{
+		if (this._socketReadyCount === this._players.size)
+		{
+			this.setParticipants([...this._players.values()]);
+			this.createMatches();
+			this._state = "started";
+		}
 	}
 
 	public dispose()
 	{
-		if (this._disposed)
+		if (this._state === "disposed")
 			return ;
 		console.log(`${this._settings.name} tournamend end`);
-		this._disposed = true;
-		if (!this._started)
+		if (this._state === "creation")
 			this._io.to(this._tournamentId).emit("tournament-event", { type: "tournament-canceled" })
+		this._state = "disposed";
 		this._players.forEach((player) => {
 			player.removeAllListeners("leave-tournament");
+			player.removeAllListeners("ready");
 			player.leave(this._tournamentId);
 			player.data.leaveTournament();
 		});
@@ -112,7 +122,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 	
 	private	canJoinTournament(socket : DefaultSocket)
 	{
-		if (this._started)
+		if (this._state !== "creation")
 			return error("The tournament has already started !");
 		if (this._players.size === this._settings.maxPlayerCount)
 			return error("The tournament is already full !");
@@ -152,17 +162,23 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 
 		this._players.delete(profile.name);
 		socket.removeAllListeners("leave-tournament");
-		if (!this._started)
+		socket.removeAllListeners("ready");
+		if (this._state === "creation")
 		{
 			this._io.to(this._tournamentId).emit("tournament-event", {
 				type: "remove-participant",
 				name: profile.name
 			});
 		}
-		if (this._started || !isCreator)
+		if (this._state !== "creation" || !isCreator)
 		{
 			socket.data.leaveTournament();
 			socket.leave(this._tournamentId);
+		}
+		if (this._state === "waiting-ready")
+		{
+			this._socketReadyCount--;
+			this.startMatchesIfReady();
 		}
 	}
 
@@ -251,7 +267,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 
 	public onSocketQuit(socket : DefaultSocket)
 	{
-		if (socket === this._creator && !this._started)
+		if (socket === this._creator && this._state === "creation")
 			this.dispose();
 		else
 			this.removePlayerFromTournament(socket);
