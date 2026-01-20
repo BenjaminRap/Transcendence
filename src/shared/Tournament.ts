@@ -7,13 +7,14 @@ export abstract class	Tournament<T>
 	protected static readonly _showOpponentsDurationMs = 2000;
 	private static readonly _showTournamentDurationMs = 5000;
 
-	private _round : "qualification" | number = "qualification";
+	private _round :  "qualifications" | number = "qualifications";
 	private _tournamentMatches : Match<T>[][] = [];
 	private _qualified : ProfileWithScore<T>[] = [];
 	private _timeout : ReturnType<typeof setTimeout> | null = null;
 	private _expectedQualifiedCount : number = 0;
 	private _participants : ProfileWithScore<T>[] = [];
 	private _matchesFinished : number = 0;
+	private _participantsCount : number = 0;
 
 	protected _currentMatches : Match<T>[] = [];
 
@@ -27,11 +28,11 @@ export abstract class	Tournament<T>
 
 	private async endRound()
 	{
-		if (this._round === "qualification")
+		if (this._round === "qualifications")
 		{
 			const	disqualified : ProfileWithScore<T>[] = [];
 			TournamentHelper.setQualifiedParticipants(this._qualified, this._participants, disqualified, this._expectedQualifiedCount);
-			disqualified.forEach(participant => this.onParticipantLose(participant.profile, this._round));
+			disqualified.forEach(participant => this.onParticipantLose(participant.profile, true, this._participantsCount));
 			if (this._qualified.length === this._expectedQualifiedCount)
 			{
 				this.onQualificationsEnd(this._qualified.map(value => value.profile));
@@ -84,6 +85,7 @@ export abstract class	Tournament<T>
 	protected	setParticipants(participants : T[])
 	{
 		this._participants = participants.map(profile => ({profile, score: 0}));
+		this._participantsCount = this._participants.length;
 		this._expectedQualifiedCount = TournamentHelper.getExpectedQualified(this._participants.length);
 	}
 
@@ -103,8 +105,8 @@ export abstract class	Tournament<T>
 
 		if (!loser)
 			return ;
-		if (this._round !== "qualification")
-			this.onParticipantLose(match.loser.profile, this._round);
+		if (this._round !== "qualifications")
+			this.onParticipantLose(match.loser.profile, false, this._tournamentMatches[this._round].length);
 		this._matchesFinished++;
 		if (this._matchesFinished === this._currentMatches.length)
 			this.endRound();
@@ -116,7 +118,7 @@ export abstract class	Tournament<T>
 			clearTimeout(this._timeout);
 	}
 
-	protected abstract	onParticipantLose(loser : T, round : "qualification" | number) : void;
+	protected abstract	onParticipantLose(loser : T, isQualifications : boolean, roundMatchCount : number) : void;
 	protected abstract	onQualificationsEnd(qualified : T[]) : void;
 	protected abstract	onTournamentEnd(winner : T) : void;
 	protected abstract	onTournamentShow() : void;

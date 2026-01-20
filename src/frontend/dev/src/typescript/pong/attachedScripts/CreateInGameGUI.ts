@@ -13,9 +13,9 @@ import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { Imported } from "@shared/ImportedDecorator";
 import type { ThemeName } from "../menuStyles";
 import { MatchOpponentsGUI } from "../gui/MatchOpponentsGUI";
-import { TournamentWinnerGUI } from "../gui/TournamentWinnerGUI";
 import { initMenu } from "../gui/IGUI";
 import { TournamentGUI } from "../gui/TournamentGUI";
+import { TournamentEndGUI } from "../gui/TournamentEndGUI";
 
 export class CreateInGameGUI extends CustomScriptComponent {
 	@Imported("InputManager") private _inputManager! : InputManager;
@@ -25,7 +25,7 @@ export class CreateInGameGUI extends CustomScriptComponent {
 	private _pauseGUI! : PauseGUI;
 	private _endGUI! : EndGUI;
 	private _inMatchmakingGUI! : InMatchmakingGUI;
-	private _tournamentWinnerGUI! : TournamentWinnerGUI;
+	private _tournamentEndGUI! : TournamentEndGUI;
 	private _matchOpponentsGUI! : MatchOpponentsGUI;
 	private _tournamentGUI? : TournamentGUI;
 
@@ -71,7 +71,7 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		this._inMatchmakingGUI = initMenu(new InMatchmakingGUI(), {
 			cancelButton: () => this.leaveMatchmaking(),
 		}, this._menuParent);
-		this._tournamentWinnerGUI = initMenu(new TournamentWinnerGUI(), {
+		this._tournamentEndGUI = initMenu(new TournamentEndGUI(), {
 			goToMenu: () => this.onGoToMenu()
 		}, this._menuParent);
 		this._matchOpponentsGUI = initMenu(new MatchOpponentsGUI(), undefined, this._menuParent);
@@ -102,11 +102,12 @@ export class CreateInGameGUI extends CustomScriptComponent {
 			switch (tournamentEvent.type)
 			{
 				case "win":
-					this._tournamentWinnerGUI.setWinner(tournamentEvent.winner);
-					this.switchToGUI(this._tournamentWinnerGUI);
+					this._tournamentEndGUI.setWinner(tournamentEvent.winner);
+					this.switchToGUI(this._tournamentEndGUI);
 					break ;
 				case "lose":
-					this.switchToGUI(this._tournamentWinnerGUI);
+					this._tournamentEndGUI.setLoser(tournamentEvent.isQualifications, tournamentEvent.roundMatchCount);
+					this.switchToGUI(this._tournamentEndGUI);
 					break ;
 				case "show-tournament":
 					if (this._tournamentGUI)
