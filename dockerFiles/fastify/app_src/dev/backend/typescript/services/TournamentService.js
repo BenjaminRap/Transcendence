@@ -69,7 +69,7 @@ export class TournamentService {
     // ----------------------------------------------------------------------------- //
     async getTournamentById(tournamentId) {
         const tournament = await this.prisma.tournament.findUnique({
-            where: { id: tournamentId },
+            where: { id: Number(tournamentId) },
             include: {
                 participants: true,
                 matches: true,
@@ -87,7 +87,7 @@ export class TournamentService {
         }
         // 1. Check Tournament Status FIRST
         const tournament = await this.prisma.tournament.findUnique({
-            where: { id: tournamentId },
+            where: { id: Number(tournamentId) },
             select: { status: true, participants: true }
         });
         if (!tournament)
@@ -98,8 +98,8 @@ export class TournamentService {
         // 2. Strict Match Retrieval (Security & Validation)
         const match = await this.prisma.match.findFirst({
             where: {
-                id: matchData.matchId,
-                tournamentId: tournamentId,
+                id: Number(matchData.matchId),
+                tournamentId: Number(tournamentId),
                 OR: [
                     { player1GuestName: matchData.winner.guestName, player2GuestName: matchData.loser.guestName },
                     { player1GuestName: matchData.loser.guestName, player2GuestName: matchData.winner.guestName }
@@ -137,7 +137,7 @@ export class TournamentService {
         // Find next match
         const nextMatch = await this.prisma.match.findFirst({
             where: {
-                tournamentId,
+                tournamentId: Number(tournamentId),
                 round: nextRound,
                 matchOrder: nextMatchOrder
             }
@@ -153,7 +153,7 @@ export class TournamentService {
                 updateData.player2GuestName = matchData.winner.guestName;
             }
             await this.prisma.match.update({
-                where: { id: nextMatch.id },
+                where: { id: Number(nextMatch.id) },
                 data: updateData
             });
         }
@@ -165,19 +165,19 @@ export class TournamentService {
     async startNextMatch(tournamentId, player1, player2) {
         const matchId = await this.prisma.match.findFirst({
             where: {
-                tournamentId,
+                tournamentId: Number(tournamentId),
                 status: MatchStatus.IN_PROGRESS,
                 OR: [
                     {
-                        player1Id: player1.id,
+                        player1Id: Number(player1.id),
                         player1GuestName: player1.guestName,
-                        player2Id: player2.id,
+                        player2Id: Number(player2.id),
                         player2GuestName: player2.guestName
                     },
                     {
-                        player1Id: player2.id,
+                        player1Id: Number(player2.id),
                         player1GuestName: player2.guestName,
-                        player2Id: player1.id,
+                        player2Id: Number(player1.id),
                         player2GuestName: player1.guestName
                     }
                 ],
@@ -191,7 +191,7 @@ export class TournamentService {
     // ----------------------------------------------------------------------------- //
     async updateTournamentStatus(tournamentId, status) {
         const tournament = await this.prisma.tournament.update({
-            where: { id: tournamentId },
+            where: { id: Number(tournamentId) },
             data: { status },
         });
         return tournament;
@@ -204,7 +204,7 @@ export class TournamentService {
     async finishTournament(tournamentId) {
         // Log consistency check
         const remainingMatches = await this.prisma.match.count({
-            where: { tournamentId, status: MatchStatus.IN_PROGRESS }
+            where: { tournamentId: Number(tournamentId), status: MatchStatus.IN_PROGRESS }
         });
         if (remainingMatches > 0) {
             console.warn(`Tournament ${tournamentId} finished with ${remainingMatches} matches still IN_PROGRESS. Cancelling them.`);
@@ -213,7 +213,7 @@ export class TournamentService {
         // because they were not played.
         await this.prisma.match.updateMany({
             where: {
-                tournamentId,
+                tournamentId: Number(tournamentId),
                 status: MatchStatus.IN_PROGRESS
             },
             data: {
@@ -236,7 +236,7 @@ export class TournamentService {
         // Cancel ALL matches (InProgress AND placeholders to lock the bracket)
         await this.prisma.match.updateMany({
             where: {
-                tournamentId,
+                tournamentId: Number(tournamentId),
                 status: MatchStatus.IN_PROGRESS
             },
             data: {
@@ -267,7 +267,7 @@ export class TournamentService {
             // Finding the unique ID for the participant row
             const whereCondition = { tournamentId };
             if (player.id) {
-                whereCondition.userId = player.id;
+                whereCondition.userId = Number(player.id);
             }
             else {
                 whereCondition.guestName = player.guestName;
@@ -277,7 +277,7 @@ export class TournamentService {
             // However, updateMany is safer if we don't have the primary key (id) of TournamentParticipant.
             await this.prisma.tournamentParticipant.updateMany({
                 where: whereCondition,
-                data: { finalRank: rank }
+                data: { finalRank: Number(rank) }
             });
         }
         catch (error) {
@@ -293,7 +293,7 @@ export class TournamentService {
         const tournaments = await this.prisma.tournament.findMany({
             where: {
                 participants: {
-                    some: { userId: userId }
+                    some: { userId: Number(userId) }
                 }
             },
             include: {

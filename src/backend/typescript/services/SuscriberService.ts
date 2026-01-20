@@ -140,7 +140,7 @@ export class SuscriberService {
         const newAvatarUrl = `${this.api_url}/static/avatars/${path.basename(avatarFileName)}`;
         try {
             const updatedUser = await this.prisma.user.update({
-                where: { id: userId },
+                where: { id: Number(userId) },
                 data: { avatar: newAvatarUrl },
             });
             
@@ -167,7 +167,7 @@ export class SuscriberService {
         const oldAvatarUrl = user.avatar;
 
         const updatedUser = await this.prisma.user.update({
-            where: { id: userId },
+            where: { id: Number(userId) },
             data: { avatar: this.default_avatar_url },
         });
 
@@ -194,7 +194,7 @@ export class SuscriberService {
 
     // ----------------------------------------------------------------------------- //
     private async getById(id: number): Promise<User | null> {
-        return await this.prisma.user.findUnique({ where: { id } });
+        return await this.prisma.user.findUnique({ where: { id: Number(id) } });
     }
 
     // ----------------------------------------------------------------------------- //

@@ -96,40 +96,15 @@ export class SocketEventController {
 
     // ==================================== PRIVATE ==================================== //
 	
-	// Auth middleware for socket.io new connections
-	// ----------------------------------------------------------------------------- //
-	private async initMiddleware()
-	{
-		this.io.use(async (socket : DefaultSocket, next) => {
-			const token = socket.handshake.auth.token;
-
-			// guest user
-			if (!token) {
-				socket.data.userId = -1;
-				return next();
-			}
-
-			try {
-				const tokenManager: TokenManager = Container.getInstance().getService('TokenManager');
-				const decoded = await tokenManager.verify(token, false);
-
-				socket.data.userId = decoded.userId;
-				
-				next();
-			} catch (err) {
-				(socket.data as any).userId = -1;
-				(socket.data as any).authError = true;
-				return next();
-			}
-		});
-	}
-
 	// ----------------------------------------------------------------------------- //
 	private async initSocket()
 	{
-		this.initMiddleware();
 		this.io.on('connection', (socket : DefaultSocket) => {
 			this.handleConnection(socket);
+
+            socket.once("authenticate", (data: { token: string }, ack: (result: Result<null>) => void) => {
+                this.handleAuthenticate(socket, data.token, ack);
+            });
 
 			socket.on("get-tournaments", (ack : (descriptions : TournamentDescription[]) => void) => {
 				this.handleGetTournaments(socket, ack);
@@ -168,43 +143,60 @@ export class SocketEventController {
 	// ----------------------------------------------------------------------------- //
 	private async handleConnection(socket: DefaultSocket)
 	{
-		
 		this.sockets.add(socket);
-		const userId = (socket.data as any).userId;
 
-		socket.data = new SocketData(socket, userId);
+		socket.data = new SocketData(socket, -1);
 
-		if (userId == -1) {
-			if ( (socket.data as any).authError )
-				console.log("Socket connection with invalid token !\nConnected as Guest.");
-			else
-				console.log("Guest connected !");
-			return;
-		}
-		console.log(`User ${userId} connected !`);
-
-		// join a room specific to the user for private events
-		socket.join('user-' + userId);
-
-		// system to count multiple connections from the same user
-		const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
-		const newCount = currentCount + 1;
-
-		SocketEventController.connectedUsers.set(userId, newCount);
-
-		// notifie everyone only if it's the first connection of the user
-		if (newCount === 1) {
-			this.io.emit('user-status-change', { userId: userId, status: 'online' });
-		}
+		console.log(`Guest connected !`);
 	}
 
+	// ----------------------------------------------------------------------------- //
+    private async handleAuthenticate(socket: DefaultSocket, token: string, ack: (result: Result<null>) => void) : Promise<void>
+    {
+        // guest user
+        if (!token) {
+            socket.data.userId = -1;
+            ack(error("No token provided"));
+            return;
+        }
+
+        let userId: number;
+
+        try {
+            const tokenManager: TokenManager = Container.getInstance().getService('TokenManager');
+            const decoded = await tokenManager.verify(token, false);
+            userId = decoded.userId;
+            socket.data.userId = userId;
+        } catch (err) {
+            ack(error("Invalid token"));
+            return;
+        }
+
+        // system to count multiple connections from the same user
+        const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
+        const newCount = currentCount + 1;
+
+        SocketEventController.connectedUsers.set(userId, newCount);
+
+        // notifie everyone only if it's the first connection of the user
+        if (newCount === 1) {
+            SocketEventController.sendToProfileWatchers(userId, 'user-status-change', { userId: userId, status: 'online' });
+            SocketEventController.sendToFriends(userId, 'user-status-change', { userId: userId, status: 'online' });
+        }
+        
+        console.log(`User ${userId} authenticated !`);
+        ack(success(null));
+    }
+
+	// ----------------------------------------------------------------------------- //
 	private handleGetTournaments(socket : DefaultSocket, ack : (descriptions : TournamentDescription[]) => void)
 	{
-		const	descriptions = getPublicTournamentsDescriptions(socket);
+		const descriptions = getPublicTournamentsDescriptions(socket);
 
 		ack(descriptions);
 	}
 
+    // ----------------------------------------------------------------------------- //
 	private	handleCreateTournament(socket : DefaultSocket, data : any, ack : (tournamentId : Result<string>) => void)
 	{
 		const	parsed = zodTournamentCreationSettings.safeParse(data);
@@ -226,7 +218,8 @@ export class SocketEventController {
 		console.log(`tournament created : ${description.name}`);
 		ack(success(description.id));
 	}
-	
+
+    // ----------------------------------------------------------------------------- //	
 	private	handleJoinTournament(socket : DefaultSocket, tournamentId : TournamentId, ack: (participants : Result<string[]>) => void)
 	{
 			const	tournament = this.tournamentMaker.joinTournament(tournamentId, socket);
@@ -295,8 +288,8 @@ export class SocketEventController {
 			
 			if (newCount <= 0) {
 				SocketEventController.connectedUsers.delete(userId);
-                SocketEventController.sendToProfileWatchers(userId, 'user-status-change', { userId: userId });
-                SocketEventController.sendToFriends(userId, 'user-status-change', { userId: userId });
+                SocketEventController.sendToProfileWatchers(userId, 'user-status-change', { userId: userId, status: 'offline' });
+                SocketEventController.sendToFriends(userId, 'user-status-change', { userId: userId, status: 'offline' });
 			}
 			else {
 				SocketEventController.connectedUsers.set(userId, newCount);

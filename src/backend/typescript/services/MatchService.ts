@@ -15,9 +15,9 @@ export class MatchService {
     async startMatch(player1: PlayerInfo, player2: PlayerInfo): Promise<number> {
         const match = await this.prisma.match.create({
             data: {
-                player1Id: player1.id ?? null,
+                player1Id: Number(player1.id) ?? null,
                 player1GuestName: player1.guestName,
-                player2Id: player2.id ?? null,
+                player2Id: Number(player2.id) ?? null,
                 player2GuestName: player2.guestName,
                 winnerGuestName: "",
                 loserGuestName: "",
@@ -30,14 +30,14 @@ export class MatchService {
 	// ----------------------------------------------------------------------------- //
     async endMatch(matchData: EndMatchData): Promise<void> {
         await this.prisma.match.update({
-            where: { id: matchData.matchId as number },
+            where: { id: Number(matchData.matchId) },
             data: {
                 status: MatchStatus.FINISHED,
 
-                winnerId: matchData.winner.id ?? null,
+                winnerId: Number(matchData.winner.id) ?? null,
                 winnerGuestName: matchData.winner.guestName,
 
-                loserId: matchData.loser.id ?? null,
+                loserId: Number(matchData.loser.id) ?? null,
                 loserGuestName: matchData.loser.guestName,
                 
                 scoreWinner: Number(matchData.scoreWinner),
@@ -52,8 +52,8 @@ export class MatchService {
     async getTournamentMatch(tournamentId: number, matchData: EndMatchData): Promise<Match | null> {
         return await this.prisma.match.findFirst({
             where: {
-                id: matchData.matchId,
-                tournamentId: tournamentId,
+                id: Number(matchData.matchId),
+                tournamentId: Number(tournamentId),
                 OR: [
                     {
                         player1GuestName: matchData.winner.guestName,
@@ -72,7 +72,7 @@ export class MatchService {
 	async getMatchInProgress(matchId: number): Promise<Match | null> {
         return this.prisma.match.findFirst({
             where: {
-                id: matchId,
+                id: Number(matchId),
                 status: MatchStatus.IN_PROGRESS
             }
         });
@@ -154,13 +154,13 @@ export class MatchService {
 
 		const wins = await this.prisma.match.groupBy({
 			by: ['winnerId'],
-			where: { winnerId: { in: playerIds } },
+			where: { winnerId: { in: playerIds.map(id => Number(id)) } },
 			_count: true
 		});
 
 		const losses = await this.prisma.match.groupBy({
 			by: ['loserId'],
-			where: { loserId: { in: playerIds } },
+			where: { loserId: { in: playerIds.map(id => Number(id)) } },
 			_count: true
 		});
         
@@ -175,15 +175,15 @@ export class MatchService {
 
 	// ----------------------------------------------------------------------------- //
  	async getStat(playerId: number): Promise<{stats: GameStats | null, message?: string }> {
-        if (!await this.isExisting(playerId))
+        if (!await this.isExisting(Number(playerId)))
             return { stats: null, message: 'Player does not exist' }
 
         const wins = await this.prisma.match.count({
-            where: { winnerId: playerId }
+            where: { winnerId: Number(playerId) }
         });
 
         const losses = await this.prisma.match.count({
-            where: { loserId: playerId }
+            where: { loserId: Number(playerId) }
         });
 
         const stats: GameStats = this.calculateStats(wins, losses);
@@ -195,12 +195,12 @@ export class MatchService {
 	async startTournamentMatch(tournamentId: number, round: number, matchOrder: number, player1: PlayerInfo, player2: PlayerInfo) {
         return this.prisma.match.create({
             data: {
-                tournamentId,
-                round,
-                matchOrder,
-                player1Id: player1.id ?? null,
+                tournamentId: Number(tournamentId),
+                round: Number(round),
+                matchOrder: Number(matchOrder),
+                player1Id: Number(player1.id) ?? null,
                 player1GuestName: player1.guestName,
-                player2Id: player2.id ?? null,
+                player2Id: Number(player2.id) ?? null,
                 player2GuestName: player2.guestName,
                 winnerGuestName: "",
                 loserGuestName: "",
@@ -213,9 +213,9 @@ export class MatchService {
     async createBracketMatch(tournamentId: number, round: number, matchOrder: number) {
         return this.prisma.match.create({
             data: {
-                tournamentId,
-                round,
-                matchOrder,
+                tournamentId: Number(tournamentId),
+                round: Number(round),
+                matchOrder: Number(matchOrder),
                 player1GuestName: "",
                 player2GuestName: "",
                 winnerGuestName: "",
@@ -230,7 +230,7 @@ export class MatchService {
 	// ----------------------------------------------------------------------------- //
 	private async theyExist(ids: number[]): Promise<boolean> {
 		const existingUsers = await this.prisma.user.findMany({
-			where: { id: { in: ids } },
+			where: { id: { in: ids.map(id => Number(id)) } },
 			select: { id: true }
 		});
 
@@ -246,7 +246,7 @@ export class MatchService {
 	// ----------------------------------------------------------------------------- //
 	private async isExisting(id: number): Promise<boolean> {
 		const user = await this.prisma.user.findUnique({
-			where: { id: id },
+			where: { id: Number(id) },
 			select: { id: true }
 		});
 		return user !== null;

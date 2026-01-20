@@ -116,7 +116,7 @@ export class SuscriberService {
         const newAvatarUrl = `${this.api_url}/static/avatars/${path.basename(avatarFileName)}`;
         try {
             const updatedUser = await this.prisma.user.update({
-                where: { id: userId },
+                where: { id: Number(userId) },
                 data: { avatar: newAvatarUrl },
             });
             if (!oldAvatarUrl.includes(this.default_avatar_filename)) {
@@ -137,7 +137,7 @@ export class SuscriberService {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
         const oldAvatarUrl = user.avatar;
         const updatedUser = await this.prisma.user.update({
-            where: { id: userId },
+            where: { id: Number(userId) },
             data: { avatar: this.default_avatar_url },
         });
         if (!oldAvatarUrl.includes(this.default_avatar_filename)) {
@@ -158,7 +158,7 @@ export class SuscriberService {
     // ================================== PRIVATE ================================== //
     // ----------------------------------------------------------------------------- //
     async getById(id) {
-        return await this.prisma.user.findUnique({ where: { id } });
+        return await this.prisma.user.findUnique({ where: { id: Number(id) } });
     }
     // ----------------------------------------------------------------------------- //
     hasChanged(user, data) {

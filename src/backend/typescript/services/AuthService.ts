@@ -172,7 +172,7 @@ export class AuthService {
     private async findById(id: number): Promise<User | null> {
         const user = await this.prisma.user.findUnique({
             where: {
-                id,
+                id: Number(id),
             },
         });
         if (!user?.id) {

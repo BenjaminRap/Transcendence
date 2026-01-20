@@ -91,7 +91,7 @@ export class UsersService {
     // --------------------------------------------------------------------------------- //
     async checkIfUserExists(id) {
         const user = await this.prisma.user.findUnique({
-            where: { id },
+            where: { id: Number(id) },
             select: { id: true }
         });
         if (!user) {
