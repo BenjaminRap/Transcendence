@@ -83,7 +83,7 @@ export class	ServerProxy
 
 	public onGameReady() : Promise<void>
 	{
-		this.verifyState("in-game");
+		this.verifyState("in-game", "in-tournament");
 		const	deferred = this._frontendSocketHandler.onGameReady();
 
 		this.replaceCurrentPromise(deferred);
@@ -92,7 +92,7 @@ export class	ServerProxy
 
 	public setReady() : void
 	{
-		this.verifyState("in-game");
+		this.verifyState("in-game", "in-tournament");
 		this._frontendSocketHandler.sendEventWithNoResponse("ready");
 	}
 
