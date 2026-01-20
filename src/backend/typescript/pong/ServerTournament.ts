@@ -14,6 +14,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 	private _tournamentId : TournamentId;
 	private _started = false;
 	private _rooms = new Set<Room>();
+	private _socketReadyCount = 0;
 
 	constructor(
 		private _onTournamentDispose : () => void,
@@ -79,8 +80,14 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		this._started = true;
 		console.log(`${this._settings.name} tournament started !`);
 		this._io.to(this._tournamentId).emit("tournament-event", {type:"tournament-start"});
-		this.setParticipants([...this._players.values()]);
-		this.createMatches();
+		this._players.forEach(socket => socket.once("ready", () => {
+			this._socketReadyCount++;
+			if (this._socketReadyCount === this._players.size)
+			{
+				this.setParticipants([...this._players.values()]);
+				this.createMatches();
+			}
+		}));
 		return success(null);
 	}
 
