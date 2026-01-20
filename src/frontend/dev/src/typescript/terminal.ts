@@ -135,7 +135,8 @@ export namespace TerminalCommand {
 // ------------------------------------------------------------------------ Command ---------------------------------------------------------------------
 
 function rmCommand(): string {
-	return 'Chef ? Laisse mes fichiers tranquilles !';
+	clearOutput();
+	return CommandHelpMessage.RICK_ROLL;
 }
 
 function pongCommand(args: string[], description: string): string {

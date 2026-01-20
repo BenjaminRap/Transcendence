@@ -457,11 +457,6 @@ export namespace ProfileBuilder {
 				sortFriendList();
 				updateFriendDiv();
 			});
-
-
-
-
-
 		}
 		return 'Profil ouvert. Tapez "kill profile" pour le fermer.';
 	}
