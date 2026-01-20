@@ -68,9 +68,10 @@ export class	ServerProxy
 		return deferred.promise;
 	}
 
-	public leaveScene() : void
+	public leave() : void
 	{
-		this.verifyState("connected", "in-game", "in-tournament");
+		if (this._state === "in-matchmaking")
+			this._frontendSocketHandler.sendEventWithNoResponse("leave-matchmaking");
 		if (this._state === "in-game")
 			this._frontendSocketHandler.sendEventWithNoResponse("forfeit");
 		else if (this._state === "in-tournament")

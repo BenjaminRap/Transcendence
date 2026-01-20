@@ -136,7 +136,7 @@ export class PongGame extends HTMLElement {
 	{
 		if (this.isInScene("Menu.gltf"))
 			return ;
-		this._serverProxy.leaveScene();
+		this._serverProxy.leave();
 		await this.changeScene("Menu.gltf", "Menu");
 	}
 
@@ -300,6 +300,7 @@ export class PongGame extends HTMLElement {
 
 	public quit()
 	{
+		this._serverProxy.leave();
 		PongUtils.removePongDiv();
 	}
 }
