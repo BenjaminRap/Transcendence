@@ -43,7 +43,7 @@ export class SocketEventController {
 	{
 		try {
 			if (SocketEventController.socketInstance) {
-				SocketEventController.socketInstance.io.to('user-' + userId).emit(event as any, data);
+				SocketEventController.socketInstance.io.to('user-' + Number(userId)).emit(event as any, data);
 			}			
 		} catch (error) {
 			console.warn(`Error sending socket event to user ${userId} :`, error);
@@ -177,6 +177,9 @@ export class SocketEventController {
         const newCount = currentCount + 1;
 
         SocketEventController.connectedUsers.set(userId, newCount);
+
+        // oublie de creer la room user-<id>
+        socket.join('user-' + userId);
 
         // notifie everyone only if it's the first connection of the user
         if (newCount === 1) {
