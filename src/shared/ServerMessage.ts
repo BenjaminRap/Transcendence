@@ -133,7 +133,11 @@ export const	zodTournamentEvent = zod.discriminatedUnion("type", [
 		winner: zodProfile
 	}),
 	zod.object({
-		type: zod.literal("lose")
+		type: zod.literal("lose"),
+		round: zod.union([
+			zod.literal("qualification"),
+			zod.number()
+		])
 	}),
 	zod.object({
 		type: zod.literal("tournament-start")

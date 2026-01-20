@@ -159,9 +159,9 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		}
 	}
 
-	protected override onParticipantLose(loser : DefaultSocket)
+	protected override onParticipantLose(loser : DefaultSocket, round : "qualification" | number)
 	{
-		loser.emit("tournament-event", {type: "lose"})
+		loser.emit("tournament-event", {type: "lose", round})
 	}
 
     protected override onQualificationsEnd(qualified: DefaultSocket[]): void

@@ -31,7 +31,7 @@ export abstract class	Tournament<T>
 		{
 			const	disqualified : ProfileWithScore<T>[] = [];
 			TournamentHelper.setQualifiedParticipants(this._qualified, this._participants, disqualified, this._expectedQualifiedCount);
-			disqualified.forEach(participant => this.onParticipantLose(participant.profile));
+			disqualified.forEach(participant => this.onParticipantLose(participant.profile, this._round));
 			if (this._qualified.length === this._expectedQualifiedCount)
 			{
 				this.onQualificationsEnd(this._qualified.map(value => value.profile));
@@ -104,7 +104,7 @@ export abstract class	Tournament<T>
 		if (!loser)
 			return ;
 		if (this._round !== "qualification")
-			this.onParticipantLose(match.loser.profile);
+			this.onParticipantLose(match.loser.profile, this._round);
 		this._matchesFinished++;
 		if (this._matchesFinished === this._currentMatches.length)
 			this.endRound();
@@ -116,7 +116,7 @@ export abstract class	Tournament<T>
 			clearTimeout(this._timeout);
 	}
 
-	protected abstract	onParticipantLose(loser : T) : void;
+	protected abstract	onParticipantLose(loser : T, round : "qualification" | number) : void;
 	protected abstract	onQualificationsEnd(qualified : T[]) : void;
 	protected abstract	onTournamentEnd(winner : T) : void;
 	protected abstract	onTournamentShow() : void;

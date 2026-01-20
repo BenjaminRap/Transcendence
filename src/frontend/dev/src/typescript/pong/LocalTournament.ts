@@ -60,7 +60,7 @@ export class	LocalTournament extends Tournament<Profile>
 		super.dispose();
 	}
 
-	protected override onParticipantLose(loser: Profile): void
+	protected override onParticipantLose(loser: Profile, round : "qualification" | number): void
 	{
 	}
 
