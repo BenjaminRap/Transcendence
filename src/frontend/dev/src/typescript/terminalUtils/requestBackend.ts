@@ -73,7 +73,6 @@ export namespace RequestBackendModule {
 			return ;
 		socketUtils.socket.emit('authenticate', { token: token });
 		socketUtils.socket.onAny((event, ...args) => {
-			console.log(`Événement reçu '${event}': ${JSON.stringify(args)}`);
 		});
 	}
 
