@@ -16,7 +16,7 @@ import { MatchOpponentsGUI } from "../gui/MatchOpponentsGUI";
 import { initMenu } from "../gui/IGUI";
 import { TournamentGUI } from "../gui/TournamentGUI";
 import { TournamentEndGUI } from "../gui/TournamentEndGUI";
-import type { FrontendGameSceneName, SceneName } from "@shared/SceneData";
+import type { FrontendGameSceneName } from "@shared/SceneData";
 
 export class CreateInGameGUI extends CustomScriptComponent {
 	@Imported("InputManager") private _inputManager! : InputManager;
