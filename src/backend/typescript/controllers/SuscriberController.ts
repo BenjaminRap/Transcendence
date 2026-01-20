@@ -105,7 +105,7 @@ export class SuscriberController {
             const user = await this.suscriberService.updateUsername(id, validation.data);
 
             SocketEventController.notifyProfileChange(Number(id), 'profile-update', { user: sanitizeUser(user) });
-    
+            
             return reply.status(200).send({
                 success: true,
                 message: 'Profile successfully updated',
