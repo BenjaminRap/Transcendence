@@ -33,9 +33,8 @@ export class	FrontendSocketHandler
 	public static async createFrontendSocketHandler()
 	{
         const socket = io("/", {
-            path: "/socket.io/",
-            transports: ["websocket"],
-            autoConnect: true,
+            path: FrontendSocketHandler._apiUrl,
+            autoConnect: false,
         });
 
 		const	connectionPromise = new Promise<void>((resolve, reject) => {
