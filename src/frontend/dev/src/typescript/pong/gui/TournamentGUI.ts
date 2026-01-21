@@ -79,7 +79,7 @@ export class	TournamentGUI extends HTMLElement implements IGUI<void>
 		for (let matchesCount = 1; matchesCount < this._participants.length; matchesCount *= 2) {
 			const	matchesGUIs = [];
 			const	div = document.createElement("div");
-			const	width =  `calc((50% + ${TournamentGUI._lineWidth}) / ${matchesCount})`;
+			const	width =  `calc((50cqw + ${TournamentGUI._lineWidth}) / ${matchesCount})`;
 			div.style.setProperty("--opponent-font-size", `calc(${TournamentGUI._opponentFontSize} / 2 / ${matchesCount})`);
 			div.style.setProperty("--match-line-width", `calc(${TournamentGUI._lineWidth} / ${matchesCount})`);
 			div.style.setProperty("--rounded", `calc(${TournamentGUI._rounded} / ${matchesCount})`);
@@ -102,7 +102,7 @@ export class	TournamentGUI extends HTMLElement implements IGUI<void>
 	private	placeParticipants()
 	{
 		const	div = document.createElement("div");
-		const	width =  `calc((50% + ${TournamentGUI._lineWidth}) / ${this._participants.length})`;
+		const	width =  `calc((50cqw + ${TournamentGUI._lineWidth}) / ${this._participants.length})`;
 
 		div.classList.add("flex", "flex-row", "justify-around");
 		div.style.setProperty("--opponent-font-size", `calc(${TournamentGUI._opponentFontSize} / ${this._participants.length})`);

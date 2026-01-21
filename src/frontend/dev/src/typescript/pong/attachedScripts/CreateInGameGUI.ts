@@ -103,7 +103,7 @@ export class CreateInGameGUI extends CustomScriptComponent {
 			switch (tournamentEvent.type)
 			{
 				case "win":
-					this._tournamentEndGUI.setWinner(tournamentEvent.winner);
+					this._tournamentEndGUI.setWinner(this._tournamentGUI);
 					this.switchToGUI(this._tournamentEndGUI);
 					break ;
 				case "lose":
