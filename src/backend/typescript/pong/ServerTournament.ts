@@ -104,6 +104,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 	{
 		if (this._state === "disposed")
 			return ;
+		super.dispose();
 		console.log(`${this._settings.name} tournamend end`);
 		if (this._state === "creation")
 			this._io.to(this._tournamentId).emit("tournament-event", { type: "tournament-canceled" })
