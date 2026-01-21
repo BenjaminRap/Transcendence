@@ -31,7 +31,8 @@ export class Ball extends CustomScriptComponent {
 
 		this._sceneData = getSceneData(this.scene);
 
-		this.setBallRandomStartDirection();
+		if (this._sceneData.gameType !== "Multiplayer")
+			this.setBallRandomStartDirection();
 		this._sceneData.events.getObservable("game-start").add(() => {
 			this.launch();
 		});
