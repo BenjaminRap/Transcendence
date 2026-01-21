@@ -70,12 +70,19 @@ export abstract class	Tournament<T>
 
 	protected async delay(callback: () => void, durationMs : number)
 	{
-		if (this._timeout !== null)
-			clearTimeout(this._timeout);
+		this.clearDelay();
 		this._timeout = setTimeout(() => {
 			callback();
 			this._timeout = null;
 		}, durationMs);
+	}
+
+	protected	clearDelay()
+	{
+		if (!this._timeout)
+			return ;
+		clearTimeout(this._timeout);
+		this._timeout = null;
 	}
 
 	protected	setParticipants(participants : T[])
@@ -110,8 +117,7 @@ export abstract class	Tournament<T>
 
 	protected dispose()
 	{
-		if (this._timeout !== null)
-			clearTimeout(this._timeout);
+		this.clearDelay();
 	}
 
 	protected abstract	onParticipantLose(loser : T, isQualifications : boolean, roundMatchCount : number) : void;
