@@ -128,8 +128,8 @@ export class SocketEventController {
         try {
             const tokenManager = Container.getInstance().getService('TokenManager');
             const decoded = await tokenManager.verify(token, false);
-            userId = decoded.userId;
-            socket.data.userId = Number(userId);
+            userId = Number(decoded.userId);
+            socket.data.userId = userId;
         }
         catch (err) {
             ack(error("Invalid token"));
@@ -139,6 +139,7 @@ export class SocketEventController {
         // system to count multiple connections from the same user
         const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
         const newCount = currentCount + 1;
+        console.log(`User ${userId} connected, total connections: ${newCount}\n`);
         SocketEventController.connectedUsers.set(userId, newCount);
         socket.join('user-' + userId);
         console.log(`User ${userId} authenticated and joined his own socket room !`);
@@ -147,6 +148,7 @@ export class SocketEventController {
             SocketEventController.sendToProfileWatchers(userId, 'user-status-change', { userId: userId, status: 'online' });
             SocketEventController.sendToFriends(userId, 'user-status-change', { userId: userId, status: 'online' });
         }
+        console.log("user connected actually : ", SocketEventController.connectedUsers);
     }
     // ----------------------------------------------------------------------------- //
     handleGetTournaments(socket, ack) {
@@ -212,22 +214,21 @@ export class SocketEventController {
         this.matchMaker.removeUserFromMatchMaking(socket);
         // clean socket data
         socket.data.disconnect();
-        const userId = socket.data.userId;
-        if (userId == -1)
+        const userId = Number(socket.data.userId);
+        if (userId === -1)
             console.log(`Guest disconnected !`);
         else {
             // decompte ne nb de connexion du user (plusieurs onglets...)
             const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
+            console.log(`User ${userId} disconnected, remaining connections: ${currentCount - 1}`);
             const newCount = currentCount - 1;
-            console.log(`User ${userId} disconnected !`);
             if (newCount <= 0) {
+                console.log(`User ${userId} disconnected !`);
                 SocketEventController.connectedUsers.delete(userId);
                 SocketEventController.sendToProfileWatchers(userId, 'user-status-change', { userId: userId, status: 'offline' });
                 SocketEventController.sendToFriends(userId, 'user-status-change', { userId: userId, status: 'offline' });
             }
-            else {
-                SocketEventController.connectedUsers.set(userId, newCount);
-            }
+            SocketEventController.connectedUsers.set(userId, newCount);
         }
     }
 }
