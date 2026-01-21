@@ -1,9 +1,9 @@
 import { ServerSceneData } from "./ServerSceneData";
 import { ServerPongGame } from "./ServerPongGame";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
-import { type GameInit, type KeysUpdate, zodKeysUpdate } from "@shared/ServerMessage"
+import { type GameInit, type GameStartInfos, type KeysUpdate, zodKeysUpdate } from "@shared/ServerMessage"
 import { ClientProxy } from "./ClientProxy";
-import { type int, Observable } from "@babylonjs/core";
+import { type int, Observable, Vector3 } from "@babylonjs/core";
 import type { ServerEvents, ServerToClientEvents } from "@shared/MessageType";
 import type { ServerType } from "../index";
 import type { Profile } from "@shared/Profile";
@@ -110,11 +110,12 @@ export class	Room
 
 	private	async startGame()
 	{
-		await this._sceneData!.readyPromise.promise;
+		const	gameStartInfos = await this._sceneData!.readyPromise.promise as GameStartInfos;
+
 		await this.delay(Room._showParticipantsTimeoutMs);
 		this._sceneData!.events.getObservable("game-start").notifyObservers();
 		this._sceneData!.events.getObservable("end").add(endData => { this.gameEnd(endData) });
-		this.sendMessageToRoom("ready");
+		this.sendMessageToRoom("ready", gameStartInfos);
 		this._sockets.forEach((socket : DefaultSocket, index : int) => {
 			socket.once("forfeit", () => {
 				socket.broadcast.to(this._roomId).emit("game-infos", { type: "forfeit" });

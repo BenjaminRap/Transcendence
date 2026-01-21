@@ -157,3 +157,8 @@ export const zodGameStats = zod.object({
 	winRate: zod.number()
 });
 export type GameStats = zod.infer<typeof zodGameStats>;
+
+export const zodGameStartInfos = zod.object({
+	ballStartDirection: zodVector3
+});
+export type GameStartInfos = zod.infer<typeof zodGameStartInfos>;

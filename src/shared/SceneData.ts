@@ -1,6 +1,7 @@
 import { Deferred, HavokPlugin, Scene } from "@babylonjs/core";
 import { EventsManager } from "./EventsManager";
 import { PongError } from "./pongError/PongError";
+import type { GameStartInfos } from "./ServerMessage";
 
 export type ServerGameType = "Server";
 export type FrontendGameType = "Local" | "Multiplayer" | "Bot" | "Menu";
@@ -21,7 +22,7 @@ export abstract class	SceneData
 		public readonly gameType : GameType,
 		protected readonly _events : EventsManager
 	) {
-		this.readyPromise = new Deferred<void>
+		this.readyPromise = new Deferred<GameStartInfos | void>
 	}
 
 	public get events()

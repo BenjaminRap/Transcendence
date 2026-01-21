@@ -1,4 +1,4 @@
-import type { GameInfos, GameInit, GameStats, KeysUpdate, SanitizedUser, TournamentCreationSettings, TournamentDescription, TournamentEvent, TournamentId } from "./ServerMessage";
+import type { GameInfos, GameInit, GameStartInfos, GameStats, KeysUpdate, SanitizedUser, TournamentCreationSettings, TournamentDescription, TournamentEvent, TournamentId } from "./ServerMessage";
 import type { Result } from "./utils";
 
 export type ClientMessage = "join-matchmaking" |
@@ -50,6 +50,7 @@ export type ServerEventsData<T extends ServerEvents> =
     T extends "profile-update" ? [{ user: SanitizedUser }] :
     T extends "game-stats-update" ? [{ stats: GameStats }] :
 	T extends "friend-status-update" ? [{ fromUserId: number, status: 'PENDING' | 'ACCEPTED' }] :
+	T extends "ready" ? [GameStartInfos] :
 	[]
 
 

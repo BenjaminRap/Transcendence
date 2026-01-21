@@ -181,8 +181,8 @@ export class PongGame extends HTMLElement {
 		this._serverProxy.setReady();
 		const	participants = gameInit.participants as [Profile, Profile];
 		sceneData.events.getObservable("set-participants").notifyObservers(participants);
-		await this._serverProxy.onGameReady();
-		sceneData.events.getObservable("game-start").notifyObservers();
+		const	gameStartInfos = await this._serverProxy.onGameReady();
+		sceneData.events.getObservable("game-start").notifyObservers(gameStartInfos);
 	}
 
 	private onTournamentMessage(tournamentEvent : TournamentEventAndJoinedGame)

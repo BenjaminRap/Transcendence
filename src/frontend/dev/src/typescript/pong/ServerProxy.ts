@@ -1,4 +1,4 @@
-import type { GameInfos, GameInit, KeysUpdate, TournamentCreationSettings, TournamentDescription, TournamentEvent, TournamentId } from "@shared/ServerMessage";
+import type { GameInfos, GameInit, GameStartInfos, KeysUpdate, TournamentCreationSettings, TournamentDescription, TournamentEvent, TournamentId } from "@shared/ServerMessage";
 import { FrontendSocketHandler } from "./FrontendSocketHandler";
 import type { Deferred, int, Observable, Observer } from "@babylonjs/core";
 import { PongError } from "@shared/pongError/PongError";
@@ -80,7 +80,7 @@ export class	ServerProxy
 		this._state = "connected";
 	}
 
-	public onGameReady() : Promise<void>
+	public onGameReady() : Promise<GameStartInfos>
 	{
 		this.verifyState("in-game", "in-tournament");
 		const	deferred = this._frontendSocketHandler.onGameReady();
