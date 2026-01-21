@@ -231,6 +231,7 @@ export class PongGame extends HTMLElement {
 				this.goToMenuScene();
 				break;
 			case "quitPong":
+				console.error(message);
 				this.quit();
 				break;
 		}
@@ -293,6 +294,15 @@ export class PongGame extends HTMLElement {
 			delete globalThis.HKP;
 		this.disposeScene();
 		this._engine.dispose();
+	}
+
+	public setButtonEnable(enabled : boolean)
+	{
+		const	buttons = this.querySelectorAll("button")
+
+		buttons.forEach(button => {
+			button.disabled = !enabled;
+		})
 	}
 
 	public focusOnCanvas()
