@@ -75,12 +75,16 @@ function sortFriendList()
 	for (const friend of profile.friends) {
 		if (friend.isOnline) {
 			onlineFriends.push(friend);
-		} else if (friend.status === "pending") {
+		} else if (friend.status === "PENDING") {
 			pendingFriends.push(friend);
 		} else {
 			offlineFriends.push(friend);
 		}
 	}
+
+	console.log("Online friends:", onlineFriends);
+	console.log("Pending friends:", pendingFriends);
+	console.log("Offline friends:", offlineFriends);
 
 	profile.friends = [...onlineFriends, ...pendingFriends, ...offlineFriends];
 	console.log("Sorted friend list:", profile.friends);
@@ -435,7 +439,7 @@ export namespace ProfileBuilder {
 		isActive = true;
 		if (socketUtils && socketUtils.socket)
 		{
-            console.log("\nEN ECOUTE PROFILE UPDATE, STATUS CHANGE ET FRIEND STATUS UPDATE\n");
+			// console.log("\nEN ECOUTE PROFILE UPDATE, STATUS CHANGE ET FRIEND STATUS UPDATE\n");
 			socketUtils.socket.on("profile-update", (data : {user: { id: string; username: string; avatar: string }}) => {
 				console.log("Profile updated:", data.user.id);
 				ProfileUpdater.updateFriendProfile(parseInt(data.user.id), data.user.username, data.user.avatar);
@@ -445,19 +449,23 @@ export namespace ProfileBuilder {
 			});
 
 			socketUtils.socket.on("friend-status-update", (data: {requester: {id: number, username: string, avatar: string, isOnline: boolean, requesterId: number}, status: string}) => {
-				console.log("Friend status updated:", data.requester.id, data.status);
 				let friendToAdd: Friend = {
-					avatar: data.requester.avatar,
-					username: data.requester.username,
 					id: data.requester.id,
-					status: data.status,
+					username: data.requester.username,
+					avatar: data.requester.avatar,
 					isOnline: data.requester.isOnline,
+					status: data.status,
 					requesterId: data.requester.requesterId,
 				};
 				profile.friends.push(friendToAdd);
 				sortFriendList();
 				updateFriendDiv();
 			});
+			let watchMatchIds = getWathIdMatch();
+			let watchFriendIds = getWathIdFriend();
+			let profileIds : number[] = watchFriendIds.concat(watchMatchIds);
+			console.log("Watching profile IDs:", profileIds);
+			// socketUtils.socket.emit("watch-profile", { profileId: profileIds });
 		}
 		return 'Profil ouvert. Tapez "kill profile" pour le fermer.';
 	}
@@ -474,6 +482,32 @@ export namespace ProfileBuilder {
 	export let isActive = false;
 }
 
+function getWathIdMatch(): number[]
+{
+	if (!profile.lastMatchs)
+		return [];
+	let ids: number[] = [];
+	for (let i = 0; i < 4; i++)
+	{
+		if (profile.lastMatchs[i] && profile.lastMatchs[i].match)
+			ids.push(profile.lastMatchs[i].match!.id);
+	}
+	return ids;
+}
+
+function getWathIdFriend(): number[]
+{
+	if (!profile.friends)
+		return [];
+	let ids: number[] = [];
+	for (let i = 0; i < 4; i++)
+	{
+		if (profile.friends[i])
+			ids.push(profile.friends[i].id);
+	}
+	return ids;
+}
+
 
 async function ChangeName() {
 	if (Modal.isModalActive || PongUtils.isPongLaunched )
@@ -484,7 +518,6 @@ async function ChangeName() {
 		await requetChangeName(text);
 	});
 }
-
 
 async function requetChangeName(newName: string): Promise<boolean> {
 	const token = TerminalUtils.getCookie('accessToken') || '';
@@ -598,7 +631,6 @@ function ChangeAvatar() {
 
 async function requestChangeAvatar(formData: FormData): Promise<boolean> {
 	const token = TerminalUtils.getCookie('accessToken') || '';
-
 	try {
 		const response = await fetch('/api/suscriber/update/avatar', {
 			method: 'PUT',
