@@ -75,7 +75,7 @@ export class	Room
 		if (this._disposed)
 			return ;
 		socket.broadcast.to(this._roomId).emit("game-infos", { type: "forfeit" });
-		const	winningSide = (socket === this._sockets[0]) ? "left" : "right";
+		const	winningSide = (socket === this._sockets[0]) ? "right" : "left";
 
 		this._sceneData!.events.getObservable("forfeit").notifyObservers(winningSide);
 	}
@@ -119,7 +119,7 @@ export class	Room
 		this._sockets.forEach((socket : DefaultSocket, index : int) => {
 			socket.once("forfeit", () => {
 				socket.broadcast.to(this._roomId).emit("game-infos", { type: "forfeit" });
-				const	winningSide = (index === 0) ? "left" : "right";
+				const	winningSide = (index === 0) ? "right" : "left";
 
 				this._sceneData!.events.getObservable("forfeit").notifyObservers(winningSide);
 			});
@@ -128,6 +128,7 @@ export class	Room
 
 	private gameEnd(endData : EndData)
 	{
+		console.log(endData);
 		setTimeout(() => {
 			this.dispose(endData);
 		}, 0);
