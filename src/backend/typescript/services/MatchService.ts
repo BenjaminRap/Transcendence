@@ -1,81 +1,61 @@
 import { type PrismaClient, type Match, MatchStatus } from '@prisma/client';
-import type { EndMatchData } from '../types/match.types.js';
-import type { PlayerInfo } from '../types/match.types.js';
-import type { MatchSummary, OpponentSummary } from '../types/match.types.js';
 import { FriendService } from './FriendService.js';
 import type { GameStats } from '@shared/ServerMessage.js';
+import type { MatchData } from '../types/match.types.js';
+
 
 export class MatchService {
 	constructor(
 		private prisma: PrismaClient,
         private friendService: FriendService,
 	) {}
-    
+
+    // =================================== PUBLIC ==================================== //
+
 	// ----------------------------------------------------------------------------- //
-    async startMatch(player1: PlayerInfo, player2: PlayerInfo): Promise<number> {
-        const match = await this.prisma.match.create({
-            data: {
-                player1Id: Number(player1.id) ?? null,
-                player1GuestName: player1.guestName,
-                player2Id: Number(player2.id) ?? null,
-                player2GuestName: player2.guestName,
-                winnerGuestName: "",
-                loserGuestName: "",
-            }
+    async registerMatch(match: MatchData, winName: string, losName: string): Promise<number | null> {
+        const data = {
+            winnerId: typeof match.winner === "number" ? match.winner : null,
+            winnerGuestName: winName,
+            
+            loserId: typeof match.loser === "number" ? match.loser : null,
+            loserGuestName: losName,
+            
+            scoreWinner: match.scoreWinner,
+            scoreLoser: match.scoreLoser,
+            duration: match.duration,
+        }
+
+        const newmatch = await this.prisma.match.create({
+            data: data
         });
 
-        return match.id
+        return newmatch ? newmatch.id : null;
+
     }
 
-	// ----------------------------------------------------------------------------- //
-    async endMatch(matchData: EndMatchData): Promise<void> {
-        await this.prisma.match.update({
-            where: { id: Number(matchData.matchId) },
-            data: {
-                status: MatchStatus.FINISHED,
+    // ----------------------------------------------------------------------------- //
+    async registerTournamentMatch(tournamentId: number, match: MatchData, winName: string, losName: string)
+    {
+        const data = {
+            tournamentId,
 
-                winnerId: Number(matchData.winner.id) ?? null,
-                winnerGuestName: matchData.winner.guestName,
+            winnerId: typeof match.winner === "number" ? match.winner : null,
+            winnerGuestName: winName,
 
-                loserId: Number(matchData.loser.id) ?? null,
-                loserGuestName: matchData.loser.guestName,
-                
-                scoreWinner: Number(matchData.scoreWinner),
-                scoreLoser: Number(matchData.scoreLoser),
+            loserId: typeof match.loser === "number" ? match.loser : null,
+            loserGuestName: losName,
 
-                duration: matchData.duration,
-            }
+            scoreWinner: match.scoreWinner,
+            scoreLoser: match.scoreLoser,
+            duration: match.duration,
+        }
+
+        const newmatch = await this.prisma.match.create({
+            data: data
         });
-    }
 
-	// ----------------------------------------------------------------------------- //
-    async getTournamentMatch(tournamentId: number, matchData: EndMatchData): Promise<Match | null> {
-        return await this.prisma.match.findFirst({
-            where: {
-                id: Number(matchData.matchId),
-                tournamentId: Number(tournamentId),
-                OR: [
-                    {
-                        player1GuestName: matchData.winner.guestName,
-                        player2GuestName: matchData.loser.guestName
-                    },
-                    {
-                        player1GuestName: matchData.loser.guestName,
-                        player2GuestName: matchData.winner.guestName
-                    }
-                ]
-            }
-        });
-    }
-
-	// ----------------------------------------------------------------------------- //
-	async getMatchInProgress(matchId: number): Promise<Match | null> {
-        return this.prisma.match.findFirst({
-            where: {
-                id: Number(matchId),
-                status: MatchStatus.IN_PROGRESS
-            }
-        });
+        return newmatch ? newmatch.id : null;
     }
 
     // --------------------------------------- -------------------------------------- //
@@ -148,32 +128,6 @@ export class MatchService {
     }
 
 	// ----------------------------------------------------------------------------- //
-	async getStats(playerIds: number[]): Promise<{stats: GameStats[] | null, message?: string }> {
-		if (!await this.theyExist(playerIds))
-			return { stats: null, message: 'One or more players do not exist' }
-
-		const wins = await this.prisma.match.groupBy({
-			by: ['winnerId'],
-			where: { winnerId: { in: playerIds.map(id => Number(id)) } },
-			_count: true
-		});
-
-		const losses = await this.prisma.match.groupBy({
-			by: ['loserId'],
-			where: { loserId: { in: playerIds.map(id => Number(id)) } },
-			_count: true
-		});
-        
-		const stats = playerIds.map(id => {
-			const won = wins.find((w: any) => w.winnerId === id)?._count ?? 0;
-			const lost = losses.find((l: any) => l.loserId === id)?._count ?? 0;
-
-			return this.calculateStats(won, lost);
-		});
-		return { stats }
-	}
-
-	// ----------------------------------------------------------------------------- //
  	async getStat(playerId: number): Promise<{stats: GameStats | null, message?: string }> {
         if (!await this.isExisting(Number(playerId)))
             return { stats: null, message: 'Player does not exist' }
@@ -189,40 +143,6 @@ export class MatchService {
         const stats: GameStats = this.calculateStats(wins, losses);
 
         return { stats };
-    }
-
-	// ----------------------------------------------------------------------------- //
-	async startTournamentMatch(tournamentId: number, round: number, matchOrder: number, player1: PlayerInfo, player2: PlayerInfo) {
-        return this.prisma.match.create({
-            data: {
-                tournamentId: Number(tournamentId),
-                round: Number(round),
-                matchOrder: Number(matchOrder),
-                player1Id: Number(player1.id) ?? null,
-                player1GuestName: player1.guestName,
-                player2Id: Number(player2.id) ?? null,
-                player2GuestName: player2.guestName,
-                winnerGuestName: "",
-                loserGuestName: "",
-                status: MatchStatus.IN_PROGRESS
-            }
-        });
-    }
-
-    // ----------------------------------------------------------------------------- //
-    async createBracketMatch(tournamentId: number, round: number, matchOrder: number) {
-        return this.prisma.match.create({
-            data: {
-                tournamentId: Number(tournamentId),
-                round: Number(round),
-                matchOrder: Number(matchOrder),
-                player1GuestName: "",
-                player2GuestName: "",
-                winnerGuestName: "",
-                loserGuestName: "",
-                status: MatchStatus.IN_PROGRESS
-            }
-        });
     }
 
 	// ================================== PRIVATE ================================== //
