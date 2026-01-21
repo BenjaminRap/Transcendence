@@ -64,6 +64,9 @@ let profile: SuscriberProfile;
 
 let profileDiv: HTMLDivElement | null = null;
 
+let watchMatchIds: number[];
+let watchFriendIds: number[];
+let profileIds: number[];
 
 function sortFriendList()
 {
@@ -71,6 +74,8 @@ function sortFriendList()
 	let pendingFriends = [];
 	let onlineFriends = [];
 	let offlineFriends = [];
+
+	console.log(watchFriendIds)
 
 	for (const friend of profile.friends) {
 		if (friend.isOnline) {
@@ -81,13 +86,29 @@ function sortFriendList()
 			offlineFriends.push(friend);
 		}
 	}
-
-	console.log("Online friends:", onlineFriends);
-	console.log("Pending friends:", pendingFriends);
-	console.log("Offline friends:", offlineFriends);
-
 	profile.friends = [...onlineFriends, ...pendingFriends, ...offlineFriends];
 	console.log("Sorted friend list:", profile.friends);
+
+	let newIds: number[] = [];
+	newIds = profile.friends.slice(0, 4).map(friend => friend.id);
+
+	for (let i = 0; i < 4; i++) {
+		let id = newIds[i];
+		if (id && !watchFriendIds.includes(id)) {
+			watchFriendIds.push(id);
+			console.log("Watching new friend ID:", id);
+			// Send watch for id
+		}
+		let oldId = watchFriendIds[i];
+		if (oldId && !newIds.includes(oldId)) {
+			const index = watchFriendIds.indexOf(oldId);
+			if (index > -1) {
+				watchFriendIds.splice(index, 1);
+			}
+			console.log("Unwatching friend ID:", oldId);
+			// Send unwatch for oldId
+		}
+	}
 }
 
 
@@ -461,11 +482,11 @@ export namespace ProfileBuilder {
 				sortFriendList();
 				updateFriendDiv();
 			});
-			let watchMatchIds = getWathIdMatch();
-			let watchFriendIds = getWathIdFriend();
-			let profileIds : number[] = watchFriendIds.concat(watchMatchIds);
+			watchMatchIds = getWathIdMatch();
+			watchFriendIds = getWathIdFriend();
+			profileIds = watchFriendIds.concat(watchMatchIds);
 			console.log("Watching profile IDs:", profileIds);
-			// socketUtils.socket.emit("watch-profile", { profileId: profileIds });
+			socketUtils.socket.emit("watch-profile", { profileId: profileIds });
 		}
 		return 'Profil ouvert. Tapez "kill profile" pour le fermer.';
 	}
@@ -478,6 +499,14 @@ export namespace ProfileBuilder {
 				socketUtils.socket.off("profile-update");
 			history.pushState({}, '', `/`);
 		}
+		if (socketUtils && socketUtils.socket)
+		{
+			socketUtils.socket.emit("unwatch-profile", { profileId: profileIds });
+			socketUtils.socket.off("user-status-change");
+			socketUtils.socket.off("friend-status-update");
+			socketUtils.socket.off("profile-update");
+		}
+
 	}
 	export let isActive = false;
 }
