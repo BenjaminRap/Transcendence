@@ -1,3 +1,5 @@
+import { Vector3 } from "@babylonjs/core";
+
 export function isPowerOfTwo (value : number) {
 	return value !== 0 && (value & (value - 1)) === 0;
 };
@@ -29,4 +31,14 @@ export function success<ValueType, ErrorType = string>(value: ValueType): Result
 
 export function error<ValueType, ErrorType = string>(error: ErrorType): Result<ValueType, ErrorType> {
     return { success: false, error };
+}
+
+export function	toVec3(xyz : {x : number, y : number, z : number})
+{
+	return new Vector3(xyz.x, xyz.y, xyz.z);
+}
+
+export function	toXYZ(v : Vector3)
+{
+	return { x: v.x, y: v.y, z: v.z };
 }

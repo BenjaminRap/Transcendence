@@ -7,13 +7,13 @@ import { InputManager, PlayerInput } from "@shared/attachedScripts/InputManager"
 import { InputKey } from "@shared/InputKey";
 import type { SocketMessage } from "../Room";
 import type { int } from "@babylonjs/core/types";
-import { Vector3 } from "@babylonjs/core";
 import { getServerSceneData } from "../ServerPongGame";
 import { TimerManager } from "@shared/attachedScripts/TimerManager";
 import { Paddle } from "@shared/attachedScripts/Paddle";
 import { Imported } from "@shared/ImportedDecorator";
 import { Ball } from "@shared/attachedScripts/Ball";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
+import { toXYZ } from "@shared/utils";
 
 export class ServerSync extends CustomScriptComponent {
 	private static readonly	_sendInfoDelay = 100;
@@ -58,21 +58,16 @@ export class ServerSync extends CustomScriptComponent {
 		const	message : GameInfos = {
 			type : "itemsUpdate",
 			itemsUpdate: {
-				paddleRightPos: this.getXYZ(this._paddleRight.transform.position),
-				paddleLeftPos: this.getXYZ(this._paddleLeft.transform.position),
+				paddleRightPos: toXYZ(this._paddleRight.transform.position),
+				paddleLeftPos: toXYZ(this._paddleLeft.transform.position),
 				ball: {
-					pos: this.getXYZ(this._ball.transform.position),
-					linearVelocity: this.getXYZ(this._ball.getLinearVelocity())
+					pos: toXYZ(this._ball.transform.position),
+					linearVelocity: toXYZ(this._ball.getLinearVelocity())
 				}
 			}
 		}
 		this._sceneData.clientProxy.sendMessageToRoom("game-infos", message);
     }
-
-	private	getXYZ(v : Vector3)
-	{
-		return { x: v.x, y: v.y, z: v.z };
-	}
 
 	private	listenToClients()
 	{
