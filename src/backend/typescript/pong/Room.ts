@@ -112,18 +112,19 @@ export class	Room
 	{
 		const	gameStartInfos = await this._sceneData!.readyPromise.promise as GameStartInfos;
 
-		await this.delay(Room._showParticipantsTimeoutMs);
-		this._sceneData!.events.getObservable("game-start").notifyObservers();
-		this._sceneData!.events.getObservable("end").add(endData => { this.gameEnd(endData) });
-		this.sendMessageToRoom("ready", gameStartInfos);
-		this._sockets.forEach((socket : DefaultSocket, index : int) => {
-			socket.once("forfeit", () => {
-				socket.broadcast.to(this._roomId).emit("game-infos", { type: "forfeit" });
-				const	winningSide = (index === 0) ? "right" : "left";
+		this.delay(() => {
+			this._sceneData!.events.getObservable("game-start").notifyObservers();
+			this._sceneData!.events.getObservable("end").add(endData => { this.gameEnd(endData) });
+			this.sendMessageToRoom("ready", gameStartInfos);
+			this._sockets.forEach((socket : DefaultSocket, index : int) => {
+				socket.once("forfeit", () => {
+					socket.broadcast.to(this._roomId).emit("game-infos", { type: "forfeit" });
+					const	winningSide = (index === 0) ? "right" : "left";
 
-				this._sceneData!.events.getObservable("forfeit").notifyObservers(winningSide);
+					this._sceneData!.events.getObservable("forfeit").notifyObservers(winningSide);
+				});
 			});
-		});
+		}, Room._showParticipantsTimeoutMs);
 	}
 
 	private gameEnd(endData : EndData)
@@ -201,18 +202,13 @@ export class	Room
 		return observable;
 	}
 
-	private async delay(durationMs : number)
+	private async delay(callback: () => void, durationMs : number)
 	{
-		return new Promise<void>((resolve, reject) => {
-			if (this._timeout !== null)
-			{
-				reject();
-				return ;
-			}
-			this._timeout = setTimeout(() => {
-				this._timeout = null;
-				resolve();
-			}, durationMs);
-		})
+		if (this._timeout)
+			clearTimeout(this._timeout);
+		this._timeout = setTimeout(() => {
+			callback();
+			this._timeout = null;
+		}, durationMs);
 	}
 }
