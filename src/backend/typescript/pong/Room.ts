@@ -18,6 +18,8 @@ export type SocketMessage = {
 export class	Room
 {
 	private static readonly _showParticipantsTimeoutMs = 2000;
+	private static readonly _readyTimeout = 60000;
+
 	private _sockets : DefaultSocket[] = [];
 	private _serverPongGame : ServerPongGame | undefined;
 	private _disposed : boolean = false;
@@ -44,6 +46,9 @@ export class	Room
 	{
 		const	participants = this._sockets.map((socket) => socket.data.getProfile());
 
+		this.delay(() => {
+			this.onReadyTimeout();
+		}, Room._readyTimeout);
 		for (let index = 0; index < this._sockets.length; index++) {
 			const socket = this._sockets[index];
 
@@ -53,6 +58,22 @@ export class	Room
 		const	clientProxy = new ClientProxy(this);
 		this._sceneData = new ServerSceneData(new HavokPlugin(false), clientProxy);
 		this._serverPongGame = new ServerPongGame(this._sceneData);
+	}
+
+	private	onReadyTimeout()
+	{
+		const	isFirstReady = this._sockets[0].data.ready;
+		const	isSecondReady = this._sockets[1].data.ready;
+
+		const	winner =
+			(isFirstReady && !isSecondReady) ? "left" :
+			(!isFirstReady && isSecondReady) ? "right" :
+			"draw";
+		const	endData : EndData = {
+            winner: winner,
+            forfeit: true
+        }
+		this.dispose(endData);
 	}
 
 	private dispose(endData : EndData)
@@ -97,12 +118,14 @@ export class	Room
             playerIndex: playerIndex,
             participants: participants
         }
+		socket.data.ready = false;
 		socket.emit("joined-game", gameInit);
-		socket.once("ready", () => { this.setSocketReady() } );
+		socket.once("ready", () => { this.setSocketReady(socket) } );
 	}
 
-	private	setSocketReady()
+	private	setSocketReady(socket : DefaultSocket)
 	{
+		socket.data.ready = true;
 		this._socketsReadyCount++;
 		if (this._socketsReadyCount === 2)
 			this.startGame();
@@ -110,6 +133,11 @@ export class	Room
 
 	private	async startGame()
 	{
+		if (this._timeout)
+		{
+			clearTimeout(this._timeout);
+			this._timeout = null;
+		}
 		const	gameStartInfos = await this._sceneData!.readyPromise.promise as GameStartInfos;
 
 		this.delay(() => {
