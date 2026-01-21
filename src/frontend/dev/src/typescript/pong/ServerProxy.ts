@@ -74,8 +74,13 @@ export class	ServerProxy
 			this._frontendSocketHandler.sendEventWithNoResponse("leave-matchmaking");
 		if (this._state === "in-game")
 			this._frontendSocketHandler.sendEventWithNoResponse("forfeit");
-		else if (this._state === "in-tournament")
+		else if (this._state === "in-tournament" || this._state === "tournament-player")
+		{
+			this._tournamentData = null;
 			this._frontendSocketHandler.sendEventWithNoResponse("leave-tournament");
+		}
+		else if (this._state === "tournament-creator" || this._state === "tournament-creator-player")
+			this._frontendSocketHandler.sendEventWithNoResponse("cancel-tournament");
 		this._currentPromise?.reject(new PongError("canceled", "ignore"));
 		this._state = "connected";
 	}
@@ -291,5 +296,6 @@ export class	ServerProxy
 		this._frontendSocketHandler.onTournamentMessage().clear();
 		this._frontendSocketHandler.onJoinGame().clear();
 		this._frontendSocketHandler.onDisconnect().remove(this._disconnectedObserver);
+		this.leave();
 	}
 }
