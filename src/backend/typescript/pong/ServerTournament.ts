@@ -8,12 +8,15 @@ import type { DefaultSocket } from "../controllers/SocketEventController";
 
 export class	ServerTournament extends Tournament<DefaultSocket>
 {
+	private static readonly _readyTimeoutMs = 60000;
+
 	private	_state : "creation" | "waiting-ready" | "started" | "disposed" = "creation";
 	private _players = new Map<string, DefaultSocket>();
 	private _bannedPlayers = new Set<string>();
 	private _tournamentId : TournamentId;
 	private _rooms = new Set<Room>();
 	private _socketReadyCount = 0;
+	private _readyTimeout : NodeJS.Timeout | null = null;
 
 	constructor(
 		private _onTournamentDispose : () => void,
@@ -79,6 +82,9 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		this._state = "waiting-ready";
 		console.log(`${this._settings.name} tournament started !`);
 		this._io.to(this._tournamentId).emit("tournament-event", {type:"tournament-start"});
+		this._readyTimeout = setTimeout(() => {
+			this.dispose();
+		}, ServerTournament._readyTimeoutMs);
 		this._players.forEach(socket => {
 			socket.data.ready = false;
 			socket.once("ready", () => {
@@ -94,6 +100,9 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 	{
 		if (this._socketReadyCount === this._players.size)
 		{
+			if (this._readyTimeout)
+				clearTimeout(this._readyTimeout);
+			this._readyTimeout = null;
 			this.setParticipants([...this._players.values()]);
 			this.createMatches();
 			this._state = "started";
@@ -105,6 +114,8 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		if (this._state === "disposed")
 			return ;
 		super.dispose();
+		if (this._readyTimeout)
+			clearTimeout(this._readyTimeout);
 		console.log(`${this._settings.name} tournamend end`);
 		if (this._state === "creation")
 			this._io.to(this._tournamentId).emit("tournament-event", { type: "tournament-canceled" })
