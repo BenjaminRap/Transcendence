@@ -46,24 +46,26 @@ export class	TournamentEndGUI extends HTMLElement implements IGUI<TournamentEndG
 	{
 		if (tournamentGui)
 		{
-			this._tournamentGUIContainer.classList.remove("hidden");
 			this._tournamentGUIContainer.replaceChildren(tournamentGui);
 			tournamentGui.classList.remove("hidden");
 		}
 		this._text.textContent = "WIN";
 	}
 
-	public setLoser(isQualifications : boolean, roundMatchCount : number)
+	public setLoser(isQualifications : boolean, roundMatchCount : number, tournamentGUI? : TournamentGUI)
 	{
-		this._tournamentGUIContainer.classList.add("hidden");
-		this._tournamentGUIContainer.replaceChildren();
+		if (tournamentGUI)
+		{
+			this._tournamentGUIContainer.replaceChildren(tournamentGUI);
+			tournamentGUI.classList.remove("hidden");
+		}
 		const	roundName =
 			isQualifications ? "Qualifications" :
-			roundMatchCount === 1 ? "The Final" :
-			roundMatchCount === 2 ? "The Semi-Finals" :
-			roundMatchCount === 4 ? "The Quarter-Finals" :
+			roundMatchCount === 1 ? "Final" :
+			roundMatchCount === 2 ? "Semi-Finals" :
+			roundMatchCount === 4 ? "Quarter-Finals" :
 			`The Round of ${roundMatchCount * 2}`;
-		this._text.textContent = `Tou Were Disqualified in ${roundName}`;
+		this._text.textContent = `Lost : ${roundName}`;
 	}
 }
 
