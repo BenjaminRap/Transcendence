@@ -83,7 +83,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		console.log(`${this._settings.name} tournament started !`);
 		this._io.to(this._tournamentId).emit("tournament-event", {type:"tournament-start"});
 		this._readyTimeout = setTimeout(() => {
-			this.dispose();
+			this.onReadyTimeout();
 		}, ServerTournament._readyTimeoutMs);
 		this._players.forEach(socket => {
 			socket.data.ready = false;
@@ -96,13 +96,31 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		return success(null);
 	}
 
-	startMatchesIfReady()
+	private onReadyTimeout()
 	{
-		if (this._socketReadyCount === this._players.size)
+		this._players.forEach(socket => {
+			if (!socket.data.ready)
+				this.removePlayerFromTournament(socket);
+		});
+	}
+
+	private startMatchesIfReady()
+	{
+		if (this._socketReadyCount !== this._players.size)
+			return ;
+		if (this._readyTimeout)
+			clearTimeout(this._readyTimeout);
+		this._readyTimeout = null;
+		if (this._players.size === 0)
+			this.dispose();
+		else if (this._players.size === 1)
 		{
-			if (this._readyTimeout)
-				clearTimeout(this._readyTimeout);
-			this._readyTimeout = null;
+			const	winner = this._players.values().next().value!;
+
+			this.onTournamentEnd(winner);
+		}
+		else
+		{
 			this.setParticipants([...this._players.values()]);
 			this.createMatches();
 			this._state = "started";
@@ -121,10 +139,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 			this._io.to(this._tournamentId).emit("tournament-event", { type: "tournament-canceled" })
 		this._state = "disposed";
 		this._players.forEach((player) => {
-			player.removeAllListeners("leave-tournament");
-			player.removeAllListeners("ready");
-			player.leave(this._tournamentId);
-			player.data.leaveTournament();
+			this.removePlayerFromTournament(player);
 		});
 		this._creator.leave(this._tournamentId);
 		this._creator.data.leaveTournament();
@@ -189,8 +204,10 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		}
 		if (this._state === "waiting-ready")
 		{
-			this._socketReadyCount--;
-			this.startMatchesIfReady();
+			if (socket.data.ready)
+				this._socketReadyCount--;
+			else
+				this.startMatchesIfReady();
 		}
 	}
 
