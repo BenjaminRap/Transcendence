@@ -1,10 +1,10 @@
-import type { GameInfos, GameInit, GameStartInfos, KeysUpdate, TournamentCreationSettings, TournamentDescription, TournamentEvent, TournamentId } from "@shared/ServerMessage";
+import type { GameInfos, GameInit, GameStartInfos, KeysUpdate, TournamentCreationSettings, TournamentDescription, TournamentId } from "@shared/ServerMessage";
 import { FrontendSocketHandler } from "./FrontendSocketHandler";
 import type { Deferred, int, Observable, Observer } from "@babylonjs/core";
 import { PongError } from "@shared/pongError/PongError";
 import type { TournamentEventAndJoinedGame } from "./FrontendEventsManager";
 
-type SocketState = "not-connected" | "connected" | "in-matchmaking" | "in-game" | "tournament-creator" | "tournament-player" | "tournament-creator-player" | "in-tournament";
+type SocketState = "not-connected" | "connected" | "in-matchmaking" | "in-game" | "tournament-creator" | "tournament-player" | "tournament-creator-player" | "in-tournament" | "waiting";
 
 type tournamentData = {
 	isCreator: boolean,
@@ -158,18 +158,19 @@ export class	ServerProxy
 		this.verifyState("connected");
 		const deferred =  this._frontendSocketHandler.createTournament(settings);
 
+		this._state = "waiting";
 		deferred.promise
 			.then(tournamentId => {
 				this._tournamentData = {
 					isCreator: true,
 					id: tournamentId
-				}
+				};
+				this._state = "tournament-creator";
 			})
 			.catch(() => {
 				this._state = "connected";
 			});
 		this.replaceCurrentPromise(deferred);
-		this._state = "tournament-creator";
 
 		return deferred.promise;
 	}
@@ -177,15 +178,16 @@ export class	ServerProxy
 	public joinTournament(tournamentId : TournamentId) : Promise<string[]>
 	{
 		this.verifyState("connected");
-		this._state = "tournament-player";
 		const	deferred = this._frontendSocketHandler.joinTournament(tournamentId);
 
+		this._state = "waiting";
 		deferred.promise
 			.then(() => {
 				this._tournamentData = {
 					isCreator: false,
 					id: tournamentId
-				}
+				};
+				this._state = "tournament-player";
 			})
 			.catch(() => {
 				this._state = "connected";
@@ -197,11 +199,14 @@ export class	ServerProxy
 	public joinTournamentAsCreator()
 	{
 		this.verifyState("tournament-creator");
-		this._state = "tournament-creator-player";
+		this._state = "waiting";
 
 		const	deferred = this._frontendSocketHandler.joinTournament(this._tournamentData!.id);
 
 		deferred.promise
+			.then(() => {
+				this._state = "tournament-creator-player";
+			})
 			.catch(() => {
 				this._state = "tournament-creator";
 			});
@@ -225,11 +230,15 @@ export class	ServerProxy
 		const	deferred =  this._frontendSocketHandler.startTournament();
 
 		this.replaceCurrentPromise(deferred);
-		this._state = "in-tournament";
+		this._state = "waiting";
 
-		deferred.promise.catch(() => {
-			this._state = previousState;
-		});
+		deferred.promise
+			.then(() => {
+				this._state = "in-tournament";
+			})
+			.catch(() => {
+				this._state = previousState;
+			});
 		return deferred.promise;
 	}
 
