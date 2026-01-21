@@ -31,7 +31,7 @@ export class	TournamentGUI extends HTMLElement implements IGUI<void>
 			throw new PongError(`The profiles should be a power of two, greater than 1, got ${this._participants.length}`, "quitPong");
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-auto", "backdrop-blur-sm", "flex", "items-center", "overflow-hidden");
 		this.innerHTML = `
-			<div class="absolute w-1/5 left-[3cqw] top-[3cqw] border-solid border-(--border-color) border-(length:--border-width) rounded-(--rounded) p-[1%]">
+			<div class="absolute w-1/5 left-[3cqw] top-[3cqw] border-solid border-(--border-color) border-(length:--border-width) rounded-md p-[1%]">
 				<p class="text-(--text-color) text-[1.8cqw] font-(family-name:--font)">Scrool to zoom or dezoom</p>
 				<p class="text-(--text-color) text-[1.8cqw] font-(family-name:--font)">Click and drag to move</p>
 			</div>

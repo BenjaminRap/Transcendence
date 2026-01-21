@@ -19,7 +19,7 @@ export class	TournamentEndGUI extends HTMLElement implements IGUI<TournamentEndG
 		this.innerHTML = `
 			<div class="tournamentEndGUIMainDiv flex flex-col h-full w-full m-auto items-center">
 				<p class="tournamentEndGUIText font-bold leading-normal text-[7cqw] text-white text-center h-1/5"></p>
-				<div class="relative h-[70%] w-[90%] border-solid border-(length:--border-width) border-(--border-color) overflow-hidden rounded-(--rounded) tournamentEndGUITournamentGUIContainer"></div>
+				<div class="relative h-[70%] w-[90%] border-solid border-(length:--border-width) border-(--border-color) overflow-hidden rounded-md tournamentEndGUITournamentGUIContainer"></div>
 				<div class="absolute bottom-[4%] w-1/3 h-[12%]">
 					${this.getButtonHTML("Go To Menu", "tournamentEndGUIGoToMenu")}
 				</div>
