@@ -234,7 +234,13 @@ export class	ServerProxy
 
 		deferred.promise
 			.then(() => {
-				this._state = "in-tournament";
+				if (previousState === "tournament-creator")
+				{
+					this._state = "connected";
+					this._tournamentData = null;
+				}
+				else
+					this._state = "in-tournament";
 			})
 			.catch(() => {
 				this._state = previousState;

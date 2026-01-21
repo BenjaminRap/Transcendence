@@ -297,6 +297,10 @@ export class CreateMenuGUI extends CustomScriptComponent {
 	{
 		try {
 			await this._sceneData.serverProxy.startTournament();
+			const	tournamentData = this._sceneData.serverProxy.getTournamentData();
+
+			if (!tournamentData)
+				this.switchMenu(this._onlineTournamentChoiceGUI);
 		} catch (error) {
 			this._sceneData.pongHTMLElement.onError(error);
 		}
