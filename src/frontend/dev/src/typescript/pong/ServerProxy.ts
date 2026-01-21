@@ -37,7 +37,10 @@ export class	ServerProxy
 
 			if ((removeFromTournament && this._state === "tournament-player")
 				|| (tournamentEnd && this._state === "in-tournament"))
+			{
 				this._state = "connected";
+				this._tournamentData = null;
+			}
 			else if ((this._state === "tournament-player" || this._state === "tournament-creator-player")
 				&& tournamentEvent.type === "tournament-start")
 				this._state = "in-tournament";
