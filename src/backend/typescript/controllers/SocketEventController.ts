@@ -265,7 +265,8 @@ export class SocketEventController {
 	// ----------------------------------------------------------------------------- //
     private addProfileToWatch(socket: DefaultSocket, profileId: number[]): void
     {
-        for (const id of profileId) {
+        const ids = Array.isArray(profileId) ? profileId : [profileId];
+        for (const id of ids) {
             socket.join('watching-' + id);
         }
     }
@@ -273,7 +274,8 @@ export class SocketEventController {
     // ----------------------------------------------------------------------------- //
     private removeProfileToWatch(socket: DefaultSocket, profileId: number[]): void
     {
-        for (const id of profileId) {
+        const ids = Array.isArray(profileId) ? profileId : [profileId];
+        for (const id of ids) {
             socket.leave('watching-' + id);
         }
     }
