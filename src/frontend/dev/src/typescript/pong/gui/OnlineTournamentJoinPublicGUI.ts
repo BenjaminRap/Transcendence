@@ -1,5 +1,5 @@
 import type { TournamentDescription } from "@shared/ServerMessage";
-import type { IGUI } from "./IGUI";
+import { initMenu, type IGUI } from "./IGUI";
 import { TournamentDescriptionGUI } from "./TournamentDescriptionGUI";
 import { Observable } from "@babylonjs/core";
 
@@ -48,17 +48,14 @@ export class	OnlineTournamentJoinPublicGUI extends HTMLElement implements IGUI<O
 
 	public setTournaments(descriptions : TournamentDescription[])
 	{
-		const	nodes : TournamentDescriptionGUI[] = [];
-
+		this._descriptionsContainer.replaceChildren();
 		descriptions.forEach((description) => {
 			const	tournamentDescriptionGUI = new TournamentDescriptionGUI(description);
 
-			tournamentDescriptionGUI.addEventListener("click", () => {
-				this._onTournamentJoinObservable.notifyObservers(tournamentDescriptionGUI.getTournamentId());
-			})
-			nodes.push(tournamentDescriptionGUI);
+			initMenu(tournamentDescriptionGUI, {
+				main: () => this._onTournamentJoinObservable.notifyObservers(tournamentDescriptionGUI.getTournamentId())
+			}, this._descriptionsContainer, false);
 		});
-		this._descriptionsContainer.replaceChildren(...nodes);
 	}
 
 	public onTournamentJoin()
