@@ -61,7 +61,7 @@ export class	MenuGUI extends HTMLElement
 		}, "");
 		return `
 			${this.getButtonHTML(`${classNameBase}ButtonLeft`, "left")}
-			<div class="relative h-2/3 grow-2 text-[2cqw] mx-[5%] overflow-hidden menu-button" >
+			<div class="relative h-2/3 grow-2 text-[2cqw] mx-[5%] overflow-hidden menu-button pointer-events-none" >
 				<div class="${classNameBase}ItemsContainer size-full absolute transition-all ease-in-out left-0">
 					${itemsHTML}
 				</div>
