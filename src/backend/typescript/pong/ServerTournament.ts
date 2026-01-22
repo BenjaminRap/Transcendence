@@ -1,6 +1,6 @@
 import type { TournamentCreationSettings, TournamentDescription, TournamentId, Username } from "@shared/ServerMessage";
 import type { ServerType } from "..";
-import { error, success, type Result } from "@shared/utils";
+import { error, getEndDataOnInvalidMatch, success, type Result } from "@shared/utils";
 import { Tournament } from "@shared/Tournament";
 import type { Match } from "@shared/Match";
 import { Room } from "./Room";
@@ -117,11 +117,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		if (this._players.size === 0)
 			this.dispose();
 		else if (this._players.size === 1)
-		{
-			const	winner = this._players.values().next().value!;
-
-			this.onTournamentEnd(winner);
-		}
+			this.onTournamentEnd();
 		else
 		{
 			this.setParticipants([...this._players.values()]);
@@ -245,9 +241,9 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		});
     }
 
-    protected override onTournamentEnd(winner: DefaultSocket): void
+    protected override onTournamentEnd(): void
 	{
-		winner.emit("tournament-event", {type: "win", winner: winner.data.getProfile()})
+		this._io.to(this._tournamentId).emit("tournament-event", {type: "win"})
 		this.dispose();
     }
 
@@ -261,19 +257,29 @@ export class	ServerTournament extends Tournament<DefaultSocket>
     protected override onNewMatches(): void
 	{
 		this._currentMatches.forEach(match => {
-			const	left = match.left?.profile;
-			const	right = match.right?.profile;
+			const	left = match.left;
+			const	right = match.right;
 
+			if (match.winner !== undefined)
+				return ;
+			if (!left || !right)
+			{
+				const	endData = getEndDataOnInvalidMatch(!!left, !!right);
+
+				match.setWinner(endData);
+				this.onMatchEnd(match);
+				return ;
+			}
 			if (match.winner !== undefined
-				|| left?.data.getState() !== "tournament-waiting"
-				|| right?.data.getState() !== "tournament-waiting")
+				|| left.profile.data.getState() !== "tournament-waiting"
+				|| right.profile.data.getState() !== "tournament-waiting")
 				return ;
 			const	room = new Room(this._io, endData => {
 				this._rooms.delete(room);
 				match.setWinner(endData);
 				this.onNewMatches();
 				this.onMatchEnd(match);
-			}, left, right);
+			}, left.profile, right.profile);
 			this._rooms.add(room);
 		});
     }

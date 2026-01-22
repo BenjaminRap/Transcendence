@@ -95,8 +95,8 @@ export const	zodMatchWinningDescription = zod.object({
 	winner: zod.object({
 		profile: zodProfile,
 		score: zod.number()
-	}).optional(),
-	winnerSide: zod.literal(["left", "right"]).optional()
+	}).optional().nullable(),
+	winnerSide: zod.literal(["left", "right", "draw"]).optional()
 });
 export type MatchWinningDescription = zod.infer<typeof zodMatchWinningDescription>;
 
@@ -140,7 +140,6 @@ export const	zodTournamentEvent = zod.discriminatedUnion("type", [
 	}),
 	zod.object({
 		type: zod.literal("win"),
-		winner: zodProfile
 	}),
 	zod.object({
 		type: zod.literal("lose"),

@@ -18,14 +18,6 @@ export abstract class	Tournament<T>
 
 	protected _currentMatches : Match<T>[] = [];
 
-	private	endTournament()
-	{
-		const	lastRound = this._tournamentMatches[this._tournamentMatches.length - 1];
-		const	lastMatch = lastRound[0];
-
-		this.onTournamentEnd(lastMatch.winner!.profile);
-	}
-
 	private async endRound()
 	{
 		if (this._round === "qualifications")
@@ -51,7 +43,7 @@ export abstract class	Tournament<T>
 			this.setRoundWinners(this._round, this._tournamentMatches[this._round]);
 			this._round++;
 			if (this._round >= this._tournamentMatches.length)
-				this.endTournament();
+				this.onTournamentEnd();
 			else
 			{
 				this.onTournamentShow();
@@ -122,7 +114,7 @@ export abstract class	Tournament<T>
 
 	protected abstract	onParticipantLose(loser : T, isQualifications : boolean, roundMatchCount : number) : void;
 	protected abstract	onQualificationsEnd(qualified : T[]) : void;
-	protected abstract	onTournamentEnd(winner : T) : void;
+	protected abstract	onTournamentEnd() : void;
 	protected abstract	onTournamentShow() : void;
 	protected abstract onNewMatches() : void;
 	protected abstract	setRoundWinners(round : number, matches : Match<T>[]) : void;

@@ -25,11 +25,20 @@ export class	LocalTournament extends Tournament<Profile>
 		const	right = match.right;
 
 		if (left === undefined || right === undefined)
-			throw new PongError("A match is started, but the players has'nt finished their match !", "quitPong");
-		this._events?.getObservable("set-participants").notifyObservers([left.profile, right.profile]);
-		await this.delay(() => {
-			this._events?.getObservable("game-start").notifyObservers();
-		},Tournament._showOpponentsDurationMs);
+			throw new PongError("A match is started, but the players hasn't finished their match !", "quitPong");
+		if (left === null && right === null)
+			this.setMatchWinner({ winner: "draw", forfeit: true });
+		else if (left === null)
+			this.setMatchWinner({ winner: "right", forfeit: true });
+		else if (right === null)
+			this.setMatchWinner({ winner: "left", forfeit: true });
+		else
+		{
+			this._events?.getObservable("set-participants").notifyObservers([left.profile, right.profile]);
+			await this.delay(() => {
+				this._events?.getObservable("game-start").notifyObservers();
+			},Tournament._showOpponentsDurationMs);
+		}
 	}
 
 	public setEventsAndStart(events : FrontendEventsManager)
@@ -73,11 +82,10 @@ export class	LocalTournament extends Tournament<Profile>
 		});
 	}
 
-    protected override onTournamentEnd(winner: Profile): void
+    protected override onTournamentEnd(): void
 	{
 		this._events?.getObservable("tournament-event").notifyObservers({
-			type: "win",
-			winner: winner
+			type: "win"
 		});
     }
 

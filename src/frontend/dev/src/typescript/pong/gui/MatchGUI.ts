@@ -24,8 +24,9 @@ export class	MatchGUI extends HTMLElement
 		this._matchOrOpponent = this.querySelector("div.MatchGUICard")!;
 	}
 
-	public setWinner(profile : Profile)
+	public setWinner(profile? : Profile)
 	{
+		throw new Error("Not implemented yet");
 		if (this._matchOrOpponent instanceof OpponentGUI)
 			throw new PongError("MatchGUI setWinner has been called twice !", "quitPong");
 		const	opponentGUI = new OpponentGUI(profile);
