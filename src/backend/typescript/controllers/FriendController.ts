@@ -1,7 +1,7 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { FriendService } from '../services/FriendService.js'
 import { FriendException, FriendError } from '../error_handlers/Friend.error.js';
-import { CommonSchema } from '../schemas/common.schema.js';
+import { CommonSchema } from '@shared/common.schema';
 import { SocketEventController } from './SocketEventController.js';
 
 export class FriendController {

@@ -3,7 +3,7 @@ import { AuthService } from '../services/AuthService.js';
 import type { RegisterData, LoginData, VerifData } from '../types/auth.types.js';
 import { AuthException, AuthError } from '../error_handlers/Auth.error.js';
 import { AuthSchema } from '../schemas/auth.schema.js';
-import { CommonSchema } from '../schemas/common.schema.js';
+import { CommonSchema } from '@shared/common.schema';
 
 export class AuthController {
     constructor(

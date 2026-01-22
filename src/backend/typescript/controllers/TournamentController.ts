@@ -1,9 +1,6 @@
-import type { FastifyRequest, FastifyReply } from 'fastify';
 import { TournamentService } from '../services/TournamentService.js';
 import { TournamentException } from '../error_handlers/Tournament.error.js';
 import type { CreateTournament } from '../types/tournament.types.js';
-import type { UsersService } from '../services/UsersService.js';
-import { CommonSchema } from "../schemas/common.schema.js";
 import type { MatchController } from './MatchController.js';
 import type { MatchData } from '../types/match.types.js';
 

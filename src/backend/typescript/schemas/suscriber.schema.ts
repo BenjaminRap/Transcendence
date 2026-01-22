@@ -1,5 +1,5 @@
 import { string, z } from 'zod'
-import { CommonSchema } from './common.schema.js'
+import { CommonSchema } from '@shared/common.schema'
 
 export const SuscriberSchema = {
     updateUsername: z.object({
