@@ -97,7 +97,7 @@ function sortFriendList()
 		if (id && !watchFriendIds.includes(id)) {
 			watchFriendIds.push(id);
 			console.log("Watching new friend ID:", id);
-			// Send watch for id
+			socketUtils.socket?.emit("watch-profile", id);
 		}
 		let oldId = watchFriendIds[i];
 		if (oldId && !newIds.includes(oldId)) {
@@ -106,7 +106,7 @@ function sortFriendList()
 				watchFriendIds.splice(index, 1);
 			}
 			console.log("Unwatching friend ID:", oldId);
-			// Send unwatch for oldId
+			socketUtils.socket?.emit("unwatch-profile", oldId);
 		}
 	}
 }
