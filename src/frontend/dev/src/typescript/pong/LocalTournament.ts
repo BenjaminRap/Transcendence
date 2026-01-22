@@ -1,9 +1,9 @@
 import type { Match } from "@shared/Match";
 import type { EndData } from "@shared/attachedScripts/GameManager";
 import type { FrontendEventsManager } from "./FrontendEventsManager";
-import { PongError } from "@shared/pongError/PongError";
 import { Tournament } from "@shared/Tournament";
 import type { Profile } from "@shared/ServerMessage";
+import { getEndDataOnInvalidMatch } from "@shared/utils";
 
 export class	LocalTournament extends Tournament<Profile>
 {
@@ -24,21 +24,18 @@ export class	LocalTournament extends Tournament<Profile>
 		const	left = match.left;
 		const	right = match.right;
 
-		if (left === undefined || right === undefined)
-			throw new PongError("A match is started, but the players hasn't finished their match !", "quitPong");
-		if (left === null && right === null)
-			this.setMatchWinner({ winner: "draw", forfeit: true });
-		else if (left === null)
-			this.setMatchWinner({ winner: "right", forfeit: true });
-		else if (right === null)
-			this.setMatchWinner({ winner: "left", forfeit: true });
-		else
+		if (!left || !right)
 		{
-			this._events?.getObservable("set-participants").notifyObservers([left.profile, right.profile]);
-			await this.delay(() => {
-				this._events?.getObservable("game-start").notifyObservers();
-			},Tournament._showOpponentsDurationMs);
+			const	endData = getEndDataOnInvalidMatch(!!left, !!right);
+
+			this.setMatchWinner(endData);
+			this.startNextGame();
+			return ;
 		}
+		this._events?.getObservable("set-participants").notifyObservers([left.profile, right.profile]);
+		await this.delay(() => {
+			this._events?.getObservable("game-start").notifyObservers();
+		},Tournament._showOpponentsDurationMs);
 	}
 
 	public setEventsAndStart(events : FrontendEventsManager)
@@ -54,7 +51,7 @@ export class	LocalTournament extends Tournament<Profile>
 		match.setWinner(endData);
 	}
 
-	public async startNextGame()
+	public startNextGame()
 	{
 		if (this._currentMatchIndex >= this._currentMatches.length)
 			return ;
