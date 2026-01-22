@@ -10,7 +10,7 @@
     "module": "ESNext",
     "moduleResolution": "Node",
 	"rootDir": "../",
-    "outDir": "dev/",
+    "outDir": "../../dockerFiles/fastify/app_src/dev",
     "lib": ["ESNext"],
     "types": ["node"],
 	"experimentalDecorators": true,

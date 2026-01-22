@@ -130,8 +130,7 @@ export class Container {
         ));
 
         this.registerService('MatchController', () => new MatchController(
-            this.getService('MatchService'),
-			this.getService('FriendService')
+            this.getService('MatchService')
         ));
 
 		this.registerService('TournamentController', () => new TournamentController(

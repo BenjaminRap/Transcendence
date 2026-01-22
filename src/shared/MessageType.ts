@@ -17,7 +17,8 @@ export type ClientMessage = "join-matchmaking" |
 							// "force-disconnect" |
 							"get-online-users" |
 							"watch-profile" |
-							"unwatch-profile";
+							"unwatch-profile" |
+                            "authenticate";
 
 export type ClientMessageData<T extends ClientMessage> =
 	T extends "input-infos" ? [KeysUpdate] :
@@ -30,6 +31,7 @@ export type ClientMessageData<T extends ClientMessage> =
 	T extends "get-online-users" ? [(users: number[]) => void] :
 	T extends "watch-profile" ? [profileId: number[]] :
 	T extends "unwatch-profile" ? [profileId: number[]] :
+    T extends "authenticate" ? [data: { token: string }, ack: (result: Result<null>) => void] :
 	[];
 
 export type ServerEvents = "game-infos" |

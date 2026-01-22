@@ -41,9 +41,10 @@ export class SocketEventController {
     // ----------------------------------------------------------------------------- //
 	static sendToUser(userId: number, event: string, data: any): void
 	{
+        console.log(`\nSending event ${event} to user ${userId}`);
 		try {
 			if (SocketEventController.socketInstance) {
-				SocketEventController.socketInstance.io.to('user-' + userId).emit(event as any, data);
+				SocketEventController.socketInstance.io.to('user-' + Number(userId)).emit(event as any, data);
 			}			
 		} catch (error) {
 			console.warn(`Error sending socket event to user ${userId} :`, error);
@@ -54,6 +55,7 @@ export class SocketEventController {
     // ----------------------------------------------------------------------------- //
     static sendToProfileWatchers(userId: number, event: string, data: any): void
     {
+        console.log(`\nSending event ${event} to watchers of profile ${userId}`);
         SocketEventController.socketInstance.io.to('watching-' + userId).emit(event as any, data);
     }
 
@@ -61,6 +63,7 @@ export class SocketEventController {
     // ----------------------------------------------------------------------------- //
     static sendToFriends(userId: number, event: string, data: any): void
     {
+        console.log(`\nSending event ${event} to friends of user ${userId}`);
         try {
             if (SocketEventController.socketInstance)
             {
@@ -91,45 +94,21 @@ export class SocketEventController {
     // check if a user is online
     // ----------------------------------------------------------------------------- //
     static isUserOnline(userId: number): boolean {
+        console.log(`checking if user ${userId} is online in the list : `, SocketEventController.connectedUsers);
         return SocketEventController.connectedUsers.has(userId);
     }
 
     // ==================================== PRIVATE ==================================== //
 	
-	// Auth middleware for socket.io new connections
-	// ----------------------------------------------------------------------------- //
-	private async initMiddleware()
-	{
-		this.io.use(async (socket : DefaultSocket, next) => {
-			const token = socket.handshake.auth.token;
-
-			// guest user
-			if (!token) {
-				socket.data.userId = -1;
-				return next();
-			}
-
-			try {
-				const tokenManager: TokenManager = Container.getInstance().getService('TokenManager');
-				const decoded = await tokenManager.verify(token, false);
-
-				socket.data.userId = decoded.userId;
-				
-				next();
-			} catch (err) {
-				(socket.data as any).userId = -1;
-				(socket.data as any).authError = true;
-				return next();
-			}
-		});
-	}
-
 	// ----------------------------------------------------------------------------- //
 	private async initSocket()
 	{
-		this.initMiddleware();
 		this.io.on('connection', (socket : DefaultSocket) => {
 			this.handleConnection(socket);
+
+            socket.once("authenticate", (data: { token: string }, ack: (result: Result<null>) => void) => {
+                this.handleAuthenticate(socket, data.token, ack);
+            });
 
 			socket.on("get-tournaments", (ack : (descriptions : TournamentDescription[]) => void) => {
 				this.handleGetTournaments(socket, ack);
@@ -148,14 +127,17 @@ export class SocketEventController {
 			});
 
             socket.on("get-online-users", (callback) => {
+                console.log( `${socket.data.userId} requested online users list`);
 				this.handleGetStatus(socket, callback);
             });
 
             socket.on("watch-profile", (profileId: number[]) => {
+                console.log( `${socket.data.userId} is watching profiles: `, profileId);
                 this.addProfileToWatch(socket, profileId);
             });
 
             socket.on("unwatch-profile", (profileId: number[]) => {
+                console.log( `${socket.data.userId} stopped watching profiles: `, profileId);
                 this.removeProfileToWatch(socket, profileId);
             });
 
@@ -168,43 +150,66 @@ export class SocketEventController {
 	// ----------------------------------------------------------------------------- //
 	private async handleConnection(socket: DefaultSocket)
 	{
-		
 		this.sockets.add(socket);
-		const userId = (socket.data as any).userId;
 
-		socket.data = new SocketData(socket, userId);
+		socket.data = new SocketData(socket, -1);
 
-		if (userId == -1) {
-			if ( (socket.data as any).authError )
-				console.log("Socket connection with invalid token !\nConnected as Guest.");
-			else
-				console.log("Guest connected !");
-			return;
-		}
-		console.log(`User ${userId} connected !`);
-
-		// join a room specific to the user for private events
-		socket.join('user-' + userId);
-
-		// system to count multiple connections from the same user
-		const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
-		const newCount = currentCount + 1;
-
-		SocketEventController.connectedUsers.set(userId, newCount);
-
-		// notifie everyone only if it's the first connection of the user
-		if (newCount === 1) {
-			this.io.emit('user-status-change', { userId: userId, status: 'online' });
-		}
+		console.log(`Guest connected !`);
 	}
 
+	// ----------------------------------------------------------------------------- //
+    private async handleAuthenticate(socket: DefaultSocket, token: string, ack: (result: Result<null>) => void) : Promise<void>
+    {
+        // guest user
+        if (!token) {
+            socket.data.userId = -1;
+            ack(error("No token provided"));
+            return;
+        }
+
+        let userId: number;
+
+        try {
+            const tokenManager: TokenManager = Container.getInstance().getService('TokenManager');
+            const decoded = await tokenManager.verify(token, false);
+            userId = Number(decoded.userId);
+            socket.data.userId = userId;
+        } catch (err) {
+            ack(error("Invalid token"));
+            return;
+        }
+        ack(success(null));
+
+        // system to count multiple connections from the same user
+        const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
+        const newCount = currentCount + 1;
+
+        console.log(`User ${userId} connected, total connections: ${newCount}\n`);
+
+        SocketEventController.connectedUsers.set(userId, newCount);
+
+        socket.join('user-' + userId);
+        console.log(`User ${userId} authenticated and joined his own socket room !`);
+
+        // notifie watchers and friends only if it's the first connection of the user
+        if (newCount === 1) {
+            SocketEventController.sendToProfileWatchers(userId, 'user-status-change', { userId: userId, status: 'online' });
+            SocketEventController.sendToFriends(userId, 'user-status-change', { userId: userId, status: 'online' });
+        }
+        console.log("user connected actually : ", SocketEventController.connectedUsers);
+
+        
+    }
+
+	// ----------------------------------------------------------------------------- //
 	private handleGetTournaments(socket : DefaultSocket, ack : (descriptions : TournamentDescription[]) => void)
 	{
-		const	descriptions = getPublicTournamentsDescriptions(socket);
+		const descriptions = getPublicTournamentsDescriptions(socket);
 
 		ack(descriptions);
 	}
 
+    // ----------------------------------------------------------------------------- //
 	private	handleCreateTournament(socket : DefaultSocket, data : any, ack : (tournamentId : Result<string>) => void)
 	{
 		const	parsed = zodTournamentCreationSettings.safeParse(data);
@@ -226,7 +231,8 @@ export class SocketEventController {
 		console.log(`tournament created : ${description.name}`);
 		ack(success(description.id));
 	}
-	
+
+    // ----------------------------------------------------------------------------- //	
 	private	handleJoinTournament(socket : DefaultSocket, tournamentId : TournamentId, ack: (participants : Result<string[]>) => void)
 	{
 			const	tournament = this.tournamentMaker.joinTournament(tournamentId, socket);
@@ -260,7 +266,8 @@ export class SocketEventController {
 	// ----------------------------------------------------------------------------- //
     private addProfileToWatch(socket: DefaultSocket, profileId: number[]): void
     {
-        for (const id of profileId) {
+        const ids = Array.isArray(profileId) ? profileId : [profileId];
+        for (const id of ids) {
             socket.join('watching-' + id);
         }
     }
@@ -268,7 +275,8 @@ export class SocketEventController {
     // ----------------------------------------------------------------------------- //
     private removeProfileToWatch(socket: DefaultSocket, profileId: number[]): void
     {
-        for (const id of profileId) {
+        const ids = Array.isArray(profileId) ? profileId : [profileId];
+        for (const id of ids) {
             socket.leave('watching-' + id);
         }
     }
@@ -284,21 +292,21 @@ export class SocketEventController {
 		// clean socket data
 		socket.data.disconnect();
 		
-		const userId = socket.data.userId;
-
-        // decompte ne nb de connexion du user (plusieurs onglets...)
-		if (userId != -1) {
+		const userId = Number(socket.data.userId);
+        if (userId === -1)
+            console.log(`Guest disconnected !`);
+        else {
+            // decompte ne nb de connexion du user (plusieurs onglets...)
 			const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
+            console.log(`User ${userId} disconnected, remaining connections: ${currentCount - 1}`);
 			const newCount = currentCount - 1;
-            console.log(`User ${userId} disconnected !`);
-			
 			if (newCount <= 0) {
+                console.log(`User ${userId} disconnected !`);
 				SocketEventController.connectedUsers.delete(userId);
-				this.io.emit('user-status-change', { userId: userId, status: 'offline' });
+                SocketEventController.sendToProfileWatchers(userId, 'user-status-change', { userId: userId, status: 'offline' });
+                SocketEventController.sendToFriends(userId, 'user-status-change', { userId: userId, status: 'offline' });
 			}
-			else {
-				SocketEventController.connectedUsers.set(userId, newCount);
-			}
+            SocketEventController.connectedUsers.set(userId, newCount);
 		}
 	}
 }

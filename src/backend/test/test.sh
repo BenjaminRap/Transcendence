@@ -20,13 +20,14 @@ init_test() {
     accessTokens=()
     
     for i in {0..6}; do
-        accessTokens[$i]=$(curl -s -X POST 'http://localhost:8181/auth/register' \
+        accessTokens[$i]=$(curl -k -X POST 'https://localhost:8080/api/auth/register' \
                 -H "Content-Type: application/json" \
                 -d "{
                         \"username\": \"${usernames[i]}\",
                         \"password\": \"${password}\",
                         \"email\": \"${emails[i]}\"
                     }" | jq -r '.tokens.accessToken')
+        
 		echo "User ${usernames[i]} created"
     done
     
@@ -54,7 +55,7 @@ login_test() {
 	for i in {0..6}; do
 		echo "Login user ${usernames[i]}"
 
-        accessTokens[$i]=$(curl -s -X POST 'http://localhost:8181/auth/login' \
+        accessTokens[$i]=$(curl -k -X POST 'https://localhost:8080/api/auth/login' \
                 -H "Content-Type: application/json" \
                 -d "{
                         \"identifier\": \"${usernames[i]}\",
@@ -72,7 +73,7 @@ login_test() {
 
     echo "Connection users with bad password"
 
-	curl -X POST 'http://localhost:8181/auth/login' \
+	curl -k -X POST 'https://localhost:8080/api/auth/login' \
 	    -H "Content-Type: application/json" \
 	    -d "{
 	            \"password\": \"${badPassword}\",
@@ -87,28 +88,28 @@ update_avatar_test() {
 	load_tokens || return 1
 
 	echo "Upload a valid image as avatar"
-	curl -X PUT 'http://localhost:8181/suscriber/update/avatar' \
+	curl -k -X PUT 'https://localhost:8080/api/suscriber/update/avatar' \
 			-H "Content-Type: multipart/form-data" \
 			-H "Authorization: Bearer ${accessTokens[0]}" \
 			-F "avatar=@./img_test/profile.webp";
 	echo ; echo
 
 	echo "Upload an invalid image as avatar (bad magic number)"
-	curl -X PUT 'http://localhost:8181/suscriber/update/avatar' \
+	curl -k -X PUT 'https://localhost:8080/api/suscriber/update/avatar' \
 			-H "Content-Type: multipart/form-data" \
 			-H "Authorization: Bearer ${accessTokens[0]}" \
 			-F "avatar=@./img_test/test_bad_magic_number.png";
 	echo ; echo
 
 	echo "Upload an invalid image as avatar (mutant file)"
-	curl -X PUT 'http://localhost:8181/suscriber/update/avatar' \
+	curl -k -X PUT 'https://localhost:8080/api/suscriber/update/avatar' \
 			-H "Content-Type: multipart/form-data" \
 			-H "Authorization: Bearer ${accessTokens[0]}" \
 			-F "avatar=@./img_test/test_mutant.jpg";
 	echo ; echo
 
 	echo "Upload an invalid image as avatar (trapp file)"
-	curl -X PUT 'http://localhost:8181/suscriber/update/avatar' \
+	curl -k -X PUT 'https://localhost:8080/api/suscriber/update/avatar' \
 			-H "Content-Type: multipart/form-data" \
 			-H "Authorization: Bearer ${accessTokens[0]}" \
 			-F "avatar=@./img_test/test_trapp.jpg";
@@ -116,7 +117,7 @@ update_avatar_test() {
 	echo ; echo
 
 	echo "Retrieve the default avatar"
-	curl -X GET 'http://localhost:8181/static/public/avatarDefault.webp' 
+	curl -k -X GET 'https://localhost:8080/api/static/public/avatarDefault.webp' 
 
 }
 
@@ -127,7 +128,7 @@ friend_test() {
 
 	for i in {1..6}; do
 		echo "Add friend $i to user 1"
-		curl -X POST "http://localhost:8181/friend/request/${i}" \
+		curl -k -X POST "https://localhost:8080/api/friend/request/${i}" \
 			-H "Content-Type: application/json" \
 			-H "Authorization: Bearer ${accessTokens[0]}" \
 			-d "{}"
@@ -135,7 +136,7 @@ friend_test() {
 		if (( $i % 2 != 0 )); then
 			(( user = i - 1 ))
 			echo ; echo "User $i try to accepts friend request from user 1"
-			curl -X PUT "http://localhost:8181/friend/accept/1" \
+			curl -k -X PUT "https://localhost:8080/api/friend/accept/1" \
 				-H "Content-Type: application/json" \
 				-H "Authorization: Bearer ${accessTokens[$user]}" \
 				-d "{}"
@@ -151,7 +152,7 @@ delete_test() {
 
 	for i in {0..6}; do
 		echo "Delete user $i"
-		curl -X DELETE "http://localhost:8181/suscriber/delete/account" \
+		curl -k -X DELETE "https://localhost:8080/api/suscriber/delete/account" \
 			-H "Content-Type: application/json" \
 			-H "Authorization: Bearer ${accessTokens[i]}" \
 			-d "{}"

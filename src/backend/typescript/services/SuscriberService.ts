@@ -21,6 +21,7 @@ export class SuscriberService {
     private api_url = process.env.API_URL || 'https://localhost:8080/api';
     private default_avatar_filename = 'avatarDefault.webp';
     private default_avatar_url = this.api_url + '/static/public/' + this.default_avatar_filename;
+
     // ----------------------------------------------------------------------------- //
     async getProfile(id: number): Promise<SuscriberProfile> {
         // we are limited to 10 matches won and 10 matches lost to get last matches
@@ -140,7 +141,7 @@ export class SuscriberService {
         const newAvatarUrl = `${this.api_url}/static/avatars/${path.basename(avatarFileName)}`;
         try {
             const updatedUser = await this.prisma.user.update({
-                where: { id: userId },
+                where: { id: Number(userId) },
                 data: { avatar: newAvatarUrl },
             });
             
@@ -167,7 +168,7 @@ export class SuscriberService {
         const oldAvatarUrl = user.avatar;
 
         const updatedUser = await this.prisma.user.update({
-            where: { id: userId },
+            where: { id: Number(userId) },
             data: { avatar: this.default_avatar_url },
         });
 
@@ -194,7 +195,7 @@ export class SuscriberService {
 
     // ----------------------------------------------------------------------------- //
     private async getById(id: number): Promise<User | null> {
-        return await this.prisma.user.findUnique({ where: { id } });
+        return await this.prisma.user.findUnique({ where: { id: Number(id) } });
     }
 
     // ----------------------------------------------------------------------------- //

@@ -4,6 +4,18 @@ import type { ListFormat } from '../types/friend.types.js';
 import { SocketEventController } from "../controllers/SocketEventController.js";
 import type { FriendProfile } from "../types/friend.types.js";
 
+/**
+ * detected errors
+ * 
+ * file:///app/dev/backend/typescript/services/FriendService.js:3
+fastify-1  | import { SocketEventController } from "../controllers/SocketEventController.js";
+fastify-1  |          ^^^^^^^^^^^^^^^^^^^^^
+fastify-1  | SyntaxError: The requested module '../controllers/SocketEventController.js' does not provide an export named 'SocketEventController'
+fastify-1  |     at #asyncInstantiate (node:internal/modules/esm/module_job:302:21)
+fastify-1  |     at async ModuleJob.run (node:internal/modules/esm/module_job:405:5)
+fastify-1  |     at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:660:26)
+fastify-1  |     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+ */
 export class FriendService {
     constructor(
         private prisma: PrismaClient
@@ -57,7 +69,7 @@ export class FriendService {
             throw new FriendException(FriendError.INVALID_ID, "the user can't accept this friend request");
 
         await this.prisma.friendship.update({
-            where: { id: friendship.id },
+            where: { id: Number(friendship.id) },
             data: { status: 'ACCEPTED' }
         });
 
@@ -83,7 +95,7 @@ export class FriendService {
             throw new FriendException(FriendError.NO_LINK, FriendError.NO_LINK);
 
         await this.prisma.friendship.delete({ 
-            where: { id: friendship.id }
+            where: { id: Number(friendship.id) }
         });
 
     }
@@ -98,8 +110,8 @@ export class FriendService {
         const friendList = await this.prisma.friendship.findMany({
             where: {
                 OR: [
-                    { receiverId: userId },
-                    { requesterId: userId },
+                    { receiverId: Number(userId) },
+                    { requesterId: Number(userId) },
                 ],
                 status: 'ACCEPTED',
             },
@@ -141,8 +153,8 @@ export class FriendService {
             where: {
                 status: 'ACCEPTED',
                 OR: [
-                    { requesterId: userId },
-                    { receiverId: userId }
+                    { requesterId: Number(userId) },
+                    { receiverId: Number(userId) }
                 ]
             },
             select: {
@@ -168,8 +180,8 @@ export class FriendService {
         const pendingList =  await this.prisma.friendship.findMany({
             where: {
                 OR: [
-                    { receiverId: userId },
-                    { requesterId: userId },
+                    { receiverId: Number(userId) },
+                    { requesterId: Number(userId) },
                 ],
                 status: 'PENDING',
             },
@@ -199,7 +211,7 @@ export class FriendService {
     // ----------------------------------------------------------------------------- //
     async getById(id: number): Promise<FriendProfile> {
         return await this.prisma.user.findUnique({
-            where: { id },
+            where: { id: Number(id) },
             select: {
                 id: true,
                 username: true,
@@ -212,7 +224,7 @@ export class FriendService {
 
     // ----------------------------------------------------------------------------- //
     private async checkId(id: number): Promise<boolean> {
-        if (await this.prisma.user.findFirst({where: { id }, select: { id: true }}))
+        if (await this.prisma.user.findFirst({where: { id: Number(id) }, select: { id: true }}))
             return true;
         return false;
     }
@@ -222,8 +234,8 @@ export class FriendService {
         const friendship = await this.prisma.friendship.findFirst({
             where: {
                 OR: [
-                    { requesterId: friendId, receiverId: userId },
-                    { requesterId: userId, receiverId: friendId }
+                    { requesterId: Number(friendId), receiverId: Number(userId) },
+                    { requesterId: Number(userId), receiverId: Number(friendId) }
                 ]
             }
         })

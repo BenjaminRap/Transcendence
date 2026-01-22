@@ -15,12 +15,6 @@ enum FriendshipStatus {
   DECLINED
 }
 
-enum MatchStatus {
-  IN_PROGRESS
-  FINISHED
-  CANCELLED
-}
-
 enum TournamentStatus {
   ONGOING
   FINISHED
@@ -35,8 +29,7 @@ model User {
   email     String      @unique
   password  String
 
-  // URL DANGER !!!
-  avatar    String      @default("http://localhost:8181/static/public/avatarDefault.webp")
+  avatar    String      @default("https://localhost:8080/api/static/public/avatarDefault.webp")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -46,9 +39,6 @@ model User {
   
   matchesWons       Match[]   @relation("matchWinner")
   matchesLoses      Match[]   @relation("matchLoser")
-
-  matchesAsPlayer1  Match[]   @relation("Player1")
-  matchesAsPlayer2  Match[]   @relation("Player2")
 
   tournamentsCreated       Tournament[]     @relation("tournamentCreator")
   tournamentParticipations TournamentParticipant[]
@@ -77,18 +67,10 @@ model Friendship {
 model Match {
   id          Int       @id @default(autoincrement())
   
-  status      MatchStatus  @default(IN_PROGRESS)
+  status      String    @default("FINISHED")
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
-
-  player1Id         Int?
-  player1           User?     @relation("Player1", fields: [player1Id], references: [id], onDelete: SetNull)
-  player1GuestName  String
-
-  player2Id         Int?
-  player2           User?     @relation("Player2", fields: [player2Id], references: [id], onDelete: SetNull)
-  player2GuestName  String
 
   winnerId    Int?
   winner      User?    @relation("matchWinner", fields: [winnerId], references: [id], onDelete: SetNull)

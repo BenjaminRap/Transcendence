@@ -51,7 +51,7 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: ../src/backend/dev/
+      device: ./fastify/app_src/dev/
       o: bind
   shared:
     driver: local
