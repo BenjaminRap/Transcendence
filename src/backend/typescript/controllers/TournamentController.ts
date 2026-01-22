@@ -14,7 +14,7 @@ export class TournamentController {
     ) {}
 
 	// ----------------------------------------------------------------------------- //
-    async createTournament(data: CreateTournament) : Promise<boolean> {
+    async createTournament(data: CreateTournament) : Promise<{ success: boolean, tournamentId?: number, messageError?: string }> {
         try {
             const result = await this.tournamentService.createTournament(data);
             if (!result) {

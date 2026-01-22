@@ -21,6 +21,7 @@ export class SuscriberService {
     private api_url = process.env.API_URL || 'https://localhost:8080/api';
     private default_avatar_filename = 'avatarDefault.webp';
     private default_avatar_url = this.api_url + '/static/public/' + this.default_avatar_filename;
+
     // ----------------------------------------------------------------------------- //
     async getProfile(id: number): Promise<SuscriberProfile> {
         // we are limited to 10 matches won and 10 matches lost to get last matches

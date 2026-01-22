@@ -1,7 +1,7 @@
-import { type PrismaClient, type Match, MatchStatus } from '@prisma/client';
+import { type PrismaClient } from '@prisma/client';
 import { FriendService } from './FriendService.js';
 import type { GameStats } from '@shared/ServerMessage.js';
-import type { MatchData } from '../types/match.types.js';
+import type { MatchData, MatchSummary, OpponentSummary, PlayerInfo } from '../types/match.types.js';
 
 
 export class MatchService {
@@ -59,7 +59,7 @@ export class MatchService {
     }
 
     // --------------------------------------- -------------------------------------- //
-    calculateStats(matchesWons: number, matchesLoses: number): GameStats {
+    public calculateStats(matchesWons: number, matchesLoses: number): GameStats {
         const totalMatches = matchesWons + matchesLoses;
         const ratio = totalMatches > 0 ? (matchesWons / totalMatches * 100).toFixed(2) : "0.00";
 
@@ -80,7 +80,7 @@ export class MatchService {
         ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, limit);
 
-        return Promise.all(allMatches.map(async match => {
+        return await Promise.all(allMatches.map(async match => {
             
             const isUserWinner = match.winnerId === userId;
             
@@ -102,7 +102,7 @@ export class MatchService {
                 opponentSummary = {
                     id: undefined,
                     username: opponentGuestName,
-                    avatar: process.env.DEFAULT_AVATAR_URL || "http://localhost:8181/static/public/avatarDefault.webp",
+                    avatar: process.env.DEFAULT_AVATAR_URL || "https://localhost:8080/api/static/public/avatarDefault.webp",
                     isFriend: false
                 };
             }
@@ -146,22 +146,6 @@ export class MatchService {
     }
 
 	// ================================== PRIVATE ================================== //
-
-	// ----------------------------------------------------------------------------- //
-	private async theyExist(ids: number[]): Promise<boolean> {
-		const existingUsers = await this.prisma.user.findMany({
-			where: { id: { in: ids.map(id => Number(id)) } },
-			select: { id: true }
-		});
-
-		const existingIds = existingUsers.map((u: { id: number }) => u.id);
-
-		const missingIds = ids.filter(ids => !existingIds.includes(ids));
-
-		if (missingIds.length > 0)
-			return false;
-		return true;
-	}
 
 	// ----------------------------------------------------------------------------- //
 	private async isExisting(id: number): Promise<boolean> {

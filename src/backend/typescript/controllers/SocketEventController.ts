@@ -94,6 +94,7 @@ export class SocketEventController {
     // check if a user is online
     // ----------------------------------------------------------------------------- //
     static isUserOnline(userId: number): boolean {
+        console.log(`checking if user ${userId} is online in the list : `, SocketEventController.connectedUsers);
         return SocketEventController.connectedUsers.has(userId);
     }
 
