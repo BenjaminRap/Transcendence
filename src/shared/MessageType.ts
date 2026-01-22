@@ -1,4 +1,4 @@
-import type { GameInfos, GameInit, GameStartInfos, GameStats, KeysUpdate, SanitizedUser, TournamentCreationSettings, TournamentDescription, TournamentEvent, TournamentId } from "./ServerMessage";
+import type { GameInfos, GameInit, GameStartInfos, GameStats, KeysUpdate, SanitizedUser, TournamentCreationSettings, TournamentDescription, TournamentEvent, TournamentId, Username } from "./ServerMessage";
 import type { Result } from "./utils";
 
 export type ClientMessage = "join-matchmaking" |

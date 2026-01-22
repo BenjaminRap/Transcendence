@@ -1,9 +1,9 @@
-import type { Profile } from "@shared/Profile";
 import type { Match } from "@shared/Match";
 import type { EndData } from "@shared/attachedScripts/GameManager";
 import type { FrontendEventsManager } from "./FrontendEventsManager";
 import { PongError } from "@shared/pongError/PongError";
 import { Tournament } from "@shared/Tournament";
+import type { Profile } from "@shared/ServerMessage";
 
 export class	LocalTournament extends Tournament<Profile>
 {
