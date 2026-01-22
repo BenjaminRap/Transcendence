@@ -8,6 +8,7 @@ import type { ServerEvents, ServerToClientEvents } from "@shared/MessageType";
 import type { ServerType } from "../index";
 import type { EndData } from "@shared/attachedScripts/GameManager";
 import type { DefaultSocket } from "../controllers/SocketEventController";
+import { getEndDataOnInvalidMatch } from "@shared/utils";
 
 export type SocketMessage = {
 	socketIndex : int,
@@ -63,15 +64,8 @@ export class	Room
 	{
 		const	isFirstReady = this._sockets[0].data.ready;
 		const	isSecondReady = this._sockets[1].data.ready;
+		const	endData = getEndDataOnInvalidMatch(isFirstReady, isSecondReady);
 
-		const	winner =
-			(isFirstReady && !isSecondReady) ? "left" :
-			(!isFirstReady && isSecondReady) ? "right" :
-			"draw";
-		const	endData : EndData = {
-            winner: winner,
-            forfeit: true
-        }
 		this.dispose(endData);
 	}
 
