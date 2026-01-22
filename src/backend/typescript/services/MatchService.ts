@@ -15,14 +15,16 @@ export class MatchService {
 	// ----------------------------------------------------------------------------- //
     async registerMatch(match: MatchData): Promise<number | null> {
         const data = {
-            winnerId: match.winnerId ?? null,
-            winnerGuestName: match.winnerGuestName ?? null,
+            leftId: match.leftId ?? null,
+            leftGuestName: match.leftGuestName,
 
-            loserId: match.loserId ?? null,
-            loserGuestName: match.loserGuestName ?? null,
+            rightId: match.rightId ?? null,
+            rightGuestName: match.rightGuestName,
 
-            scoreWinner: match.scoreWinner,
-            scoreLoser: match.scoreLoser,
+            winnerIndicator: match.winnerIndicator,
+
+            scoreLeft: match.scoreLeft,
+            scoreRight: match.scoreRight,
             duration: match.duration,
         }
 
@@ -38,17 +40,19 @@ export class MatchService {
     async registerTournamentMatch(tournamentId: number, match: MatchData)
     {
         const data = {
-            tournamentId,
+            leftId: match.leftId ?? null,
+            leftGuestName: match.leftGuestName,
 
-            winnerId: match.winnerId ?? null,
-            winnerGuestName: match.winnerGuestName,
+            rightId: match.rightId ?? null,
+            rightGuestName: match.rightGuestName,
 
-            loserId: match.loserId ?? null,
-            loserGuestName: match.loserGuestName,
+            winnerIndicator: match.winnerIndicator,
 
-            scoreWinner: match.scoreWinner,
-            scoreLoser: match.scoreLoser,
+            scoreLeft: match.scoreLeft,
+            scoreRight: match.scoreRight,
             duration: match.duration,
+
+            tournamentId: tournamentId,
         }
 
         const newmatch = await this.prisma.match.create({
@@ -72,59 +76,50 @@ export class MatchService {
     }
 
     // ----------------------------------------------------------------------------- //
-    async getLastMatches(userId: number, matchesWons: any[], matchesLoses: any[], limit: number): Promise<MatchSummary[]> {
-
-        const allMatches = [
-            ...(matchesWons || []),
-            ...(matchesLoses || []),
-        ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, limit);
-
-        return await Promise.all(allMatches.map(async match => {
-            
-            const isUserWinner = match.winnerId === userId;
-            
-            const opponentUser = isUserWinner ? match.loser : match.winner;
-            const opponentGuestName = isUserWinner ? match.loserGuestName : match.winnerGuestName;
-
-            let opponentSummary: OpponentSummary;
-
-            if (opponentUser) {
-                // if user exists in DB
-                opponentSummary = {
-                    id: Number(opponentUser.id),
-                    username: opponentUser.username,
-                    avatar: opponentUser.avatar,
-                    isFriend: await this.friendService.isFriend(userId, Number(opponentUser.id))
-                };
-            }else {
-                // opponent is guest or AI
-                opponentSummary = {
-                    id: undefined,
-                    username: opponentGuestName,
-                    avatar: process.env.DEFAULT_AVATAR_URL || "https://localhost:8080/api/static/public/avatarDefault.webp",
-                    isFriend: false
-                };
-            }
-
-            return {
-                opponent: opponentSummary,
-                matchResult: {
-                    matchId: match.id,
-                    scoreWinner: match.scoreWinner,
-                    scoreLoser: match.scoreLoser,
-                    duration: match.duration,
-                    winner: {
-                        id: match.winnerId ?? undefined,
-                        guestName: match.winnerGuestName,
-                    } as PlayerInfo,
-                    loser: {
-                        id: match.loserId ?? undefined,
-                        guestName: match.loserGuestName,
-                    } as PlayerInfo,
+    async getLastMatches(userId: number, limit: number): Promise<MatchSummary[]>
+    {
+            const matchs = await this.prisma.match.findMany({ 
+            where: {
+                playerLeftId: userId,
+            },
+            select: {
+                winnerIndicator: true,
+                playerRight: {
+                    select: {
+                        id: true,
+                        username: true,
+                        avatar: true
+                    }
                 },
-            } as MatchSummary;
-        }));
+                playerLeft: {
+                    select: {
+                        id: true,
+                        username: true,
+                        avatar: true
+                    }
+                },
+            }
+        });
+
+        // renvoyer MatchSummary[]
+
+        // mapper chaque match pour renvoyer le bon format
+        const summary: MatchSummary[] = matchs.map((m) => {
+            opponent: {
+                id: m.playerRightId === userId ? m.playerLeft?.id : m.playerRight?.id,
+                username: m.playerRightId === userId ? m.playerLeft?.username : m.playerRight?.username,
+                avatar: m.playerRightId === userId ? m.playerLeft?.avatar : m.playerRight?.avatar,
+                isFriend: false // a implementer plus tard
+            },
+            matchResult: {
+                matchId: m.id,
+                scoreWinner: m.winnerIndicator === 'left' ? m.scoreLeft : m.scoreRight,
+                scoreLoser: m.winnerIndicator === 'left' ? m.scoreRight : m.scoreLeft,
+                duration: m.duration,
+                winnerName: m.winnerIndicator === 'left' ? (m.playerLeft?.username || m.leftGuestName) : (m.playerRight?.username || m.rightGuestName),
+                loserName: m.winnerIndicator === 'left' ? (m.playerRight?.username || m.rightGuestName) : (m.playerLeft?.username || m.leftGuestName),
+            },
+        });
     }
 
 	// ----------------------------------------------------------------------------- //
@@ -132,20 +127,31 @@ export class MatchService {
         if (!await this.isExisting(Number(playerId)))
             return { stats: null, message: 'Player does not exist' }
 
-        const wins = await this.prisma.match.count({
-            where: { winnerId: Number(playerId) }
-        });
+        const wins = await this.countMatchAs(playerId, 'left');
 
-        const losses = await this.prisma.match.count({
-            where: { loserId: Number(playerId) }
-        });
+        const lose = await this.countMatchAs(playerId, 'right');
 
-        const stats: GameStats = this.calculateStats(wins, losses);
+        const stats: GameStats = this.calculateStats(wins, lose);
 
         return { stats };
     }
 
 	// ================================== PRIVATE ================================== //
+
+	// ----------------------------------------------------------------------------- //
+    private async countMatchAs(id: number, indic: string): Promise<number> {
+        
+        const left = await this.prisma.match.count({
+            where: { playerLeftId: id, winnerIndicator: indic },
+        });
+
+        const other = indic === 'left' ? 'right' : 'left';
+
+        const right = await this.prisma.match.count({
+            where: { playerRightId: id, winnerIndicator: other }
+        });
+        return left + right;
+    }
 
 	// ----------------------------------------------------------------------------- //
 	private async isExisting(id: number): Promise<boolean> {

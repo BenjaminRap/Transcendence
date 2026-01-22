@@ -13,8 +13,8 @@ export class TournamentService {
             data: {
                 title: data.title,
                 status: TournamentStatus.ONGOING,
-                creatorId: data.creatorId || null,
-                creatorGuestName: data.guestName,
+                creatorId: data.creatorId ?? null,
+                creatorGuestName: data.creatorGuestName,
                 participants: {
                     create: data.participants,
                 },
@@ -67,22 +67,4 @@ export class TournamentService {
         const tournament = await this.updateTournamentStatus(tournamentId, TournamentStatus.FINISHED);
 		return tournament;
 	}
-
-	// ----------------------------------------------------------------------------- //
-    async cancelTournament(tournamentId: number, adminId: number | null, adminGuestName: string) {
-        const tournament = await this.getTournamentById(tournamentId);
-
-        if (tournament.status === TournamentStatus.FINISHED || tournament.status === TournamentStatus.CANCELLED) {
-             return tournament;
-        }
-
-        const isCreator = (tournament.creatorId === adminId) &&
-                          (tournament.creatorGuestName === adminGuestName);
-
-        if (!isCreator)
-            throw new TournamentException(TournamentError.UNAUTHORIZED);
-
-        return await this.updateTournamentStatus(tournamentId, TournamentStatus.CANCELLED);
-    }
-
 }

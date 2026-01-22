@@ -27,20 +27,16 @@ export class SuscriberService {
         // we are limited to 10 matches won and 10 matches lost to get last matches
         const takeLimit = 10; 
 
-        // we count matches won and lost for stats calculation
         const user = await this.prisma.user.findUnique({
             where: { id: Number(id) },
             include: {
-                _count: {
-                    select: { matchesWons: true, matchesLoses: true }
-                },
-                matchesWons: { 
-                    include: { loser: true },
+                matchsAsLeft: { 
+                    include: { playerRight: true },
                     orderBy: { createdAt: 'desc' },
                     take: takeLimit
                 },
-                matchesLoses: { 
-                    include: { winner: true },
+                matchsAsRight: { 
+                    include: { playerLeft: true },
                     orderBy: { createdAt: 'desc' },
                     take: takeLimit
                 },
@@ -53,12 +49,22 @@ export class SuscriberService {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
         }
 
-		const stats: GameStats = this.matchService.calculateStats(user._count.matchesWons, user._count.matchesLoses);
+        const lastsMatchs = await this.matchService.getLastMatches(id, 4);
 
-		// Get last 4 matches
-        const allMatches = await this.matchService.getLastMatches(user.id, user.matchesWons, user.matchesLoses, 4);
+        const matchesAsRight = await this.prisma.match.findMany({ where: { playerRightId: id } });
+
+        const wins = matchesAsLeft.filter(m => m.winnerIndicator === 'left').length +
+                     matchesAsRight.filter(m => m.winnerIndicator === 'right').length;
         
-		// Sorted 4 friends
+        const losses = matchesAsLeft.filter(m => m.winnerIndicator === 'right').length +
+                       matchesAsRight.filter(m => m.winnerIndicator === 'left').length;
+
+        const stats: GameStats = this.matchService.calculateStats(wins, losses); // userID
+
+        // Get last 4 matches
+        const allMatches = await this.matchService.getLastMatches(user.id, [...user.matchsAsLeft, ...user.matchsAsRight], 4);
+        
+        // Sorted 4 friends
         const sortedFriends = this.getSortedFriendlist(user.sentRequests, user.receivedRequests, 4, user.id);
 
         return {

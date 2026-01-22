@@ -37,8 +37,8 @@ model User {
   sentRequests      Friendship[]  @relation("requesterFriendships")
   receivedRequests  Friendship[]  @relation("receiverFriendships")
   
-  matchesWons       Match[]   @relation("matchWinner")
-  matchesLoses      Match[]   @relation("matchLoser")
+  matchsAsLeft       Match[]   @relation("playerLeft")
+  matchsAsRight      Match[]   @relation("playerRight")
 
   tournamentsCreated       Tournament[]     @relation("tournamentCreator")
   tournamentParticipations TournamentParticipant[]
@@ -56,7 +56,7 @@ model Friendship {
   requester   User    @relation("requesterFriendships", fields: [requesterId], references: [id], onDelete: Cascade)
   requesterId Int
 
-  receiver    User      @relation("receiverFriendships", fields: [receiverId], references: [id], onDelete: Cascade)
+  receiver    User    @relation("receiverFriendships", fields: [receiverId], references: [id], onDelete: Cascade)
   receiverId  Int
 
   @@unique([requesterId, receiverId])
@@ -72,23 +72,22 @@ model Match {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  winnerId    Int?
-  winner      User?    @relation("matchWinner", fields: [winnerId], references: [id], onDelete: SetNull)
-  winnerGuestName String
+  playerLeftId         int?
+  playerLeft           User?    @relation("playerLeft", fields: [winnerplayerLeftIdId], references: [id], onDelete: SetNull)
+  playerLeftGuestName  String
 
-  loserId     Int?
-  loser       User?    @relation("matchLoser", fields: [loserId], references: [id], onDelete: SetNull)
-  loserGuestName  String
+  playerRightId         int?
+  playerRight           User?    @relation("playerRight", fields: [playerRightId], references: [id], onDelete: SetNull)
+  playerRightGuestName  String
 
-  scoreWinner Int     @default(0)
-  scoreLoser  Int     @default(0)
+  winnerIndicator       String   @default("")
+
+  scoreLeft   Int     @default(0)
+  scoreRight  Int     @default(0)
   duration    Int     @default(0)
 
   tournament   Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   tournamentId Int?
-  
-  round        Int?    @default(1)
-  matchOrder   Int?    @default(0)
 }
 
 // -------------------------------------------------------------------------------------------- //
@@ -101,7 +100,7 @@ model Tournament {
   status          TournamentStatus  @default(ONGOING)
 
   creatorId       Int?
-  creatorGuestName String?
+  creatorGuestName String
   creator         User?     @relation("tournamentCreator", fields: [creatorId], references: [id], onDelete: SetNull)
 
   participants    TournamentParticipant[]
@@ -119,7 +118,7 @@ model TournamentParticipant {
   alias         String
   user          User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   userId        Int?
-  guestName     String?
+  guestName     String
 
   finalRank     Int?
 

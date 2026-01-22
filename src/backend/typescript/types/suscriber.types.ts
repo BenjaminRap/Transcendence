@@ -26,8 +26,8 @@ export interface Friend
     username:       string,
     id:             number,
     status:         string,
-    isOnline:       boolean,
     requesterId:    number,
+    isOnline:       boolean,
 }
 
 export interface SuscriberProfile
