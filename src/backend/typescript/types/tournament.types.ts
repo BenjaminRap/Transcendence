@@ -1,11 +1,13 @@
 
 export interface TournamentParticipant {
-    player: number | undefined | string;
-    alias: string;
+    playerId:   number | undefined;
+    guestName:  string;
+    alias:      string;
 }
 
 export interface CreateTournament {
-  title: string; // titre ou nom du tournois
-  creator: number | undefined | string;
+  title:        string; // titre ou nom du tournois
+  creatorId:    number | undefined;
+  guestName:    string;
   participants: TournamentParticipant[]
 }

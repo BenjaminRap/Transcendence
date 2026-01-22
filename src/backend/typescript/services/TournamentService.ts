@@ -1,57 +1,22 @@
 import { type PrismaClient, TournamentStatus } from '@prisma/client';
 import { TournamentException, TournamentError } from '../error_handlers/Tournament.error.js';
-import type { CreateTournament, TournamentParticipant } from '../types/tournament.types.js';
-import { MatchService } from './MatchService.js';
-import type { MatchController } from '../controllers/MatchController.js';
+import type { CreateTournament } from '../types/tournament.types.js';
 
 export class TournamentService {
 	constructor(
-		private prisma: PrismaClient,
-        private matchController: MatchController
+		private prisma: PrismaClient
 	) {}
 
     // ----------------------------------------------------------------------------- //
     async createTournament(data: CreateTournament): Promise<number | null> {
-        let adminUserId: number | null = null;
-        let adminGuestName: string | null = null;
-
-        if (typeof data.creator === 'number') {
-            adminUserId = data.creator;
-            adminGuestName = this.matchController.generateName('User');
-        } else if (typeof data.creator === 'string') {
-            adminGuestName = data.creator;
-        } else {
-            adminGuestName = this.matchController.generateName('Guest');
-        }
-
-        const participants = data.participants.map((p) => {
-            let userId: number | null = null;
-            let guestName: string | null = null;
-
-            if (typeof p.player === 'number') {
-                userId = p.player;
-                guestName = this.matchController.generateName('User');
-            } else if (typeof p.player === 'string') {
-                guestName = p.player;
-            } else {
-                guestName = this.matchController.generateName('Guest');
-            }
-
-            return {
-                alias: p.alias,
-                userId,
-                guestName,
-            };
-        });
-
         const tournament = await this.prisma.tournament.create({
             data: {
                 title: data.title,
                 status: TournamentStatus.ONGOING,
-                creatorId: adminUserId,
-                creatorGuestName: adminGuestName,
+                creatorId: data.creatorId || null,
+                creatorGuestName: data.guestName,
                 participants: {
-                    create: participants,
+                    create: data.participants,
                 },
             },
         });
