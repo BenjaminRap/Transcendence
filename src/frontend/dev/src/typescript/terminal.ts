@@ -124,6 +124,7 @@ export namespace TerminalCommand {
 		new Command('42' , CommandHelpMessage.HELP_42, OauthCommand),
 		new Command('pong', CommandHelpMessage.HELP_PONG, pongCommand),
 		new Command('rm', 'Remove files or directories', rmCommand),
+        new Command('sudo', 'Execute a command with superuser privileges', sudoCommand)
 	];
 	export let commandHistory: string[] = [];
 	export let indexCommandHistory = -2;
@@ -133,6 +134,11 @@ export namespace TerminalCommand {
 
 
 // ------------------------------------------------------------------------ Command ---------------------------------------------------------------------
+
+function sudoCommand(): string {
+	clearOutput();
+	return CommandHelpMessage.SALAMANCA_ROLL;
+}
 
 function rmCommand(): string {
 	clearOutput();
