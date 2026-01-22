@@ -1,10 +1,12 @@
 export interface MatchData
 {
-    winner: number| undefined | string,
-    loser:  number| undefined | string,
-    scoreWinner:	number,
-    scoreLoser:	    number,
-    duration:	    number,
+    winnerId:           number| undefined,
+    winnerGuestName:    string,
+    loserId:            number| undefined,
+    loserGuestName:     string,
+    scoreWinner:	    number,
+    scoreLoser:	        number,
+    duration:	        number,
 }
 
 export interface OpponentSummary

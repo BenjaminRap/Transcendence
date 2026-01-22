@@ -13,14 +13,14 @@ export class MatchService {
     // =================================== PUBLIC ==================================== //
 
 	// ----------------------------------------------------------------------------- //
-    async registerMatch(match: MatchData, winName: string, losName: string): Promise<number | null> {
+    async registerMatch(match: MatchData): Promise<number | null> {
         const data = {
-            winnerId: typeof match.winner === "number" ? match.winner : null,
-            winnerGuestName: winName,
-            
-            loserId: typeof match.loser === "number" ? match.loser : null,
-            loserGuestName: losName,
-            
+            winnerId: match.winnerId ?? null,
+            winnerGuestName: match.winnerGuestName ?? null,
+
+            loserId: match.loserId ?? null,
+            loserGuestName: match.loserGuestName ?? null,
+
             scoreWinner: match.scoreWinner,
             scoreLoser: match.scoreLoser,
             duration: match.duration,
@@ -35,16 +35,16 @@ export class MatchService {
     }
 
     // ----------------------------------------------------------------------------- //
-    async registerTournamentMatch(tournamentId: number, match: MatchData, winName: string, losName: string)
+    async registerTournamentMatch(tournamentId: number, match: MatchData)
     {
         const data = {
             tournamentId,
 
-            winnerId: typeof match.winner === "number" ? match.winner : null,
-            winnerGuestName: winName,
+            winnerId: match.winnerId ?? null,
+            winnerGuestName: match.winnerGuestName,
 
-            loserId: typeof match.loser === "number" ? match.loser : null,
-            loserGuestName: losName,
+            loserId: match.loserId ?? null,
+            loserGuestName: match.loserGuestName,
 
             scoreWinner: match.scoreWinner,
             scoreLoser: match.scoreLoser,

@@ -108,7 +108,6 @@ export class Container {
 
 		this.registerService('TournamentService', () => new TournamentService(
 			prisma,
-            this.getService('MatchService')
 		));
 
         // Controllers
