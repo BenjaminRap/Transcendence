@@ -1,11 +1,10 @@
 import { Clamp } from "@babylonjs/core";
 import { MatchGUI } from "./MatchGUI";
 import { OpponentGUI } from "./OpponentGUI";
-import type { Profile } from "@shared/Profile";
 import type { IGUI } from "./IGUI";
 import { PongError } from "@shared/pongError/PongError";
 import { isPowerOfTwo } from "@shared/utils";
-import type { MatchWinningDescription } from "@shared/ServerMessage";
+import type { MatchWinningDescription, Profile } from "@shared/ServerMessage";
 
 export class	TournamentGUI extends HTMLElement implements IGUI<void>
 {

@@ -1,4 +1,4 @@
-import type { Profile } from "@shared/Profile";
+import type { Profile } from "@shared/ServerMessage";
 import { TournamentHelper } from "@shared/TournamentHelper";
 
 export type	ProfileCreationInputs = {
@@ -55,8 +55,9 @@ export class	ProfileCreationGUI extends HTMLElement
 	public createProfile() : Profile
 	{
 		return {
-			name: this._inputs!.name.value,
-			image: this._inputs!.image.value
+			shownName: this._inputs!.name.value,
+			image: this._inputs!.image.value,
+            guestName: "Guest"
 		}
 	}
 }

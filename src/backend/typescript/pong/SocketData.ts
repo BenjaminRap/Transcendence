@@ -91,6 +91,7 @@ export class	SocketData
 		this._room = null;
 		this._tournament?.onSocketQuit(this._socket);
 		this._tournament = null;
+		this._onlineProfile = null;
 	}
 
 	public authenticate(userId : number, userName : string, image : string)
@@ -100,11 +101,6 @@ export class	SocketData
 			image,
 			userId
 		};
-	}
-
-	public logOut()
-	{
-		this._onlineProfile = null;
 	}
 
 	public getGuestName()

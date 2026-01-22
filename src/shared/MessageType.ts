@@ -14,7 +14,7 @@ export type ClientMessage = "join-matchmaking" |
 							"get-tournaments" |
 							"ban-participant" |
 							"kick-participant" |
-							// "force-disconnect" |
+							"logout" |
 							"get-online-users" |
 							"watch-profile" |
 							"unwatch-profile" |

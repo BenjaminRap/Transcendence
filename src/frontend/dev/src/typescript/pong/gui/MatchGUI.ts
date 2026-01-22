@@ -1,4 +1,4 @@
-import type { Profile } from "@shared/Profile";
+import type { Profile } from "@shared/ServerMessage";
 import { OpponentGUI } from "./OpponentGUI";
 import { PongError } from "@shared/pongError/PongError";
 

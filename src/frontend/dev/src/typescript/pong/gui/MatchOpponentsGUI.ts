@@ -1,8 +1,8 @@
-import type { Profile } from "@shared/Profile";
 import { OpponentGUI } from "./OpponentGUI";
 import type { IGUI } from "./IGUI";
 import type { ClientInput } from "../FrontendSceneData";
 import { MatchInputGUI } from "./MatchInputGUI";
+import type { Profile } from "@shared/ServerMessage";
 
 export class	MatchOpponentsGUI extends HTMLElement implements IGUI<void>
 {
