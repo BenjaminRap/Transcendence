@@ -363,7 +363,7 @@ function createFriendList() : HTMLDivElement
 	friendElement.id = "friendList";
 	const lign = document.createElement('hr');
 	lign.className = "border-green-500";
-	friendElement.className = "flex flex-col gap-y-4 px-2 h-full overflow-y-auto";
+	friendElement.className = "terminal-font flex flex-col gap-y-4 px-2 h-full overflow-y-auto";
 	for (let i = 0; i < FriendDisplay.length; i++) {
 		const friend = FriendDisplay[i];
 		const friendDiv = document.createElement('div');
@@ -424,7 +424,8 @@ export namespace ExtendedView {
 			return;
 		type = dataType;
 		const view = document.createElement('div');
-		view.className = "fixed top-[50%] left-[50%] border p-4 border-green-500 bg-black z-2 flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 w-[20%] max-h-[50vh]";
+		view.className = "terminal-font fixed top-[50%] left-[50%] border p-4 border-green-500 bg-black z-2 flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 w-[20%] max-h-[50vh] overflow-y-auto focus:outline-none";
+		view.style = "width: 30%"
 		view.id = "view";
 
 		view.setAttribute('tabindex', '0');
@@ -432,6 +433,7 @@ export namespace ExtendedView {
 
 		view.addEventListener('keydown', (event: KeyboardEvent) => {
 			if (event.key === 'Escape' || (event.key === 'c' && event.ctrlKey)) {
+				console.log("Kill signal recu par :", event.key);
 				event.preventDefault();
 				closeExtendedView();
 				WriteOnTerminal.displayOnTerminal("^C", true);
@@ -467,8 +469,8 @@ export namespace ExtendedView {
 		setTimeout(() => {
 			window?.addEventListener('click', handleOutsideClick);
 		}, 0);
-
 		closeButton.addEventListener('click', closeExtendedView);
+
 		view.appendChild(closeButton);
 		const terminal = document.getElementById('terminal');
 		if (terminal) {

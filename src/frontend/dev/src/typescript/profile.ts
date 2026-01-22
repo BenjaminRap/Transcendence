@@ -204,7 +204,8 @@ function updateMatchDiv()
 	if (oldMatchListElement && oldMatchListElement.parentElement) {
 		oldMatchListElement.parentElement.replaceChild(newMatchListElement, oldMatchListElement);
 	} else if (oldMatchListElement) {
-		oldMatchListElement.remove();
+		oldMatchListElement.remove();			// Send unwatch for oldId
+
 		profileDiv.appendChild(newMatchListElement);
 	} else {
 		profileDiv.appendChild(newMatchListElement);
@@ -460,7 +461,6 @@ export namespace ProfileBuilder {
 		isActive = true;
 		if (socketUtils && socketUtils.socket)
 		{
-			// console.log("\nEN ECOUTE PROFILE UPDATE, STATUS CHANGE ET FRIEND STATUS UPDATE\n");
 			socketUtils.socket.on("profile-update", (data : {user: { id: string; username: string; avatar: string }}) => {
 				console.log("Profile updated:", data.user.id);
 				ProfileUpdater.updateFriendProfile(parseInt(data.user.id), data.user.username, data.user.avatar);
@@ -657,7 +657,6 @@ function ChangeAvatar() {
 	});
 }
 
-
 async function requestChangeAvatar(formData: FormData): Promise<boolean> {
 	const token = TerminalUtils.getCookie('accessToken') || '';
 	try {
@@ -749,6 +748,9 @@ async function removeFriend(id: number): Promise<boolean> {
 		if (response.status === 204) {
 			console.log("Friend removed successfully");
 			ProfileUpdater.removeFriend(id);
+			fetchProfileData('');
+			sortFriendList();
+			updateFriendDiv();
 			return true;
 		}
 		const data = await response.json();
