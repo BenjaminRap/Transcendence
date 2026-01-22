@@ -1,10 +1,11 @@
-import type { TournamentCreationSettings, TournamentDescription, TournamentId } from "@shared/ServerMessage";
+import type { TournamentCreationSettings, TournamentDescription, TournamentId, Username } from "@shared/ServerMessage";
 import type { ServerType } from "..";
 import { error, success, type Result } from "@shared/utils";
 import { Tournament } from "@shared/Tournament";
 import type { Match } from "@shared/Match";
 import { Room } from "./Room";
 import type { DefaultSocket } from "../controllers/SocketEventController";
+import { CommonSchema } from "@shared/common.schema";
 
 export class	ServerTournament extends Tournament<DefaultSocket>
 {
@@ -174,7 +175,26 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		socket.join(this._tournamentId);
 		socket.data.joinTournament(this);
 		socket.once("leave-tournament", () => this.removePlayerFromTournament(socket));
+		socket.on("set-alias", (alias, ack) => this.changeAlias(socket, alias, ack));
 		return success(undefined);
+	}
+
+	private	changeAlias(socket : DefaultSocket, alias : Username, ack: (result: Result<null>) => void)
+	{
+		const	parsed = CommonSchema.username.safeParse(alias);
+
+		if (!parsed.success)
+			ack(error(parsed.error.message));
+		else
+		{
+			this._io.to(this._tournamentId).emit("tournament-event", {
+					type: "change-alias",
+					name: socket.data.getProfile().name,
+					newAlias: parsed.data
+			});
+			socket.data.setAlias(alias);
+			ack(success(null));
+		}
 	}
 
 	private	removePlayerFromTournament(socket : DefaultSocket)
@@ -185,6 +205,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		this._players.delete(profile.name);
 		socket.removeAllListeners("leave-tournament");
 		socket.removeAllListeners("ready");
+		socket.removeAllListeners("change-alias");
 		if (this._state === "creation")
 		{
 			this._io.to(this._tournamentId).emit("tournament-event", {

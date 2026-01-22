@@ -21,6 +21,7 @@ export class	SocketData
 	private _tournament : ServerTournament | null = null;
 	private _profile : Profile = getGuestProfile();
 	private _connected : boolean = false;
+	private _alias : string | null = null;
 
 	public ready : boolean = false;
 
@@ -65,6 +66,11 @@ export class	SocketData
 		this._state = "tournament-waiting";
 	}
 
+	public setAlias(alias : string)
+	{
+		this._alias = alias;
+	}
+
 	public leaveTournament() {
 		if (this._room !== null)
 		{
@@ -73,6 +79,7 @@ export class	SocketData
 		}
 		this._tournament = null;
 		this._state = "unactive";
+		this._alias = null;
 	}
 
 	public disconnect() {
