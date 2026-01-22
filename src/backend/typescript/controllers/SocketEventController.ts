@@ -160,20 +160,13 @@ export class SocketEventController {
 	// ----------------------------------------------------------------------------- //
     private async handleAuthenticate(socket: DefaultSocket, token: string, ack: (result: Result<null>) => void) : Promise<void>
     {
-        // guest user
-        if (!token) {
-            socket.data.userId = -1;
-            ack(error("No token provided"));
-            return;
-        }
-
         let userId: number;
 
         try {
             const tokenManager: TokenManager = Container.getInstance().getService('TokenManager');
             const decoded = await tokenManager.verify(token, false);
             userId = Number(decoded.userId);
-            socket.data.userId = userId;
+			socket.data.authenticate(userId, )
         } catch (err) {
             ack(error("Invalid token"));
             return;
@@ -290,7 +283,7 @@ export class SocketEventController {
 		this.matchMaker.removeUserFromMatchMaking(socket);
 
 		// clean socket data
-		socket.data.disconnect();
+		socket.data.disconnectOrLogout();
 		
 		const userId = Number(socket.data.userId);
         if (userId === -1)

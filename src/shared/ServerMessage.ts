@@ -1,5 +1,6 @@
 import * as zod from "zod";
 import { TournamentHelper } from "./TournamentHelper";
+import { CommonSchema } from "./common.schema";
 
 export const zodVector3 = zod.object({
 	x: zod.number(),
@@ -54,9 +55,11 @@ export const zodGameInfos = zod.discriminatedUnion("type", [
 export type GameInfos = zod.infer<typeof zodGameInfos>;
 
 const	zodProfile = zod.object({
-	name: zod.string(),
+	shownName: CommonSchema.username,
+	guestName: CommonSchema.username,
 	image: zod.string()
 });
+export type Profile = zod.infer<typeof zodProfile>;
 
 const	zodPlayerIndex = zod.int().min(0).max(1);
 
@@ -97,6 +100,8 @@ export const	zodMatchWinningDescription = zod.object({
 });
 export type MatchWinningDescription = zod.infer<typeof zodMatchWinningDescription>;
 
+export type Username = zod.infer<typeof CommonSchema.username>;
+
 export const	zodTournamentEvent = zod.discriminatedUnion("type", [
 	zod.object({
 		type: zod.literal("add-participant"),
@@ -106,6 +111,11 @@ export const	zodTournamentEvent = zod.discriminatedUnion("type", [
 	zod.object({
 		type: zod.literal("remove-participant"),
 		name: zod.string()
+	}),
+	zod.object({
+		type: zod.literal("change-alias"),
+		name: CommonSchema.username,
+		newAlias: CommonSchema.username
 	}),
 	zod.object({
 		type: zod.literal("banned")

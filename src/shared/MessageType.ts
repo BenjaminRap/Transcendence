@@ -1,4 +1,4 @@
-import type { GameInfos, GameInit, GameStartInfos, GameStats, KeysUpdate, SanitizedUser, TournamentCreationSettings, TournamentDescription, TournamentEvent, TournamentId } from "./ServerMessage";
+import type { GameInfos, GameInit, GameStartInfos, GameStats, KeysUpdate, SanitizedUser, TournamentCreationSettings, TournamentDescription, TournamentEvent, TournamentId, Username } from "./ServerMessage";
 import type { Result } from "./utils";
 
 export type ClientMessage = "join-matchmaking" |
@@ -18,7 +18,8 @@ export type ClientMessage = "join-matchmaking" |
 							"get-online-users" |
 							"watch-profile" |
 							"unwatch-profile" |
-                            "authenticate";
+                            "authenticate" |
+							"set-alias";
 
 export type ClientMessageData<T extends ClientMessage> =
 	T extends "input-infos" ? [KeysUpdate] :
@@ -32,6 +33,7 @@ export type ClientMessageData<T extends ClientMessage> =
 	T extends "watch-profile" ? [profileId: number[]] :
 	T extends "unwatch-profile" ? [profileId: number[]] :
     T extends "authenticate" ? [data: { token: string }, ack: (result: Result<null>) => void] :
+    T extends "set-alias" ? [alias: Username, ack: (result : Result<null>) => void] :
 	[];
 
 export type ServerEvents = "game-infos" |

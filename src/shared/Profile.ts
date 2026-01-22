@@ -1,10 +1,8 @@
-export type Profile = {
-	name : string,
-	image : string
-}
+import type { Profile } from "./ServerMessage";
 
 export const	defaultProfile : Profile = {
-	name: "unkown",
+	shownName: "unkown",
+	guestName: "guest",
 	image : "/images/unkown.png",
 }
 

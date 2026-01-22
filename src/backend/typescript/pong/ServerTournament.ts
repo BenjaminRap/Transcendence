@@ -1,10 +1,11 @@
-import type { TournamentCreationSettings, TournamentDescription, TournamentId } from "@shared/ServerMessage";
+import type { TournamentCreationSettings, TournamentDescription, TournamentId, Username } from "@shared/ServerMessage";
 import type { ServerType } from "..";
 import { error, success, type Result } from "@shared/utils";
 import { Tournament } from "@shared/Tournament";
 import type { Match } from "@shared/Match";
 import { Room } from "./Room";
 import type { DefaultSocket } from "../controllers/SocketEventController";
+import { CommonSchema } from "@shared/common.schema";
 
 export class	ServerTournament extends Tournament<DefaultSocket>
 {
@@ -12,7 +13,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 
 	private	_state : "creation" | "waiting-ready" | "started" | "disposed" = "creation";
 	private _players = new Map<string, DefaultSocket>();
-	private _bannedPlayers = new Set<string>();
+	private _bannedPlayers = new Set<string | number>();
 	private _tournamentId : TournamentId;
 	private _rooms = new Set<Room>();
 	private _socketReadyCount = 0;
@@ -45,7 +46,12 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 
 		if (!socket || socket === this._creator)
 			return ;
-		this._bannedPlayers.add(name);
+		const	userId = socket.data.getUserId();
+
+		if (userId !== -1)
+			this._bannedPlayers.add(userId);
+		else
+			this._bannedPlayers.add(name);
 		socket.emit("tournament-event", {type: "banned"});
 		this.removePlayerFromTournament(socket);
 		console.log(`${name} has been banned from the ${this._settings.name} tournament !`);
@@ -76,7 +82,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		if (this._players.size < 2)
 			return error("Not enough players !");
 		this.removeCreatorEvents();
-		if (!this._players.has(this._creator.data.getProfile().name))
+		if (!this._players.has(this._creator.data.getGuestName()))
 			this._creator.leave(this._tournamentId);
 		this._state = "waiting-ready";
 		console.log(`${this._settings.name} tournament started !`);
@@ -150,9 +156,9 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 			return error("The tournament is already full !");
 		if (!socket.data.isConnected() && !this._settings.acceptGuests)
 			return error("The tournament doesn't accept guests, you must log to your account !");
-		const	profile = socket.data.getProfile();
+		const	userId = socket.data.getUserId();
 
-		if (this._bannedPlayers.has(profile.name))
+		if (this._bannedPlayers.has(socket.data.getGuestName()) || this._bannedPlayers.has(userId))
 			return error("You have been banned from this tournament !");
 		return success(undefined);
 	}
@@ -163,33 +169,53 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 
 		if (!canJoinTournament.success)
 			return canJoinTournament;
-		const	profile = socket.data.getProfile();
+		const	guestName = socket.data.getGuestName();
 
-		this._players.set(profile.name, socket);
+		this._players.set(guestName, socket);
 		this._io.to(this._tournamentId).emit("tournament-event", {
             type: "add-participant",
-			name: profile.name,
-			isCreator: profile === this._creator.data.getProfile()
+			name: guestName,
+			isCreator: guestName === this._creator.data.getGuestName()
         });
 		socket.join(this._tournamentId);
 		socket.data.joinTournament(this);
 		socket.once("leave-tournament", () => this.removePlayerFromTournament(socket));
+		socket.on("set-alias", (alias, ack) => this.changeAlias(socket, alias, ack));
 		return success(undefined);
+	}
+
+	private	changeAlias(socket : DefaultSocket, alias : Username, ack: (result: Result<null>) => void)
+	{
+		const	parsed = CommonSchema.username.safeParse(alias);
+
+		if (!parsed.success)
+			ack(error(parsed.error.message));
+		else
+		{
+			this._io.to(this._tournamentId).emit("tournament-event", {
+					type: "change-alias",
+					name: socket.data.getGuestName(),
+					newAlias: parsed.data
+			});
+			socket.data.setAlias(alias);
+			ack(success(null));
+		}
 	}
 
 	private	removePlayerFromTournament(socket : DefaultSocket)
 	{
-		const	profile = socket.data.getProfile();
+		const	guestName = socket.data.getGuestName();
 		const	isCreator = socket === this._creator;
 
-		this._players.delete(profile.name);
+		this._players.delete(guestName);
 		socket.removeAllListeners("leave-tournament");
 		socket.removeAllListeners("ready");
+		socket.removeAllListeners("change-alias");
 		if (this._state === "creation")
 		{
 			this._io.to(this._tournamentId).emit("tournament-event", {
 				type: "remove-participant",
-				name: profile.name
+				name: guestName
 			});
 		}
 		if (this._state !== "creation" || !isCreator)
