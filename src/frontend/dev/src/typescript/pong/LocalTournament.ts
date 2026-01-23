@@ -1,9 +1,9 @@
-import type { Profile } from "@shared/Profile";
 import type { Match } from "@shared/Match";
 import type { EndData } from "@shared/attachedScripts/GameManager";
 import type { FrontendEventsManager } from "./FrontendEventsManager";
 import { PongError } from "@shared/pongError/PongError";
 import { Tournament } from "@shared/Tournament";
+import type { Profile } from "@shared/ServerMessage";
 
 export class	LocalTournament extends Tournament<Profile>
 {
@@ -27,8 +27,9 @@ export class	LocalTournament extends Tournament<Profile>
 		if (left === undefined || right === undefined)
 			throw new PongError("A match is started, but the players has'nt finished their match !", "quitPong");
 		this._events?.getObservable("set-participants").notifyObservers([left.profile, right.profile]);
-		await this.delay(Tournament._showOpponentsDurationMs);
-		this._events?.getObservable("game-start").notifyObservers();
+		await this.delay(() => {
+			this._events?.getObservable("game-start").notifyObservers();
+		},Tournament._showOpponentsDurationMs);
 	}
 
 	public setEventsAndStart(events : FrontendEventsManager)

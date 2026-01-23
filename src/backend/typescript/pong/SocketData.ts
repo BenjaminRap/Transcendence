@@ -1,17 +1,20 @@
-import { defaultProfile, type Profile } from "@shared/Profile";
 import { Room } from "./Room";
 import type { ServerTournament } from "./ServerTournament";
 import type { DefaultSocket } from "../controllers/SocketEventController";
+import { defaultProfile } from "@shared/Profile";
 
 let	guestProfileId = BigInt(0);
 
-function	getGuestProfile() : Profile
+function	getGuestName() : string
 {
 	guestProfileId++;
-	return {
-		name: `guest${guestProfileId}`,
-		image: defaultProfile.image
-	}
+	return `guest${guestProfileId}`;
+}
+
+export type	OnlineProfile = {
+	userId: number,
+	username: string,
+	image: string
 }
 
 export class	SocketData
@@ -19,8 +22,12 @@ export class	SocketData
 	private _state : "unactive" | "waiting" | "playing" | "tournament-waiting" | "tournament-playing" = "unactive";
 	private _room : Room | null = null;
 	private _tournament : ServerTournament | null = null;
-	private _profile : Profile = getGuestProfile();
+	private _onlineProfile : OnlineProfile | null = null;
 	private _connected : boolean = false;
+	private _guestName : string = getGuestName(); 
+	private _alias : string | null = null;
+
+	public ready : boolean = false;
 
 	public getState() {
 		return this._state;
@@ -30,7 +37,7 @@ export class	SocketData
 		return this._connected;
 	}
 
-	constructor(private readonly _socket : DefaultSocket, public userId : number)
+	constructor(private readonly _socket : DefaultSocket)
 	{
 	}
 
@@ -63,17 +70,59 @@ export class	SocketData
 		this._state = "tournament-waiting";
 	}
 
-	public leaveTournament() {
-		this._tournament = null;
-		this._state = "unactive";
+	public setAlias(alias : string)
+	{
+		this._alias = alias;
 	}
 
-	public disconnect() {
-		this._room?.onSocketDisconnect(this._socket);
-		this._tournament?.onSocketDisconnect(this._socket);
+	public leaveTournament() {
+		if (this._room !== null)
+		{
+			this._room.onSocketQuit(this._socket);
+			this._room = null;
+		}
+		this._tournament = null;
+		this._state = "unactive";
+		this._alias = null;
+	}
+
+	public disconnectOrLogout() {
+		this._room?.onSocketQuit(this._socket);
+		this._room = null;
+		this._tournament?.onSocketQuit(this._socket);
+		this._tournament = null;
+		this._onlineProfile = null;
+	}
+
+	public authenticate(userId : number, userName : string, image : string)
+	{
+		this._onlineProfile = {
+			username: userName,
+			image,
+			userId
+		};
+	}
+
+	public getGuestName()
+	{
+		return this._guestName;
+	}
+
+	public getUserId()
+	{
+		return this._onlineProfile?.userId ?? -1;
 	}
 
 	public getProfile() {
-		return this._profile;
+		const	shownName =
+			this._alias !== null ? this._alias :
+			this._onlineProfile ? this._onlineProfile.username :
+			this._guestName;
+		const	image = this._onlineProfile?.image ?? defaultProfile.image
+		return {
+			shownName : shownName,
+			guestName: this._guestName,
+			image: image
+		};
 	}
 }

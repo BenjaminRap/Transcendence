@@ -13,9 +13,9 @@ export type OnlineTournamentStartGUIInputs =
 
 export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<OnlineTournamentStartGUIInputs>
 {
-	private _inputs : OnlineTournamentStartGUIInputs | undefined;
-	private _tournamentId : HTMLParagraphElement | undefined;
-	private _participantsContainer : HTMLDivElement | undefined;
+	private _inputs : OnlineTournamentStartGUIInputs;
+	private _tournamentId : HTMLParagraphElement;
+	private _participantsContainer : HTMLDivElement;
 	private _participants = new Map<string, HTMLElement>();
 	private _onBanParticipantObservable = new Observable<string>();
 	private _onKickParticipantObservable = new Observable<string>();
@@ -23,10 +23,6 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 	constructor()
 	{
 		super();
-	}
-
-	public	connectedCallback()
-	{
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm");
 		this.innerHTML = `
 			<div class="h-1/5 w-full">
@@ -75,8 +71,6 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 
 	public addParticipant(addKickAndBanButtons : boolean, name : string)
 	{
-		if (!this._participantsContainer)
-			return ;
 		const	existingGUI = this._participants.get(name);
 
 		if (existingGUI)
@@ -93,15 +87,11 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 
 	public addParticipants(addKickAndBanButtons : boolean, ...names : string[])
 	{
-		if (!this._participantsContainer)
-			return ;
 		names.forEach(profile => this.addParticipant(addKickAndBanButtons, profile));
 	}
 
 	public removeParticipant(name : string)
 	{
-		if (!this._participantsContainer)
-			return ;
 		const	gui = this._participants.get(name);
 
 		if (!gui)
@@ -112,11 +102,9 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 
 	public init(type : "creator" | "creator-player" | "player", tournamentId : TournamentId)
 	{
-		if (!this._tournamentId)
-			return ;
 		this.setType(type);
 		this._tournamentId.textContent = tournamentId;
-		this._participantsContainer?.replaceChildren();
+		this._participantsContainer.replaceChildren();
 		this._participants.clear();
 	}
 
@@ -132,8 +120,6 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 
 	private	setOnlyInputsVisible(...visibles : (keyof OnlineTournamentStartGUIInputs)[])
 	{
-		if (!this._inputs)
-			return ;
 		Object.entries(this._inputs).forEach(([key, value]) => {
 			const	isVisible = visibles.includes(key as keyof OnlineTournamentStartGUIInputs);
 

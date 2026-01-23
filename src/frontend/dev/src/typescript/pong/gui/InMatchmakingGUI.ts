@@ -7,15 +7,11 @@ export type InMatchmakingGUIInputs = {
 
 export class	InMatchmakingGUI extends HTMLElement implements IGUI<InMatchmakingGUIInputs>
 {
-	private	_inputs : InMatchmakingGUIInputs | undefined;
+	private	_inputs : InMatchmakingGUIInputs;
 
 	constructor()
 	{
 		super();
-	}
-
-	public	connectedCallback()
-	{
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none");
 		this.innerHTML = `
 			<div class="flex flex-col absolute left-1/2 top-2/3 -translate-1/2 w-1/3">

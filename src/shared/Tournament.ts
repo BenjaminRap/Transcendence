@@ -37,10 +37,11 @@ export abstract class	Tournament<T>
 			{
 				this.onQualificationsEnd(this._qualified.map(value => value.profile));
 				this.onTournamentShow();
-				await this.delay(Tournament._showTournamentDurationMs);
-				this._round = 0;
-				this._tournamentMatches = TournamentHelper.createTournamentMatches(this._qualified);
-				this.setCurrentMatches([...this._tournamentMatches[this._round]]);
+				this.delay(() => {
+					this._round = 0;
+					this._tournamentMatches = TournamentHelper.createTournamentMatches(this._qualified);
+					this.setCurrentMatches(this._tournamentMatches[this._round]);
+				}, Tournament._showTournamentDurationMs);
 			}
 			else
 				this.setCurrentMatches(TournamentHelper.createQualificationMatches(this._participants));
@@ -54,8 +55,8 @@ export abstract class	Tournament<T>
 			else
 			{
 				this.onTournamentShow();
-				await this.delay(Tournament._showTournamentDurationMs);
-				this.setCurrentMatches([...this._tournamentMatches[this._round]])
+				const	currentMatches = this._tournamentMatches[this._round];
+				this.delay(() => this.setCurrentMatches(currentMatches), Tournament._showTournamentDurationMs);
 			}
 		}
 	}
@@ -67,19 +68,21 @@ export abstract class	Tournament<T>
 		this.onNewMatches();
 	}
 
-	protected async delay(durationMs : number)
+	protected async delay(callback: () => void, durationMs : number)
 	{
-		return new Promise<void>((resolve, reject) => {
-			if (this._timeout !== null)
-			{
-				reject();
-				return ;
-			}
-			this._timeout = setTimeout(() => {
-				this._timeout = null;
-				resolve();
-			}, durationMs);
-		});
+		this.clearDelay();
+		this._timeout = setTimeout(() => {
+			callback();
+			this._timeout = null;
+		}, durationMs);
+	}
+
+	protected	clearDelay()
+	{
+		if (!this._timeout)
+			return ;
+		clearTimeout(this._timeout);
+		this._timeout = null;
 	}
 
 	protected	setParticipants(participants : T[])
@@ -114,8 +117,7 @@ export abstract class	Tournament<T>
 
 	protected dispose()
 	{
-		if (this._timeout !== null)
-			clearTimeout(this._timeout);
+		this.clearDelay();
 	}
 
 	protected abstract	onParticipantLose(loser : T, isQualifications : boolean, roundMatchCount : number) : void;

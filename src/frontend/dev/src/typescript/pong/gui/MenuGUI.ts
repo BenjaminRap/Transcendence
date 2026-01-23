@@ -19,10 +19,6 @@ export class	MenuGUI extends HTMLElement
 		this._sceneSwitch = sceneSwitch ?? {items : [], currentItemIndex: 0, onItemChange: null};
 		this._enemyTypeSwitch = enemyTypeSwitch ?? {items : [], currentItemIndex: 0, onItemChange: null};
 		this._onPlay = onPlay ?? null;
-	}
-
-	public connectedCallback()
-	{
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none");
 		this.innerHTML = `
 				<div class="bottom-1/5 absolute flex flex-row items-center w-full h-1/12 justify-between">
@@ -65,7 +61,7 @@ export class	MenuGUI extends HTMLElement
 		}, "");
 		return `
 			${this.getButtonHTML(`${classNameBase}ButtonLeft`, "left")}
-			<div class="relative h-2/3 grow-2 text-[2cqw] mx-[5%] overflow-hidden menu-button" >
+			<div class="relative h-2/3 grow-2 text-[2cqw] mx-[5%] overflow-hidden menu-button pointer-events-none" >
 				<div class="${classNameBase}ItemsContainer size-full absolute transition-all ease-in-out left-0">
 					${itemsHTML}
 				</div>

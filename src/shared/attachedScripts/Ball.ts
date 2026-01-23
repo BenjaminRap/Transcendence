@@ -10,6 +10,7 @@ import { zodNumber } from "@shared/ImportedHelpers";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { ShapeCastResult } from "@babylonjs/core/Physics/shapeCastResult";
 import { PongError } from "@shared/pongError/PongError";
+import { toVec3 } from "@shared/utils";
 
 export class Ball extends CustomScriptComponent {
 	private static readonly _startMaxAngleRadian = Math.PI / 6;
@@ -31,8 +32,11 @@ export class Ball extends CustomScriptComponent {
 
 		this._sceneData = getSceneData(this.scene);
 
-		this.setBallRandomStartDirection();
-		this._sceneData.events.getObservable("game-start").add(() => {
+		if (this._sceneData.gameType !== "Multiplayer")
+			this.setBallRandomStartDirection();
+		this._sceneData.events.getObservable("game-start").add((gameStartInfos) => {
+			if (gameStartInfos)
+				this._startDirection = toVec3(gameStartInfos.ballStartDirection)
 			this.launch();
 		});
     }

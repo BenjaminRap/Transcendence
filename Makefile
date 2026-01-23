@@ -25,9 +25,9 @@ cp-scenes:
 	cp -r ./src/backend/dev/scenes ./dockerFiles/fastify/app_src/dev/.
 
 create-upload-folders:
-	mkdir -p ./dockerFiles/fastify/app_src/upload/avatars
+	mkdir -p ./dockerFiles/fastify/app_src/uploads/avatars
 
-build: compile cp-scenes create-upload-folders
+build: cp-scenes create-upload-folders compile
 
 ifeq ($(PROFILE), prod)
 	npx vite build

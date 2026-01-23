@@ -8,16 +8,12 @@ export type OnlineTournamentJoinPrivateGUIInputs =
 
 export class	OnlineTournamentJoinPrivateGUI extends HTMLElement implements IGUI<OnlineTournamentJoinPrivateGUIInputs>
 {
-	private _inputs : OnlineTournamentJoinPrivateGUIInputs | undefined;
-	private _tournamentIdInput : HTMLInputElement | undefined;
+	private _inputs : OnlineTournamentJoinPrivateGUIInputs;
+	private _tournamentIdInput : HTMLInputElement;
 
 	constructor()
 	{
 		super();
-	}
-
-	public	connectedCallback()
-	{
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm");
 		this.innerHTML = `
 			<div class="h-3/5 w-full">
@@ -49,15 +45,11 @@ export class	OnlineTournamentJoinPrivateGUI extends HTMLElement implements IGUI<
 
 	public getTournamentId()
 	{
-		if (!this._tournamentIdInput)
-			return "";
 		return this._tournamentIdInput.value.trim();
 	}
 
 	public reset()
 	{
-		if (!this._tournamentIdInput)
-			return ;
 		this._tournamentIdInput.value = "";
 	}
 }

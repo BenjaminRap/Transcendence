@@ -1,5 +1,5 @@
 import type { TournamentDescription } from "@shared/ServerMessage";
-import type { IGUI } from "./IGUI";
+import { initMenu, type IGUI } from "./IGUI";
 import { TournamentDescriptionGUI } from "./TournamentDescriptionGUI";
 import { Observable } from "@babylonjs/core";
 
@@ -11,17 +11,13 @@ export type OnlineTournamentJoinPublicGUIInputs =
 
 export class	OnlineTournamentJoinPublicGUI extends HTMLElement implements IGUI<OnlineTournamentJoinPublicGUIInputs>
 {
-	private _inputs : OnlineTournamentJoinPublicGUIInputs | undefined;
-	private _descriptionsContainer : HTMLDivElement | undefined;
+	private _inputs : OnlineTournamentJoinPublicGUIInputs;
+	private _descriptionsContainer : HTMLDivElement;
 	private _onTournamentJoinObservable = new Observable<string>();
 
 	constructor()
 	{
 		super();
-	}
-
-	public	connectedCallback()
-	{
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm");
 		this.innerHTML = `
 			<fieldset class="w-11/12 h-3/5 overflow-y-scroll pointer-events-auto border-solid border-(--border-color) border-(length:--border-width) m-auto mt-[1%] scrollbar-thumb-white scrollbar-track-[transparent] cursor-all-scroll">
@@ -52,17 +48,14 @@ export class	OnlineTournamentJoinPublicGUI extends HTMLElement implements IGUI<O
 
 	public setTournaments(descriptions : TournamentDescription[])
 	{
-		const	nodes : TournamentDescriptionGUI[] = [];
-
+		this._descriptionsContainer.replaceChildren();
 		descriptions.forEach((description) => {
 			const	tournamentDescriptionGUI = new TournamentDescriptionGUI(description);
 
-			tournamentDescriptionGUI.addEventListener("click", () => {
-				this._onTournamentJoinObservable.notifyObservers(tournamentDescriptionGUI.getTournamentId());
-			})
-			nodes.push(tournamentDescriptionGUI);
+			initMenu(tournamentDescriptionGUI, {
+				main: () => this._onTournamentJoinObservable.notifyObservers(tournamentDescriptionGUI.getTournamentId())
+			}, this._descriptionsContainer, false);
 		});
-		this._descriptionsContainer?.replaceChildren(...nodes);
 	}
 
 	public onTournamentJoin()
@@ -72,7 +65,7 @@ export class	OnlineTournamentJoinPublicGUI extends HTMLElement implements IGUI<O
 
 	public reset()
 	{
-		this._descriptionsContainer?.replaceChildren();
+		this._descriptionsContainer.replaceChildren();
 	}
 }
 

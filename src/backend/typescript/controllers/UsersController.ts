@@ -1,6 +1,6 @@
 import { type FastifyRequest, type FastifyReply } from "fastify";
 import { UsersService} from "../services/UsersService.js";
-import { CommonSchema } from "../schemas/common.schema.js";
+import { CommonSchema } from "@shared/common.schema";
 import { UsersSchema } from "../schemas/users.schema.js";
 import { UsersException, UsersError } from "../error_handlers/Users.error.js";
 

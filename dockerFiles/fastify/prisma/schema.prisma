@@ -15,12 +15,6 @@ enum FriendshipStatus {
   DECLINED
 }
 
-enum MatchStatus {
-  IN_PROGRESS
-  FINISHED
-  CANCELLED
-}
-
 enum TournamentStatus {
   ONGOING
   FINISHED
@@ -43,11 +37,8 @@ model User {
   sentRequests      Friendship[]  @relation("requesterFriendships")
   receivedRequests  Friendship[]  @relation("receiverFriendships")
   
-  matchesWons       Match[]   @relation("matchWinner")
-  matchesLoses      Match[]   @relation("matchLoser")
-
-  matchesAsPlayer1  Match[]   @relation("Player1")
-  matchesAsPlayer2  Match[]   @relation("Player2")
+  matchsAsLeft       Match[]   @relation("playerLeft")
+  matchsAsRight      Match[]   @relation("playerRight")
 
   tournamentsCreated       Tournament[]     @relation("tournamentCreator")
   tournamentParticipations TournamentParticipant[]
@@ -65,7 +56,7 @@ model Friendship {
   requester   User    @relation("requesterFriendships", fields: [requesterId], references: [id], onDelete: Cascade)
   requesterId Int
 
-  receiver    User      @relation("receiverFriendships", fields: [receiverId], references: [id], onDelete: Cascade)
+  receiver    User    @relation("receiverFriendships", fields: [receiverId], references: [id], onDelete: Cascade)
   receiverId  Int
 
   @@unique([requesterId, receiverId])
@@ -76,36 +67,27 @@ model Friendship {
 model Match {
   id          Int       @id @default(autoincrement())
   
-  status      MatchStatus  @default(IN_PROGRESS)
+  status      String    @default("FINISHED")
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  player1Id         Int?
-  player1           User?     @relation("Player1", fields: [player1Id], references: [id], onDelete: SetNull)
-  player1GuestName  String
+  playerLeftId         Int?
+  playerLeft           User?    @relation("playerLeft", fields: [playerLeftId], references: [id], onDelete: SetNull)
+  playerLeftGuestName  String
 
-  player2Id         Int?
-  player2           User?     @relation("Player2", fields: [player2Id], references: [id], onDelete: SetNull)
-  player2GuestName  String
+  playerRightId         Int?
+  playerRight           User?    @relation("playerRight", fields: [playerRightId], references: [id], onDelete: SetNull)
+  playerRightGuestName  String
 
-  winnerId    Int?
-  winner      User?    @relation("matchWinner", fields: [winnerId], references: [id], onDelete: SetNull)
-  winnerGuestName String
+  winnerIndicator       String   @default("")
 
-  loserId     Int?
-  loser       User?    @relation("matchLoser", fields: [loserId], references: [id], onDelete: SetNull)
-  loserGuestName  String
-
-  scoreWinner Int     @default(0)
-  scoreLoser  Int     @default(0)
+  scoreLeft   Int     @default(0)
+  scoreRight  Int     @default(0)
   duration    Int     @default(0)
 
   tournament   Tournament? @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   tournamentId Int?
-  
-  round        Int?    @default(1)
-  matchOrder   Int?    @default(0)
 }
 
 // -------------------------------------------------------------------------------------------- //
@@ -118,7 +100,7 @@ model Tournament {
   status          TournamentStatus  @default(ONGOING)
 
   creatorId       Int?
-  creatorGuestName String?
+  creatorGuestName String
   creator         User?     @relation("tournamentCreator", fields: [creatorId], references: [id], onDelete: SetNull)
 
   participants    TournamentParticipant[]
@@ -136,7 +118,7 @@ model TournamentParticipant {
   alias         String
   user          User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
   userId        Int?
-  guestName     String?
+  guestName     String
 
   finalRank     Int?
 

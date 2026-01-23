@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 import type { TokenPair, TokenKey } from '../types/tokenManager.types.js';
-import { CommonSchema } from '../schemas/common.schema.js';
+import { CommonSchema } from "@shared/common.schema";
 
 export class TokenManager {
     constructor(

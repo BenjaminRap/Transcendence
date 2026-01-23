@@ -1,7 +1,7 @@
 import { Deferred, Observable } from "@babylonjs/core";
 import type { ClientToServerEvents, ServerToClientEvents } from "@shared/MessageType";
 import { PongError } from "@shared/pongError/PongError";
-import { type GameInfos, type GameInit, type TournamentCreationSettings, type TournamentDescription, type TournamentEvent, type TournamentId, zodGameInit } from "@shared/ServerMessage";
+import { type GameInfos, type GameInit, type GameStartInfos, type TournamentCreationSettings, type TournamentDescription, type TournamentEvent, type TournamentId, zodGameInit } from "@shared/ServerMessage";
 import type { Result } from "@shared/utils";
 import { io, Socket } from "socket.io-client";
 import type { TournamentEventAndJoinedGame } from "./FrontendEventsManager";
@@ -98,12 +98,12 @@ export class	FrontendSocketHandler
 		return deferred;
 	}
 
-	public onGameReady() : Deferred<void>
+	public onGameReady() : Deferred<GameStartInfos>
 	{
-		const	deferred = new Deferred<void>();
+		const	deferred = new Deferred<GameStartInfos>();
 
-		this._socket.once("ready", () => {
-			deferred.resolve();
+		this._socket.once("ready", (gameStartInfos) => {
+			deferred.resolve(gameStartInfos);
 		});
 		return deferred;
 	}

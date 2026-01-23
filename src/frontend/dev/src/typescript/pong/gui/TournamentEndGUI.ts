@@ -1,6 +1,5 @@
-import type { Profile } from "@shared/Profile";
-import { OpponentGUI } from "./OpponentGUI";
 import type { IGUI } from "./IGUI";
+import type { TournamentGUI } from "./TournamentGUI";
 
 export type TournamentEndGUIInputs =
 {
@@ -9,23 +8,19 @@ export type TournamentEndGUIInputs =
 
 export class	TournamentEndGUI extends HTMLElement implements IGUI<TournamentEndGUIInputs>
 {
-	private _inputs : TournamentEndGUIInputs | undefined;
-	private _text? : HTMLParagraphElement;
-	private _winnerContainer? : HTMLDivElement;
+	private _inputs : TournamentEndGUIInputs;
+	private _text : HTMLParagraphElement;
+	private _tournamentGUIContainer : HTMLDivElement;
 
 	constructor()
 	{
 		super();
-	}
-
-	public	connectedCallback()
-	{
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm");
 		this.innerHTML = `
-			<div class="tournamentEndGUIMainDiv flex flex-col h-full w-[45%] m-auto items-center">
-				<div class="tournamentEndGUIWinnerContainer"></div>
-				<p class="tournamentEndGUIText font-bold leading-normal text-[7cqw] text-white text-center h-1/4"></p>
-				<div class="w-2/3 h-2/5">
+			<div class="tournamentEndGUIMainDiv flex flex-col h-full w-full m-auto items-center">
+				<p class="tournamentEndGUIText font-bold leading-normal text-[7cqw] text-white text-center h-1/5"></p>
+				<div class="relative h-[70%] w-[90%] border-solid border-(length:--border-width) border-(--border-color) overflow-hidden rounded-md tournamentEndGUITournamentGUIContainer"></div>
+				<div class="absolute bottom-[4%] w-1/3 h-[12%]">
 					${this.getButtonHTML("Go To Menu", "tournamentEndGUIGoToMenu")}
 				</div>
 			</div>
@@ -34,12 +29,12 @@ export class	TournamentEndGUI extends HTMLElement implements IGUI<TournamentEndG
 			goToMenu: this.querySelector<HTMLButtonElement>("button.tournamentEndGUIGoToMenu")!
 		}
 		this._text = this.querySelector<HTMLParagraphElement>("p.tournamentEndGUIText")!;
-		this._winnerContainer = this.querySelector<HTMLDivElement>("div.tournamentEndGUIWinnerContainer")!;
+		this._tournamentGUIContainer = this.querySelector<HTMLDivElement>("div.tournamentEndGUITournamentGUIContainer")!;
 	}
 
 	private	getButtonHTML(text : string, className : string)
 	{
-		return `<button class="${className} text-[3cqw] w-full h-2/5 mt-[10%] grow menu-button">${text}</button>`;
+		return `<button class="${className} text-[3cqw] w-full h-full menu-button">${text}</button>`;
 	}
 
 	public getInputs()
@@ -47,30 +42,30 @@ export class	TournamentEndGUI extends HTMLElement implements IGUI<TournamentEndG
 		return this._inputs;
 	}
 
-	public setWinner(profile : Profile)
+	public setWinner(tournamentGui? : TournamentGUI)
 	{
-		if (!this._text)
-			return ;
-		const	winnerGUI = new OpponentGUI(profile);
-
+		if (tournamentGui)
+		{
+			this._tournamentGUIContainer.replaceChildren(tournamentGui);
+			tournamentGui.classList.remove("hidden");
+		}
 		this._text.textContent = "WIN";
-		winnerGUI.classList.add("h-1/2")
-		winnerGUI.style.setProperty("--opponent-font-size", "3cqw");
-		this._winnerContainer?.replaceChildren(winnerGUI);
 	}
 
-	public setLoser(isQualifications : boolean, roundMatchCount : number)
+	public setLoser(isQualifications : boolean, roundMatchCount : number, tournamentGUI? : TournamentGUI)
 	{
-		if (!this._text || !this._winnerContainer)
-			return ;
-		this._winnerContainer?.replaceChildren();
+		if (tournamentGUI)
+		{
+			this._tournamentGUIContainer.replaceChildren(tournamentGUI);
+			tournamentGUI.classList.remove("hidden");
+		}
 		const	roundName =
 			isQualifications ? "Qualifications" :
-			roundMatchCount === 1 ? "The Final" :
-			roundMatchCount === 2 ? "The Semi-Finals" :
-			roundMatchCount === 4 ? "The Quarter-Finals" :
+			roundMatchCount === 1 ? "Final" :
+			roundMatchCount === 2 ? "Semi-Finals" :
+			roundMatchCount === 4 ? "Quarter-Finals" :
 			`The Round of ${roundMatchCount * 2}`;
-		this._text.textContent = `Tou Were Disqualified in ${roundName}`;
+		this._text.textContent = `Lost : ${roundName}`;
 	}
 }
 

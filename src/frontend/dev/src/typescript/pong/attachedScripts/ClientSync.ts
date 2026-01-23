@@ -14,6 +14,7 @@ import { Paddle } from "@shared/attachedScripts/Paddle";
 import type { Platform } from "@shared/attachedScripts/Platform";
 import { PongError } from "@shared/pongError/PongError";
 import type { GameInfos } from "@shared/ServerMessage";
+import { toVec3 } from "@shared/utils";
 
 export class ClientSync extends CustomScriptComponent {
 	@Imported("InputManager") private	_inputManager! : InputManager;
@@ -61,22 +62,17 @@ export class ClientSync extends CustomScriptComponent {
 				this.updateKey(gameInfos.keysUpdate.down, opponentInputs.down);
 				break ;
 			case "itemsUpdate":
-				this._ball.transform.position.copyFrom(this.xyzToVector3(gameInfos.itemsUpdate.ball.pos));
-				this._ball.transform.getPhysicsBody()!.setLinearVelocity(this.xyzToVector3(gameInfos.itemsUpdate.ball.linearVelocity));
-				this._paddleLeft.transform.position.copyFrom(this.xyzToVector3(gameInfos.itemsUpdate.paddleLeftPos));
-				this._paddleRight.transform.position.copyFrom(this.xyzToVector3(gameInfos.itemsUpdate.paddleRightPos));
+				this._ball.transform.position.copyFrom(toVec3(gameInfos.itemsUpdate.ball.pos));
+				this._ball.transform.getPhysicsBody()!.setLinearVelocity(toVec3(gameInfos.itemsUpdate.ball.linearVelocity));
+				this._paddleLeft.transform.position.copyFrom(toVec3(gameInfos.itemsUpdate.paddleLeftPos));
+				this._paddleRight.transform.position.copyFrom(toVec3(gameInfos.itemsUpdate.paddleRightPos));
 				break ;
 			case "goal":
-				this._ball.setBallStartDirection(this.xyzToVector3(gameInfos.goal.newBallDirection));
+				this._ball.setBallStartDirection(toVec3(gameInfos.goal.newBallDirection));
 				this._gameManager.onGoal(gameInfos.goal.side);
 				break ;
 			}
 		});
-	}
-	
-	private	xyzToVector3(xyz : {x : number, y : number, z : number})
-	{
-		return new Vector3(xyz.x, xyz.y, xyz.z);
 	}
 
 	private	updateKey(keyUpdate : { event: "keyDown" | "keyUp" } | undefined, inputKey : InputKey)

@@ -1,35 +1,29 @@
-export interface PlayerInfo {
-    id:         number | undefined,
-    guestName:  string,
-}
-
-export interface StartMatchData {
-    player1: PlayerInfo,
-    player2: PlayerInfo,
-}
-
 export interface MatchData
 {
-    matchId:        number,
-    player1Info:  PlayerInfo,
-    player2Info:  PlayerInfo,
-}
+    leftId:          number| undefined,
+    leftGuestName:   string,
 
-export interface EndMatchData {
-    matchId:	    number,
-    winner:         PlayerInfo,
-    loser:          PlayerInfo,
-    scoreWinner:	number,
-    scoreLoser:	    number,
+    rightId:          number| undefined,
+    rightGuestName:   string,
+
+    winnerIndicator:  'left' | 'right' | 'draw',
+
+    scoreLeft:	    number,
+    scoreRight:	    number,
     duration:	    number,
 }
 
 export interface OpponentSummary
 {
     id: number | undefined,
-    username: string,
-    avatar: string,
-    isFriend: boolean,
+    username: string,   // guestname si id null sinon username courant
+    avatar: string,     // default si id null
+    isFriend: boolean,  // false si id null
+}
+
+export interface PlayerInfo {
+    id:         number | undefined,
+    guestName:  string, // username si id defini sinon guestname
 }
 
 export interface MatchResult
@@ -38,12 +32,12 @@ export interface MatchResult
     scoreWinner: number,
     scoreLoser: number,
     duration: number,
-    winner: PlayerInfo,
-    loser: PlayerInfo,
+    winnerName: string,
+    loserName: string,
 }
 
 export interface MatchSummary
 {
-    opponent?: OpponentSummary,
-    matchResult: MatchResult,
+    opponent:       OpponentSummary,
+    matchResult:    MatchResult,
 }

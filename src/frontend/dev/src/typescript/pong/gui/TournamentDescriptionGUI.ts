@@ -1,4 +1,5 @@
 import type { TournamentDescription, TournamentId } from "@shared/ServerMessage";
+import type { IGUI } from "./IGUI";
 
 const	defaultDescription : TournamentDescription = {
     name: "defautServer",
@@ -7,30 +8,37 @@ const	defaultDescription : TournamentDescription = {
 	id: "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"
 };
 
-export class	TournamentDescriptionGUI extends HTMLElement
-{
-	private readonly _description : TournamentDescription;
+export type TournamentDescriptionGUIInputs = {
+	main: HTMLButtonElement
+};
 
-	constructor(description? : TournamentDescription)
+export class	TournamentDescriptionGUI extends HTMLElement implements IGUI<TournamentDescriptionGUIInputs>
+{
+	private	_inputs : TournamentDescriptionGUIInputs;
+
+	constructor(private _description : TournamentDescription = defaultDescription)
 	{
 		super();
-		this._description = description ?? defaultDescription;
-	}
-
-	public	connectedCallback()
-	{
 		this.classList.add("menu-button", "mt-[3%]", "block");
 		this.innerHTML = `
-				<div class="flex flex-row justify-between w-11/12 m-auto">
+				<button class="flex flex-row justify-between w-11/12 m-auto tournamentDescriptionGUIMain">
 					<p>${this._description.name}</p>
 					<p>${this._description.currentPlayerCount}/${this._description.maxPlayerCount}</p>
-				</div>
+				</button>
 		`;
+		this._inputs = {
+			main: this.querySelector("button.tournamentDescriptionGUIMain")!
+		}
 	}
 
 	public getTournamentId() : TournamentId
 	{
 		return this._description.id;
+	}
+
+	public getInputs()
+	{
+		return this._inputs;
 	}
 }
 

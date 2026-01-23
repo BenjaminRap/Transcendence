@@ -10,21 +10,15 @@ export type EndGUIInputs =
 
 export class	EndGUI extends HTMLElement implements IGUI<EndGUIInputs>
 {
-	private _inputs : EndGUIInputs | undefined;
-	private _mainDiv : HTMLDivElement | undefined;
-	private _winText : HTMLParagraphElement | undefined;
-	private _isOnline : boolean;
-	private _isTournament : boolean;
+	private _inputs : EndGUIInputs;
+	private _mainDiv : HTMLDivElement;
+	private _winText : HTMLParagraphElement;
 
-	constructor(isOnline? : boolean, isTournament? : boolean)
+	constructor(
+		private _isOnline : boolean = false,
+		private _isTournament : boolean = false)
 	{
 		super();
-		this._isOnline = isOnline ?? false;
-		this._isTournament = isTournament ?? false;
-	}
-
-	public	connectedCallback()
-	{
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm");
 		this.innerHTML = `
 			<div class="pauseGUIMainDiv flex flex-col size-full  h-4/6 w-1/3 -translate-y-1/2 top-1/2 absolute">
@@ -44,8 +38,6 @@ export class	EndGUI extends HTMLElement implements IGUI<EndGUIInputs>
 
 	public setWinner(winner : "left" | "right" | "draw", forfeit : boolean, playerIndex? : number)
 	{
-		if (!this._winText || !this._mainDiv)
-			return ;
 		let		winText = "";
 		const	winnerIndex = (winner === "left") ? 0 : 1;
 
@@ -66,13 +58,13 @@ export class	EndGUI extends HTMLElement implements IGUI<EndGUIInputs>
 
 	private	setWinTextSide(side : "left" | "right" | "middle")
 	{
-		this._mainDiv?.classList.remove("left-1/2", "left-1/12", "-translate-x-1/2", "right-1/12");
+		this._mainDiv.classList.remove("left-1/2", "left-1/12", "-translate-x-1/2", "right-1/12");
 		if (side === "left")
-			this._mainDiv?.classList.add("left-1/12")
+			this._mainDiv.classList.add("left-1/12")
 		else if (side === "right")
-			this._mainDiv?.classList.add("right-1/12")
+			this._mainDiv.classList.add("right-1/12")
 		else
-			this._mainDiv?.classList.add("left-1/2", "-translate-x-1/2")
+			this._mainDiv.classList.add("left-1/2", "-translate-x-1/2")
 	}
 
 	private	getTypeSpecificHTML()
@@ -94,7 +86,7 @@ export class	EndGUI extends HTMLElement implements IGUI<EndGUIInputs>
 		return `<button class="${className} text-[3cqw] w-full mt-[10%] grow menu-button">${text}</button>`;
 	}
 
-	public getInputs() : EndGUIInputs | undefined
+	public getInputs() : EndGUIInputs
 	{
 		return this._inputs;
 	}

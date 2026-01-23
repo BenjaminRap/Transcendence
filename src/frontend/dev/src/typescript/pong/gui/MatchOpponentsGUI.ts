@@ -1,13 +1,13 @@
-import type { Profile } from "@shared/Profile";
 import { OpponentGUI } from "./OpponentGUI";
 import type { IGUI } from "./IGUI";
 import type { ClientInput } from "../FrontendSceneData";
 import { MatchInputGUI } from "./MatchInputGUI";
+import type { Profile } from "@shared/ServerMessage";
 
 export class	MatchOpponentsGUI extends HTMLElement implements IGUI<void>
 {
 	private static readonly _fightMask = "url(/images/fight.png)";
-	private _fightElement! : HTMLDivElement;
+	private _fightElement : HTMLDivElement;
 	private _leftInput? : ClientInput;
 	private _rightInput? : ClientInput;
 
@@ -17,10 +17,6 @@ export class	MatchOpponentsGUI extends HTMLElement implements IGUI<void>
 		this.style.setProperty("--fight-mask", MatchOpponentsGUI._fightMask);
 		this.style.setProperty("--opponent-font-size", "3cqw");
 		this.style.setProperty("--rounded", "1cqw");
-	}
-
-	public connectedCallback()
-	{
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm");
 
 		this._fightElement = document.createElement("div");

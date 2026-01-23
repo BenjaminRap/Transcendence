@@ -16,7 +16,10 @@ export const CommonSchema = {
             .trim()
             .min(3, 'username should have 3 characters minimum')
             .max(20, 'Username can\'t exceed 20 characters')
-            .regex(/^[a-zA-Z0-9]+$/, 'Username can only contain letters and numbers'),
+            .regex(/^[a-zA-Z0-9]+$/, 'Username can only contain letters and numbers')
+            .refine((val) => !['A_', 'G_'].some(prefix => val.startsWith(prefix)), {
+                message: 'This username is not allowed, don\'t use reserved prefixes (A_ , G_)',
+            }),
 
     id: z.number()
 	    	.int()

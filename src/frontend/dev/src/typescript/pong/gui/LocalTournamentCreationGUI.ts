@@ -1,7 +1,7 @@
-import type { Profile } from "@shared/Profile";
 import { ProfileCreationGUI } from "./ProfileCreationGUI";
 import type { IGUI } from "./IGUI";
 import { TournamentHelper } from "@shared/TournamentHelper";
+import type { Profile } from "@shared/ServerMessage";
 
 export type TournamentCreationGUIInputs = {
 	start : HTMLButtonElement,
@@ -12,16 +12,12 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 {
 	private _profileContainer! : HTMLDivElement;
 	private	_profiles : ProfileCreationGUI[] = [];
-	private _inputs? : TournamentCreationGUIInputs;
+	private _inputs : TournamentCreationGUIInputs;
 	private _currentPlayerId = 0;
 
 	constructor()
 	{
 		super();
-	}
-
-	connectedCallback()
-	{
 		this.classList.add("absolute", "inset-0", "size-full", "backdrop-blur-sm", "flex", "flex-col");
 		this.innerHTML = `
 				<fieldset class="w-11/12 h-2/3 overflow-y-scroll pointer-events-auto border-solid border-(--border-color) border-(length:--border-width) mt-[1%] m-auto scrollbar scrollbar-thumb-white scrollbar-track-[transparent] cursor-all-scroll">

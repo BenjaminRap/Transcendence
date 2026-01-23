@@ -8,6 +8,7 @@ import { getSceneData, SceneData } from "@shared/SceneData";
 import { Vector3 } from "@babylonjs/core";
 import { Imported } from "@shared/ImportedDecorator";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
+import { toXYZ } from "@shared/utils";
 
 export type EndData = {
 	winner : "left" | "right" | "draw",
@@ -23,7 +24,7 @@ export class GameManager extends CustomScriptComponent {
 
 	private _scoreRight : int = 0;
 	private _scoreLeft : int = 0;
-	private _ended : boolean = false;
+	private _ended : boolean = true;
 	private _sceneData : SceneData;
 	private _isGamePaused : boolean = false;
 	private _defaultTimeStep : number;
@@ -45,7 +46,9 @@ export class GameManager extends CustomScriptComponent {
 			this.unPause();
 		});
 		this._sceneData.events.getObservable("forfeit").add((winner) => { this.endMatch(winner, true) });
-		this._sceneData.readyPromise.resolve();
+		this._sceneData.readyPromise.resolve({
+			ballStartDirection: toXYZ(this._ball.getBallStartDirection())
+		});
 	}
 
 	private onTriggerEvent(eventData : IBasePhysicsCollisionEvent)

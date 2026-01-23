@@ -1,4 +1,4 @@
-import type { GameInfos, GameInit, GameStats, KeysUpdate, SanitizedUser, TournamentCreationSettings, TournamentDescription, TournamentEvent, TournamentId } from "./ServerMessage";
+import type { GameInfos, GameInit, GameStartInfos, GameStats, KeysUpdate, SanitizedUser, TournamentCreationSettings, TournamentDescription, TournamentEvent, TournamentId, Username } from "./ServerMessage";
 import type { Result } from "./utils";
 
 export type ClientMessage = "join-matchmaking" |
@@ -14,11 +14,12 @@ export type ClientMessage = "join-matchmaking" |
 							"get-tournaments" |
 							"ban-participant" |
 							"kick-participant" |
-							// "force-disconnect" |
+							"logout" |
 							"get-online-users" |
 							"watch-profile" |
 							"unwatch-profile" |
-                            "authenticate";
+                            "authenticate" |
+							"set-alias";
 
 export type ClientMessageData<T extends ClientMessage> =
 	T extends "input-infos" ? [KeysUpdate] :
@@ -32,6 +33,7 @@ export type ClientMessageData<T extends ClientMessage> =
 	T extends "watch-profile" ? [profileId: number[]] :
 	T extends "unwatch-profile" ? [profileId: number[]] :
     T extends "authenticate" ? [data: { token: string }, ack: (result: Result<null>) => void] :
+    T extends "set-alias" ? [alias: Username, ack: (result : Result<null>) => void] :
 	[];
 
 export type ServerEvents = "game-infos" |
@@ -52,6 +54,7 @@ export type ServerEventsData<T extends ServerEvents> =
     T extends "profile-update" ? [{ user: SanitizedUser }] :
     T extends "game-stats-update" ? [{ stats: GameStats }] :
 	T extends "friend-status-update" ? [{ fromUserId: number, status: 'PENDING' | 'ACCEPTED' }] :
+	T extends "ready" ? [GameStartInfos] :
 	[]
 
 
