@@ -7,7 +7,7 @@ import { TokenManager } from "../utils/TokenManager.js";
 import type { FriendService } from "../services/FriendService.js";
 import type { ServerType } from "../index.js";
 import { getPublicTournamentsDescriptions, TournamentMaker } from "../pong/TournamentMaker.js";
-import { zodTournamentCreationSettings, type TournamentDescription, type TournamentId } from "@shared/ServerMessage.js";
+import { zodTournamentCreationSettings, type Profile, type TournamentDescription, type TournamentId } from "@shared/ServerMessage.js";
 import { error, success, type Result } from "@shared/utils.js";
 
 export type DefaultSocket = Socket<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>;
@@ -115,7 +115,7 @@ export class SocketEventController {
 				this.handleGetTournaments(socket, ack);
 			});
 
-			socket.on("join-tournament", (tournamentId : TournamentId, ack: (participants : Result<string[]>) => void) => {
+			socket.on("join-tournament", (tournamentId : TournamentId, ack: (participants : Result<Profile[]>) => void) => {
 				this.handleJoinTournament(socket, tournamentId, ack);
 			});
 
@@ -160,6 +160,7 @@ export class SocketEventController {
 
 		socket.data = new SocketData(socket);
 
+		socket.emit("init", socket.data.getGuestName());
 		console.log(`Guest connected !`);
 	}
 
@@ -239,7 +240,7 @@ export class SocketEventController {
 	}
 
     // ----------------------------------------------------------------------------- //	
-	private	handleJoinTournament(socket : DefaultSocket, tournamentId : TournamentId, ack: (participants : Result<string[]>) => void)
+	private	handleJoinTournament(socket : DefaultSocket, tournamentId : TournamentId, ack: (participants : Result<Profile[]>) => void)
 	{
 			const	tournament = this.tournamentMaker.joinTournament(tournamentId, socket);
 
@@ -248,7 +249,7 @@ export class SocketEventController {
 				ack(tournament);
 				return ;
 			}
-			ack(success(tournament.value.getParticipantsNames()));
+			ack(success(tournament.value.getParticipants()));
 	}
 
 	// ----------------------------------------------------------------------------- //

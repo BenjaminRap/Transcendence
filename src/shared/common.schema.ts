@@ -17,9 +17,15 @@ export const CommonSchema = {
             .min(3, 'username should have 3 characters minimum')
             .max(20, 'Username can\'t exceed 20 characters')
             .regex(/^[a-zA-Z0-9]+$/, 'Username can only contain letters and numbers')
-            .refine((val) => !['A_', 'G_'].some(prefix => val.startsWith(prefix)), {
+            .refine((val) => !['@', 'guest'].some(prefix => val.startsWith(prefix)), {
                 message: 'This username is not allowed, don\'t use reserved prefixes (A_ , G_)',
             }),
+
+    alias: z.string()
+            .trim()
+            .min(3, 'Alias should have 3 characters minimum')
+            .max(20, 'Alias can\'t exceed 20 characters')
+            .regex(/^@[a-zA-Z0-9]+$/, 'Alias should begin by `@` and only contain letters and numbers'),
 
     id: z.number()
 	    	.int()

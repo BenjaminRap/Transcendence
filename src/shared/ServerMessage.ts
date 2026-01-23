@@ -105,16 +105,16 @@ export type Username = zod.infer<typeof CommonSchema.username>;
 export const	zodTournamentEvent = zod.discriminatedUnion("type", [
 	zod.object({
 		type: zod.literal("add-participant"),
-		name: zod.string(),
+		profile: zodProfile,
 		isCreator: zod.boolean()
 	}),
 	zod.object({
 		type: zod.literal("remove-participant"),
-		name: zod.string()
+		guestName: zod.string()
 	}),
 	zod.object({
 		type: zod.literal("change-alias"),
-		name: CommonSchema.username,
+		guestName: CommonSchema.username,
 		newAlias: CommonSchema.username
 	}),
 	zod.object({

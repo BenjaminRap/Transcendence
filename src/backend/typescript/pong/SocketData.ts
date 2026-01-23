@@ -70,7 +70,7 @@ export class	SocketData
 		this._state = "tournament-waiting";
 	}
 
-	public setAlias(alias : string)
+	public setAlias(alias : string | null)
 	{
 		this._alias = alias;
 	}
@@ -124,5 +124,10 @@ export class	SocketData
 			guestName: this._guestName,
 			image: image
 		};
+	}
+
+	public getAlias()
+	{
+		return this._alias;
 	}
 }

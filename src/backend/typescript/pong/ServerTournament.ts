@@ -1,4 +1,4 @@
-import type { TournamentCreationSettings, TournamentDescription, TournamentId, Username } from "@shared/ServerMessage";
+import type { Profile, TournamentCreationSettings, TournamentDescription, TournamentId, Username } from "@shared/ServerMessage";
 import type { ServerType } from "..";
 import { error, getEndDataOnInvalidMatch, success, type Result } from "@shared/utils";
 import { Tournament } from "@shared/Tournament";
@@ -35,7 +35,6 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		this._creator.once("cancel-tournament", () => this.dispose());
 		this._creator.on("ban-participant", (name : string) => this.banParticipant(name));
 		this._creator.on("kick-participant", (name : string) => this.kickParticipant(name));
-		this._creator.join(this._tournamentId);
 	}
 
 	private	banParticipant(name : string)
@@ -82,8 +81,6 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		if (this._players.size < 2)
 			return error("Not enough players !");
 		this.removeCreatorEvents();
-		if (!this._players.has(this._creator.data.getGuestName()))
-			this._creator.leave(this._tournamentId);
 		this._state = "waiting-ready";
 		console.log(`${this._settings.name} tournament started !`);
 		this._io.to(this._tournamentId).emit("tournament-event", {type:"tournament-start"});
@@ -91,6 +88,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 			this.onReadyTimeout();
 		}, ServerTournament._readyTimeoutMs);
 		this._players.forEach(socket => {
+			socket.removeAllListeners("set-alias");
 			socket.data.ready = false;
 			socket.once("ready", () => {
 				socket.data.ready = true;
@@ -133,14 +131,15 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		super.dispose();
 		console.log(`${this._settings.name} tournamend end`);
 		if (this._state === "creation")
+		{
 			this._io.to(this._tournamentId).emit("tournament-event", { type: "tournament-canceled" })
+			this._creator.data.leaveTournament();
+			this.removeCreatorEvents();
+		}
 		this._state = "disposed";
 		this._players.forEach((player) => {
 			this.removePlayerFromTournament(player);
 		});
-		this._creator.leave(this._tournamentId);
-		this._creator.data.leaveTournament();
-		this.removeCreatorEvents();
 		this._onTournamentDispose();
 	}
 	
@@ -165,13 +164,14 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 
 		if (!canJoinTournament.success)
 			return canJoinTournament;
-		const	guestName = socket.data.getGuestName();
+		socket.data.setAlias(null);
+		const	profile = socket.data.getProfile();
 
-		this._players.set(guestName, socket);
-		this._io.to(this._tournamentId).emit("tournament-event", {
+		this._players.set(profile.guestName, socket);
+		this._io.to(this._tournamentId).to(this._creator.id).emit("tournament-event", {
             type: "add-participant",
-			name: guestName,
-			isCreator: guestName === this._creator.data.getGuestName()
+			profile: profile,
+			isCreator: profile.guestName === this._creator.data.getGuestName()
         });
 		socket.join(this._tournamentId);
 		socket.data.joinTournament(this);
@@ -182,15 +182,16 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 
 	private	changeAlias(socket : DefaultSocket, alias : Username, ack: (result: Result<null>) => void)
 	{
-		const	parsed = CommonSchema.username.safeParse(alias);
+		const	parsed = CommonSchema.alias.safeParse(alias);
 
 		if (!parsed.success)
-			ack(error(parsed.error.message));
-		else
-		{
-			this._io.to(this._tournamentId).emit("tournament-event", {
+			ack(error(parsed.error.issues[0].message));
+		else if (this._players.values().find(socket => socket.data.getAlias() === alias))
+			ack(error("Alias already taken !"));
+		else {
+			this._io.to(this._tournamentId).to(this._creator.id).except(socket.id).emit("tournament-event", {
 					type: "change-alias",
-					name: socket.data.getGuestName(),
+					guestName: socket.data.getGuestName(),
 					newAlias: parsed.data
 			});
 			socket.data.setAlias(alias);
@@ -206,12 +207,12 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		this._players.delete(guestName);
 		socket.removeAllListeners("leave-tournament");
 		socket.removeAllListeners("ready");
-		socket.removeAllListeners("change-alias");
+		socket.removeAllListeners("set-alias");
 		if (this._state === "creation")
 		{
-			this._io.to(this._tournamentId).emit("tournament-event", {
+			this._io.to(this._tournamentId).to(this._creator.id).emit("tournament-event", {
 				type: "remove-participant",
-				name: guestName
+				guestName: guestName
 			});
 		}
 		if (this._state !== "creation" || !isCreator)
@@ -316,9 +317,9 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		return this.getDescription();
 	}
 
-	public getParticipantsNames() : string[]
+	public getParticipants() : Profile[]
 	{
-		return Array.from(this._players.keys());
+		return [...this._players.values()].map(socket => socket.data.getProfile());
 	}
 
 	public onSocketQuit(socket : DefaultSocket)

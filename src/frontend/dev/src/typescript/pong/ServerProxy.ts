@@ -1,4 +1,4 @@
-import type { GameInfos, GameInit, GameStartInfos, KeysUpdate, TournamentCreationSettings, TournamentDescription, TournamentId } from "@shared/ServerMessage";
+import type { GameInfos, GameInit, GameStartInfos, KeysUpdate, Profile, TournamentCreationSettings, TournamentDescription, TournamentId } from "@shared/ServerMessage";
 import { FrontendSocketHandler } from "./FrontendSocketHandler";
 import type { Deferred, int, Observable, Observer } from "@babylonjs/core";
 import { PongError } from "@shared/pongError/PongError";
@@ -41,8 +41,7 @@ export class	ServerProxy
 				this._state = "connected";
 				this._tournamentData = null;
 			}
-			else if ((this._state === "tournament-player" || this._state === "tournament-creator-player")
-				&& tournamentEvent.type === "tournament-start")
+			else if (this._state === "tournament-player" && tournamentEvent.type === "tournament-start")
 				this._state = "in-tournament";
 		});
 		this._frontendSocketHandler.onJoinGame().add(gameInit => {
@@ -183,7 +182,7 @@ export class	ServerProxy
 		return deferred.promise;
 	}
 
-	public joinTournament(tournamentId : TournamentId) : Promise<string[]>
+	public joinTournament(tournamentId : TournamentId) : Promise<Profile[]>
 	{
 		this.verifyState("connected");
 		const	deferred = this._frontendSocketHandler.joinTournament(tournamentId);
@@ -261,6 +260,10 @@ export class	ServerProxy
 		this.verifyState("connected");
 		const deferred = this._frontendSocketHandler.getTournaments();
 
+		deferred.promise
+			.finally(() => {
+				this._state = "connected";
+			});
 		this.replaceCurrentPromise(deferred);
 
 		return deferred.promise;
@@ -276,9 +279,30 @@ export class	ServerProxy
 		this._frontendSocketHandler.sendEventWithNoResponse("kick-participant", name);
 	}
 
+	public setAlias(newAlias : string)
+	{
+		this.verifyState("tournament-creator-player", "tournament-player");
+		const previousState = this._state;
+		const deferred = this._frontendSocketHandler.setAlias(newAlias);
+
+		this._state = "waiting";
+		deferred.promise
+			.finally(() => {
+				this._state = previousState;
+			});
+		this.replaceCurrentPromise(deferred);
+
+		return deferred.promise;
+	}
+
 	public getTournamentData()
 	{
 		return this._tournamentData;
+	}
+
+	public getGuestName()
+	{
+		return this._frontendSocketHandler.guestName;
 	}
 
 	private verifyState(...allowedStates : SocketState[]) : void
