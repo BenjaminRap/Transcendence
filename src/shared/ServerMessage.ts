@@ -55,8 +55,8 @@ export const zodGameInfos = zod.discriminatedUnion("type", [
 export type GameInfos = zod.infer<typeof zodGameInfos>;
 
 const	zodProfile = zod.object({
-	shownName: CommonSchema.username,
-	guestName: CommonSchema.username,
+	shownName: CommonSchema.shownName,
+	guestName: CommonSchema.guestName,
 	image: zod.string()
 });
 export type Profile = zod.infer<typeof zodProfile>;
