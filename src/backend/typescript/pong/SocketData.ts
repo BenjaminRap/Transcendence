@@ -110,7 +110,7 @@ export class	SocketData
 
 	public getUserId()
 	{
-		return this._onlineProfile?.userId ?? -1;
+		return this._onlineProfile?.userId;
 	}
 
 	public getProfile() {

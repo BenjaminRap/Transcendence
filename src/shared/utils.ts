@@ -52,8 +52,11 @@ export function	getEndDataOnInvalidMatch(isLeftValid : boolean, isRightValid: bo
 		"draw";
 	const	endData : EndData = {
 		winner: winner,
-		forfeit: true
-	}
+		forfeit: true,
+		scoreLeft: 0,
+		scoreRight: 0,
+		duration: 0
+	};
 	
 	return endData;
 }

@@ -6,6 +6,8 @@ import type { Match } from "@shared/Match";
 import { Room } from "./Room";
 import type { DefaultSocket } from "../controllers/SocketEventController";
 import { CommonSchema } from "@shared/common.schema";
+import { Container } from "../container/Container";
+import type { TournamentController } from "../controllers/TournamentController";
 
 export class	ServerTournament extends Tournament<DefaultSocket>
 {
@@ -17,6 +19,8 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 	private _tournamentId : TournamentId;
 	private _rooms = new Set<Room>();
 	private _socketReadyCount = 0;
+	private _tournamentController = Container.getInstance().getService<TournamentController>("TournamentController");
+    private _databaseId?: number;
 
 	constructor(
 		private _onTournamentDispose : () => void,
@@ -47,7 +51,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 			return ;
 		const	userId = socket.data.getUserId();
 
-		if (userId !== -1)
+		if (userId)
 			this._bannedPlayers.add(userId);
 		else
 			this._bannedPlayers.add(name);
@@ -107,7 +111,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		});
 	}
 
-	private startMatchesIfReady()
+	private async startMatchesIfReady()
 	{
 		if (this._socketReadyCount !== this._players.size)
 			return ;
@@ -118,9 +122,28 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 			this.onTournamentEnd();
 		else
 		{
+			const result = await this._tournamentController.createTournament({
+				title: this._settings.name,
+				creatorId: this._creator.data.getUserId(),
+				creatorGuestName: this._creator.data.getGuestName(),
+				participants: [...this._players.values()].map(socket => {
+					return {
+						userId: socket.data.getUserId(),
+						guestName: socket.data.getGuestName(),
+						alias: socket.data.getProfile().shownName
+					}
+				})
+			});
+			if (!result.success)
+			{
+				this.dispose();
+				return ;
+			}
+			this._databaseId = result.value;
 			this.setParticipants([...this._players.values()]);
 			this.createMatches();
 			this._state = "started";
+			return ;
 		}
 	}
 
@@ -129,6 +152,10 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		if (this._state === "disposed")
 			return ;
 		super.dispose();
+		if (this._databaseId)
+		{
+			this._tournamentController.closeTournament(this._databaseId, []);
+		}
 		console.log(`${this._settings.name} tournamend end`);
 		if (this._state === "creation")
 		{
@@ -153,7 +180,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 			return error("The tournament doesn't accept guests, you must log to your account !");
 		const	userId = socket.data.getUserId();
 
-		if (this._bannedPlayers.has(socket.data.getGuestName()) || this._bannedPlayers.has(userId))
+		if (this._bannedPlayers.has(socket.data.getGuestName()) || (userId && this._bannedPlayers.has(userId)))
 			return error("You have been banned from this tournament !");
 		return success(undefined);
 	}
@@ -278,6 +305,16 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 			const	room = new Room(this._io, endData => {
 				this._rooms.delete(room);
 				match.setWinner(endData);
+				this._tournamentController.updateTournament(this._databaseId!, {
+					leftId: left.profile.data.getUserId(),
+					leftGuestName: left.profile.data.getGuestName(),
+					rightId: right.profile.data.getUserId(),
+					rightGuestName: right.profile.data.getGuestName(),
+					winnerIndicator: endData.winner,
+					scoreLeft: endData.scoreLeft,
+					scoreRight: endData.scoreRight,
+					duration: endData.duration
+				});
 				this.onNewMatches();
 				this.onMatchEnd(match);
 			}, left.profile, right.profile);

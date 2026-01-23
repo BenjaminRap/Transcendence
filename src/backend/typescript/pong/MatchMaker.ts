@@ -1,12 +1,15 @@
 import { Room } from "./Room";
 import type { ServerType } from "../index";
 import type { DefaultSocket } from "../controllers/SocketEventController";
+import type { MatchController } from "../controllers/MatchController";
+import { Container } from "../container/Container";
 
 const	rooms = new Set<Room>();
 
 export class	MatchMaker
 {
 	private _waitingSockets : DefaultSocket[] = [];
+	private _matchController = Container.getInstance().getService<MatchController>("MatchController")
 
 
 	constructor(
@@ -43,9 +46,21 @@ export class	MatchMaker
 		if (this._waitingSockets.length < 2)
 			return ;
 		console.log("creating party");
-		const	firstSocket = this._waitingSockets.pop()!;
-		const	secondSocket = this._waitingSockets.pop()!;
-		const	room = new Room(this._io, () => rooms.delete(room), firstSocket, secondSocket);
+		const	leftSocket = this._waitingSockets.pop()!;
+		const	rightSocket = this._waitingSockets.pop()!;
+		const	room = new Room(this._io, endData => {
+			rooms.delete(room)
+			this._matchController.registerMatch({
+				leftId: leftSocket.data.getUserId(),
+				leftGuestName: leftSocket.data.getGuestName(),
+				rightId: rightSocket.data.getUserId(),
+				rightGuestName: rightSocket.data.getGuestName(),
+				winnerIndicator: endData.winner,
+				scoreLeft: endData.scoreLeft,
+				scoreRight: endData.scoreRight,
+				duration: endData.duration
+			});
+		}, leftSocket, rightSocket);
 
 		rooms.add(room);
 	}

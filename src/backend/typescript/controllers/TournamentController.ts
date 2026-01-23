@@ -3,6 +3,7 @@ import { TournamentException } from '../error_handlers/Tournament.error.js';
 import type { CreateTournament } from '../types/tournament.types.js';
 import type { MatchController } from './MatchController.js';
 import type { MatchData } from '../types/match.types.js';
+import { error, success, type Result } from '@shared/utils.js';
 
 export class TournamentController {
     constructor(
@@ -11,21 +12,21 @@ export class TournamentController {
     ) {}
 
 	// ----------------------------------------------------------------------------- //
-    async createTournament(data: CreateTournament) : Promise<{ success: boolean, tournamentId?: number, messageError?: string }> {
+    async createTournament(data: CreateTournament) : Promise<Result<number>> {
         try {
             const result = await this.tournamentService.createTournament(data);
             if (!result) {
-                return { success: false, messageError: 'Failed to create tournament.' };
+                return error('Failed to create tournament.');
             }
-            return { success: true, tournamentId: result };
+            return success(result);
 
-        } catch (error) {
-            console.error(error);
+        } catch (e) {
+            console.error(e);
 
-            if (error instanceof TournamentException)
-                return { success: false, messageError: error?.message || error.code };
+            if (e instanceof TournamentException)
+				return error(e?.message || e.code)
 
-            return { success: false, messageError: 'Failed to create tournament.' };
+			return error('Failed to create tournament.');
         }
     }
 

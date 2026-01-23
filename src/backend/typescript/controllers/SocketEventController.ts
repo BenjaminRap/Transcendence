@@ -316,11 +316,14 @@ export class SocketEventController {
 	// ----------------------------------------------------------------------------- //
     private handleLogout(socket: DefaultSocket)
     {
-        const userId = socket.data.getUserId();
         socket.rooms.forEach((room) => {
            room !== `${socket.id}` ? socket.leave(room) : null;
         });
+        socket.data.disconnectOrLogout();
+		const userId = socket.data.getUserId();
 
+		if (!userId)
+			return ;
         const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
         const newCount = currentCount - 1;
         SocketEventController.connectedUsers.set(userId, newCount);
@@ -331,6 +334,5 @@ export class SocketEventController {
             SocketEventController.sendToProfileWatchers(userId, 'user-status-change', { userId: userId, status: 'offline' });
             SocketEventController.sendToFriends(userId, 'user-status-change', { userId: userId, status: 'offline' });
         }
-        socket.data.disconnectOrLogout();
     }
 }
