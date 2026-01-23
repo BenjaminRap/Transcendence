@@ -48,7 +48,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 			return ;
 		const	userId = socket.data.getUserId();
 
-		if (userId !== -1)
+		if (userId !== undefined)
 			this._bannedPlayers.add(userId);
 		else
 			this._bannedPlayers.add(name);
@@ -158,8 +158,8 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 			return error("The tournament doesn't accept guests, you must log to your account !");
 		const	userId = socket.data.getUserId();
 
-		if (this._bannedPlayers.has(socket.data.getGuestName()) || this._bannedPlayers.has(userId))
-			return error("You have been banned from this tournament !");
+		// if (this._bannedPlayers.has(socket.data.getGuestName()) || this._bannedPlayers.has(userId))
+		// 	return error("You have been banned from this tournament !");
 		return success(undefined);
 	}
 

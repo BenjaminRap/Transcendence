@@ -313,7 +313,7 @@ export class SocketEventController {
     {
         const userId = socket.data.getUserId();
 
-        if (userId === -1) {
+        if (userId === undefined) {
             socket.data.disconnectOrLogout();
             return;
         }

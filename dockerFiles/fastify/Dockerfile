@@ -15,8 +15,6 @@ RUN ["chmod", "-R", "755", "/app/uploads"]
 RUN [ "npm", "install" ]
 
 # generate prisma before cleaning cache
-ENV PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
-
 COPY ./prisma ./prisma
 RUN ["npx", "prisma", "generate"]
 
