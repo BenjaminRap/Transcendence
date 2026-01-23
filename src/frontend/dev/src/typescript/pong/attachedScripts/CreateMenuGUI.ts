@@ -259,20 +259,25 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		this.startGame(this._currentSceneFileName, "Local", tournament);
 	}
 
-	private	startGame<T extends EnemyType>(
+	private	async startGame<T extends EnemyType>(
 		sceneName : FrontendGameSceneName,
 		enemyType : T,
 		tournament : T extends "Local" ? LocalTournament | undefined : undefined)
 	{
-		if (enemyType === "Local")
-			this._sceneData.pongHTMLElement.startLocalGame(sceneName, tournament);
-		else if (enemyType === "Multiplayer")
-		{
-			this.switchMenu(this._inMatchmakingGUI);
-			this._sceneData.pongHTMLElement.searchOnlineGame(sceneName);
+		try {
+			if (enemyType === "Local")
+				await this._sceneData.pongHTMLElement.startLocalGame(sceneName, tournament);
+			else if (enemyType === "Multiplayer")
+			{
+				this.switchMenu(this._inMatchmakingGUI);
+				await this._sceneData.pongHTMLElement.searchOnlineGame(sceneName);
+			}
+			else if (enemyType === "Bot")
+				await this._sceneData.pongHTMLElement.startBotGame(sceneName);
+		} catch (error) {
+			this._sceneData.pongHTMLElement.onError(error);
+			this.switchMenu(this._menuGUI);
 		}
-		else if (enemyType === "Bot")
-			this._sceneData.pongHTMLElement.startBotGame(sceneName);
 	}
 
 	private	async createTournament()

@@ -261,6 +261,7 @@ export class	ServerProxy
 		const deferred = this._frontendSocketHandler.getTournaments();
 
 		deferred.promise
+			.catch(() => {})
 			.finally(() => {
 				this._state = "connected";
 			});
@@ -287,6 +288,7 @@ export class	ServerProxy
 
 		this._state = "waiting";
 		deferred.promise
+			.catch(() => {})
 			.finally(() => {
 				this._state = previousState;
 			});
