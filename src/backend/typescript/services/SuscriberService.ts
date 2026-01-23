@@ -1,4 +1,4 @@
-import { PrismaClient, type User, type Friendship, type Match  } from "@prisma/client";
+import { PrismaClient, type User, type Friendship  } from "@prisma/client";
 import { type UpdateData } from "../types/suscriber.types.js";
 import { PasswordHasher } from "../utils/PasswordHasher.js";
 import { FileService } from "./FileService.js";
@@ -51,19 +51,8 @@ export class SuscriberService {
 
         const lastsMatchs = await this.matchService.getLastMatches(id, 4);
 
-        const matchesAsRight = await this.prisma.match.findMany({ where: { playerRightId: id } });
+        const stats: GameStats = await this.matchService.getStat(id);
 
-        const wins = matchesAsLeft.filter(m => m.winnerIndicator === 'left').length +
-                     matchesAsRight.filter(m => m.winnerIndicator === 'right').length;
-        
-        const losses = matchesAsLeft.filter(m => m.winnerIndicator === 'right').length +
-                       matchesAsRight.filter(m => m.winnerIndicator === 'left').length;
-
-        const stats: GameStats = this.matchService.calculateStats(wins, losses); // userID
-
-        // Get last 4 matches
-        const allMatches = await this.matchService.getLastMatches(user.id, [...user.matchsAsLeft, ...user.matchsAsRight], 4);
-        
         // Sorted 4 friends
         const sortedFriends = this.getSortedFriendlist(user.sentRequests, user.receivedRequests, 4, user.id);
 
@@ -72,7 +61,7 @@ export class SuscriberService {
             avatar: user.avatar,
             username: user.username,
             gameStats: stats,
-            lastMatchs: allMatches,
+            lastMatchs: lastsMatchs,
             friends: sortedFriends,
         };
     }

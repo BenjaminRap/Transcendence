@@ -15,11 +15,11 @@ export class MatchService {
 	// ----------------------------------------------------------------------------- //
     async registerMatch(match: MatchData): Promise<number | null> {
         const data = {
-            leftId: match.leftId ?? null,
-            leftGuestName: match.leftGuestName,
+            playerLeftId: match.leftId ?? null,
+            playerLeftGuestName: match.leftGuestName,
 
-            rightId: match.rightId ?? null,
-            rightGuestName: match.rightGuestName,
+            playerRightId: match.rightId ?? null,
+            playerRightGuestName: match.rightGuestName,
 
             winnerIndicator: match.winnerIndicator,
 
@@ -40,11 +40,11 @@ export class MatchService {
     async registerTournamentMatch(tournamentId: number, match: MatchData)
     {
         const data = {
-            leftId: match.leftId ?? null,
-            leftGuestName: match.leftGuestName,
+            playerLeftId: match.leftId ?? null,
+            playerLeftGuestName: match.leftGuestName,
 
-            rightId: match.rightId ?? null,
-            rightGuestName: match.rightGuestName,
+            playerRightId: match.rightId ?? null,
+            playerRightGuestName: match.rightGuestName,
 
             winnerIndicator: match.winnerIndicator,
 
@@ -62,25 +62,12 @@ export class MatchService {
         return newmatch ? newmatch.id : null;
     }
 
-    // --------------------------------------- -------------------------------------- //
-    public calculateStats(matchesWons: number, matchesLoses: number): GameStats {
-        const totalMatches = matchesWons + matchesLoses;
-        const ratio = totalMatches > 0 ? (matchesWons / totalMatches * 100).toFixed(2) : "0.00";
-
-        return {
-            wins: matchesWons,
-            losses: matchesLoses,
-            total: totalMatches,
-            winRate: parseFloat(ratio),
-        };
-    }
-
     // ----------------------------------------------------------------------------- //
     async getLastMatches(userId: number, limit: number): Promise<MatchSummary[]>
     {
             const matchs = await this.prisma.match.findMany({ 
             where: {
-                playerLeftId: userId,
+                playerLeftId: Number(userId),
             },
             select: {
                 winnerIndicator: true,
@@ -98,59 +85,82 @@ export class MatchService {
                         avatar: true
                     }
                 },
-            }
+            },
+            orderBy: {
+                createdAt: 'desc'
+            },
+            take: Number(limit),
         });
 
-        // renvoyer MatchSummary[]
-
-        // mapper chaque match pour renvoyer le bon format
-        const summary: MatchSummary[] = matchs.map((m) => {
-            opponent: {
-                id: m.playerRightId === userId ? m.playerLeft?.id : m.playerRight?.id,
-                username: m.playerRightId === userId ? m.playerLeft?.username : m.playerRight?.username,
-                avatar: m.playerRightId === userId ? m.playerLeft?.avatar : m.playerRight?.avatar,
-                isFriend: false // a implementer plus tard
-            },
-            matchResult: {
-                matchId: m.id,
-                scoreWinner: m.winnerIndicator === 'left' ? m.scoreLeft : m.scoreRight,
-                scoreLoser: m.winnerIndicator === 'left' ? m.scoreRight : m.scoreLeft,
-                duration: m.duration,
-                winnerName: m.winnerIndicator === 'left' ? (m.playerLeft?.username || m.leftGuestName) : (m.playerRight?.username || m.rightGuestName),
-                loserName: m.winnerIndicator === 'left' ? (m.playerRight?.username || m.rightGuestName) : (m.playerLeft?.username || m.leftGuestName),
-            },
-        });
+        return await this.formatMatchSummary(matchs, userId);
     }
 
 	// ----------------------------------------------------------------------------- //
- 	async getStat(playerId: number): Promise<{stats: GameStats | null, message?: string }> {
-        if (!await this.isExisting(Number(playerId)))
-            return { stats: null, message: 'Player does not exist' }
-
+ 	async getStat(playerId: number): Promise<GameStats> {
         const wins = await this.countMatchAs(playerId, 'left');
 
         const lose = await this.countMatchAs(playerId, 'right');
 
-        const stats: GameStats = this.calculateStats(wins, lose);
-
-        return { stats };
+        return this.calculateStats(wins, lose);
     }
 
 	// ================================== PRIVATE ================================== //
 
-	// ----------------------------------------------------------------------------- //
+    // ----------------------------------------------------------------------------- //
+	private async formatMatchSummary(matchs: any[], userId: number): Promise<MatchSummary[]> {
+        return await Promise.all(matchs.map(async (m) => {
+            const isUserLeft = m.leftId === userId;
+            const opponentPlayer = isUserLeft ? m.right : m.left;
+            const opponentId = opponentPlayer?.id;
+
+            const isWinner = (isUserLeft && m.winnerIndicator === 'left') || (!isUserLeft && m.winnerIndicator === 'right');
+
+            const opponent: OpponentSummary = {
+                id: opponentId,
+                username: opponentPlayer?.username ?? (isUserLeft ? m.rightGuestName : m.leftGuestName),
+                avatar: opponentPlayer?.avatar ?? null,
+                isFriend: opponentId ? await this.friendService.areFriends(userId, opponentId) : false,
+            };
+
+            const winnerScore = m.winnerIndicator === 'left' ? m.scoreLeft : m.scoreRight;
+            const loserScore = m.winnerIndicator === 'left' ? m.scoreRight : m.scoreLeft;
+
+            const winner = m.winnerIndicator === 'left' ? (m.left ?? { username: m.leftGuestName }) : (m.right ?? { username: m.rightGuestName });
+            const loser = m.winnerIndicator === 'left' ? (m.right ?? { username: m.rightGuestName }) : (m.left ?? { username: m.leftGuestName });
+
+            return {
+                opponent,
+                isWinner,
+                matchResult: {
+                    matchId: m.id,
+                    scoreWinner: winnerScore,
+                    scoreLoser: loserScore,
+                    duration: m.duration,
+                    winnerName: winner.username,
+                    loserName: loser.username,
+                },
+            };
+        }));
+    }
+    
+    // ----------------------------------------------------------------------------- //
     private async countMatchAs(id: number, indic: string): Promise<number> {
-        
-        const left = await this.prisma.match.count({
-            where: { playerLeftId: id, winnerIndicator: indic },
-        });
-
-        const other = indic === 'left' ? 'right' : 'left';
-
-        const right = await this.prisma.match.count({
-            where: { playerRightId: id, winnerIndicator: other }
-        });
-        return left + right;
+        try {
+            const left = await this.prisma.match.count({
+                where: { playerLeftId: id, winnerIndicator: indic },
+            });
+    
+            const other = indic === 'left' ? 'right' : 'left';
+    
+            const right = await this.prisma.match.count({
+                where: { playerRightId: id, winnerIndicator: other }
+            });
+            return left + right;
+            
+        } catch (error) {
+            console.log(error);
+            return 0;
+        }
     }
 
 	// ----------------------------------------------------------------------------- //
@@ -161,4 +171,17 @@ export class MatchService {
 		});
 		return user !== null;
 	}
+
+    // --------------------------------------- -------------------------------------- //
+    private calculateStats(matchesWons: number, matchesLoses: number): GameStats {
+        const totalMatches = matchesWons + matchesLoses;
+        const ratio = totalMatches > 0 ? (matchesWons / totalMatches * 100).toFixed(2) : "0.00";
+
+        return {
+            wins: matchesWons,
+            losses: matchesLoses,
+            total: totalMatches,
+            winRate: parseFloat(ratio),
+        };
+    }
 }

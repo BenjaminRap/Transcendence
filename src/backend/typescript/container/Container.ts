@@ -88,14 +88,15 @@ export class Container {
             prisma
         ));
 
-        this.registerService('UsersService', () => new UsersService(
+        this.registerService('MatchService', () => new MatchService(
             prisma,
             this.getService('FriendService'),
         ));
 
-        this.registerService('MatchService', () => new MatchService(
+        this.registerService('UsersService', () => new UsersService(
             prisma,
-            this.getService('FriendService')
+            this.getService('FriendService'),
+            this.getService('MatchService')
         ));
 		
         this.registerService('SuscriberService', () => new SuscriberService(

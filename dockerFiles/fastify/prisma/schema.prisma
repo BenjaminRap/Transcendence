@@ -72,11 +72,11 @@ model Match {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
-  playerLeftId         int?
-  playerLeft           User?    @relation("playerLeft", fields: [winnerplayerLeftIdId], references: [id], onDelete: SetNull)
+  playerLeftId         Int?
+  playerLeft           User?    @relation("playerLeft", fields: [playerLeftId], references: [id], onDelete: SetNull)
   playerLeftGuestName  String
 
-  playerRightId         int?
+  playerRightId         Int?
   playerRight           User?    @relation("playerRight", fields: [playerRightId], references: [id], onDelete: SetNull)
   playerRightGuestName  String
 
