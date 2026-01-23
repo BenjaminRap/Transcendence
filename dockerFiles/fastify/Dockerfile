@@ -9,7 +9,6 @@ RUN [ "rm", "-rf", "/var/lib/apt/lists*" ]
 COPY ./package.json ./package.json
 COPY ./app_src .
 
-RUN ["mkdir", "/app/uploads"]
 RUN ["chmod", "-R", "755", "/app/uploads"]
 
 # install dependencies including prisma
