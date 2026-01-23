@@ -12,7 +12,6 @@ export class MatchController {
 	// --------------------------------------------------------------------------------- //
     async registerMatch(data: MatchData): Promise<{ success: boolean, messageError?: string, matchId?: number }>
     {
-
         let match;
         try {
             match = await this.matchService.registerMatch(data);

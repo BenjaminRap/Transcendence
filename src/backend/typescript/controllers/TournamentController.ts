@@ -50,11 +50,6 @@ export class TournamentController {
         }
     }
 
-	// ----------------------------------------------------------------------------- //
-    async cancelTournament(tournamentId: number, adminId: number | null, adminGuestName: string): Promise<{ success: boolean }> {
-        await this.tournamentService.cancelTournament(tournamentId, adminId, adminGuestName);
-        return { success: true };
-    }
 
     // ----------------------------------------------------------------------------- //
     /**
