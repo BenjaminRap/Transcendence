@@ -140,10 +140,6 @@ export class SocketEventController {
             });
 
             socket.on("logout", () => {
-                // decrement compteur
-                // quitter room personnelle
-                // notifier amis et watchers si besoin
-                // mettre jour socketData pour passer guest
                 this.handleLogout(socket);
             });
 
@@ -316,6 +312,11 @@ export class SocketEventController {
     private handleLogout(socket: DefaultSocket)
     {
         const userId = socket.data.getUserId();
+
+        if (userId === -1) {
+            socket.data.disconnectOrLogout();
+            return;
+        }
         socket.rooms.forEach((room) => {
            room !== `${socket.id}` ? socket.leave(room) : null;
         });
