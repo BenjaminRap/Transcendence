@@ -277,7 +277,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		if (winner)
 			this._ranks.push({alias: winner.data.getProfile().shownName, rank: 1});
 		this._tournamentController.closeTournament(this._databaseId!, this._ranks);
-		this._io.to(this._tournamentId).emit("tournament-event", {type: "win"})
+		winner?.emit("tournament-event", {type: "win"})
 		this.dispose();
     }
 
