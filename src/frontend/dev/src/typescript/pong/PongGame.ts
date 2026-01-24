@@ -262,13 +262,13 @@ export class PongGame extends HTMLElement {
 		this._assetsManager.addMeshTask("scene", null, "/scenes/", sceneName)
 
 		SceneManager.OnSceneReadyObservable.add(() => {
-			this._loadingGUI.hideLoadingUI();
 			SceneManager.OnSceneReadyObservable.clear();
 			scene.clearColor = new Color4(0, 0, 0, 1);
 			this._assetsManager = null;
 			cam.dispose(); // removing the unecessary camera
 			scene.activeCameras = scene.cameras;
 			globalThis.HKP = undefined;
+			this._loadingGUI.hideLoadingUI();
 		});
 		await this._assetsManager.loadAsync();
 
