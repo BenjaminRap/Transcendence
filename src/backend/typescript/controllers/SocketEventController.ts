@@ -42,35 +42,44 @@ export class SocketEventController {
     // ----------------------------------------------------------------------------- //
 	static sendToUser(userId: number, event: string, data: any): void
 	{
-        console.log(`\nSending event ${event} to user ${userId}`);
-		try {
-			if (SocketEventController.socketInstance) {
-				SocketEventController.socketInstance.io.to('user-' + Number(userId)).emit(event as any, data);
-			}			
-		} catch (error) {
-			console.warn(`Error sending socket event to user ${userId} :`, error);
-		}
+        if (!userId) return;
+
+        try {
+            if (SocketEventController.socketInstance) {
+                SocketEventController.socketInstance.io.to('user-' + Number(userId)).emit(event as any, data);
+            }
+        } catch (error) {
+            console.warn(`\nFailed to emit event "${event}" to user ${userId} :`, error);
+        }			
 	}
 
     // send message to all users watching a specific profile
     // ----------------------------------------------------------------------------- //
     static sendToProfileWatchers(userId: number, event: string, data: any): void
     {
-        console.log(`\nSending event ${event} to watchers of profile ${userId}`);
-        SocketEventController.socketInstance.io.to('watching-' + userId).emit(event as any, data);
+        if (!userId) return;
+
+        try {
+            if (SocketEventController.socketInstance) {
+                SocketEventController.socketInstance.io.to('watching-' + userId).emit(event as any, data);
+            }
+        } catch (error) {
+            console.warn(`\nFailed to emit event "${event}" to watchers of profile ${userId} :`, error);
+        }
     }
 
     // send message to all friends of a specific user
     // ----------------------------------------------------------------------------- //
-    static sendToFriends(userId: number, event: string, data: any): void
+    static async sendToFriends(userId: number, event: string, data: any): Promise<void>
     {
-        console.log(`\nSending event ${event} to friends of user ${userId}`);
+        if (!userId) return;
+
         try {
             if (SocketEventController.socketInstance)
             {
                 const friendService: FriendService = Container.getInstance().getService('FriendService');
     
-                friendService.getFriendsIds(userId).then((friendsIds: number[]) => {
+                await friendService.getFriendsIds(userId).then((friendsIds: number[]) => {
                     friendsIds.forEach((friendId) => {
                         SocketEventController.sendToUser(friendId, event, data);
                     });
