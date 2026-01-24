@@ -1,6 +1,6 @@
 import { type PrismaClient, TournamentStatus } from '@prisma/client';
 import { TournamentException, TournamentError } from '../error_handlers/Tournament.error.js';
-import type { CreateTournament } from '../types/tournament.types.js';
+import type { CreateTournament, Ranking } from '../types/tournament.types.js';
 
 export class TournamentService {
 	constructor(
@@ -50,13 +50,13 @@ export class TournamentService {
 	}
 
 	// ----------------------------------------------------------------------------- //
-	async finishTournament(tournamentId: number, ranking: { PlayerAlias: string, rank: number }[]) {
+	async finishTournament(tournamentId: number, ranking: Ranking[]) {
         // update ranking for each participant
         for (const r of ranking) {
             await this.prisma.tournamentParticipant.updateMany({
                 where: {
                     tournamentId: Number(tournamentId),
-                    alias: r.PlayerAlias,
+                    alias: r.alias,
                 },
                 data: {
                     finalRank: r.rank,

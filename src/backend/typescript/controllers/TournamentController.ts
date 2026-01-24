@@ -1,6 +1,6 @@
 import { TournamentService } from '../services/TournamentService.js';
 import { TournamentException } from '../error_handlers/Tournament.error.js';
-import type { CreateTournament } from '../types/tournament.types.js';
+import type { CreateTournament, Ranking } from '../types/tournament.types.js';
 import type { MatchController } from './MatchController.js';
 import type { MatchData } from '../types/match.types.js';
 import { error, success, type Result } from '@shared/utils.js';
@@ -41,7 +41,7 @@ export class TournamentController {
     }
 
 	// ----------------------------------------------------------------------------- //
-    async closeTournament(id: number, ranking: { PlayerAlias: string, rank: number }[]): Promise<{ success: boolean }> {
+    async closeTournament(id: number, ranking: Ranking[]): Promise<{ success: boolean }> {
         try {
             await this.tournamentService.finishTournament(id, ranking);
             return { success: true };            

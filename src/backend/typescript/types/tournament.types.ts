@@ -11,3 +11,8 @@ export interface CreateTournament {
   creatorGuestName: string;
   participants:     TournamentParticipant[]
 }
+
+export interface Ranking {
+	alias: string,
+	rank: number
+}
