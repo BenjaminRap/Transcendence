@@ -17,9 +17,11 @@ export type	OnlineProfile = {
 	image: string
 }
 
+export type SocketState = "unactive" | "waiting" | "playing" | "tournament-waiting" | "tournament-playing";
+
 export class	SocketData
 {
-	private _state : "unactive" | "waiting" | "playing" | "tournament-waiting" | "tournament-playing" = "unactive";
+	private _state : SocketState = "unactive";
 	private _room : Room | null = null;
 	private _tournament : ServerTournament | null = null;
 	private _onlineProfile : OnlineProfile | null = null;
@@ -92,6 +94,7 @@ export class	SocketData
 		this._tournament?.onSocketQuit(this._socket);
 		this._tournament = null;
 		this._onlineProfile = null;
+		this._state = "unactive";
 	}
 
 	public authenticate(userId : number, userName : string, image : string)

@@ -34,6 +34,7 @@ export type ClientMessageData<T extends ClientMessage> =
 	T extends "unwatch-profile" ? [profileId: number[]] :
     T extends "authenticate" ? [data: { token: string }, ack: (result: Result<null>) => void] :
     T extends "set-alias" ? [alias: Username, ack: (result : Result<null>) => void] :
+    T extends "join-matchmaking" ? [ack: (result : Result<null>) => void] :
 	[];
 
 export type ServerEvents = "game-infos" |

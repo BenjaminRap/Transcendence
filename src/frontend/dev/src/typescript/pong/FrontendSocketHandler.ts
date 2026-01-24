@@ -69,7 +69,12 @@ export class	FrontendSocketHandler
 			else
 				deferred.resolve(gameInit.data);
 		});
-		this._socket.emit("join-matchmaking");
+		this._socket.emit("join-matchmaking", result => {
+			if (result.success)
+				return ;
+			this._socket.off("joined-game");
+			deferred.reject(result.error);
+		});
 		return deferred;
 	}
 

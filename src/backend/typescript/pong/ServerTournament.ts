@@ -4,7 +4,7 @@ import { error, getEndDataOnInvalidMatch, success, type Result } from "@shared/u
 import { Tournament } from "@shared/Tournament";
 import type { Match } from "@shared/Match";
 import { Room } from "./Room";
-import type { DefaultSocket } from "../controllers/SocketEventController";
+import { SocketEventController, type DefaultSocket } from "../controllers/SocketEventController";
 import { CommonSchema } from "@shared/common.schema";
 import { Container } from "../container/Container";
 import type { TournamentController } from "../controllers/TournamentController";
@@ -172,8 +172,17 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		this._onTournamentDispose();
 	}
 	
-	private	canJoinTournament(socket : DefaultSocket)
+	private	async canJoinTournament(socket : DefaultSocket)
 	{
+		const	userState = await SocketEventController.getUserState(this._io, socket.data);
+
+		if (!userState.success)
+			return error("Server Error");
+		const	isCreator = socket === this._creator;
+		const	isCreatorPlayer = isCreator && this._players.has(this._creator.data.getGuestName());
+
+		if (isCreatorPlayer || (!isCreator && userState.value !== "unactive"))
+			return error("The user is already in a game, tournament or matchmaking");
 		if (this._state !== "creation")
 			return error("The tournament has already started !");
 		if (this._players.size === this._settings.maxPlayerCount)
@@ -187,9 +196,9 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		return success(undefined);
 	}
 
-	public addParticipant(socket : DefaultSocket) : Result<undefined>
+	public async addParticipant(socket : DefaultSocket) : Promise<Result<undefined>>
 	{
-		const	canJoinTournament = this.canJoinTournament(socket);
+		const	canJoinTournament = await this.canJoinTournament(socket);
 
 		if (!canJoinTournament.success)
 			return canJoinTournament;
@@ -354,9 +363,13 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		}
 	}
 
-	public getDescriptionIfAvailable(socket : DefaultSocket) : TournamentDescription | null
+	public async getDescriptionIfAvailable(socket : DefaultSocket) : Promise<TournamentDescription | null>
 	{
-		if (!this._settings.isPublic || !this.canJoinTournament(socket).success)
+		if (!this._settings.isPublic)
+			return null;
+		const	canJoinTournament = await this.canJoinTournament(socket);
+
+		if (!canJoinTournament)
 			return null;
 		return this.getDescription();
 	}
