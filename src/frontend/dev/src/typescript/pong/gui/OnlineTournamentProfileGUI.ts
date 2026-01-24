@@ -72,7 +72,7 @@ export class	OnlineTournamentProfileGUI extends HTMLElement implements IGUI<Onli
 
 	private	getButtonWithMask(className : string)
 	{
-		return `<button class="h-full aspect-square mask-no-repeat mask-contain mask-center bg-(--border-color) hover:scale-125 ${className}"></button>`;
+		return `<button class="h-full aspect-square mask-no-repeat mask-contain mask-center bg-(--border-color) hover:not-disabled:scale-125 ${className}"></button>`;
 	}
 
 	public getAlias()

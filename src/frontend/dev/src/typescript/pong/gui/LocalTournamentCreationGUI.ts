@@ -25,7 +25,7 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 				<legend class="m-auto pr-[2%] pl-[2%] text-(--text-color) text-[3.5cqw] font-(family-name:--font)">Participants</legend>
 				<div class="tournamentCreationGUIProfiles inline">
 				</div>
-				<button class="tournamentCreationGUIAddProfile ml-[2.5%] w-[3%] bg-(--add-button-color) rounded-md aspect-square hover:scale-(--add-button-hover-scale) transition-all pointer-events-auto">
+				<button class="tournamentCreationGUIAddProfile ml-[2.5%] w-[3%] bg-(--add-button-color) rounded-md aspect-square hover:not-disabled:scale-(--add-button-hover-scale) transition-all pointer-events-auto">
 					<div class="aspect-square m-auto flex flex-col h-4/5">
 						<div class="w-[13.8%] h-[45%] bg-black m-auto"></div>
 						<div class="w-full h-[13.8%] bg-black"></div>

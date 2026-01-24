@@ -261,7 +261,7 @@ export class PongGame extends HTMLElement {
 
 		this._assetsManager.addMeshTask("scene", null, "/scenes/", sceneName)
 
-		SceneManager.OnSceneReadyObservable.add((filename) => {
+		SceneManager.OnSceneReadyObservable.add(() => {
 			this._loadingGUI.hideLoadingUI();
 			SceneManager.OnSceneReadyObservable.clear();
 			scene.clearColor = new Color4(0, 0, 0, 1);
