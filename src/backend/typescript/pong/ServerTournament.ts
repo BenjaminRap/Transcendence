@@ -262,6 +262,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 	{
 		this._ranks.push({alias: loser.data.getProfile().shownName, rank: 1});
 		loser.emit("tournament-event", {type: "lose", isQualifications, roundParticipantsCount: roundMatchCount})
+		this.removePlayerFromTournament(loser);
 	}
 
     protected override onQualificationsEnd(qualified: DefaultSocket[]): void
