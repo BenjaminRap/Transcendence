@@ -29,7 +29,7 @@ model User {
   email     String      @unique
   password  String
 
-  avatar    String      @default("https://localhost:8080/api/static/public/avatarDefault.webp")
+  avatar    String
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -95,7 +95,7 @@ model Match {
 model Tournament {
   id              Int       @id @default(autoincrement())
 
-  title           String	@unique
+  title           String
   
   status          TournamentStatus  @default(ONGOING)
 

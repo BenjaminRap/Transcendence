@@ -53,7 +53,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 			return ;
 		const	userId = socket.data.getUserId();
 
-		if (userId)
+		if (userId !== undefined)
 			this._bannedPlayers.add(userId);
 		else
 			this._bannedPlayers.add(name);
