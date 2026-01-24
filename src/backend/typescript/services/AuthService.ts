@@ -33,7 +33,7 @@ export class AuthService {
                 username: data.username,
                 email: data.email,
                 password: hashedPassword,
-                avatar: process.env.DEFAULT_AVATAR_URL,
+                avatar: process.env.DEFAULT_AVATAR_URL || "api/static/public/avatarDefault.webp",
             },
         });
 
