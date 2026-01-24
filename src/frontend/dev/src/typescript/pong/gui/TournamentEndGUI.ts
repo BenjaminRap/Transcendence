@@ -52,7 +52,7 @@ export class	TournamentEndGUI extends HTMLElement implements IGUI<TournamentEndG
 		this._text.textContent = "WIN";
 	}
 
-	public setLoser(isQualifications : boolean, roundMatchCount : number, tournamentGUI? : TournamentGUI)
+	public setLoser(isQualifications : boolean, roundParticipantsCount : number, tournamentGUI? : TournamentGUI)
 	{
 		if (tournamentGUI)
 		{
@@ -61,10 +61,10 @@ export class	TournamentEndGUI extends HTMLElement implements IGUI<TournamentEndG
 		}
 		const	roundName =
 			isQualifications ? "Qualifications" :
-			roundMatchCount === 1 ? "Final" :
-			roundMatchCount === 2 ? "Semi-Finals" :
-			roundMatchCount === 4 ? "Quarter-Finals" :
-			`The Round of ${roundMatchCount * 2}`;
+			roundParticipantsCount === 2 ? "Final" :
+			roundParticipantsCount === 4 ? "Semi-Finals" :
+			roundParticipantsCount === 8 ? "Quarter-Finals" :
+			`The Round of ${roundParticipantsCount}`;
 		this._text.textContent = `Lost : ${roundName}`;
 	}
 }

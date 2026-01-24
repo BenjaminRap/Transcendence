@@ -8,6 +8,7 @@ import type { DefaultSocket } from "../controllers/SocketEventController";
 import { CommonSchema } from "@shared/common.schema";
 import { Container } from "../container/Container";
 import type { TournamentController } from "../controllers/TournamentController";
+import type { Ranking } from "../types/tournament.types";
 
 export class	ServerTournament extends Tournament<DefaultSocket>
 {
@@ -21,6 +22,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 	private _socketReadyCount = 0;
 	private _tournamentController = Container.getInstance().getService<TournamentController>("TournamentController");
     private _databaseId?: number;
+	private _ranks = new Array<Ranking>;
 
 	constructor(
 		private _onTournamentDispose : () => void,
@@ -119,7 +121,11 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		if (this._players.size === 0)
 			this.dispose();
 		else if (this._players.size === 1)
-			this.onTournamentEnd();
+		{
+			const	winner = this._players.values().next().value;
+
+			this.onTournamentEnd(winner);
+		}
 		else
 		{
 			const result = await this._tournamentController.createTournament({
@@ -152,10 +158,6 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		if (this._state === "disposed")
 			return ;
 		super.dispose();
-		if (this._databaseId)
-		{
-			this._tournamentController.closeTournament(this._databaseId, []);
-		}
 		console.log(`${this._settings.name} tournamend end`);
 		if (this._state === "creation")
 		{
@@ -258,7 +260,8 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 
 	protected override onParticipantLose(loser : DefaultSocket, isQualifications : boolean, roundMatchCount : number)
 	{
-		loser.emit("tournament-event", {type: "lose", isQualifications, roundMatchCount})
+		this._ranks.push({alias: loser.data.getProfile().shownName, rank: 1});
+		loser.emit("tournament-event", {type: "lose", isQualifications, roundParticipantsCount: roundMatchCount})
 	}
 
     protected override onQualificationsEnd(qualified: DefaultSocket[]): void
@@ -269,8 +272,11 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		});
     }
 
-    protected override onTournamentEnd(): void
+    protected override onTournamentEnd(winner? : DefaultSocket): void
 	{
+		if (winner)
+			this._ranks.push({alias: winner.data.getProfile().shownName, rank: 1});
+		this._tournamentController.closeTournament(this._databaseId!, this._ranks);
 		this._io.to(this._tournamentId).emit("tournament-event", {type: "win"})
 		this.dispose();
     }
