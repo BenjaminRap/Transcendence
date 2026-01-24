@@ -95,7 +95,7 @@ model Match {
 model Tournament {
   id              Int       @id @default(autoincrement())
 
-  title           String	@unique
+  title           String
   
   status          TournamentStatus  @default(ONGOING)
 
