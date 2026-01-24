@@ -96,6 +96,7 @@ export class	SocketData
 
 	public authenticate(userId : number, userName : string, image : string)
 	{
+		this.disconnectOrLogout();
 		this._onlineProfile = {
 			username: userName,
 			image,
