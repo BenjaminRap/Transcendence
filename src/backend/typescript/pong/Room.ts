@@ -150,7 +150,6 @@ export class	Room
 
 	private gameEnd(endData : EndData)
 	{
-		console.log(endData);
 		setTimeout(() => {
 			this.dispose(endData);
 		}, 0);
