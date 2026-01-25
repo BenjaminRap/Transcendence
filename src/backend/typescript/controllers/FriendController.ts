@@ -65,6 +65,7 @@ export class FriendController {
             const userProfile = await this.friendService.acceptFriendRequest(Number(friendId.data), Number(userId));
 
 			// notify friendship acceptance to friend
+			console.log('ACCEPT sended at :', Number(friendId.data));
 			SocketEventController.sendToUser(Number(friendId.data), 'friend-status-update', {
 				friendProfile: userProfile, status: 'ACCEPTED'
 			});

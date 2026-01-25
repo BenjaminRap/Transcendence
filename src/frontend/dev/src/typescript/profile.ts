@@ -435,7 +435,6 @@ export namespace ProfileBuilder {
 		isActive = true;
 		if (socketUtils && socketUtils.socket)
 		{
-            console.log("\nEN ECOUTE PROFILE UPDATE, STATUS CHANGE ET FRIEND STATUS UPDATE\n");
 			socketUtils.socket.on("profile-update", (data : {user: { id: string; username: string; avatar: string }}) => {
 				console.log("Profile updated:", data.user.id);
 				ProfileUpdater.updateFriendProfile(parseInt(data.user.id), data.user.username, data.user.avatar);
@@ -444,15 +443,15 @@ export namespace ProfileBuilder {
 				ProfileUpdater.updateFriendList(parseInt(data.userId), data.status);
 			});
 
-			socketUtils.socket.on("friend-status-update", (data: {requester: {id: number, username: string, avatar: string, isOnline: boolean, requesterId: number}, status: string}) => {
-				console.log("Friend status updated:", data.requester.id, data.status);
+			socketUtils.socket.on("friend-status-update", ( friendProfile: {id: number, username: string, avatar: string, isOnline:boolean, requesterId: number}, status: string) => {
+				console.log("Friend status updated:", friendProfile.requesterId, status);
 				let friendToAdd: Friend = {
-					avatar: data.requester.avatar,
-					username: data.requester.username,
-					id: data.requester.id,
-					status: data.status,
-					isOnline: data.requester.isOnline,
-					requesterId: data.requester.requesterId,
+					avatar: friendProfile.avatar,
+					username: friendProfile.username,
+					id: friendProfile.id,
+					status: status,
+					isOnline: friendProfile.isOnline,
+					requesterId: friendProfile.requesterId,
 				};
 				profile.friends.push(friendToAdd);
 				sortFriendList();
