@@ -28,15 +28,11 @@ export class TerminalText extends CustomScriptComponent {
         super(transform, scene, properties, alias);
     }
 
-	protected	awake()
+	protected	ready()
 	{
 		this._commandPrefix = "user@terminal:/$ ";
 		this.reset();
 		this.listenToEvents();
-	}
-
-	protected	start()
-	{
 		this._timerManager.setInterval(() => this.updateCursor(), TerminalText._cursorBlinkingInterval);
 		this._timerManager.setInterval(() => this.writeCommand(), TerminalText._writeInterval);
 	}

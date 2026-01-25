@@ -3,10 +3,10 @@ import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager } from "@babylonjs-toolkit/next";
 import { AdvancedDynamicTexture, Control, TextBlock } from "@babylonjs/gui/2D"
 import { Imported } from "@shared/ImportedDecorator";
-import { Color4 } from "@babylonjs/core";
 import { zodInt, zodString } from "@shared/ImportedHelpers";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import zod from "zod";
+import { getFrontendSceneData } from "../PongGame";
 
 const	zodVerticalAlignment = zod.literal(["top", "center", "bottom"]);
 type	VerticalAlignment = zod.infer<typeof zodVerticalAlignment>;
@@ -16,13 +16,11 @@ type	HorizontalAlignment = zod.infer<typeof zodHorizontalAlignment>;
 
 export class Text extends CustomScriptComponent {
 	@Imported(zodString) private _text! : string;
-	@Imported(Color4) private _color! : Color4;
 	@Imported(zodInt) private _fontSizeInPixels! : number;
 	@Imported(zodInt) private _maxCharacterInRow! : number;
 	@Imported(zodInt) private _maxRow! : number;
 	@Imported(zodVerticalAlignment) private _verticalAlignment! : VerticalAlignment;
 	@Imported(zodHorizontalAlignment) private _horizontalAlignment! : HorizontalAlignment;
-	@Imported(zodString) private _fontFamily! : string;
 
 	private _texture! : AdvancedDynamicTexture;
 	private _textBlock! : TextBlock;
@@ -31,20 +29,24 @@ export class Text extends CustomScriptComponent {
         super(transform, scene, properties, alias);
     }
 
-	protected awake()
+	protected start()
 	{
+		const	sceneData = getFrontendSceneData(this.scene);
+		const	style = getComputedStyle(sceneData.pongHTMLElement);
+		const	color = style.getPropertyValue("--text-color").trim();
+		const	font = style.getPropertyValue("--font").trim();
 		const	width = this._fontSizeInPixels * this._maxCharacterInRow;
 		const	height = this._fontSizeInPixels * this._maxRow;
 
 		this._texture = AdvancedDynamicTexture.CreateForMesh(this.getAbstractMesh(), width, height, false, false, false);
 		this._textBlock = new TextBlock(undefined, this._text);
 		this._textBlock.fontSizeInPixels = this._fontSizeInPixels;
-		this._textBlock.color = this.colorToString(this._color);
+		this._textBlock.color = color;
 		this._textBlock.resizeToFit = true;
 		this._textBlock.textHorizontalAlignment = this.getHorizontalAlignment();
 		this._textBlock.verticalAlignment = this.getVerticalAlignment();
 		this._textBlock.textWrapping = true;
-		this._textBlock.fontFamily = this._fontFamily;
+		this._textBlock.fontFamily = font === "VT323" ? "pixel" : font;
 		this._texture.addControl(this._textBlock);
 	}
 
@@ -91,11 +93,6 @@ export class Text extends CustomScriptComponent {
 	public getText()
 	{
 		return this._textBlock.text;
-	}
-
-	private colorToString(color : Color4) : string
-	{
-		return  `rgba(${color.r * 255}, ${color.g * 255}, ${color.b * 255}, ${color.a})`
 	}
 }
 
