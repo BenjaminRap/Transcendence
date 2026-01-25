@@ -29,25 +29,30 @@ export class Text extends CustomScriptComponent {
         super(transform, scene, properties, alias);
     }
 
-	protected start()
+	protected	awake()
 	{
-		const	sceneData = getFrontendSceneData(this.scene);
-		const	style = getComputedStyle(sceneData.pongHTMLElement);
-		const	color = style.getPropertyValue("--text-color").trim();
-		const	font = style.getPropertyValue("--font").trim();
 		const	width = this._fontSizeInPixels * this._maxCharacterInRow;
 		const	height = this._fontSizeInPixels * this._maxRow;
 
 		this._texture = AdvancedDynamicTexture.CreateForMesh(this.getAbstractMesh(), width, height, false, false, false);
 		this._textBlock = new TextBlock(undefined, this._text);
 		this._textBlock.fontSizeInPixels = this._fontSizeInPixels;
-		this._textBlock.color = color;
 		this._textBlock.resizeToFit = true;
 		this._textBlock.textHorizontalAlignment = this.getHorizontalAlignment();
 		this._textBlock.verticalAlignment = this.getVerticalAlignment();
 		this._textBlock.textWrapping = true;
-		this._textBlock.fontFamily = font === "VT323" ? "pixel" : font;
 		this._texture.addControl(this._textBlock);
+	}
+
+	protected ready()
+	{
+		const	sceneData = getFrontendSceneData(this.scene);
+		const	style = getComputedStyle(sceneData.pongHTMLElement);
+		const	color = style.getPropertyValue("--text-color").trim();
+		const	font = style.getPropertyValue("--font").trim();
+
+		this._textBlock.color = color;
+		this._textBlock.fontFamily = font === "VT323" ? "pixel" : font;
 	}
 
 	private getHorizontalAlignment() : number
