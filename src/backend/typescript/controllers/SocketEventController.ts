@@ -15,7 +15,7 @@ export type DefaultSocket = Socket<ClientToServerEvents, ServerToClientEvents, D
 export class SocketEventController {
 	constructor (
 		private io: ServerType,
-        private friendService: FriendService = Container.getInstance().getService('FriendService'),
+        private friendService: FriendService,
 	) {
 		this.matchMaker = new MatchMaker(io);
 		this.sockets = new Set<DefaultSocket>();
@@ -34,7 +34,7 @@ export class SocketEventController {
 	static initInstance( io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>): void
 	{
 		if (!SocketEventController.socketInstance) {
-			SocketEventController.socketInstance = new SocketEventController (io);
+			SocketEventController.socketInstance = new SocketEventController (io, Container.getInstance().getService('FriendService'));
 		}
 	}
 
@@ -77,15 +77,14 @@ export class SocketEventController {
         try {
             if (SocketEventController.socketInstance)
             {
-                const friendService: FriendService = Container.getInstance().getService('FriendService');
-    
-                await friendService.getFriendsIds(userId).then((friendsIds: number[]) => {
-                    friendsIds.forEach((friendId) => {
-                        SocketEventController.sendToUser(friendId, event, data);
+                await SocketEventController.socketInstance.friendService.getFriendsIds(userId)
+                    .then((friendsIds: number[]) => {
+                        friendsIds.forEach((friendId) => {
+                            SocketEventController.sendToUser(friendId, event, data);
+                        });
+                    }).catch((error) => {
+                        console.warn(`Error retrieving friends of user ${userId} :`, error);
                     });
-                }).catch((error) => {
-                    console.warn(`Error retrieving friends of user ${userId} :`, error);
-                });
             }            
         } catch (error) {
             console.warn(`Error sending socket event to friends of user ${userId} :`, error);
@@ -96,6 +95,7 @@ export class SocketEventController {
     // ----------------------------------------------------------------------------- //
     static notifyProfileChange(id: number, event: string, data: any): void
     {
+        if (!id || id < 0) return;
         SocketEventController.sendToUser(id, event, data);
         SocketEventController.sendToFriends(id, event, data);
         SocketEventController.sendToProfileWatchers(id, event, data);
@@ -104,7 +104,7 @@ export class SocketEventController {
     // check if a user is online
     // ----------------------------------------------------------------------------- //
     static isUserOnline(userId: number): boolean {
-        console.log(`checking if user ${userId} is online in the list : `, SocketEventController.connectedUsers);
+        if (!userId || userId < 0) return false;
         return SocketEventController.connectedUsers.has(userId);
     }
 

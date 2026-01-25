@@ -145,7 +145,7 @@ export class FriendService {
 
     // ----------------------------------------------------------------------------- //
     async getFriendsIds(userId: number): Promise<number[]> {
-        // check user account validity
+        // check userId and user account validity
         if ( await this.checkId(userId) == false )
             throw new FriendException(FriendError.USR_NOT_FOUND, FriendError.USR_NOT_FOUND);
 
@@ -224,6 +224,8 @@ export class FriendService {
 
     // ----------------------------------------------------------------------------- //
     private async checkId(id: number): Promise<boolean> {
+        if (!id || Number(id) < 0) return false;
+
         if (await this.prisma.user.findFirst({where: { id: Number(id) }, select: { id: true }}))
             return true;
         return false;
