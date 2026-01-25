@@ -51,7 +51,7 @@ export class FileController {
                 default: {
                     return {
                         success: false,
-                        message: (error as any)?.message || 'Error loading file'
+                        message: 'Error loading file'
                     };
                 }
             }

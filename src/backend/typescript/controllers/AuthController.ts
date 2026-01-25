@@ -68,15 +68,21 @@ export class AuthController {
                 ...result,
             });
         } catch (error) {
-            if (error instanceof AuthException) {
-                return reply.status(401).send({ success: false, message: error.message });
-            }
+			const err = analyseError(error);
+			return reply.status(err.status).send({
+				success: false,
+				message: err.message,
+			});
+		}
+            // if (error instanceof AuthException) {
+            //     return reply.status(401).send({ success: false, message: error.message });
+            // }
 
-            request.log.error(error);
-            return reply.status(500).send({
-                success: false,
-                message: 'Internal server error',
-            });
+            // request.log.error(error);
+            // return reply.status(500).send({
+            //     success: false,
+            //     message: 'Internal server error',
+            // });
         }
     }
 
