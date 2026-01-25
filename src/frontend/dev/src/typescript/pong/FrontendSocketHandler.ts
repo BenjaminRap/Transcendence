@@ -73,7 +73,7 @@ export class	FrontendSocketHandler
 			if (result.success)
 				return ;
 			this._socket.off("joined-game");
-			deferred.reject(result.error);
+			deferred.reject(new PongError(result.error, "show"));
 		});
 		return deferred;
 	}
@@ -99,8 +99,11 @@ export class	FrontendSocketHandler
 	{
 		const	deferred = new Deferred<TournamentDescription[]>();
 
-		this._socket.emit("get-tournaments", (tournamentDescriptions : TournamentDescription[]) => {
-			deferred.resolve(tournamentDescriptions);
+		this._socket.emit("get-tournaments", (tournamentDescriptions : Result<TournamentDescription[]>) => {
+			if (tournamentDescriptions.success)
+				deferred.resolve(tournamentDescriptions.value);
+			else
+				deferred.reject(new PongError(tournamentDescriptions.error, "show"));
 		});
 		return deferred;
 	}

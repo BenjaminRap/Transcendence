@@ -9,6 +9,7 @@ import type { ServerType } from "../index.js";
 import { getPublicTournamentsDescriptions, TournamentMaker } from "../pong/TournamentMaker.js";
 import { zodTournamentCreationSettings, type Profile, type TournamentDescription, type TournamentId } from "@shared/ServerMessage.js";
 import { error, success, type Result } from "@shared/utils.js";
+import type { FriendProfile } from "../types/friend.types.js";
 
 export type DefaultSocket = Socket<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>;
 
@@ -22,7 +23,7 @@ export class SocketEventController {
 		this.tournamentMaker = new TournamentMaker(io);
 		this.initSocket();
 	}
-	private static connectedUsers: Map<number, number> = new Map();
+	private static connectedUsers = new Map<number, Set<SocketData>>();
 	private static socketInstance: SocketEventController;
 	private matchMaker: MatchMaker;
 	private sockets : Set<DefaultSocket>;
@@ -104,23 +105,63 @@ export class SocketEventController {
     // check if a user is online
     // ----------------------------------------------------------------------------- //
     static isUserOnline(userId: number): boolean {
-        console.log(`checking if user ${userId} is online in the list : `, SocketEventController.connectedUsers);
+        // console.log(`checking if user ${userId} is online in the list : `, SocketEventController.connectedUsers);
         return SocketEventController.connectedUsers.has(userId);
     }
 
-	static async getUserState(io : ServerType, data : SocketData) : Promise<Result<SocketState>>{
-		try {
-			const	userId = data.getUserId();
+	static disconnectSocketToUser(socket : DefaultSocket) {
+		const	userId = socket.data.getUserId();
 
-			if (!userId)
-				return success(data.getState());
-			const	userSockets = await io.in('user-' + userId).fetchSockets();
-			const	activeSocket = userSockets.find(socket => socket.data.getState() !== "unactive");
+		if (!userId)
+			return ;
+		socket.data.disconnectOrLogout();
+		const	userSocketDatas = SocketEventController.connectedUsers.get(userId);
 
-			return success(activeSocket?.data.getState() ?? "unactive");
-		} catch (e) {
-			return error("Could not fetch sockets");
+		if (!userSocketDatas)
+			return ;
+		userSocketDatas.delete(socket.data);
+		if (userSocketDatas.size === 0)
+		{
+			SocketEventController.connectedUsers.delete(userId);
+            SocketEventController.sendToProfileWatchers(userId, 'user-status-change', { userId: userId, status: 'offline' });
+            SocketEventController.sendToFriends(userId, 'user-status-change', { userId: userId, status: 'offline' });
 		}
+        socket.leave('user-' + userId);
+        console.log(`User ${userId} logged out and leaved his own socket room !`);
+	}
+
+	static connectSocketToUser(socket : DefaultSocket, user : FriendProfile) {
+		socket.data.authenticate(user.id, user.username, user.avatar)
+		let	userSocketDatas = SocketEventController.connectedUsers.get(user.id);
+
+		if (!userSocketDatas)
+		{
+			userSocketDatas = new Set<SocketData>();
+			SocketEventController.connectedUsers.set(user.id, userSocketDatas);
+            SocketEventController.sendToProfileWatchers(user.id, 'user-status-change', { userId: user.id, status: 'online' });
+            SocketEventController.sendToFriends(user.id, 'user-status-change', { userId: user.id, status: 'online' });
+		}
+		userSocketDatas.add(socket.data);
+        socket.join('user-' + user.id);
+        console.log(`User ${user.id} authenticated and joined his own socket room !`);
+	}
+
+	static getUserState(data : SocketData) : SocketState {
+		const	userId = data.getUserId();
+
+		if (!userId)
+			return data.getState();
+		const	user = SocketEventController.connectedUsers.get(userId);
+		if (!user)
+			return data.getState();
+		for (const socketData of user)
+		{
+			const	state = socketData.getState();
+
+			if (state !== "unactive")
+				return state;
+		}
+		return "unactive";
 	}
 
     // ==================================== PRIVATE ==================================== //
@@ -135,7 +176,7 @@ export class SocketEventController {
                 this.handleAuthenticate(socket, data.token, ack);
             });
 
-			socket.on("get-tournaments", (ack : (descriptions : TournamentDescription[]) => void) => {
+			socket.on("get-tournaments", (ack : (descriptions : Result<TournamentDescription[]>) => void) => {
 				this.handleGetTournaments(socket, ack);
 			});
 
@@ -152,7 +193,7 @@ export class SocketEventController {
 			});
 
             socket.on("get-online-users", (callback) => {
-				this.handleGetStatus(socket, callback);
+				this.handleGetStatus(callback);
             });
 
             socket.on("watch-profile", (profileId: number[]) => {
@@ -193,45 +234,24 @@ export class SocketEventController {
             const tokenManager: TokenManager = Container.getInstance().getService('TokenManager');
             const decoded = await tokenManager.verify(token, false);
             userId = Number(decoded.userId);
-            
-            // verifier si l'id est deja dans une room `user-${userId}`
-            const tab = await this.io.in('user-' + userId).fetchSockets();
-            if (tab.length > 0) {
-                socket.data = tab[0].data;
-            }
 
             const user = await this.friendService.getById(userId);
             if (!user) {
                 ack(error("User not found"));
                 return;
             }
-			socket.data.authenticate(userId, user.username, user.avatar)
+			SocketEventController.connectSocketToUser(socket, user);
         } catch (err) {
             ack(error("Invalid token"));
             return;
         }
         ack(success(null));
-
-        // system to count multiple connections from the same user
-        const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
-        const newCount = currentCount + 1;
-
-        SocketEventController.connectedUsers.set(userId, newCount);
-
-        socket.join('user-' + userId);
-        console.log(`User ${userId} authenticated and joined his own socket room !`);
-
-        // notifie watchers and friends only if it's the first connection of the user
-        if (newCount === 1) {
-            SocketEventController.sendToProfileWatchers(userId, 'user-status-change', { userId: userId, status: 'online' });
-            SocketEventController.sendToFriends(userId, 'user-status-change', { userId: userId, status: 'online' });
-        }
     }
 
 	// ----------------------------------------------------------------------------- //
-	private async handleGetTournaments(socket : DefaultSocket, ack : (descriptions : TournamentDescription[]) => void)
+	private handleGetTournaments(socket : DefaultSocket, ack : (descriptions : Result<TournamentDescription[]>) => void)
 	{
-		const descriptions = await getPublicTournamentsDescriptions(socket);
+		const descriptions = getPublicTournamentsDescriptions(socket);
 
 		ack(descriptions);
 	}
@@ -260,9 +280,9 @@ export class SocketEventController {
 	}
 
     // ----------------------------------------------------------------------------- //	
-	private	async handleJoinTournament(socket : DefaultSocket, tournamentId : TournamentId, ack: (participants : Result<Profile[]>) => void)
+	private	handleJoinTournament(socket : DefaultSocket, tournamentId : TournamentId, ack: (participants : Result<Profile[]>) => void)
 	{
-			const	tournament = await this.tournamentMaker.joinTournament(tournamentId, socket);
+			const	tournament = this.tournamentMaker.joinTournament(tournamentId, socket);
 
 			if (!tournament.success)
 			{
@@ -275,11 +295,9 @@ export class SocketEventController {
 	// ----------------------------------------------------------------------------- //
     // demander la liste des ids des users en ligne
     // renvoyer les ids des users connectes qui correspondent a des ids de la liste demandee
-	private handleGetStatus(socket: DefaultSocket, callback: (onlineUsers: number[]) => void)
+	private handleGetStatus(callback: (onlineUsers: number[]) => void)
 	{
-		if (typeof callback === 'function') {
-			callback(Array.from(SocketEventController.connectedUsers.keys()) );
-		}
+		callback(Array.from(SocketEventController.connectedUsers.keys()));
 	}
 
 	// ----------------------------------------------------------------------------- //
@@ -287,8 +305,7 @@ export class SocketEventController {
 	{
 		console.log("try-join-matchmaking");
 
-		const	result = await this.matchMaker.addUserToMatchMaking(socket);
-		ack(result);
+		ack(this.matchMaker.addUserToMatchMaking(socket));
 	}	
 
 	// ----------------------------------------------------------------------------- //
@@ -315,23 +332,7 @@ export class SocketEventController {
 		this.sockets.delete(socket);
 
         this.matchMaker.removeUserFromMatchMaking(socket);
-
-		const userId = Number(socket.data.getUserId());
-        if (userId === -1)
-            console.log(`Guest disconnected !`);
-        else {
-            // decompte ne nb de connexion du user (plusieurs onglets...)
-			const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
-			const newCount = currentCount - 1;
-            SocketEventController.connectedUsers.set(userId, newCount);
-
-            if (newCount <= 0) {
-                console.log(`User ${userId} disconnected !`);
-				SocketEventController.connectedUsers.delete(userId);
-                SocketEventController.sendToProfileWatchers(userId, 'user-status-change', { userId: userId, status: 'offline' });
-                SocketEventController.sendToFriends(userId, 'user-status-change', { userId: userId, status: 'offline' });
-			}
-		}
+		SocketEventController.disconnectSocketToUser(socket);
 		socket.data.disconnectOrLogout();
 	}
 
@@ -341,20 +342,6 @@ export class SocketEventController {
         socket.rooms.forEach((room) => {
            room !== `${socket.id}` ? socket.leave(room) : null;
         });
-        socket.data.disconnectOrLogout();
-		const userId = socket.data.getUserId();
-
-		if (!userId)
-			return ;
-        const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
-        const newCount = currentCount - 1;
-        SocketEventController.connectedUsers.set(userId, newCount);
-
-        if (newCount <= 0) {
-            console.log(`User ${userId} logged out !`);
-            SocketEventController.connectedUsers.delete(userId);
-            SocketEventController.sendToProfileWatchers(userId, 'user-status-change', { userId: userId, status: 'offline' });
-            SocketEventController.sendToFriends(userId, 'user-status-change', { userId: userId, status: 'offline' });
-        }
+		SocketEventController.disconnectSocketToUser(socket);
     }
 }

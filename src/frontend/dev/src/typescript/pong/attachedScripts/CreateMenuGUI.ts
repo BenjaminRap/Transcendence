@@ -389,6 +389,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 			this._onlineTournamentJoinPublicGUI.setTournaments(tournaments);
 		} catch (error) {
+			this.switchMenu(this._onlineTournamentChoiceGUI);
 			this._sceneData.pongHTMLElement.setButtonEnable(true);
 			this._sceneData.pongHTMLElement.onError(error);
 		}

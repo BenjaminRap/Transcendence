@@ -89,12 +89,16 @@ export class	SocketData
 	}
 
 	public disconnectOrLogout() {
-		this._room?.onSocketQuit(this._socket);
-		this._room = null;
-		this._tournament?.onSocketQuit(this._socket);
-		this._tournament = null;
-		this._onlineProfile = null;
-		this._state = "unactive";
+		try {
+			this._room?.onSocketQuit(this._socket);
+			this._room = null;
+			this._tournament?.onSocketQuit(this._socket);
+			this._tournament = null;
+			this._onlineProfile = null;
+			this._state = "unactive";
+		} catch (error) {
+			console.error(error);
+		}
 	}
 
 	public authenticate(userId : number, userName : string, image : string)

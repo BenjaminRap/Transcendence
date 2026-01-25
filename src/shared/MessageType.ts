@@ -26,7 +26,7 @@ export type ClientMessageData<T extends ClientMessage> =
 	T extends "create-tournament" ? [TournamentCreationSettings, (tournamentId : Result<TournamentId>) => void] :
 	T extends "start-tournament" ? [(result : Result<null>) => void] :
 	T extends "join-tournament" ? [TournamentId, (participants : Result<Profile[]>) => void] :
-	T extends "get-tournaments" ? [(descriptions : TournamentDescription[]) => void] :
+	T extends "get-tournaments" ? [(descriptions : Result<TournamentDescription[]>) => void] :
 	T extends "ban-participant" ? [string] :
 	T extends "kick-participant" ? [string] :
 	T extends "get-online-users" ? [(users: number[]) => void] :

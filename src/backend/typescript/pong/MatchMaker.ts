@@ -18,13 +18,11 @@ export class	MatchMaker
 	) {
 	}
 
-	public	async addUserToMatchMaking(socket : DefaultSocket) : Promise<Result<null>>
+	public	addUserToMatchMaking(socket : DefaultSocket) : Result<null>
 	{
-		const	currentState = await SocketEventController.getUserState(this._io, socket.data);
+		const	currentState = SocketEventController.getUserState(socket.data);
 
-		if (!currentState.success)
-			return error("Server Error");
-		if (currentState.value !== "unactive")
+		if (currentState!== "unactive")
 			return error("The user is already in a game, tournament or matchmaking");
 		console.log("user added to matchmaking !");
 		socket.once("leave-matchmaking", () => { this.removeUserFromMatchMaking(socket) });

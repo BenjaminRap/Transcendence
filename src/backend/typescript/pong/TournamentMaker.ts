@@ -2,7 +2,7 @@ import type { TournamentCreationSettings, TournamentDescription, TournamentId } 
 import { ServerTournament } from "./ServerTournament";
 import { error, success, type Result } from "@shared/utils";
 import type { ServerType } from "..";
-import type { DefaultSocket } from "../controllers/SocketEventController";
+import { SocketEventController, type DefaultSocket } from "../controllers/SocketEventController";
 
 const	tournamentsByName = new Map<string, ServerTournament>();
 const	tournamentsById = new Map<string, ServerTournament>();
@@ -18,6 +18,9 @@ export class	TournamentMaker
 
 	public createTournament(settings : TournamentCreationSettings, creator : DefaultSocket) : Result<ServerTournament>
 	{
+		const	userState = SocketEventController.getUserState(creator.data);
+		if (userState !== "unactive")
+			return error("The user is already in a game, tournament or matchmaking");
 		if (tournamentsByName.has(settings.name))
 			return error("Tournament Name already taken !");
 		const	tournament = new ServerTournament(() => this.removeTournament(tournament), settings, this._io, creator);
@@ -26,13 +29,13 @@ export class	TournamentMaker
 		return success(tournament);
 	}
 
-	public async joinTournament(tournamentId : TournamentId, socket : DefaultSocket) : Promise<Result<ServerTournament>>
+	public joinTournament(tournamentId : TournamentId, socket : DefaultSocket) : Result<ServerTournament>
 	{
 		const	tournament = tournamentsById.get(tournamentId);
 
 		if (tournament === undefined)
 			return error("Invalid Tournament Id !");
-		const	result = await tournament.addParticipant(socket);
+		const	result = tournament.addParticipant(socket);
 		if (!result.success)
 			return result;
 		return success(tournament);
@@ -55,16 +58,19 @@ export class	TournamentMaker
 	}
 }
 
-export async function	getPublicTournamentsDescriptions(socket : DefaultSocket) : Promise<TournamentDescription[]>
+export function	getPublicTournamentsDescriptions(socket : DefaultSocket) : Result<TournamentDescription[]>
 {
+	const	userState = SocketEventController.getUserState(socket.data);
+	if (userState !== "unactive")
+		return error("The user is already in a game, tournament or matchmaking");
 	const	descriptions : TournamentDescription[] = [];
 
 	for (const tournament of tournamentsByName.values())
 	{
-		const	description = await tournament.getDescriptionIfAvailable(socket);
+		const	description = tournament.getDescriptionIfAvailable(socket);
 
 		if (description !== null)
 			descriptions.push(description);
 	}
-	return descriptions;
+	return success(descriptions);
 }

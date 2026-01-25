@@ -41,6 +41,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		this._creator.once("cancel-tournament", () => this.dispose());
 		this._creator.on("ban-participant", (name : string) => this.banParticipant(name));
 		this._creator.on("kick-participant", (name : string) => this.kickParticipant(name));
+		this._creator.data.joinTournament(this);
 	}
 
 	private	banParticipant(name : string)
@@ -172,16 +173,13 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		this._onTournamentDispose();
 	}
 	
-	private	async canJoinTournament(socket : DefaultSocket)
+	private	canJoinTournament(socket : DefaultSocket)
 	{
-		const	userState = await SocketEventController.getUserState(this._io, socket.data);
-
-		if (!userState.success)
-			return error("Server Error");
+		const	userState = SocketEventController.getUserState(socket.data);
 		const	isCreator = socket === this._creator;
 		const	isCreatorPlayer = isCreator && this._players.has(this._creator.data.getGuestName());
 
-		if (isCreatorPlayer || (!isCreator && userState.value !== "unactive"))
+		if (isCreatorPlayer || (!isCreator && userState !== "unactive"))
 			return error("The user is already in a game, tournament or matchmaking");
 		if (this._state !== "creation")
 			return error("The tournament has already started !");
@@ -196,9 +194,9 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		return success(undefined);
 	}
 
-	public async addParticipant(socket : DefaultSocket) : Promise<Result<undefined>>
+	public addParticipant(socket : DefaultSocket) : Result<undefined>
 	{
-		const	canJoinTournament = await this.canJoinTournament(socket);
+		const	canJoinTournament = this.canJoinTournament(socket);
 
 		if (!canJoinTournament.success)
 			return canJoinTournament;
@@ -246,6 +244,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		socket.removeAllListeners("leave-tournament");
 		socket.removeAllListeners("ready");
 		socket.removeAllListeners("set-alias");
+		socket.leave(this._tournamentId);
 		if (this._state === "creation")
 		{
 			this._io.to(this._tournamentId).to(this._creator.id).emit("tournament-event", {
@@ -253,11 +252,8 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 				guestName: guestName
 			});
 		}
-		if (this._state !== "creation" || !isCreator)
-		{
+		if (!(this._state === "creation" && isCreator))
 			socket.data.leaveTournament();
-			socket.leave(this._tournamentId);
-		}
 		if (this._state === "waiting-ready")
 		{
 			if (socket.data.ready)
@@ -363,11 +359,11 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		}
 	}
 
-	public async getDescriptionIfAvailable(socket : DefaultSocket) : Promise<TournamentDescription | null>
+	public getDescriptionIfAvailable(socket : DefaultSocket) : TournamentDescription | null
 	{
 		if (!this._settings.isPublic)
 			return null;
-		const	canJoinTournament = await this.canJoinTournament(socket);
+		const	canJoinTournament = this.canJoinTournament(socket);
 
 		if (!canJoinTournament)
 			return null;
