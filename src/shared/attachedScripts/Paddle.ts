@@ -32,6 +32,7 @@ export class Paddle extends CustomScriptComponent {
 	private _playerInput! : PlayerInput;
 	private _initialPosition : Vector3;
 	private _canMove : boolean = false;
+	private _isBallInsideCollider : boolean = false;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "Paddle") {
         super(transform, scene, properties, alias);
@@ -39,7 +40,7 @@ export class Paddle extends CustomScriptComponent {
 		this._initialPosition = this.transform.position.clone();
 		const	sceneData = getSceneData(this.scene);
 
-		sceneData.havokPlugin.onTriggerCollisionObservable.add(this.onTriggerEnter.bind(this));
+		sceneData.havokPlugin.onTriggerCollisionObservable.add(this.onTriggerEvent.bind(this));
 		sceneData.events.getObservable("game-start").add(() => {
 			this._canMove = true;
 			this.reset();
@@ -50,15 +51,27 @@ export class Paddle extends CustomScriptComponent {
 		});
     }
 
-	private onTriggerEnter(collision : IBasePhysicsCollisionEvent)
+	private onTriggerEvent(collision : IBasePhysicsCollisionEvent)
 	{
-		if (collision.type !== PhysicsEventType.TRIGGER_ENTERED
-			|| collision.collider !== this._physicsBody
+		if (collision.collider !== this._physicsBody
 			|| collision.collidedAgainst.transformNode !== this._ball.transform)
+			return ;
+		if (collision.type === PhysicsEventType.TRIGGER_ENTERED)
+			this._isBallInsideCollider = true;
+		else
+			this._isBallInsideCollider = false;
+	}
+
+	protected	fixed()
+	{
+		if (!this._isBallInsideCollider)
+			return ;
+		const	currentVelocity = this._ball.getLinearVelocity();
+
+		if (Math.sign(currentVelocity.x) !== Math.sign(this._ball.transform.absolutePosition.x))
 			return ;
 		const	thisX = this.transform.absolutePosition.x;
 		const	ballX = this._ball.transform.absolutePosition.x;
-		const	currentVelocity = this._ball.getLinearVelocity();
 		const	isGoal = (thisX < 0 && ballX < thisX) || (thisX > 0 && ballX > thisX);
 		const	newVelocity = isGoal ? currentVelocity.multiplyByFloats(1, -1, 1) : this.getNewVelocity(currentVelocity);
 
