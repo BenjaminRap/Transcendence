@@ -1,3 +1,4 @@
+import type { EndCause } from "@shared/attachedScripts/GameManager";
 import type { IGUI } from "./IGUI";
 import { getLoadingLogoHTML } from "./utilities";
 
@@ -36,7 +37,7 @@ export class	EndGUI extends HTMLElement implements IGUI<EndGUIInputs>
 		this._winText = this.querySelector<HTMLParagraphElement>("p.pauseGUIWinText")!;
 	}
 
-	public setWinner(winner : "left" | "right" | "draw", forfeit : boolean, playerIndex? : number)
+	public setWinner(winner : "left" | "right" | "draw", endCause : EndCause, playerIndex? : number)
 	{
 		let		winText = "";
 		const	winnerIndex = (winner === "left") ? 0 : 1;
@@ -47,8 +48,10 @@ export class	EndGUI extends HTMLElement implements IGUI<EndGUIInputs>
 			winText += "Lose";
 		else
 			winText += "Win";
-		if (forfeit)
+		if (endCause === "forfeit")
 			winText += " By Forfeit";
+		else if (endCause === "timeLimitReached")
+			winText += " By Time Limit";
 		this._winText.textContent = winText;
 		if (this._isOnline || winner === "draw")
 			this.setWinTextSide("middle");

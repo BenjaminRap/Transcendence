@@ -99,13 +99,8 @@ export class TerminalText extends CustomScriptComponent {
 			this.executeCommand("goal --right", `score updated : ${newscore}`);
 		});
 		sceneData.events.getObservable("end").add((endData : EndData) => {
-			let	output;
-			if (endData.forfeit)
-				output = "forfeit";
-			else if (endData.winner === "draw")
-				output = "draw";
-			else
-				output = `Win from ${endData.winner}`
+			const	output = (endData.winner === "draw") ? "Draw" : `Win from ${endData.winner}`;
+
 			this.executeCommand("match --end", output);
 		});
 		sceneData.events.getObservable("game-start").add(() => {

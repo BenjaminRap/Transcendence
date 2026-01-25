@@ -132,7 +132,7 @@ export class CreateInGameGUI extends CustomScriptComponent {
 
 	private	onGameEnd(endData : EndData)
 	{
-		this._endGUI.setWinner(endData.winner, endData.forfeit, this._sceneData.serverProxy.getPlayerIndex());
+		this._endGUI.setWinner(endData.winner, endData.endCause, this._sceneData.serverProxy.getPlayerIndex());
 		this.switchToGUI(this._endGUI);
 		this._sceneData.tournament?.setMatchWinner(endData);
 	}

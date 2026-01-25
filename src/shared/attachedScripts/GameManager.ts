@@ -9,10 +9,13 @@ import { Vector3 } from "@babylonjs/core";
 import { Imported } from "@shared/ImportedDecorator";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { toXYZ } from "@shared/utils";
+import type { TimerManager } from "./TimerManager";
+
+export type EndCause = "scoreReached" | "forfeit" | "timeLimitReached";
 
 export type EndData = {
 	winner : "left" | "right" | "draw",
-	forfeit : boolean,
+	endCause : EndCause,
 	scoreRight: number,
 	scoreLeft: number,
 	duration: number
@@ -20,10 +23,12 @@ export type EndData = {
 
 export class GameManager extends CustomScriptComponent {
 	private static readonly _pointsToWin = 5;
+	private static readonly _timeLimitS = 30;
 
 	@Imported(TransformNode) private	_goalLeft! : TransformNode;
 	@Imported(TransformNode) private	_goalRight! : TransformNode;
 	@Imported("Ball") private	_ball! : Ball;
+	@Imported("TimerManager") private _timerManager! : TimerManager;
 
 	private _scoreRight : int = 0;
 	private _scoreLeft : int = 0;
@@ -32,6 +37,7 @@ export class GameManager extends CustomScriptComponent {
 	private _isGamePaused : boolean = false;
 	private _defaultTimeStep : number;
 	private _startDate : number = 0;
+	private _timeLimitTimeout : number | null = null;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "GameManager") {
         super(transform, scene, properties, alias);
@@ -49,7 +55,7 @@ export class GameManager extends CustomScriptComponent {
 			this.reset();
 			this.unPause();
 		});
-		this._sceneData.events.getObservable("forfeit").add((winner) => { this.endMatch(winner, true) });
+		this._sceneData.events.getObservable("forfeit").add((winner) => { this.endMatch(winner, "forfeit") });
 		this._sceneData.readyPromise.resolve({
 			ballStartDirection: toXYZ(this._ball.getBallStartDirection())
 		});
@@ -77,14 +83,14 @@ export class GameManager extends CustomScriptComponent {
 			this._scoreRight++;
 			this._sceneData.events.getObservable("updateRightScore").notifyObservers(this._scoreRight);
 			if (this._scoreRight === GameManager._pointsToWin)
-				this.endMatch("right", false);
+				this.endMatch("right", "scoreReached");
 		}
 		else
 		{
 			this._scoreLeft++;
 			this._sceneData.events.getObservable("updateLeftScore").notifyObservers(this._scoreLeft);
 			if (this._scoreLeft === GameManager._pointsToWin)
-				this.endMatch("left", false);
+				this.endMatch("left", "scoreReached");
 		}
 		if (!this._ended)
 			this._ball.launch();
@@ -92,14 +98,19 @@ export class GameManager extends CustomScriptComponent {
 			this._ball.reset();
 	}
 
-	private	endMatch(winner : "left" | "right" | "highestScore", forfeit: boolean)
+	private	endMatch(winner : "left" | "right" | "highestScore", endCause : EndCause)
 	{
 		if (this._ended)
 			return ;
 		this._ended = true;
+		if (this._timeLimitTimeout !== null)
+		{
+			this._timerManager.clearTimer(this._timeLimitTimeout);
+			this._timeLimitTimeout = null;
+		}
 		const	endData : EndData = {
 			winner: (winner === "highestScore") ? this.getHighestScoreSide() : winner,
-			forfeit: forfeit,
+			endCause: endCause,
 			scoreLeft: this._scoreLeft,
 			scoreRight: this._scoreRight,
 			duration: Math.round((Date.now() - this._startDate) / 1000)
@@ -118,6 +129,11 @@ export class GameManager extends CustomScriptComponent {
 
 	private	reset()
 	{
+		this._timeLimitTimeout = this._timerManager.setTimeout(() => {
+			this._timeLimitTimeout = null;
+			this.endMatch("highestScore", "timeLimitReached");
+			console.log("timeout !");
+		}, GameManager._timeLimitS * 1000);
 		this._startDate = Date.now()
 		this._ended = false;
 		this._scoreLeft = 0;
