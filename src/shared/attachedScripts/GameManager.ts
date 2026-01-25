@@ -22,7 +22,7 @@ export type EndData = {
 }
 
 export class GameManager extends CustomScriptComponent {
-	private static readonly _pointsToWin = 5;
+	private static readonly _pointsToWin = 10;
 	private static readonly _timeLimitS = 30;
 
 	@Imported(TransformNode) private	_goalLeft! : TransformNode;
@@ -132,7 +132,6 @@ export class GameManager extends CustomScriptComponent {
 		this._timeLimitTimeout = this._timerManager.setTimeout(() => {
 			this._timeLimitTimeout = null;
 			this.endMatch("highestScore", "timeLimitReached");
-			console.log("timeout !");
 		}, GameManager._timeLimitS * 1000);
 		this._startDate = Date.now()
 		this._ended = false;
