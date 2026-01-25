@@ -15,6 +15,6 @@ export enum TournamentError
 export class TournamentException extends Error {
     constructor(public code: TournamentError, message?: string) {
         super(message ?? code);
-        this.name = 'SuscriberException';
+        this.name = 'TournamentException';
     }
 }

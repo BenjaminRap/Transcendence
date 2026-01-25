@@ -4,18 +4,6 @@ import type { ListFormat } from '../types/friend.types.js';
 import { SocketEventController } from "../controllers/SocketEventController.js";
 import type { FriendProfile } from "../types/friend.types.js";
 
-/**
- * detected errors
- * 
- * file:///app/dev/backend/typescript/services/FriendService.js:3
-fastify-1  | import { SocketEventController } from "../controllers/SocketEventController.js";
-fastify-1  |          ^^^^^^^^^^^^^^^^^^^^^
-fastify-1  | SyntaxError: The requested module '../controllers/SocketEventController.js' does not provide an export named 'SocketEventController'
-fastify-1  |     at #asyncInstantiate (node:internal/modules/esm/module_job:302:21)
-fastify-1  |     at async ModuleJob.run (node:internal/modules/esm/module_job:405:5)
-fastify-1  |     at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:660:26)
-fastify-1  |     at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
- */
 export class FriendService {
     constructor(
         private prisma: PrismaClient
@@ -81,7 +69,7 @@ export class FriendService {
     }
 
     // ----------------------------------------------------------------------------- //
-    async deleteFriend(friendId: number, userId: number) {
+    async deleteFriend(friendId: number, userId: number): Promise<void> {
          if (friendId == userId)
             throw new FriendException(FriendError.INVALID_ID, FriendError.INVALID_ID);
 
@@ -97,7 +85,6 @@ export class FriendService {
         await this.prisma.friendship.delete({ 
             where: { id: Number(friendship.id) }
         });
-
     }
 
     // ----------------------------------------------------------------------------- //
@@ -140,7 +127,7 @@ export class FriendService {
         if (friendList.length === 0)
             return [];
 
-        return (await this.formatList(friendList, userId) as ListFormat[]);
+        return await this.formatList(friendList, userId);
     }
 
     // ----------------------------------------------------------------------------- //
@@ -194,7 +181,7 @@ export class FriendService {
         if (pendingList.length === 0)
             return [];
 
-        return (await this.formatList(pendingList, userId) as ListFormat[]);
+        return await this.formatList(pendingList, userId);
     }
 
     // ----------------------------------------------------------------------------- //
@@ -239,7 +226,8 @@ export class FriendService {
                     { requesterId: Number(friendId), receiverId: Number(userId) },
                     { requesterId: Number(userId), receiverId: Number(friendId) }
                 ]
-            }
+            },
+            select: { id: true }
         })
         return friendship as Friendship;
     }

@@ -1,5 +1,4 @@
 import { TournamentService } from '../services/TournamentService.js';
-import { TournamentException } from '../error_handlers/Tournament.error.js';
 import type { CreateTournament, Ranking } from '../types/tournament.types.js';
 import type { MatchController } from './MatchController.js';
 import type { MatchData } from '../types/match.types.js';
@@ -21,11 +20,7 @@ export class TournamentController {
             return success(result);
 
         } catch (e) {
-            console.error(e);
-
-            if (e instanceof TournamentException)
-				return error(e?.message || e.code)
-
+            console.log(e);
 			return error('Failed to create tournament.');
         }
     }
@@ -33,9 +28,13 @@ export class TournamentController {
 	// ----------------------------------------------------------------------------- //
     async updateTournament(tournamentId: number, matchData: MatchData): Promise<{success: boolean, matchId?: number}> {
         try {
-            const { matchId } = await this.matchController.registerTournamentMatch(tournamentId, matchData);
+            if ( ! await this.matchController.registerTournamentMatch(tournamentId, matchData) )
+                return { success: false };
+
             return { success: true };
         } catch(error) {
+            console.log(error);
+
             return { success: false };
         }
     }
@@ -46,31 +45,8 @@ export class TournamentController {
             await this.tournamentService.finishTournament(id, ranking);
             return { success: true };            
         } catch (error) {
-            console.error(error);
+            console.log(error);
             return { success: false };
         }
     }
-
-
-    // ----------------------------------------------------------------------------- //
-    /**
-     * faire une fonction simple qui permet de recuperer les tournois d'un user
-     * avec en reponse un champ pour la liste des joueur dans l'ordre du gagnant au perdant
-     * un autre champs avec lescore des matchs, et l'avatar et l'aliasde chaque joueur
-     */
-    // async getUserTournaments(request: FastifyRequest<{ Params: {id: string} }>, reply: FastifyReply): Promise<{ success: boolean, tournaments?: UserTournament[], message?: string }> {
-    //     const userId = parseInt(request.params.id);
-    //     const valid = CommonSchema.id.parse(userId);
-    //     if (!valid) {
-    //         return { success: false, message: 'Invalid user ID.' };
-    //     }
-    //     try {
-    //         const tournaments = await this.tournamentService.getUserTournaments(valid);
-    //         return { success: true, tournaments };
-    //     } catch (error) {
-    //         console.error(error);
-    //         return { success: false, message: 'Failed to retrieve user tournaments.' };
-    //     }
-    // }
-
 }

@@ -9,11 +9,11 @@ export class FileService {
     constructor(){}
 
     private MAX_COMPRESSED_SIZE = 300 * 1024;
-    private uploadDir = process.env.UPLOADS_DIR || path.join(__dirname, '/app/uploads/');
+    private uploadDir = process.env.UPLOADS_DIR || '/app/uploads/';
     private avatarDir = process.env.AVATAR_DIR_PATH || path.join(this.uploadDir, 'avatars/');
 
     // --------------------------------------------------------------------------------- //
-    async normalizeAvatar(buffer: Buffer) {
+    async normalizeAvatar(buffer: Buffer): Promise<{ success: boolean; buffer?: Buffer; message?: string }> {
         try {
             // check if the file is not corrupt (sharp)
             await sharp(buffer).metadata();
@@ -25,7 +25,7 @@ export class FileService {
                 .toBuffer();
     
             if (cleanBuffer.length > this.MAX_COMPRESSED_SIZE)
-                console.warn('avatar too large detected, buffer size: ', (cleanBuffer.length / 1024).toFixed(2), " KB");
+                console.log('avatar too large detected, buffer size: ', (cleanBuffer.length / 1024).toFixed(2), " KB");
     
             return {
                 success: true,
@@ -45,6 +45,7 @@ export class FileService {
     async uploadAvatarSafe(buffer: Buffer, userId: string): Promise<string> {
         const filename = `avatar_${userId}_${Date.now()}_${uuidv4()}.webp`;
         const finalPath = path.join(this.avatarDir, filename);
+
         const tmpFile = `${filename}.tmp`;
         const tmpPath = path.join(this.avatarDir, tmpFile);
 
@@ -60,22 +61,23 @@ export class FileService {
             try {
                 await fs.unlink(tmpPath);
             } catch (error) {
-                console.warn(`Cannot delete ${tmpPath} : ${error}`);
+                console.log(`Cannot delete ${tmpPath} : ${error}`);
             }
 
             try {
                 await fs.unlink(finalPath);
             } catch (error) {
-                console.warn(`Cannot delete ${finalPath} : ${error}`);
+                console.log(`Cannot delete ${finalPath} : ${error}`);
             }
             return '';
         }
     }
 
     // --------------------------------------------------------------------------------- //
-    async deleteAvatar(fileUrl: string) {
+    async deleteAvatar(fileUrl: string): Promise<void> {
         const filename = path.basename(fileUrl);
-        if (filename && filename != DEFAULT_AVATAR) {
+        if (filename && filename != DEFAULT_AVATAR)
+        {
             const filePath = path.join(this.avatarDir, filename);
             
             try {
@@ -83,14 +85,11 @@ export class FileService {
                 await fs.unlink(filePath);
             } catch (err : any) {
                 if (err.code === 'ENOENT') {
-                    console.warn(`File not found: \"${filePath}\"`);
+                    console.log(`File not found: \"${filePath}\"`);
                 } else {
-                    console.warn(`Failed to delete file: \"${filePath}\", err: `, err);
+                    console.log(`Failed to delete file: \"${filePath}\", err: `, err);
                 }
             }
         }
     }
-    // ==================================== PRIVATE ==================================== //
-
-    // --------------------------------------------------------------------------------- //
 }

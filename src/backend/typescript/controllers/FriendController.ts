@@ -3,6 +3,7 @@ import { FriendService } from '../services/FriendService.js'
 import { FriendException, FriendError } from '../error_handlers/Friend.error.js';
 import { CommonSchema } from '@shared/common.schema';
 import { SocketEventController } from './SocketEventController.js';
+import { ErrorWrapper } from '../error_handlers/ErrorWrapper.js';
 
 export class FriendController {
     constructor(
@@ -18,8 +19,7 @@ export class FriendController {
                 throw new FriendException(FriendError.INVALID_ID, 'Invalid Id format');
             }
            
-            // check users existance; their connection; create the friend request
-            // returns the current user profile
+            // check users existance; their connection; create the friend request and returns the current user profile
             const userId = (request as any).user.userId;
             const userProfile = await this.friendService.createFriendRequest(Number(friendId.data), Number(userId));
 
@@ -34,19 +34,11 @@ export class FriendController {
                 message: 'Friend request successfully sent'
             });
         } catch (error) {
-            if (error instanceof FriendException ) {
-                switch (error.code) {
-                    case FriendError.USR_NOT_FOUND:
-                        return reply.status(404).send({ success: false, message: error.message });
-                    default:
-                        return reply.status(400).send({ success: false, message: error.message });
-                }
-            }
-
-            request.log.error(error);
-            return reply.status(500).send({
+            const err = ErrorWrapper.analyse(error);
+            console.log(err.message);
+            return reply.status(err.code).send({
                 success: false,
-                message: 'Internal server error'
+                message: err.message,
             });
         }
     }
@@ -64,28 +56,19 @@ export class FriendController {
             // check users existance; their connection; update the friendship status
             const userProfile = await this.friendService.acceptFriendRequest(Number(friendId.data), Number(userId));
 
-			// notify friendship acceptance to friend
-			console.log('ACCEPT sended at :', Number(friendId.data));
+			// notify friendship acceptation
 			SocketEventController.sendToUser(Number(friendId.data), 'friend-status-update', {
 				friendProfile: userProfile, status: 'ACCEPTED'
 			});
 
             return reply.status(204).send();
         } catch (error) {
-            if (error instanceof FriendException ) {
-                switch (error.message) {
-                    case FriendError.USR_NOT_FOUND:
-                        return reply.status(404).send({ success: false, message: error.message });
-                    default:
-                        return reply.status(400).send({ success: false, message: error.message });
-                }
-            }
-
-            request.log.error(error);
-            return reply.status(500).send({
+            const err = ErrorWrapper.analyse(error);
+            console.log(err.message);
+            return reply.status(err.code).send({
                 success: false,
-                message: 'Internal server error'
-            });            
+                message: err.message,
+            });           
         }
     }
 
@@ -104,22 +87,13 @@ export class FriendController {
             return reply.status(204).send();
 
         } catch (error) {
-            if (error instanceof FriendException ) {
-                switch (error.message) {
-                    case FriendError.USR_NOT_FOUND:
-                        return reply.status(404).send({ success: false, message: error.message });
-                    default:
-                        return reply.status(400).send({ success: false, message: error.message });
-                }
-            }
-
-            request.log.error(error);
-            return reply.status(500).send({
+            const err = ErrorWrapper.analyse(error);
+            console.log(err.message);
+            return reply.status(err.code).send({
                 success: false,
-                message: 'Internal server error'
-            });                        
+                message: err.message,
+            });                     
         }
-    
     }
 
     // ----------------------------------------------------------------------------- //
@@ -136,19 +110,11 @@ export class FriendController {
                 friendList
             });
         } catch (error) {
-            if (error instanceof FriendException ) {
-                switch (error.code) {
-                    case FriendError.USR_NOT_FOUND:
-                        return reply.status(404).send({ success: false, message: error.message });
-                    default:
-                        return reply.status(400).send({ success: false, message: error.message });
-                }
-            }
-
-            request.log.error(error);
-            return reply.status(500).send({
+            const err = ErrorWrapper.analyse(error);
+            console.log(err.message);
+            return reply.status(err.code).send({
                 success: false,
-                message: 'Internal server error'
+                message: err.message,
             });
         }
     }
@@ -169,19 +135,12 @@ export class FriendController {
 
             
         } catch (error) {
-            if (error instanceof FriendException ) {
-                switch (error.code) {
-                    case FriendError.USR_NOT_FOUND:
-                        return reply.status(404).send({ success: false, message: error.message });
-                    default:
-                        return reply.status(400).send({ success: false, message: error.message });
-                }
-            }
-            request.log.error(error);
-            return reply.status(500).send({
+            const err = ErrorWrapper.analyse(error);
+            console.log(err.message);
+            return reply.status(err.code).send({
                 success: false,
-                message: 'Internal server error'
-            });            
+                message: err.message,
+            });        
         }
     }
 }

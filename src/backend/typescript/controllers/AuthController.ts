@@ -4,6 +4,7 @@ import type { RegisterData, LoginData, VerifData } from '../types/auth.types.js'
 import { AuthException, AuthError } from '../error_handlers/Auth.error.js';
 import { AuthSchema } from '../schemas/auth.schema.js';
 import { CommonSchema } from '@shared/common.schema';
+import { ErrorWrapper } from '../error_handlers/ErrorWrapper.js';
 
 export class AuthController {
     constructor(
@@ -30,14 +31,11 @@ export class AuthController {
                 ...result,
             });
         } catch (error) {
-            if (error instanceof AuthException) {
-                return reply.status(409).send({ success: false, message: error.message });
-            }
-
-            request.log.error(error);
-            return reply.status(500).send({
+            const err = ErrorWrapper.analyse(error);
+            console.log(err.message);
+            return reply.status(err.code).send({
                 success: false,
-                message: 'Internal server error',
+                message: err.message,
             });
         }
     }
@@ -68,21 +66,12 @@ export class AuthController {
                 ...result,
             });
         } catch (error) {
-			const err = analyseError(error);
-			return reply.status(err.status).send({
-				success: false,
-				message: err.message,
-			});
-		}
-            // if (error instanceof AuthException) {
-            //     return reply.status(401).send({ success: false, message: error.message });
-            // }
-
-            // request.log.error(error);
-            // return reply.status(500).send({
-            //     success: false,
-            //     message: 'Internal server error',
-            // });
+            const err = ErrorWrapper.analyse(error);
+            console.log(err.message);
+            return reply.status(err.code).send({
+                success: false,
+                message: err.message,
+            });   
         }
     }
 
@@ -99,11 +88,13 @@ export class AuthController {
 				message: 'Logout successful',
 			});
 		} catch (error) {
-			request.log.error(error);
-			return reply.status(500).send({
-				success: false,
-				message: 'Internal server error',
-			});
+            const err = ErrorWrapper.analyse(error);
+            console.log(err.message);
+            return reply.status(err.code).send({
+                success: false,
+                message: err.message,
+            });   
+
 		}
 	}
 
@@ -122,29 +113,26 @@ export class AuthController {
                 tokens,
             });
         } catch (error) {
-            if (error instanceof AuthException) {
-                return reply.status(404).send({ success: false, message: "User not found", });
-            }
-
-            request.log.error(error);
-            return reply.status(500).send({
+            const err = ErrorWrapper.analyse(error);
+            console.log(err.message);
+            return reply.status(err.code).send({
                 success: false,
-                message: 'Internal server error',
+                message: err.message,
             });
         }
     }
 
     // --------------------------------------------------------------------------------- //
     // GET auth/callback
-    // a revoir
 	async callback42(request: FastifyRequest<{ Querystring: VerifData }>, reply: FastifyReply) {
 		try {
             const { code } = request.query;
+            const validation =  AuthSchema.code.safeParse(code);
 
-            if (!code) {
+            if (!code || ! validation.success ) {
                 return reply.status(400).send({
                     success: false,
-                    message: 'Authorization code missing',
+                    message: validation.error?.issues?.[0]?.message || 'Authorization code missing',
                 });
             }
 
@@ -157,15 +145,12 @@ export class AuthController {
 				tokens:	result.tokens,
 			});
 		} catch (error) {
-			if (error instanceof AuthException) {
-				return reply.status(401).send({ success: false, message: error.message });
-			}
-
-			request.log.error(error);
-			return reply.status(500).send({
-				success: false,
-				message: 'Internal server error',
-			});
+            const err = ErrorWrapper.analyse(error);
+            console.log(err.message);
+            return reply.status(err.code).send({
+                success: false,
+                message: err.message,
+            });
 		}
 	}
 }

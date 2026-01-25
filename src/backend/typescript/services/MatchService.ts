@@ -1,7 +1,7 @@
 import { type PrismaClient } from '@prisma/client';
 import { FriendService } from './FriendService.js';
 import type { GameStats } from '@shared/ServerMessage.js';
-import type { MatchData, MatchSummary, OpponentSummary, PlayerInfo } from '../types/match.types.js';
+import type { MatchData, MatchSummary, OpponentSummary } from '../types/match.types.js';
 
 
 export class MatchService {
@@ -37,7 +37,7 @@ export class MatchService {
     }
 
     // ----------------------------------------------------------------------------- //
-    async registerTournamentMatch(tournamentId: number, match: MatchData)
+    async registerTournamentMatch(tournamentId: number, match: MatchData): Promise<number | null>
     {
         const data = {
             playerLeftId: match.leftId ?? null,
@@ -97,11 +97,10 @@ export class MatchService {
 
 	// ----------------------------------------------------------------------------- //
  	async getStat(playerId: number): Promise<GameStats> {
-        const wins = await this.countMatchAs(playerId, 'left');
+        const wins = await this.countWins(playerId);
+        const losses = await this.countLosses(playerId);
 
-        const lose = await this.countMatchAs(playerId, 'right');
-
-        return this.calculateStats(wins, lose);
+        return this.calculateStats(wins, losses);
     }
 
 	// ================================== PRIVATE ================================== //
@@ -109,16 +108,16 @@ export class MatchService {
     // ----------------------------------------------------------------------------- //
 	private async formatMatchSummary(matchs: any[], userId: number): Promise<MatchSummary[]> {
         return await Promise.all(matchs.map(async (m) => {
-            const isUserLeft = m.leftId === userId;
-            const opponentPlayer = isUserLeft ? m.right : m.left;
+            const isUserLeft = m.playerLeftId && m.playerLeftId === userId ? true : false;
+            const opponentPlayer = isUserLeft ? m.playerRight : m.playerLeft;
             const opponentId = opponentPlayer?.id;
 
             const isWinner = (isUserLeft && m.winnerIndicator === 'left') || (!isUserLeft && m.winnerIndicator === 'right');
 
             const opponent: OpponentSummary = {
                 id: opponentId,
-                username: opponentPlayer?.username ?? (isUserLeft ? m.rightGuestName : m.leftGuestName),
-                avatar: opponentPlayer?.avatar ?? null,
+                username: opponentPlayer?.username ?? (isUserLeft ? m.playerRightGuestName : m.playerLeftGuestName),
+                avatar: opponentPlayer?.avatar ?? "/api/static/public/avatarDefault.webp",
                 isFriend: opponentId ? await this.friendService.areFriends(userId, opponentId) : false,
             };
 
@@ -144,33 +143,28 @@ export class MatchService {
     }
     
     // ----------------------------------------------------------------------------- //
-    private async countMatchAs(id: number, indic: string): Promise<number> {
-        try {
-            const left = await this.prisma.match.count({
-                where: { playerLeftId: id, winnerIndicator: indic },
-            });
-    
-            const other = indic === 'left' ? 'right' : 'left';
-    
-            const right = await this.prisma.match.count({
-                where: { playerRightId: id, winnerIndicator: other }
-            });
-            return left + right;
-            
-        } catch (error) {
-            console.log(error);
-            return 0;
-        }
+    private async countWins(id: number): Promise<number> {
+        return await this.prisma.match.count({
+            where: {
+                OR: [
+                    { playerLeftId: id, winnerIndicator: 'left' },
+                    { playerRightId: id, winnerIndicator: 'right' },
+                ],
+            },
+        });
     }
 
-	// ----------------------------------------------------------------------------- //
-	private async isExisting(id: number): Promise<boolean> {
-		const user = await this.prisma.user.findUnique({
-			where: { id: Number(id) },
-			select: { id: true }
-		});
-		return user !== null;
-	}
+    // ----------------------------------------------------------------------------- //
+    private async countLosses(id: number): Promise<number> {
+        return await this.prisma.match.count({
+            where: {
+                OR: [
+                    { playerLeftId: id, winnerIndicator: 'right' },
+                    { playerRightId: id, winnerIndicator: 'left' },
+                ],
+            },
+        });
+    }
 
     // --------------------------------------- -------------------------------------- //
     private calculateStats(matchesWons: number, matchesLoses: number): GameStats {

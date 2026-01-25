@@ -3,6 +3,7 @@ import { FileService } from '../services/FileService.js';
 import { FileException, FileError } from '../error_handlers/FileHandler.error.js';
 import { MAX_FILE_SIZE, ALLOWED_FILE_MIMES } from '../types/file.types.js';
 import { fileTypeFromBuffer } from 'file-type';
+import { ErrorWrapper } from '../error_handlers/ErrorWrapper.js';
 
 export class FileController {
     constructor(
@@ -34,27 +35,12 @@ export class FileController {
             return { success: true, buffer: result.buffer }
 
         } catch (error) {
-            if (error instanceof FileException) {
-                return {
-                    success: false,
-                    message: error.message || error.code,
-                };
-            }
-            switch ((error as any)?.code) {
-                case 'FST_REQ_FILE_TOO_LARGE':
-                case 'FST_PARTS_LIMIT': {
-                    return {
-                        success: false,
-                        message: 'File too large. Maximum size: 2 MB',
-                    };
-                }
-                default: {
-                    return {
-                        success: false,
-                        message: 'Error loading file'
-                    };
-                }
-            }
+            const err = ErrorWrapper.analyse(error);
+            console.log(err.message);
+            return {
+                success: false,
+                message: err.message,
+            };
         }
     }
 }
