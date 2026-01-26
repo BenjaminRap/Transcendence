@@ -1,4 +1,5 @@
-import type { GameInfos, GameInit, GameStartInfos, GameStats, KeysUpdate, Profile, SanitizedUser, TournamentCreationSettings, TournamentDescription, TournamentEvent, TournamentId, Username } from "./ServerMessage";
+import zod from "zod";
+import { funcOf, resultOf, zodProfile, zodTournamentDescription, zodTournamentId, type GameInfos, type GameInit, type GameStartInfos, type GameStats, type KeysUpdate, type Profile, type SanitizedUser, type TournamentCreationSettings, type TournamentDescription, type TournamentEvent, type TournamentId, type Username } from "./ServerMessage";
 import type { Result } from "./utils";
 
 export type ClientMessage = "join-matchmaking" |
@@ -32,6 +33,19 @@ export type ClientMessageData<T extends ClientMessage> =
     T extends "authenticate" ? [data: { token: string }] :
     T extends "set-alias" ? [alias: Username] :
 	[];
+
+export const zodClientMessageAcknowledgement = {
+	"create-tournament": funcOf(resultOf(zodTournamentId)),
+	"start-tournament": funcOf(resultOf(zod.null())),
+	"join-tournament" : funcOf(resultOf(zod.array(zodProfile))),
+	"get-tournaments" : funcOf(resultOf(zod.array(zodTournamentDescription))),
+	"get-online-users" : funcOf(zod.array(zod.number())),
+    "authenticate" : funcOf(resultOf(zod.null())),
+    "set-alias" : funcOf(resultOf(zod.null())),
+    "join-matchmaking" : funcOf(resultOf(zod.null()))
+}
+
+export const zodClientMessageAcknowledgement 
 
 export type ClientMessageAcknowledgement<T extends ClientMessage> = 
 	T extends "create-tournament" ? (tournamentId : Result<TournamentId>) => void :
