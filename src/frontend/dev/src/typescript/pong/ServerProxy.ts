@@ -1,8 +1,9 @@
 import type { GameInfos, GameInit, GameStartInfos, KeysUpdate, Profile, TournamentCreationSettings, TournamentDescription, TournamentId } from "@shared/ServerMessage";
 import { FrontendSocketHandler } from "./FrontendSocketHandler";
-import type { Deferred, int, Observable, Observer } from "@babylonjs/core";
+import type { int, Observable, Observer } from "@babylonjs/core";
 import { PongError } from "@shared/pongError/PongError";
 import type { TournamentEventAndJoinedGame } from "./FrontendEventsManager";
+import type { CancellablePromise } from "./CancellablePromise";
 
 type SocketState = "not-connected" | "connected" | "in-matchmaking" | "in-game" | "tournament-creator" | "tournament-player" | "tournament-creator-player" | "in-tournament" | "waiting";
 
@@ -15,7 +16,7 @@ export class	ServerProxy
 {
 	private _state : SocketState;
 	private _playerIndex : int = 0;
-	private _currentPromise : Deferred<any> | null = null;
+	private _currentPromise : CancellablePromise<any> | null = null;
 	private _tournamentData : tournamentData | null = null;
 	private _disconnectedObserver : Observer<void>;
 
@@ -29,7 +30,7 @@ export class	ServerProxy
 		});
 		this._disconnectedObserver = this._frontendSocketHandler.onDisconnect().add(() => {
 			this._state = "not-connected";
-			this._currentPromise?.reject(new PongError("canceled", "ignore"));
+			this.replaceCurrentPromise(null);
 		});
 		this._frontendSocketHandler.onTournamentMessage().add((tournamentEvent : TournamentEventAndJoinedGame) => {
 			const	removeFromTournament = ["banned", "kicked", "tournament-canceled"].includes(tournamentEvent.type);
@@ -58,16 +59,16 @@ export class	ServerProxy
 	public async joinGame() : Promise<GameInit>
 	{
 		this.verifyState("connected");
-		const	deferred = this._frontendSocketHandler.joinGame();
+		const	cancellable = this._frontendSocketHandler.joinGame();
 
-		this.replaceCurrentPromise(deferred);
+		this.replaceCurrentPromise(cancellable);
 		this._state = "in-matchmaking";
-		deferred.promise.then(() => {
+		cancellable.promise.then(() => {
 			this._state = "in-game";
 		}).catch(() => {
 			this._state = "connected";
 		});
-		return deferred.promise;
+		return cancellable.promise;
 	}
 
 	public leave() : void
@@ -83,17 +84,17 @@ export class	ServerProxy
 		}
 		else if (this._state === "tournament-creator" || this._state === "tournament-creator-player")
 			this._frontendSocketHandler.sendEventWithNoResponse("cancel-tournament");
-		this._currentPromise?.reject(new PongError("canceled", "ignore"));
+		this.replaceCurrentPromise(null);
 		this._state = "connected";
 	}
 
 	public onGameReady() : Promise<GameStartInfos>
 	{
 		this.verifyState("in-game", "in-tournament");
-		const	deferred = this._frontendSocketHandler.onGameReady();
+		const	cancellable = this._frontendSocketHandler.onGameReady();
 
-		this.replaceCurrentPromise(deferred);
-		return deferred.promise;
+		this.replaceCurrentPromise(cancellable);
+		return cancellable.promise;
 	}
 
 	public setReady() : void
@@ -126,7 +127,7 @@ export class	ServerProxy
 		this.verifyState("in-matchmaking");
 		this._frontendSocketHandler.sendEventWithNoResponse("leave-matchmaking")
 		this._state = "connected";
-		this._currentPromise?.reject(new PongError("canceled", "ignore"));
+		this.replaceCurrentPromise(null);
 	}
 
 	public keyUpdate(key : "up" | "down", event : "keyUp" | "keyDown") : void
@@ -163,10 +164,10 @@ export class	ServerProxy
 	public createTournament(settings : TournamentCreationSettings) : Promise<TournamentId>
 	{
 		this.verifyState("connected");
-		const deferred =  this._frontendSocketHandler.createTournament(settings);
+		const cancellable =  this._frontendSocketHandler.createTournament(settings);
 
 		this._state = "waiting";
-		deferred.promise
+		cancellable.promise
 			.then(tournamentId => {
 				this._tournamentData = {
 					isCreator: true,
@@ -177,18 +178,18 @@ export class	ServerProxy
 			.catch(() => {
 				this._state = "connected";
 			});
-		this.replaceCurrentPromise(deferred);
+		this.replaceCurrentPromise(cancellable);
 
-		return deferred.promise;
+		return cancellable.promise;
 	}
 
 	public joinTournament(tournamentId : TournamentId) : Promise<Profile[]>
 	{
 		this.verifyState("connected");
-		const	deferred = this._frontendSocketHandler.joinTournament(tournamentId);
+		const	cancellable = this._frontendSocketHandler.joinTournament(tournamentId);
 
 		this._state = "waiting";
-		deferred.promise
+		cancellable.promise
 			.then(() => {
 				this._tournamentData = {
 					isCreator: false,
@@ -199,8 +200,8 @@ export class	ServerProxy
 			.catch(() => {
 				this._state = "connected";
 			})
-		this.replaceCurrentPromise(deferred);
-		return deferred.promise;
+		this.replaceCurrentPromise(cancellable);
+		return cancellable.promise;
 	}
 
 	public joinTournamentAsCreator()
@@ -208,23 +209,23 @@ export class	ServerProxy
 		this.verifyState("tournament-creator");
 		this._state = "waiting";
 
-		const	deferred = this._frontendSocketHandler.joinTournament(this._tournamentData!.id);
+		const	cancellable = this._frontendSocketHandler.joinTournament(this._tournamentData!.id);
 
-		deferred.promise
+		cancellable.promise
 			.then(() => {
 				this._state = "tournament-creator-player";
 			})
 			.catch(() => {
 				this._state = "tournament-creator";
 			});
-		this.replaceCurrentPromise(deferred);
-		return deferred.promise;
+		this.replaceCurrentPromise(cancellable);
+		return cancellable.promise;
 	}
 
 	public cancelTournament() : void
 	{
 		this.verifyState("tournament-creator", "tournament-creator-player");
-		this._currentPromise?.reject(new PongError("canceled", "ignore"));
+		this.replaceCurrentPromise(null);
 		this._state = "connected";
 		this._tournamentData = null;
 		this._frontendSocketHandler.sendEventWithNoResponse("cancel-tournament");
@@ -234,12 +235,12 @@ export class	ServerProxy
 	{
 		this.verifyState("tournament-creator", "tournament-creator-player");
 		const	previousState = this._state;
-		const	deferred =  this._frontendSocketHandler.startTournament();
+		const	cancellable =  this._frontendSocketHandler.startTournament();
 
-		this.replaceCurrentPromise(deferred);
+		this.replaceCurrentPromise(cancellable);
 		this._state = "waiting";
 
-		deferred.promise
+		cancellable.promise
 			.then(() => {
 				if (previousState === "tournament-creator")
 				{
@@ -252,22 +253,22 @@ export class	ServerProxy
 			.catch(() => {
 				this._state = previousState;
 			});
-		return deferred.promise;
+		return cancellable.promise;
 	}
 
 	public async getTournaments() : Promise<TournamentDescription[]>
 	{
 		this.verifyState("connected");
-		const deferred = this._frontendSocketHandler.getTournaments();
+		const cancellable = this._frontendSocketHandler.getTournaments();
 
-		deferred.promise
+		cancellable.promise
 			.catch(() => {})
 			.finally(() => {
 				this._state = "connected";
 			});
-		this.replaceCurrentPromise(deferred);
+		this.replaceCurrentPromise(cancellable);
 
-		return deferred.promise;
+		return cancellable.promise;
 	}
 
 	public banPlayerFromTournament(name : string)
@@ -284,17 +285,17 @@ export class	ServerProxy
 	{
 		this.verifyState("tournament-creator-player", "tournament-player");
 		const previousState = this._state;
-		const deferred = this._frontendSocketHandler.setAlias(newAlias);
+		const cancellable = this._frontendSocketHandler.setAlias(newAlias);
 
 		this._state = "waiting";
-		deferred.promise
+		cancellable.promise
 			.catch(() => {})
 			.finally(() => {
 				this._state = previousState;
 			});
-		this.replaceCurrentPromise(deferred);
+		this.replaceCurrentPromise(cancellable);
 
-		return deferred.promise;
+		return cancellable.promise;
 	}
 
 	public getTournamentData()
@@ -313,9 +314,9 @@ export class	ServerProxy
 			throw new PongError(`A FrontendSocketHandler method called with an invalid state, current state : ${this._state}, allowed : ${allowedStates}`, "show");
 	}
 
-	private	replaceCurrentPromise(newPromise : Deferred<any>) : void
+	private	replaceCurrentPromise(newPromise : CancellablePromise<any> | null) : void
 	{
-		this._currentPromise?.reject(new PongError("canceled", "ignore"));
+		this._currentPromise?.cancel();
 		this._currentPromise = newPromise;
 	}
 

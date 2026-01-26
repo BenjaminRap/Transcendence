@@ -1,10 +1,11 @@
-import { Deferred, Observable } from "@babylonjs/core";
+import { Observable } from "@babylonjs/core";
 import type { ClientToServerEvents, ServerToClientEvents } from "@shared/MessageType";
 import { PongError } from "@shared/pongError/PongError";
-import { type GameInfos, type GameInit, type GameStartInfos, type Profile, type TournamentCreationSettings, type TournamentDescription, type TournamentEvent, type TournamentId, zodGameInit } from "@shared/ServerMessage";
+import { type GameInfos, type GameInit, type GameStartInfos, type Profile, type TournamentCreationSettings, type TournamentDescription, type TournamentId, zodGameInit } from "@shared/ServerMessage";
 import type { Result } from "@shared/utils";
 import { io, Socket } from "socket.io-client";
 import type { TournamentEventAndJoinedGame } from "./FrontendEventsManager";
+import { CancellablePromise } from "./CancellablePromise";
 
 export type EventWithNoResponse = "forfeit" | "input-infos" | "leave-matchmaking" | "ready" | "leave-tournament" | "cancel-tournament" | "ban-participant" | "kick-participant";
 type DefaultSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
@@ -57,25 +58,34 @@ export class	FrontendSocketHandler
 		return frontendSocketHandler;
 	}
 
-	public joinGame() : Deferred<GameInit>
+	public joinGame() : CancellablePromise<GameInit>
 	{
-		const	deferred = new Deferred<GameInit>();
+		let	callback : (data : any) => void;
+		let	ack : ((result : Result<null>) => void) | null = null;
 
-		this._socket.once("joined-game", (data : any) => {
-			const	gameInit = zodGameInit.safeParse(data);
+		const	promise = new CancellablePromise<GameInit>((resolve, reject) => {
+			callback = (data : any) => {
+				const	gameInit = zodGameInit.safeParse(data);
 
-			if (!gameInit.success)
-				deferred.reject(new PongError(`Server sent wrong data ! : ${gameInit.error}`, "quitPong"));
-			else
-				deferred.resolve(gameInit.data);
+				if (!gameInit.success)
+					reject(new PongError(`Server sent wrong data ! : ${gameInit.error}`, "quitPong"));
+				else
+					resolve(gameInit.data);
+			};
+			ack = (result : Result<null>) => {
+				if (result.success)
+					return ;
+				this._socket.off("joined-game");
+				reject(new PongError(result.error, "show"));
+			};
+			this._socket.once("joined-game", callback);
+			this._socket.emit("join-matchmaking", result => ack?.(result));
+		}, () => {
+			this._socket.off("joined-game", callback);
+			ack = null;
 		});
-		this._socket.emit("join-matchmaking", result => {
-			if (result.success)
-				return ;
-			this._socket.off("joined-game");
-			deferred.reject(new PongError(result.error, "show"));
-		});
-		return deferred;
+
+		return promise;
 	}
 
 	public get socket() : DefaultSocket
@@ -95,27 +105,39 @@ export class	FrontendSocketHandler
 		this._onGameMessageObservable.clear();
 	}
 
-	public getTournaments() : Deferred<TournamentDescription[]>
+	public getTournaments() : CancellablePromise<TournamentDescription[]>
 	{
-		const	deferred = new Deferred<TournamentDescription[]>();
+		let	ack : ((tournamentDescriptions : Result<TournamentDescription[]>) => void) | null = null;
 
-		this._socket.emit("get-tournaments", (tournamentDescriptions : Result<TournamentDescription[]>) => {
-			if (tournamentDescriptions.success)
-				deferred.resolve(tournamentDescriptions.value);
-			else
-				deferred.reject(new PongError(tournamentDescriptions.error, "show"));
+		const	promise = new CancellablePromise<TournamentDescription[]>((resolve, reject) => {
+			ack = tournamentDescriptions => {
+				if (tournamentDescriptions.success)
+					resolve(tournamentDescriptions.value);
+				else
+					reject(new PongError(tournamentDescriptions.error, "show"));
+			}
+			this._socket.emit("get-tournaments", tournamentDescriptions => ack?.(tournamentDescriptions));
+		}, () => {
+			ack = null;
 		});
-		return deferred;
+
+		return promise;
 	}
 
-	public onGameReady() : Deferred<GameStartInfos>
+	public onGameReady() : CancellablePromise<GameStartInfos>
 	{
-		const	deferred = new Deferred<GameStartInfos>();
+		let	ack : ((gameStartInfos : GameStartInfos) => void);
 
-		this._socket.once("ready", (gameStartInfos) => {
-			deferred.resolve(gameStartInfos);
+		const	promise = new CancellablePromise<GameStartInfos>((resolve) => {
+			ack = gameStartInfos => {
+				resolve(gameStartInfos);
+			}
+			this._socket.once("ready", ack);
+		}, () => {
+			this._socket.off("ready", ack);
 		});
-		return deferred;
+
+		return promise;
 	}
 
 	public onGameMessage() : Observable<GameInfos>
@@ -133,54 +155,80 @@ export class	FrontendSocketHandler
 		this._socket.emit(event, ...args);
 	}
 
-	public createTournament(settings : TournamentCreationSettings) : Deferred<TournamentId>
+	public createTournament(settings : TournamentCreationSettings) : CancellablePromise<TournamentId>
 	{
-		const	deferred = new Deferred<TournamentId>();
-		this._socket.emit("create-tournament", settings, (tournamentId : Result<string>) => {
-			if (tournamentId.success)
-				deferred.resolve(tournamentId.value);
-			else
-				deferred.reject(new PongError(tournamentId.error, "show"));
+		let	ack : ((tournamentId : Result<string>) => void) | null = null;
+
+		const	promise = new CancellablePromise<TournamentId>((resolve, reject) => {
+			ack = tournamentId => {
+				if (tournamentId.success)
+					resolve(tournamentId.value);
+				else
+					reject(new PongError(tournamentId.error, "show"));
+			}
+			this._socket.emit("create-tournament", settings, tournamentId => ack?.(tournamentId));
+		}, () => {
+			ack = null;
 		});
-		return deferred;
+
+		return promise;
 	}
 
-	public setAlias(newAlias : string) : Deferred<void>
+	public setAlias(newAlias : string) : CancellablePromise<void>
 	{
-		const	deferred = new Deferred<void>();
-		this._socket.emit("set-alias", newAlias, (result : Result<null>) => {
-			if (result.success)
-				deferred.resolve();
-			else
-				deferred.reject(new PongError(result.error, "show"));
+		let	ack : ((result : Result<null>) => void) | null = null;
+
+		const	promise = new CancellablePromise<void>((resolve, reject) => {
+			ack = result => {
+				if (result.success)
+					resolve();
+				else
+					reject(new PongError(result.error, "show"));
+			}
+			this._socket.emit("set-alias", newAlias, result => ack?.(result));
+		}, () => {
+			ack = null;
 		});
-		return deferred;
+
+		return promise;
 	}
 
-	public startTournament() : Deferred<void>
+	public startTournament() : CancellablePromise<void>
 	{
-		const	deferred = new Deferred<void>();
+		let	ack : ((result : Result<null>) => void) | null = null;
 
-		this._socket.emit("start-tournament", (result : Result<null>) => {
-			if (result.success)
-				deferred.resolve();
-			else
-				deferred.reject(new PongError(result.error, "show"));
+		const	promise = new CancellablePromise<void>((resolve, reject) => {
+			ack = result => {
+				if (result.success)
+					resolve();
+				else
+					reject(new PongError(result.error, "show"));
+			}
+			this._socket.emit("start-tournament", result => ack?.(result));
+		}, () => {
+			ack = null;
 		});
-		return deferred;
+
+		return promise;
 	}
 
-	public joinTournament(tournamentId : TournamentId) : Deferred<Profile[]>
+	public joinTournament(tournamentId : TournamentId) : CancellablePromise<Profile[]>
 	{
-		const	deferred = new Deferred<Profile[]>();
+		let	ack : ((result : Result<Profile[]>) => void) | null = null;
 
-		this._socket.emit("join-tournament", tournamentId, (participants : Result<Profile[]>) => {
-			if (participants.success)
-				deferred.resolve(participants.value);
-			else
-				deferred.reject(new PongError(participants.error, "show"));
+		const	promise = new CancellablePromise<Profile[]>((resolve, reject) => {
+			ack = result => {
+				if (result.success)
+					resolve(result.value);
+				else
+					reject(new PongError(result.error, "show"));
+			}
+			this._socket.emit("join-tournament", tournamentId, result => ack?.(result));
+		}, () => {
+			ack = null;
 		});
-		return deferred;
+
+		return promise;
 	}
 
 	public onDisconnect()
