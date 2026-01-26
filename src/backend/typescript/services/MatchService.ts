@@ -1,8 +1,7 @@
 import { Prisma, type Match, type PrismaClient } from '@prisma/client';
 import { FriendService } from './FriendService.js';
-import type { GameStats } from '@shared/ServerMessage.js';
 import type { MatchData, MatchSummary, OpponentSummary } from '../types/match.types.js';
-import { tr } from 'zod/v4/locales';
+import type { GameStats } from '@shared/ServerMessage.js';
 
 type MatchWithRelations = Prisma.MatchGetPayload<{
     include: {
@@ -28,7 +27,7 @@ export class MatchService {
     // =================================== PUBLIC ==================================== //
 
 	// ----------------------------------------------------------------------------- //
-    async registerMatch(match: MatchData): Promise<number | null> {
+    async registerMatch(match: MatchData): Promise<Match | undefined> {
         const data = {
             playerLeftId: match.leftId ?? null,
             playerLeftGuestName: match.leftGuestName,
@@ -47,7 +46,7 @@ export class MatchService {
             data: data
         });
 
-        return newmatch ? newmatch.id : null;
+        return newmatch ? newmatch : undefined;
 
     }
 

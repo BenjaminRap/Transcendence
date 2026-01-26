@@ -98,7 +98,7 @@ export class SocketEventController {
 
     // notify profile change to user, friends and watchers
     // ----------------------------------------------------------------------------- //
-    static notifyProfileChange(id: number, event: string, data: any): void
+    static notifyProfileChange(id: number | null, event: string, data: any): void
     {
         if (!id || id < 0) return;
         SocketEventController.sendToUser(id, event, data);
@@ -168,8 +168,8 @@ export class SocketEventController {
                 this.removeProfileToWatch(socket, profileId);
             });
 
-            socket.on("logout", (token) => {
-                this.handleLogout(socket, token);
+            socket.on("logout", () => {
+                this.handleLogout(socket);
             });
 
 			socket.once("disconnect", () => {
@@ -394,11 +394,9 @@ export class SocketEventController {
 	}
 
 	// ----------------------------------------------------------------------------- //
-    private handleLogout(socket: DefaultSocket, accessToken: string)
+    private handleLogout(socket: DefaultSocket)
     {
         try {
-            this.tokenManager.revokeToken(accessToken);
-
             socket.rooms.forEach((room) => {
                room !== `${socket.id}` ? socket.leave(room) : null;
             });

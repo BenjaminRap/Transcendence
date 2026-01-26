@@ -1,4 +1,5 @@
-import type { GameInfos, GameInit, GameStartInfos, GameStats, KeysUpdate, Profile, SanitizedUser, TournamentCreationSettings, TournamentDescription, TournamentEvent, TournamentId, Username } from "./ServerMessage";
+import type { Match } from "@prisma/client";
+import type { GameInfos, GameInit, GameStartInfos,  KeysUpdate, Profile, SanitizedUser, TournamentCreationSettings, TournamentDescription, TournamentEvent, TournamentId, Username } from "./ServerMessage";
 import type { Result } from "./utils";
 
 export type ClientMessage = "join-matchmaking" |
@@ -35,7 +36,6 @@ export type ClientMessageData<T extends ClientMessage> =
     T extends "authenticate" ? [data: { token: string }, ack: (result: Result<null>) => void] :
     T extends "set-alias" ? [alias: Username, ack: (result : Result<null>) => void] :
     T extends "join-matchmaking" ? [ack: (result : Result<null>) => void] :
-    T extends "logout" ? [token: string] :
 	[];
 
 export type ServerEvents = "game-infos" |
@@ -44,7 +44,7 @@ export type ServerEvents = "game-infos" |
 							"tournament-event" |
                             "user-status-change" | 
                             "profile-update" | 
-                            "game-stats-update" |
+                            "match-update" |
                             "account-deleted" |
 							"friend-status-update" |
 							"init";
@@ -55,7 +55,7 @@ export type ServerEventsData<T extends ServerEvents> =
 	T extends "tournament-event" ? [TournamentEvent] : 
     T extends "user-status-change" ? [{ userId: number, status: 'online' | 'offline' }] :
     T extends "profile-update" ? [{ user: SanitizedUser }] :
-    T extends "game-stats-update" ? [{ stats: GameStats }] :
+    T extends "game-stats-update" ? [{ match: Match }] :
 	T extends "friend-status-update" ? [{ fromUserId: number, status: 'PENDING' | 'ACCEPTED' }] :
 	T extends "ready" ? [GameStartInfos] :
 	T extends "init" ? [guestName: string] :
