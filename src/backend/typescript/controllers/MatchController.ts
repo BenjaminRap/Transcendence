@@ -1,6 +1,7 @@
-import { MatchService } from '../services/MatchService.js';
+import { MatchService, type MatchWithRelations } from '../services/MatchService.js';
 import type { MatchData } from '../types/match.types.js';
 import { SocketEventController } from './SocketEventController.js';
+
 
 export class MatchController {
 	constructor(
@@ -18,9 +19,15 @@ export class MatchController {
             if (!match)
                 return { success: false, messageError: "An error occurred when fetching the database" };
 
-            SocketEventController.notifyProfileChange(match.playerLeftId, 'match-update', match);
-            SocketEventController.notifyProfileChange(match.playerRightId, 'match-update', match);
+            const matchs = await this.matchService.getFirstMAtch(match);
+            let result = await this.matchService.formatMatchSummary(matchs as MatchWithRelations[], match.id);
 
+            let leftId = match.playerLeftId ? match.playerLeftId : 0;
+            let rightId = match.playerRightId ? match.playerRightId : 0;
+            SocketEventController.notifyProfileChange(leftId, 'match-update', result[0]);
+            SocketEventController.notifyProfileChange(rightId, 'match-update', result[0]);
+            SocketEventController.notifyProfileChange(leftId, 'stat-update',  await this.matchService.getStat(leftId));
+            SocketEventController.notifyProfileChange(rightId, 'stat-update', await this.matchService.getStat(rightId));
             return { success: true, matchId: match.id }
         }
         catch (error) {

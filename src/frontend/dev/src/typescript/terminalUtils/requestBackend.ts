@@ -81,6 +81,7 @@ export namespace RequestBackendModule {
 			}
 		});
 		socketUtils.socket.onAny((event, ...args) => {
+			console.log(`Reçu l'événement Socket.IO : ${event}`, args);
 		});
 	}
 

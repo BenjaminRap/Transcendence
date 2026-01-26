@@ -3,7 +3,7 @@ import { FriendService } from './FriendService.js';
 import type { MatchData, MatchSummary, OpponentSummary } from '../types/match.types.js';
 import type { GameStats } from '@shared/ServerMessage.js';
 
-type MatchWithRelations = Prisma.MatchGetPayload<{
+export type MatchWithRelations = Prisma.MatchGetPayload<{
     include: {
         winnerIndicator: true,
         scoreLeft: true,
@@ -26,6 +26,30 @@ export class MatchService {
 
     // =================================== PUBLIC ==================================== //
 
+    async getFirstMAtch(match: Match): Promise<MatchWithRelations[]>{
+        return await this.prisma.match.findMany({ 
+            where: {
+                id : match.id,
+            },
+            select: {
+                winnerIndicator: true,
+                scoreLeft: true,
+                scoreRight: true,
+                duration: true,
+                playerRight: true,
+                playerLeft: true,
+                playerRightGuestName: true,
+                playerLeftGuestName: true,
+                id: true,
+                createdAt: true,
+                tournamentId: true,
+            },
+            orderBy: {
+                createdAt: 'desc'
+            },
+            take: 1,
+        }) as MatchWithRelations[];
+    }
 	// ----------------------------------------------------------------------------- //
     async registerMatch(match: MatchData): Promise<Match | undefined> {
         const data = {
@@ -119,7 +143,7 @@ export class MatchService {
 	// ================================== PRIVATE ================================== //
 
     // ----------------------------------------------------------------------------- //
-    private async formatMatchSummary(matchs: MatchWithRelations[], userId: number): Promise<MatchSummary[]> {
+    public async formatMatchSummary(matchs: MatchWithRelations[], userId: number): Promise<MatchSummary[]> {
         return await Promise.all(matchs.map(async (m) => {
             const isUserLeft = m.playerLeftId && m.playerLeftId === userId ? true : false;
             const opponentPlayer = isUserLeft ? m.playerRight : m.playerLeft;
