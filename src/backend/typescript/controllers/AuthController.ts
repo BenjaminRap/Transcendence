@@ -76,29 +76,6 @@ export class AuthController {
     }
 
     // --------------------------------------------------------------------------------- //
-	// POST auth/logout
-	async logout(request: FastifyRequest, reply: FastifyReply) {
-		try {
-			const user = (request as any).user;
-
-			await this.authService.logout(user.userId);
-
-			return reply.status(200).send({
-				success: true,
-				message: 'Logout successful',
-			});
-		} catch (error) {
-            const err = ErrorWrapper.analyse(error);
-            console.log(err.message);
-            return reply.status(err.code).send({
-                success: false,
-                message: err.message,
-            });   
-
-		}
-	}
-
-    // --------------------------------------------------------------------------------- //
     // GET auth/refresh
     async refresh(request: FastifyRequest, reply: FastifyReply) {
         try {

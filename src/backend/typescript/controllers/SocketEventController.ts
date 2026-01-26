@@ -16,6 +16,7 @@ export class SocketEventController {
 	constructor (
 		private io: ServerType,
         private friendService: FriendService,
+        private tokenManager: TokenManager,
 	) {
 		this.matchMaker = new MatchMaker(io);
 		this.sockets = new Set<DefaultSocket>();
@@ -34,7 +35,11 @@ export class SocketEventController {
 	static initInstance( io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>): void
 	{
 		if (!SocketEventController.socketInstance) {
-			SocketEventController.socketInstance = new SocketEventController (io, Container.getInstance().getService('FriendService'));
+			SocketEventController.socketInstance = new SocketEventController (
+                io,
+                Container.getInstance().getService('FriendService'),
+                Container.getInstance().getService('TokenManager')
+            );
 		}
 	}
 
@@ -163,8 +168,8 @@ export class SocketEventController {
                 this.removeProfileToWatch(socket, profileId);
             });
 
-            socket.on("logout", () => {
-                this.handleLogout(socket);
+            socket.on("logout", (token) => {
+                this.handleLogout(socket, token);
             });
 
 			socket.once("disconnect", () => {
@@ -176,52 +181,102 @@ export class SocketEventController {
 	// ----------------------------------------------------------------------------- //
 	private async handleConnection(socket: DefaultSocket)
 	{
-		this.sockets.add(socket);
+        try {
+            this.sockets.add(socket);
+    
+            socket.data = new SocketData(socket);
+    
+            socket.emit("init", socket.data.getGuestName());
 
-		socket.data = new SocketData(socket);
-
-		socket.emit("init", socket.data.getGuestName());
-		console.log(`Guest connected !`);
+            console.log(`Guest connected !`);            
+        } catch (error) {
+            console.error("Error during socket connection handling:", error);
+        }
 	}
 
 	// ----------------------------------------------------------------------------- //
     private async handleAuthenticate(socket: DefaultSocket, token: string, ack: (result: Result<null>) => void) : Promise<void>
     {
-        let userId: number;
-
-        try {
-            const tokenManager: TokenManager = Container.getInstance().getService('TokenManager');
-            const decoded = await tokenManager.verify(token, false);
-            userId = Number(decoded.userId);
-            
-            // verifier si l'id est deja dans une room `user-${userId}`
-            const tab = await this.io.in('user-' + userId).fetchSockets();
-            if (tab.length > 0) {
-                socket.data = tab[0].data;
-            }
-
-            const user = await this.friendService.getById(userId);
-            if (!user) {
-                ack(error("User not found"));
-                return;
-            }
-			socket.data.authenticate(userId, user.username, user.avatar)
-        } catch (err) {
-            ack(error("Invalid token"));
+        const authResult = await this.authenticateSocketData(socket, token);
+        if (!authResult.success) {
+            ack(error(authResult.error));
             return;
         }
         ack(success(null));
 
-        // system to count multiple connections from the same user
+        const userId = Number(authResult.value);
+        this.setupSocketAuthMiddleware(socket, token, userId);
+        this.updateUserConnectionStatus(socket, userId);
+    }
+
+    // ----------------------------------------------------------------------------- //
+    private async authenticateSocketData(socket: DefaultSocket, token: string): Promise<Result<number>> {
+        try {
+            const decoded = this.tokenManager.verify(token, false);
+            if (!decoded) {
+                return error("Invalid token");
+            }
+
+            const userId = Number(decoded.userId);
+            
+            // Partage les données de socket si l'utilisateur est déjà connecté sur un autre onglet
+            const existingSockets = await this.io.in('user-' + userId).fetchSockets();
+            if (existingSockets.length > 0) {
+                socket.data = existingSockets[0].data;
+            }
+
+            const user = await this.friendService.getById(userId);
+            if (!user) {
+                return error("User not found");
+            }
+
+            socket.data.authenticate(userId, user.username, user.avatar);
+            return success(userId);
+        } catch (err) {
+            return error("Invalid token");
+        }
+    }
+
+    // ----------------------------------------------------------------------------- //
+    private setupSocketAuthMiddleware(socket: DefaultSocket, token: string, userId: number): void {
+        socket.use((packet, next) => {
+            if (!socket.data.getUserId()) {
+                return next();
+            }
+            
+            const [event] = packet;
+            try {
+                if (event === 'authenticate' || event === 'disconnect') {
+                    return next();
+                }
+                if (this.tokenManager.verify(token, false)) {
+                    return next();
+                } else {
+                    console.error(`Invalid token for event '${event}' from user ${userId}. Disconnecting socket.`);
+                    socket.disconnect();
+                    return next(new Error('Authentication error'));
+                }                
+            } catch (error) {
+                console.error(`Error while verifying token for event '${event}' from user ${userId}:`, error);
+            }
+
+        });
+    }
+
+    // ----------------------------------------------------------------------------- //
+    private updateUserConnectionStatus(socket: DefaultSocket, userId: number): void {
         const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
         const newCount = currentCount + 1;
-
         SocketEventController.connectedUsers.set(userId, newCount);
 
-        socket.join('user-' + userId);
-        console.log(`User ${userId} authenticated and joined his own socket room !`);
+        try {
+            socket.join('user-' + userId);
+            console.log(`User ${userId} authenticated and joined their socket room!`);
+        } catch (error) {
+            console.error(`Error while user ${userId} was joining their socket room:`, error);
+        }
 
-        // notifie watchers and friends only if it's the first connection of the user
+        // Notifie les observateurs et amis uniquement lors de la première connexion de l'utilisateur
         if (newCount === 1) {
             SocketEventController.sendToProfileWatchers(userId, 'user-status-change', { userId: userId, status: 'online' });
             SocketEventController.sendToFriends(userId, 'user-status-change', { userId: userId, status: 'online' });
@@ -273,13 +328,9 @@ export class SocketEventController {
 	}
 
 	// ----------------------------------------------------------------------------- //
-    // demander la liste des ids des users en ligne
-    // renvoyer les ids des users connectes qui correspondent a des ids de la liste demandee
 	private handleGetStatus(socket: DefaultSocket, callback: (onlineUsers: number[]) => void)
 	{
-		if (typeof callback === 'function') {
-			callback(Array.from(SocketEventController.connectedUsers.keys()) );
-		}
+        callback(Array.from(SocketEventController.connectedUsers.keys()) );
 	}
 
 	// ----------------------------------------------------------------------------- //
@@ -294,18 +345,26 @@ export class SocketEventController {
 	// ----------------------------------------------------------------------------- //
     private addProfileToWatch(socket: DefaultSocket, profileId: number[]): void
     {
-        const ids = Array.isArray(profileId) ? profileId : [profileId];
-        for (const id of ids) {
-            socket.join('watching-' + id);
+        try {
+            const ids = Array.isArray(profileId) ? profileId : [profileId];
+            for (const id of ids) {
+                socket.join('watching-' + id);
+            }            
+        } catch (error) {
+            console.error("Error while adding profile to watch:", error);
         }
     }
     
     // ----------------------------------------------------------------------------- //
     private removeProfileToWatch(socket: DefaultSocket, profileId: number[]): void
     {
-        const ids = Array.isArray(profileId) ? profileId : [profileId];
-        for (const id of ids) {
-            socket.leave('watching-' + id);
+        try {
+            const ids = Array.isArray(profileId) ? profileId : [profileId];
+            for (const id of ids) {
+                socket.leave('watching-' + id);
+            }            
+        } catch (error) {
+            console.error("Error while removing profile to watch:", error);
         }
     }
 
@@ -320,7 +379,6 @@ export class SocketEventController {
         if (userId === -1)
             console.log(`Guest disconnected !`);
         else {
-            // decompte ne nb de connexion du user (plusieurs onglets...)
 			const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
 			const newCount = currentCount - 1;
             SocketEventController.connectedUsers.set(userId, newCount);
@@ -336,25 +394,31 @@ export class SocketEventController {
 	}
 
 	// ----------------------------------------------------------------------------- //
-    private handleLogout(socket: DefaultSocket)
+    private handleLogout(socket: DefaultSocket, accessToken: string)
     {
-        socket.rooms.forEach((room) => {
-           room !== `${socket.id}` ? socket.leave(room) : null;
-        });
-        socket.data.disconnectOrLogout();
-		const userId = socket.data.getUserId();
+        try {
+            this.tokenManager.revokeToken(accessToken);
 
-		if (!userId)
-			return ;
-        const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
-        const newCount = currentCount - 1;
-        SocketEventController.connectedUsers.set(userId, newCount);
-
-        if (newCount <= 0) {
-            console.log(`User ${userId} logged out !`);
-            SocketEventController.connectedUsers.delete(userId);
-            SocketEventController.sendToProfileWatchers(userId, 'user-status-change', { userId: userId, status: 'offline' });
-            SocketEventController.sendToFriends(userId, 'user-status-change', { userId: userId, status: 'offline' });
+            socket.rooms.forEach((room) => {
+               room !== `${socket.id}` ? socket.leave(room) : null;
+            });
+            socket.data.disconnectOrLogout();
+            const userId = socket.data.getUserId();
+    
+            if (!userId)
+                return ;
+            const currentCount = SocketEventController.connectedUsers.get(userId) || 0;
+            const newCount = currentCount - 1;
+            SocketEventController.connectedUsers.set(userId, newCount);
+    
+            if (newCount <= 0) {
+                console.log(`User ${userId} logged out !`);
+                SocketEventController.connectedUsers.delete(userId);
+                SocketEventController.sendToProfileWatchers(userId, 'user-status-change', { userId: userId, status: 'offline' });
+                SocketEventController.sendToFriends(userId, 'user-status-change', { userId: userId, status: 'offline' });
+            }            
+        } catch (error) {
+            console.error("Error while logging out user:", error);
         }
     }
 }

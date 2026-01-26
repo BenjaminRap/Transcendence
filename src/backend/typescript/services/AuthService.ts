@@ -140,14 +140,6 @@ export class AuthService {
         return await this.tokenManager.generatePair(String(userId), email);
     }
 
-	// --------------------------------------------------------------------------------- //
-	async logout(userId: number): Promise<void> {
-        if ( !CommonSchema.id.safeParse(userId).success )
-            return ;
-        // In a stateless JWT system, logout can be handled on the client side by simply deleting the tokens.		
-		return;
-	}
-
     // ==================================== PRIVATE ==================================== //
 
     // --------------------------------------------------------------------------------- //
