@@ -4,7 +4,7 @@ import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
 import { type GameInit, type GameStartInfos, type KeysUpdate, type Profile, zodKeysUpdate } from "@shared/ServerMessage"
 import { ClientProxy } from "./ClientProxy";
 import { type int, Observable, Vector3 } from "@babylonjs/core";
-import type { ServerEvents, ServerToClientEvents } from "@shared/MessageType";
+import type { ServerMessage, ServerToClientEvents } from "@shared/MessageType";
 import type { ServerType } from "../index";
 import type { EndData } from "@shared/attachedScripts/GameManager";
 import type { DefaultSocket } from "../controllers/SocketEventController";
@@ -163,7 +163,7 @@ export class	Room
 		this._io.to(this._roomId).emit(event, ...args);
 	}
 
-	public sendMessageToSocketByIndex<T extends ServerEvents>
+	public sendMessageToSocketByIndex<T extends ServerMessage>
 	(
 		socketIndex : int,
 		event: T,
@@ -177,7 +177,7 @@ export class	Room
 		socket.emit(event, ...args);
 	}
 	
-	public broadcastMessageFromSocket<T extends ServerEvents>
+	public broadcastMessageFromSocket<T extends ServerMessage>
 	(
 		socketIndex : int,
 		event: T,

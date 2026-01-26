@@ -1,6 +1,11 @@
 import zod from "zod";
-import { funcOf, resultOf, zodProfile, zodTournamentDescription, zodTournamentId, type GameInfos, type GameInit, type GameStartInfos, type GameStats, type KeysUpdate, type Profile, type SanitizedUser, type TournamentCreationSettings, type TournamentDescription, type TournamentEvent, type TournamentId, type Username } from "./ServerMessage";
-import type { Result } from "./utils";
+import { funcOf, resultOf, zodGameInfos, zodGameInit, zodGameStartInfos, zodGameStats, zodKeysUpdate, zodProfile, zodSanitizedUser, zodTournamentCreationSettings, zodTournamentDescription, zodTournamentEvent, zodTournamentId} from "./ServerMessage";
+import { CommonSchema } from "./common.schema";
+
+type InferParams<T, K, DefaultValue> =
+  T extends keyof K
+    ? zod.infer<K[T]>
+    : DefaultValue;
 
 export type ClientMessage = "join-matchmaking" |
 							"ready" |
@@ -22,17 +27,19 @@ export type ClientMessage = "join-matchmaking" |
                             "authenticate" |
 							"set-alias";
 
-export type ClientMessageData<T extends ClientMessage> =
-	T extends "input-infos" ? [KeysUpdate] :
-	T extends "create-tournament" ? [TournamentCreationSettings] :
-	T extends "join-tournament" ? [TournamentId] :
-	T extends "ban-participant" ? [string] :
-	T extends "kick-participant" ? [string] :
-	T extends "watch-profile" ? [profileId: number[]] :
-	T extends "unwatch-profile" ? [profileId: number[]] :
-    T extends "authenticate" ? [data: { token: string }] :
-    T extends "set-alias" ? [alias: Username] :
-	[];
+export const zodClientMessageData = {
+	"input-infos" : zod.tuple([zodKeysUpdate]),
+	"create-tournament" : zod.tuple([zodTournamentCreationSettings]),
+	"join-tournament" : zod.tuple([zodTournamentId]),
+	"ban-participant" : zod.tuple([zod.string()]),
+	"kick-participant" : zod.tuple([zod.string()]),
+	"watch-profile" : zod.tuple([zod.array(zod.number())]),
+	"unwatch-profile" : zod.tuple([zod.array(zod.number())]),
+    "authenticate" : zod.tuple([zod.object({ token: zod.string() })]),
+    "set-alias" : zod.tuple([CommonSchema.username])
+}
+
+export type ClientMessageData<T extends ClientMessage> = InferParams<T, typeof zodClientMessageData, []>;
 
 export const zodClientMessageAcknowledgement = {
 	"create-tournament": funcOf(resultOf(zodTournamentId)),
@@ -45,24 +52,16 @@ export const zodClientMessageAcknowledgement = {
     "join-matchmaking" : funcOf(resultOf(zod.null()))
 }
 
-export const zodClientMessageAcknowledgement 
+export type ClientMessageAcknowledgement<T extends ClientMessage> = InferParams<T, typeof zodClientMessageAcknowledgement, undefined>
 
-export type ClientMessageAcknowledgement<T extends ClientMessage> = 
-	T extends "create-tournament" ? (tournamentId : Result<TournamentId>) => void :
-	T extends "start-tournament" ? (result : Result<null>) => void :
-	T extends "join-tournament" ? (participants : Result<Profile[]>) => void :
-	T extends "get-tournaments" ? (descriptions : Result<TournamentDescription[]>) => void :
-	T extends "get-online-users" ? (users: number[]) => void :
-    T extends "authenticate" ? (result: Result<null>) => void :
-    T extends "set-alias" ? (result : Result<null>) => void :
-    T extends "join-matchmaking" ? (result : Result<null>) => void :
-	undefined;
+export type ClientMessageParameters<T> =
+	T extends (keyof typeof zodClientMessageAcknowledgement) ?
+	[...InferParams<T, typeof zodClientMessageData, []>, InferParams<T, typeof zodClientMessageAcknowledgement, undefined>] :
+	InferParams<T, typeof zodClientMessageData, []>;
 
-export type ClientMessageParameters<T extends ClientMessage> =
-	ClientMessageAcknowledgement<T> extends undefined ? ClientMessageData<T> :
-	[...ClientMessageData<T>, ClientMessageAcknowledgement<T>];
 
-export type ServerEvents = "game-infos" |
+
+export type ServerMessage = "game-infos" |
 							"joined-game" |
 							"ready" |
 							"tournament-event" |
@@ -73,30 +72,23 @@ export type ServerEvents = "game-infos" |
 							"friend-status-update" |
 							"init";
 
-export type ServerEventsData<T extends ServerEvents> =
-	T extends "game-infos" ? [GameInfos] :
-	T extends "joined-game" ? [GameInit] :
-	T extends "tournament-event" ? [TournamentEvent] : 
-    T extends "user-status-change" ? [{ userId: number, status: 'online' | 'offline' }] :
-    T extends "profile-update" ? [{ user: SanitizedUser }] :
-    T extends "game-stats-update" ? [{ stats: GameStats }] :
-	T extends "friend-status-update" ? [{ fromUserId: number, status: 'PENDING' | 'ACCEPTED' }] :
-	T extends "ready" ? [GameStartInfos] :
-	T extends "init" ? [guestName: string] :
-	[];
-
-export type ServerEventsAcknowledgement<T extends ServerEvents> = 
-	undefined;
-
-export type ServerEventsParameters<T extends ServerEvents> =
-	ServerEventsAcknowledgement<T> extends undefined ? ServerEventsData<T> :
-	[...ServerEventsData<T>, ServerEventsAcknowledgement<T>];
-
+export const zodServerMessageData = {
+	"game-infos" : zod.tuple([zodGameInfos]),
+	"joined-game" : zod.tuple([zodGameInit]),
+	"tournament-event" : zod.tuple([zodTournamentEvent]),
+    "user-status-change" : zod.tuple([zod.object({ userId: zod.number(), status: zod.literal(['online', 'offline']) })]),
+    "profile-update" : zod.tuple([zod.object({ user: zodSanitizedUser })]),
+    "game-stats-update" : zod.tuple([zod.object({ stats: zodGameStats })]),
+	"friend-status-update" : zod.tuple([zod.object({ fromUserId: zod.number(), status: zod.literal('PENDING', 'ACCEPTED')})]),
+	"ready" : zod.tuple([zodGameStartInfos]),
+	"init" : zod.tuple([zod.string()])
+};
+export type ServerMessageParameters<T extends ServerMessage> = InferParams<T, typeof zodServerMessageData, []>;
 
 export type ClientToServerEvents = {
     [T in ClientMessage]: (...data: ClientMessageParameters<T>) => void;
 };
 
 export type ServerToClientEvents = {
-    [T in ServerEvents]: (...data: ServerEventsParameters<T>) => void;
+    [T in ServerMessage]: (...data: ServerMessageParameters<T>) => void;
 };
