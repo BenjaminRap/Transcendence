@@ -42,7 +42,7 @@ export interface MatchSummary
 	match: Match | null,
 }
 
-export interface SuscriberProfile
+export interface ExtProfile
 {
 	id:         number,
 	avatar:     string,
@@ -51,13 +51,13 @@ export interface SuscriberProfile
 	lastMatchs: MatchSummary[],
 }
 
-let profile: SuscriberProfile;
+let profile: ExtProfile;
 
 let profileDiv : HTMLElement | null;
 
 
 
-function updateProfileCard() {
+	export function updateProfileCard(profile: ExtProfile) {
 	if (!profileDiv)
 		return;
 	profileDiv.innerHTML = `<img src="${profile.avatar}" alt="Avatar" class="w-[12vh] h-[12vh] border border-green-500 object-cover"></img>
@@ -67,9 +67,9 @@ function updateProfileCard() {
 								<p>Loss: ${profile.gameStats.losses}</p>
 								<p>W/L: ${(profile.gameStats.wins / (profile.gameStats.losses + profile.gameStats.wins)).toFixed(2)}</p>
 							</div>`;
-	history.pushState({}, '', `/profile/${profile.username}`);
+	}
 
-}
+
 
 function createProfileCard(profileElement: HTMLElement | null): HTMLElement | void {
 	if (!profileElement)
@@ -214,7 +214,7 @@ async function fetchProfileData(user: string) : Promise <string>
 		const data = await response.json();
 		if (data.success) {
 
-			let user : SuscriberProfile = {
+			let user : ExtProfile = {
 				id:         data.user[0].id,
 				avatar:     data.user[0].avatar,
 				username:   data.user[0].username,
@@ -262,14 +262,32 @@ export namespace ExtProfileBuilder {
 
 		if (socketUtils && socketUtils.socket)
 		{
+			socketUtils.socket.emit("watch-profile", profile.id);
+
 			socketUtils.socket.on("profile-update", (data : {user: { id: string; username: string; avatar: string }}) => {
 				console.log("Profile updated:", data.user.id, ' : ', data.user.username, ' : ', data.user.avatar);
 				if (parseInt(data.user.id) === profile.id) {
 					profile.username = data.user.username;
 					profile.avatar = data.user.avatar;
-					updateProfileCard();
+					updateProfileCard(profile);
 				}
 			});
+
+			socketUtils.socket.on("match-update", (data: MatchSummary) => {
+				console.log("Match updated:", data);
+				// Update lastMatchs
+				profile.lastMatchs.unshift(data);
+				if (profile.lastMatchs.length > 4)
+					profile.lastMatchs.pop();
+				updateMatchDiv();
+			});
+
+			socketUtils.socket.on("stat-update", (data: GameStats) => {
+				console.log("Stat updated:", data);
+				profile.gameStats = data;
+				updateProfileCard(profile);
+			});
+
 		}
 	}
 	export function removeExtProfile() {

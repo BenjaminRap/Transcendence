@@ -488,6 +488,12 @@ export namespace ProfileBuilder {
 				updateMatchDiv();
 			});
 
+			socketUtils.socket.on("stat-update", (data: GameStats) => {
+				console.log("Stat updated:", data);
+				profile.gameStats = data;
+				ProfileUpdater.updateProfileCard(profile);
+			});
+
 
 
 			socketUtils.socket.on("friend-status-update", (data: {requester: {id: number, username: string, avatar: string, isOnline: boolean, requesterId: number}, status: string}) => {
