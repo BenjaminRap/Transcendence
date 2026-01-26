@@ -28,6 +28,7 @@ export interface PlayerInfo {
 
 export interface MatchResult
 {
+    createdAt: any;
     matchId: number,
     scoreWinner: number,
     scoreLoser: number,

@@ -20,12 +20,15 @@ export class MatchController {
                 return { success: false, messageError: "An error occurred when fetching the database" };
 
             const matchs = await this.matchService.getFirstMAtch(match);
-            let result = await this.matchService.formatMatchSummary(matchs as MatchWithRelations[], match.id);
+            let resultLeft = await this.matchService.formatMatchSummaryLeft(matchs as MatchWithRelations[]);
+            let resultRight = await this.matchService.formatMatchSummaryRight(matchs as MatchWithRelations[]);
+
 
             let leftId = match.playerLeftId ? match.playerLeftId : 0;
             let rightId = match.playerRightId ? match.playerRightId : 0;
-            SocketEventController.notifyProfileChange(leftId, 'match-update', result[0]);
-            SocketEventController.notifyProfileChange(rightId, 'match-update', result[0]);
+            console.log("=======", resultLeft[0], "=========");
+            SocketEventController.notifyProfileChange(leftId, 'match-update', resultLeft[0]);
+            SocketEventController.notifyProfileChange(rightId, 'match-update', resultRight[0]);
             SocketEventController.notifyProfileChange(leftId, 'stat-update',  await this.matchService.getStat(leftId));
             SocketEventController.notifyProfileChange(rightId, 'stat-update', await this.matchService.getStat(rightId));
             return { success: true, matchId: match.id }

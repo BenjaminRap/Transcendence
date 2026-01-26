@@ -195,11 +195,18 @@ function updateFriendDiv()
 
 function updateMatchDiv()
 {
+	console.log("Updating match div...");
 	if (!profileDiv)
+	{
+		console.log("Bitch")
 		return;
+	}
 	const newMatchListElement = createMatchElement();
 	if (!newMatchListElement)
+	{
+		console.log("No match element");
 		return;
+	}
 	const oldMatchListElement = document.getElementById('match-list');
 	if (oldMatchListElement && oldMatchListElement.parentElement) {
 		oldMatchListElement.parentElement.replaceChild(newMatchListElement, oldMatchListElement);
@@ -259,14 +266,10 @@ function createMatchElement() : HTMLElement
 	matchElement.className = "border py-4 border-green-500 flex flex-col gap-y-4 h-full";
 	matchElement.id = "match-list";
 	for (let i = 0; i < Math.min(profile.lastMatchs.length, 4); i++) {
-		console.log("Creating match element for match:", profile.lastMatchs[i]);
 		const match = profile.lastMatchs[i];
 		const matchDiv = document.createElement('div');
 		if (!match || !match.match || !match.opponent) 
-		{
-			console.log("Skipping invalid match:", match);
 			continue;
-		}
 		let result;
 		if (match.isWinner) {
 			result = "Win";
@@ -475,6 +478,17 @@ export namespace ProfileBuilder {
 			socketUtils.socket.on("user-status-change", (data: { userId: string; status: string }) => {
 				ProfileUpdater.updateFriendList(parseInt(data.userId), data.status);
 			});
+
+			socketUtils.socket.on("match-update", (data: MatchSummary) => {
+				console.log("Match updated:", data);
+				// Update lastMatchs
+				profile.lastMatchs.unshift(data);
+				if (profile.lastMatchs.length > 4)
+					profile.lastMatchs.pop();
+				updateMatchDiv();
+			});
+
+
 
 			socketUtils.socket.on("friend-status-update", (data: {requester: {id: number, username: string, avatar: string, isOnline: boolean, requesterId: number}, status: string}) => {
 				let friendToAdd: Friend = {

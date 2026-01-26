@@ -186,6 +186,7 @@ export class FriendService {
 
     // ----------------------------------------------------------------------------- //
     async areFriends(friendId: number, userId: number): Promise<boolean> {
+        console.log("Checking friendship between", userId, "and", friendId);
         if ( await this.checkId(friendId) == false || await this.checkId(userId) == false )
             throw new FriendException(FriendError.USR_NOT_FOUND, FriendError.USR_NOT_FOUND);
 
