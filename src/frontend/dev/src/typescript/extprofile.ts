@@ -49,6 +49,7 @@ export interface ExtProfile
 	username:   string,
 	gameStats:  GameStats,
 	lastMatchs: MatchSummary[],
+	isFriend: 	boolean
 }
 
 let profile: ExtProfile;
@@ -57,7 +58,7 @@ let profileDiv : HTMLElement | null;
 
 
 
-	export function updateProfileCard(profile: ExtProfile) {
+export function updateProfileCard(profile: ExtProfile) {
 	if (!profileDiv)
 		return;
 	profileDiv.innerHTML = `<img src="${profile.avatar}" alt="Avatar" class="w-[12vh] h-[12vh] border border-green-500 object-cover"></img>
@@ -186,12 +187,18 @@ function createButtons(profileElement: HTMLElement | null) {
 		return;
 	const buttonContainer = document.createElement('div');
 	buttonContainer.className = "flex gap-2";
-	buttonContainer.innerHTML = `<button id="addFriendButton" class=" w-full p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Add Friend</button>`
-								// <button class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Block User</button>`
-								// 	<button class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Change Avatar</button>
-								// <button class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Delete Account</button>
-	const addFriendButton = buttonContainer.querySelector('#addFriendButton');
-	addFriendButton?.addEventListener('click', () => sendFriendRequest(profile.id));
+	if (!profile.isFriend)
+	{
+		buttonContainer.innerHTML = `<button id="addFriendButton" class=" w-full p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Add Friend</button>`
+		const addFriendButton = buttonContainer.querySelector('#addFriendButton');
+		addFriendButton?.addEventListener('click', () => sendFriendRequest(profile.id));
+	}
+	else
+	{
+		buttonContainer.innerHTML = `<button id="removeFriendButton" class=" w-full p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Remove Friend</button>`
+		const removeFriendButton = buttonContainer.querySelector('#removeFriendButton');
+		removeFriendButton?.addEventListener('click', () =>  removeFriend(profile.id));
+	}	
 	profileElement.appendChild(buttonContainer);
 }
 
@@ -213,13 +220,14 @@ async function fetchProfileData(user: string) : Promise <string>
 		});
 		const data = await response.json();
 		if (data.success) {
-
+			console.log('data :', data);
 			let user : ExtProfile = {
 				id:         data.user[0].id,
 				avatar:     data.user[0].avatar,
 				username:   data.user[0].username,
 				gameStats:  data.user[0].stats,
 				lastMatchs: data.user[0].lastMatchs,
+				isFriend:   data.user[0].isFriend,
 			}
 			profile = user;
 			return "OK";
@@ -331,6 +339,40 @@ async function sendFriendRequest(id: number)
 		if (data.message === 'Friendship in pending mod')
 		{
 			WriteOnTerminal.printErrorOnTerminal('Votre demande d\'ami est en attente.');
+			return "OK";
+		}
+		console.error("Error fetching profile data:", data.message);
+		WriteOnTerminal.printErrorOnTerminal('Erreur lors de la récupération des données du profil.');
+	} catch (error) {
+		console.error("Error:", error);
+		WriteOnTerminal.printErrorOnTerminal('Erreur lors de la récupération des données du profil.');
+	}
+}
+
+async function removeFriend(id: number)
+{
+	const token = TerminalUtils.getCookie('accessToken') || '';
+	if (token === '') {
+		return `Vous n'êtes pas connecté.`;
+	}
+	try {
+		const response = await fetch(`/api/friend/remove/${id}`, {
+			method: 'DELETE',
+			headers: {
+				'Authorization': 'Bearer ' + token
+			},
+		});
+		const data = await response.json();
+		if (data.success) {
+			console.log('data :', data);
+			WriteOnTerminal.printErrorOnTerminal(`${profile.username} a été retiré de vos amis.`);
+			return "OK";
+		}
+		if (data.message === 'Invalid or expired token') {
+			const refreshed = await RequestBackendModule.tryRefreshToken();
+			if (!refreshed) {
+				WriteOnTerminal.printErrorOnTerminal(`Vous n'êtes pas connecté.`);
+			}
 			return "OK";
 		}
 		console.error("Error fetching profile data:", data.message);
