@@ -1,6 +1,5 @@
-import { type PrismaClient, TournamentStatus } from '@prisma/client';
-import { TournamentException, TournamentError } from '../error_handlers/Tournament.error.js';
-import type { CreateTournament } from '../types/tournament.types.js';
+import { type PrismaClient, type Tournament, TournamentStatus } from '@prisma/client';
+import type { CreateTournament, Ranking } from '../types/tournament.types.js';
 
 export class TournamentService {
 	constructor(
@@ -20,43 +19,36 @@ export class TournamentService {
                 },
             },
         });
-        return tournament.id;
+        return tournament?.id;
     }
 
 	// ----------------------------------------------------------------------------- //
-	async getTournamentById(tournamentId: number) {
-		const tournament = await this.prisma.tournament.findUnique({
+	async getTournamentById(tournamentId: number): Promise<Tournament | null> {
+		return await this.prisma.tournament.findUnique({
 			where: { id: Number(tournamentId) },
 			include: {
 				participants: true,
 				matches: true,
 			},
 		});
-
-		if (!tournament) {
-			throw new TournamentException(TournamentError.TOURNAMENT_NOT_FOUND);
-		}
-
-		return tournament;
 	}
 
 	// ----------------------------------------------------------------------------- //
-	private async updateTournamentStatus(tournamentId: number, status: TournamentStatus) {
-		const tournament = await this.prisma.tournament.update({
+	private async updateTournamentStatus(tournamentId: number, status: TournamentStatus): Promise<Tournament> {
+		return await this.prisma.tournament.update({
 			where: { id: Number(tournamentId) },
 			data: { status },
 		});
-		return tournament;
 	}
 
 	// ----------------------------------------------------------------------------- //
-	async finishTournament(tournamentId: number, ranking: { PlayerAlias: string, rank: number }[]) {
+	async finishTournament(tournamentId: number, ranking: Ranking[]): Promise<Tournament> {
         // update ranking for each participant
         for (const r of ranking) {
             await this.prisma.tournamentParticipant.updateMany({
                 where: {
                     tournamentId: Number(tournamentId),
-                    alias: r.PlayerAlias,
+                    alias: r.alias,
                 },
                 data: {
                     finalRank: r.rank,
@@ -64,7 +56,6 @@ export class TournamentService {
             });
         }
         
-        const tournament = await this.updateTournamentStatus(tournamentId, TournamentStatus.FINISHED);
-		return tournament;
+        return await this.updateTournamentStatus(tournamentId, TournamentStatus.FINISHED);
 	}
 }

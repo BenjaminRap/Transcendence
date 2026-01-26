@@ -1,11 +1,14 @@
-import type { TournamentCreationSettings, TournamentDescription, TournamentId, Username } from "@shared/ServerMessage";
+import type { Profile, TournamentCreationSettings, TournamentDescription, TournamentId, Username } from "@shared/ServerMessage";
 import type { ServerType } from "..";
-import { error, success, type Result } from "@shared/utils";
+import { error, getEndDataOnInvalidMatch, success, type Result } from "@shared/utils";
 import { Tournament } from "@shared/Tournament";
 import type { Match } from "@shared/Match";
 import { Room } from "./Room";
-import type { DefaultSocket } from "../controllers/SocketEventController";
+import { SocketEventController, type DefaultSocket } from "../controllers/SocketEventController";
 import { CommonSchema } from "@shared/common.schema";
+import { Container } from "../container/Container";
+import type { TournamentController } from "../controllers/TournamentController";
+import type { Ranking } from "../types/tournament.types";
 
 export class	ServerTournament extends Tournament<DefaultSocket>
 {
@@ -17,6 +20,9 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 	private _tournamentId : TournamentId;
 	private _rooms = new Set<Room>();
 	private _socketReadyCount = 0;
+	private _tournamentController = Container.getInstance().getService<TournamentController>("TournamentController");
+    private _databaseId?: number;
+	private _ranks = new Array<Ranking>;
 
 	constructor(
 		private _onTournamentDispose : () => void,
@@ -35,7 +41,6 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		this._creator.once("cancel-tournament", () => this.dispose());
 		this._creator.on("ban-participant", (name : string) => this.banParticipant(name));
 		this._creator.on("kick-participant", (name : string) => this.kickParticipant(name));
-		this._creator.join(this._tournamentId);
 	}
 
 	private	banParticipant(name : string)
@@ -48,7 +53,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 			return ;
 		const	userId = socket.data.getUserId();
 
-		if (userId !== -1)
+		if (userId !== undefined)
 			this._bannedPlayers.add(userId);
 		else
 			this._bannedPlayers.add(name);
@@ -82,8 +87,6 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		if (this._players.size < 2)
 			return error("Not enough players !");
 		this.removeCreatorEvents();
-		if (!this._players.has(this._creator.data.getGuestName()))
-			this._creator.leave(this._tournamentId);
 		this._state = "waiting-ready";
 		console.log(`${this._settings.name} tournament started !`);
 		this._io.to(this._tournamentId).emit("tournament-event", {type:"tournament-start"});
@@ -91,6 +94,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 			this.onReadyTimeout();
 		}, ServerTournament._readyTimeoutMs);
 		this._players.forEach(socket => {
+			socket.removeAllListeners("set-alias");
 			socket.data.ready = false;
 			socket.once("ready", () => {
 				socket.data.ready = true;
@@ -109,7 +113,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		});
 	}
 
-	private startMatchesIfReady()
+	private async startMatchesIfReady()
 	{
 		if (this._socketReadyCount !== this._players.size)
 			return ;
@@ -118,15 +122,34 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 			this.dispose();
 		else if (this._players.size === 1)
 		{
-			const	winner = this._players.values().next().value!;
+			const	winner = this._players.values().next().value;
 
 			this.onTournamentEnd(winner);
 		}
 		else
 		{
+			const result = await this._tournamentController.createTournament({
+				title: this._settings.name,
+				creatorId: this._creator.data.getUserId(),
+				creatorGuestName: this._creator.data.getGuestName(),
+				participants: [...this._players.values()].map(socket => {
+					return {
+						userId: socket.data.getUserId(),
+						guestName: socket.data.getGuestName(),
+						alias: socket.data.getProfile().shownName
+					}
+				})
+			});
+			if (!result.success)
+			{
+				this.dispose();
+				return ;
+			}
+			this._databaseId = result.value;
 			this.setParticipants([...this._players.values()]);
 			this.createMatches();
 			this._state = "started";
+			return ;
 		}
 	}
 
@@ -137,19 +160,29 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		super.dispose();
 		console.log(`${this._settings.name} tournamend end`);
 		if (this._state === "creation")
+		{
 			this._io.to(this._tournamentId).emit("tournament-event", { type: "tournament-canceled" })
+			this._creator.data.leaveTournament();
+			this.removeCreatorEvents();
+		}
 		this._state = "disposed";
 		this._players.forEach((player) => {
 			this.removePlayerFromTournament(player);
 		});
-		this._creator.leave(this._tournamentId);
-		this._creator.data.leaveTournament();
-		this.removeCreatorEvents();
 		this._onTournamentDispose();
 	}
 	
-	private	canJoinTournament(socket : DefaultSocket)
+	private	async canJoinTournament(socket : DefaultSocket)
 	{
+		const	userState = await SocketEventController.getUserState(this._io, socket.data);
+
+		if (!userState.success)
+			return error("Server Error");
+		const	isCreator = socket === this._creator;
+		const	isCreatorPlayer = isCreator && this._players.has(this._creator.data.getGuestName());
+
+		if (isCreatorPlayer || (!isCreator && userState.value !== "unactive"))
+			return error("The user is already in a game, tournament or matchmaking");
 		if (this._state !== "creation")
 			return error("The tournament has already started !");
 		if (this._players.size === this._settings.maxPlayerCount)
@@ -158,24 +191,25 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 			return error("The tournament doesn't accept guests, you must log to your account !");
 		const	userId = socket.data.getUserId();
 
-		if (this._bannedPlayers.has(socket.data.getGuestName()) || this._bannedPlayers.has(userId))
+		if (this._bannedPlayers.has(socket.data.getGuestName()) || (userId && this._bannedPlayers.has(userId)))
 			return error("You have been banned from this tournament !");
 		return success(undefined);
 	}
 
-	public addParticipant(socket : DefaultSocket) : Result<undefined>
+	public async addParticipant(socket : DefaultSocket) : Promise<Result<undefined>>
 	{
-		const	canJoinTournament = this.canJoinTournament(socket);
+		const	canJoinTournament = await this.canJoinTournament(socket);
 
 		if (!canJoinTournament.success)
 			return canJoinTournament;
-		const	guestName = socket.data.getGuestName();
+		socket.data.setAlias(null);
+		const	profile = socket.data.getProfile();
 
-		this._players.set(guestName, socket);
-		this._io.to(this._tournamentId).emit("tournament-event", {
+		this._players.set(profile.guestName, socket);
+		this._io.to(this._tournamentId).to(this._creator.id).emit("tournament-event", {
             type: "add-participant",
-			name: guestName,
-			isCreator: guestName === this._creator.data.getGuestName()
+			profile: profile,
+			isCreator: profile.guestName === this._creator.data.getGuestName()
         });
 		socket.join(this._tournamentId);
 		socket.data.joinTournament(this);
@@ -186,15 +220,16 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 
 	private	changeAlias(socket : DefaultSocket, alias : Username, ack: (result: Result<null>) => void)
 	{
-		const	parsed = CommonSchema.username.safeParse(alias);
+		const	parsed = CommonSchema.alias.safeParse(alias);
 
 		if (!parsed.success)
-			ack(error(parsed.error.message));
-		else
-		{
-			this._io.to(this._tournamentId).emit("tournament-event", {
+			ack(error(parsed.error.issues[0].message));
+		else if (this._players.values().find(socket => socket.data.getAlias() === alias))
+			ack(error("Alias already taken !"));
+		else {
+			this._io.to(this._tournamentId).to(this._creator.id).except(socket.id).emit("tournament-event", {
 					type: "change-alias",
-					name: socket.data.getGuestName(),
+					guestName: socket.data.getGuestName(),
 					newAlias: parsed.data
 			});
 			socket.data.setAlias(alias);
@@ -210,12 +245,12 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		this._players.delete(guestName);
 		socket.removeAllListeners("leave-tournament");
 		socket.removeAllListeners("ready");
-		socket.removeAllListeners("change-alias");
+		socket.removeAllListeners("set-alias");
 		if (this._state === "creation")
 		{
-			this._io.to(this._tournamentId).emit("tournament-event", {
+			this._io.to(this._tournamentId).to(this._creator.id).emit("tournament-event", {
 				type: "remove-participant",
-				name: guestName
+				guestName: guestName
 			});
 		}
 		if (this._state !== "creation" || !isCreator)
@@ -234,7 +269,9 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 
 	protected override onParticipantLose(loser : DefaultSocket, isQualifications : boolean, roundMatchCount : number)
 	{
-		loser.emit("tournament-event", {type: "lose", isQualifications, roundMatchCount})
+		this._ranks.push({alias: loser.data.getProfile().shownName, rank: 1});
+		loser.emit("tournament-event", {type: "lose", isQualifications, roundParticipantsCount: roundMatchCount})
+		this.removePlayerFromTournament(loser);
 	}
 
     protected override onQualificationsEnd(qualified: DefaultSocket[]): void
@@ -245,9 +282,12 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		});
     }
 
-    protected override onTournamentEnd(winner: DefaultSocket): void
+    protected override onTournamentEnd(winner? : DefaultSocket): void
 	{
-		winner.emit("tournament-event", {type: "win", winner: winner.data.getProfile()})
+		if (winner)
+			this._ranks.push({alias: winner.data.getProfile().shownName, rank: 1});
+		this._tournamentController.closeTournament(this._databaseId!, this._ranks);
+		winner?.emit("tournament-event", {type: "win"})
 		this.dispose();
     }
 
@@ -261,19 +301,39 @@ export class	ServerTournament extends Tournament<DefaultSocket>
     protected override onNewMatches(): void
 	{
 		this._currentMatches.forEach(match => {
-			const	left = match.left?.profile;
-			const	right = match.right?.profile;
+			const	left = match.left;
+			const	right = match.right;
 
+			if (match.winner !== undefined)
+				return ;
+			if (!left || !right)
+			{
+				const	endData = getEndDataOnInvalidMatch(!!left, !!right);
+
+				match.setWinner(endData);
+				this.onMatchEnd(match);
+				return ;
+			}
 			if (match.winner !== undefined
-				|| left?.data.getState() !== "tournament-waiting"
-				|| right?.data.getState() !== "tournament-waiting")
+				|| left.profile.data.getState() !== "tournament-waiting"
+				|| right.profile.data.getState() !== "tournament-waiting")
 				return ;
 			const	room = new Room(this._io, endData => {
 				this._rooms.delete(room);
 				match.setWinner(endData);
+				this._tournamentController.updateTournament(this._databaseId!, {
+					leftId: left.profile.data.getUserId(),
+					leftGuestName: left.profile.data.getGuestName(),
+					rightId: right.profile.data.getUserId(),
+					rightGuestName: right.profile.data.getGuestName(),
+					winnerIndicator: endData.winner,
+					scoreLeft: endData.scoreLeft,
+					scoreRight: endData.scoreRight,
+					duration: endData.duration
+				});
 				this.onNewMatches();
 				this.onMatchEnd(match);
-			}, left, right);
+			}, left.profile, right.profile);
 			this._rooms.add(room);
 		});
     }
@@ -303,16 +363,20 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		}
 	}
 
-	public getDescriptionIfAvailable(socket : DefaultSocket) : TournamentDescription | null
+	public async getDescriptionIfAvailable(socket : DefaultSocket) : Promise<TournamentDescription | null>
 	{
-		if (!this._settings.isPublic || !this.canJoinTournament(socket).success)
+		if (!this._settings.isPublic)
+			return null;
+		const	canJoinTournament = await this.canJoinTournament(socket);
+
+		if (!canJoinTournament)
 			return null;
 		return this.getDescription();
 	}
 
-	public getParticipantsNames() : string[]
+	public getParticipants() : Profile[]
 	{
-		return Array.from(this._players.keys());
+		return [...this._players.values()].map(socket => socket.data.getProfile());
 	}
 
 	public onSocketQuit(socket : DefaultSocket)

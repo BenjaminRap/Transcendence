@@ -1,12 +1,16 @@
 import { Room } from "./Room";
 import type { ServerType } from "../index";
-import type { DefaultSocket } from "../controllers/SocketEventController";
+import { SocketEventController, type DefaultSocket } from "../controllers/SocketEventController";
+import type { MatchController } from "../controllers/MatchController";
+import { Container } from "../container/Container";
+import { error, success, type Result } from "@shared/utils";
 
 const	rooms = new Set<Room>();
 
 export class	MatchMaker
 {
 	private _waitingSockets : DefaultSocket[] = [];
+	private _matchController = Container.getInstance().getService<MatchController>("MatchController")
 
 
 	constructor(
@@ -14,15 +18,20 @@ export class	MatchMaker
 	) {
 	}
 
-	public	addUserToMatchMaking(socket : DefaultSocket)
+	public	async addUserToMatchMaking(socket : DefaultSocket) : Promise<Result<null>>
 	{
-		if (socket.data.getState() !== "unactive")
-			return ;
+		const	currentState = await SocketEventController.getUserState(this._io, socket.data);
+
+		if (!currentState.success)
+			return error("Server Error");
+		if (currentState.value !== "unactive")
+			return error("The user is already in a game, tournament or matchmaking");
 		console.log("user added to matchmaking !");
 		socket.once("leave-matchmaking", () => { this.removeUserFromMatchMaking(socket) });
 		this._waitingSockets.push(socket);
 		socket.data.setInWaitingQueue();
 		this.createParty();
+		return success(null);
 	}
 
 	public	removeUserFromMatchMaking(socket : DefaultSocket)
@@ -43,9 +52,21 @@ export class	MatchMaker
 		if (this._waitingSockets.length < 2)
 			return ;
 		console.log("creating party");
-		const	firstSocket = this._waitingSockets.pop()!;
-		const	secondSocket = this._waitingSockets.pop()!;
-		const	room = new Room(this._io, () => rooms.delete(room), firstSocket, secondSocket);
+		const	leftSocket = this._waitingSockets.pop()!;
+		const	rightSocket = this._waitingSockets.pop()!;
+		const	room = new Room(this._io, endData => {
+			rooms.delete(room)
+			this._matchController.registerMatch({
+				leftId: leftSocket.data.getUserId(),
+				leftGuestName: leftSocket.data.getGuestName(),
+				rightId: rightSocket.data.getUserId(),
+				rightGuestName: rightSocket.data.getGuestName(),
+				winnerIndicator: endData.winner,
+				scoreLeft: endData.scoreLeft,
+				scoreRight: endData.scoreRight,
+				duration: endData.duration
+			});
+		}, leftSocket, rightSocket);
 
 		rooms.add(room);
 	}

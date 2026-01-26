@@ -43,3 +43,7 @@
 	word-break: break-all;
 	height: auto;
 }
+
+button:disabled {
+	filter: grayscale(100%) opacity(25%);
+}

@@ -143,6 +143,9 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		this._onlineTournamentStartGUI.onKickParticipant().add((name : string) => {
 			this._sceneData.serverProxy.kickPlayerFromTournament(name);
 		});
+		this._onlineTournamentStartGUI.onSetAlias().add(value => {
+			this.setAlias(value.guestName, value.newAlias);
+		});
 	}
 
 	protected	ready()
@@ -256,20 +259,25 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		this.startGame(this._currentSceneFileName, "Local", tournament);
 	}
 
-	private	startGame<T extends EnemyType>(
+	private	async startGame<T extends EnemyType>(
 		sceneName : FrontendGameSceneName,
 		enemyType : T,
 		tournament : T extends "Local" ? LocalTournament | undefined : undefined)
 	{
-		if (enemyType === "Local")
-			this._sceneData.pongHTMLElement.startLocalGame(sceneName, tournament);
-		else if (enemyType === "Multiplayer")
-		{
-			this.switchMenu(this._inMatchmakingGUI);
-			this._sceneData.pongHTMLElement.searchOnlineGame(sceneName);
+		try {
+			if (enemyType === "Local")
+				await this._sceneData.pongHTMLElement.startLocalGame(sceneName, tournament);
+			else if (enemyType === "Multiplayer")
+			{
+				this.switchMenu(this._inMatchmakingGUI);
+				await this._sceneData.pongHTMLElement.searchOnlineGame(sceneName);
+			}
+			else if (enemyType === "Bot")
+				await this._sceneData.pongHTMLElement.startBotGame(sceneName);
+		} catch (error) {
+			this._sceneData.pongHTMLElement.onError(error);
+			this.switchMenu(this._menuGUI);
 		}
-		else if (enemyType === "Bot")
-			this._sceneData.pongHTMLElement.startBotGame(sceneName);
 	}
 
 	private	async createTournament()
@@ -306,6 +314,21 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 			if (!tournamentData)
 				this.switchMenu(this._onlineTournamentChoiceGUI);
+			else
+				this._sceneData.pongHTMLElement.startOnlineTournament(this._currentSceneFileName);
+		} catch (error) {
+			this._sceneData.pongHTMLElement.setButtonEnable(true);
+			this._sceneData.pongHTMLElement.onError(error);
+		}
+	}
+
+	private async setAlias(guestName: string, newAlias : string)
+	{
+		try {
+			this._sceneData.pongHTMLElement.setButtonEnable(false);
+			await this._sceneData.serverProxy.setAlias(newAlias);
+			this._sceneData.pongHTMLElement.setButtonEnable(true);
+			this._onlineTournamentStartGUI.validate(guestName);
 		} catch (error) {
 			this._sceneData.pongHTMLElement.setButtonEnable(true);
 			this._sceneData.pongHTMLElement.onError(error);
@@ -334,7 +357,11 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			this._sceneData.pongHTMLElement.setButtonEnable(true);
 
 			this._onlineTournamentStartGUI.init("player", tournamentId)
-			this._onlineTournamentStartGUI.addParticipants(false, ...participants);
+			participants.forEach(participant => {
+				const	isNameInput = this._sceneData.serverProxy.getGuestName() === participant.guestName;
+
+				this._onlineTournamentStartGUI.addParticipant(false, participant, isNameInput);
+			})
 			this.switchMenu(this._onlineTournamentStartGUI);
 		} catch (error) {
 			this._sceneData.pongHTMLElement.setButtonEnable(true);
@@ -387,11 +414,14 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		{
 			const	areYouCreator = tournamentData.isCreator;
 			const	canKickOrBan = areYouCreator && !tournamentEvent.isCreator;
+			const	isNameInput = this._sceneData.serverProxy.getGuestName() === tournamentEvent.profile.guestName;
 
-			this._onlineTournamentStartGUI.addParticipant(canKickOrBan, tournamentEvent.name);
+			this._onlineTournamentStartGUI.addParticipant(canKickOrBan, tournamentEvent.profile, isNameInput);
 		}
 		else if (tournamentEvent.type === "remove-participant")
-			this._onlineTournamentStartGUI.removeParticipant(tournamentEvent.name);
+			this._onlineTournamentStartGUI.removeParticipant(tournamentEvent.guestName);
+		else if (tournamentEvent.type === "change-alias")
+			this._onlineTournamentStartGUI.changeAlias(tournamentEvent.guestName, tournamentEvent.newAlias);
 		else if (tournamentEvent.type === "tournament-start")
 			this._sceneData.pongHTMLElement.startOnlineTournament(this._currentSceneFileName);
 	}

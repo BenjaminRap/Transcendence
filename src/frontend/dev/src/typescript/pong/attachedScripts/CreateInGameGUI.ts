@@ -70,7 +70,7 @@ export class CreateInGameGUI extends CustomScriptComponent {
 
 		}, this._menuParent);
 		this._inMatchmakingGUI = initMenu(new InMatchmakingGUI(), {
-			cancelButton: () => this.leaveMatchmaking(),
+			cancelButton: () => this._sceneData.serverProxy.leaveMatchmaking(),
 		}, this._menuParent);
 		this._tournamentEndGUI = initMenu(new TournamentEndGUI(), {
 			goToMenu: () => this.onGoToMenu()
@@ -107,7 +107,7 @@ export class CreateInGameGUI extends CustomScriptComponent {
 					this.switchToGUI(this._tournamentEndGUI);
 					break ;
 				case "lose":
-					this._tournamentEndGUI.setLoser(tournamentEvent.isQualifications, tournamentEvent.roundMatchCount, this._tournamentGUI);
+					this._tournamentEndGUI.setLoser(tournamentEvent.isQualifications, tournamentEvent.roundParticipantsCount, this._tournamentGUI);
 					this.switchToGUI(this._tournamentEndGUI);
 					break ;
 				case "show-tournament":
@@ -169,25 +169,19 @@ export class CreateInGameGUI extends CustomScriptComponent {
 	{
 		if (this._sceneData.gameType === "Multiplayer")
 		{
-			this._endGUI.classList.add("hidden");
-			this._inMatchmakingGUI.classList.remove("hidden");
+			this.switchToGUI(this._inMatchmakingGUI);
 			const	newSceneName = this._sceneData.sceneName as FrontendGameSceneName;
 			this._sceneData.pongHTMLElement.searchOnlineGame(newSceneName).then(() => {
-				this._inMatchmakingGUI.classList.add("hidden");
+				this.hideCurrentGUI();
+			}).catch(() => {
+				this.switchToGUI(this._endGUI);
 			});
 		}
 		else
 		{
 			this._sceneData.events.getObservable("game-start").notifyObservers();
-			this._endGUI.classList.add("hidden");
+			this.hideCurrentGUI();
 		}
-	}
-
-	private	leaveMatchmaking()
-	{
-		this._inMatchmakingGUI.classList.add("hidden");
-		this._endGUI.classList.remove("hidden");
-		this._sceneData.serverProxy.leaveMatchmaking();
 	}
 
 	private	switchToGUI(newGUI : HTMLElement)

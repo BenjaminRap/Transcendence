@@ -7,6 +7,6 @@ export enum MatchError {
 export class MatchException extends Error {
     constructor(public code: MatchError, message?: string) {
         super(message ?? code);
-        this.name = 'FriendException';
+        this.name = 'MatchException';
     }
 }

@@ -55,8 +55,8 @@ export const zodGameInfos = zod.discriminatedUnion("type", [
 export type GameInfos = zod.infer<typeof zodGameInfos>;
 
 const	zodProfile = zod.object({
-	shownName: CommonSchema.username,
-	guestName: CommonSchema.username,
+	shownName: CommonSchema.shownName,
+	guestName: CommonSchema.guestName,
 	image: zod.string()
 });
 export type Profile = zod.infer<typeof zodProfile>;
@@ -95,8 +95,8 @@ export const	zodMatchWinningDescription = zod.object({
 	winner: zod.object({
 		profile: zodProfile,
 		score: zod.number()
-	}).optional(),
-	winnerSide: zod.literal(["left", "right"]).optional()
+	}).optional().nullable(),
+	winnerSide: zod.literal(["left", "right", "draw"]).optional()
 });
 export type MatchWinningDescription = zod.infer<typeof zodMatchWinningDescription>;
 
@@ -105,16 +105,16 @@ export type Username = zod.infer<typeof CommonSchema.username>;
 export const	zodTournamentEvent = zod.discriminatedUnion("type", [
 	zod.object({
 		type: zod.literal("add-participant"),
-		name: zod.string(),
+		profile: zodProfile,
 		isCreator: zod.boolean()
 	}),
 	zod.object({
 		type: zod.literal("remove-participant"),
-		name: zod.string()
+		guestName: zod.string()
 	}),
 	zod.object({
 		type: zod.literal("change-alias"),
-		name: CommonSchema.username,
+		guestName: CommonSchema.username,
 		newAlias: CommonSchema.username
 	}),
 	zod.object({
@@ -140,12 +140,11 @@ export const	zodTournamentEvent = zod.discriminatedUnion("type", [
 	}),
 	zod.object({
 		type: zod.literal("win"),
-		winner: zodProfile
 	}),
 	zod.object({
 		type: zod.literal("lose"),
 		isQualifications : zod.boolean(),
-		roundMatchCount: zod.number()
+		roundParticipantsCount: zod.number()
 	}),
 	zod.object({
 		type: zod.literal("tournament-start")

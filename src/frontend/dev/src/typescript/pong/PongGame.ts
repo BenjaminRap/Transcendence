@@ -22,6 +22,7 @@ import type { GameInfos, GameInit, Profile } from "@shared/ServerMessage";
 import type { TournamentEventAndJoinedGame } from "./FrontendEventsManager";
 
 import { PongUtils } from '../terminal'
+import { LoadingGUI } from "./gui/LoadingGUI";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
@@ -35,8 +36,10 @@ export class PongGame extends HTMLElement {
 	private _engine! : Engine;
 	private _scene : Scene | undefined;
 	private _settings : Settings;
-	private _errorGUI! : ErrorGUI;
+	private _errorGUI : ErrorGUI;
+	private _loadingGUI : LoadingGUI;
 	private _serverProxy : ServerProxy;
+	private _assetsManager : AssetsManager | null = null;
 
 	public constructor() {
 		super();
@@ -48,13 +51,15 @@ export class PongGame extends HTMLElement {
 		this._errorGUI = initMenu(new ErrorGUI(), {
 			close: () => this._errorGUI.classList.add("hidden")
 		}, this);
+		this._loadingGUI = new LoadingGUI();
+		this.appendChild(this._loadingGUI);
 		initMenu(new CloseGUI(), {
 			close: () => this.quit()
 		}, this, false);
 
 		this.append(this._canvas);
-		this._serverProxy.onTournamentMessage().add(tournamentEvent => this.onTournamentMessage(tournamentEvent));
-		this._serverProxy.onGameMessage().add(gameEvent => this.onGameMessage(gameEvent));
+		this._serverProxy.onTournamentMessage().add(tournamentEvent => this.onTournamentMessage(tournamentEvent), undefined, true);
+		this._serverProxy.onGameMessage().add(gameEvent => this.onGameMessage(gameEvent), undefined, true);
 		this.loadGame();
 	}
 
@@ -62,7 +67,7 @@ export class PongGame extends HTMLElement {
 		try {
 			this._engine = this.createEngine();
 			globalThis.HK = await HavokPhysics();
-			await SceneManager.InitializeRuntime(this._engine, { showDefaultLoadingScreen: true, hideLoadingUIWithEngine: false });
+			await SceneManager.InitializeRuntime(this._engine, { showDefaultLoadingScreen: false });
 			this._scene = await this.getNewScene("Menu.gltf", "Menu");
 			this._engine.runRenderLoop(this.renderScene.bind(this));
 		} catch (error) {
@@ -75,7 +80,6 @@ export class PongGame extends HTMLElement {
 		try {
 			if (this._scene)
 				this._scene.render();
-			// console.log(this._scene?.getEngine().getFps());
 		} catch (error) {
 			console.error(`Could not render the scene : ${error}`)
 		}
@@ -241,6 +245,7 @@ export class PongGame extends HTMLElement {
 		gameType : T,
 		tournament? : TournamentType<T>) : Promise<Scene>
 	{
+		this._loadingGUI.displayLoadingUI();
 		const	scene = new Scene(this._engine);
 
 		if (!scene.metadata)
@@ -248,32 +253,32 @@ export class PongGame extends HTMLElement {
 		globalThis.HKP = new HavokPlugin(false);
 		scene.metadata.sceneData = new FrontendSceneData(sceneName, globalThis.HKP, this, gameType, this._serverProxy, tournament);
 		const	cam = new FreeCamera("camera1", Vector3.Zero(), scene);
-		const	assetsManager = new AssetsManager(scene);
+		this._assetsManager = new AssetsManager(scene);
+		this._assetsManager.useDefaultLoadingScreen = false;
 
 		if (!scene.enablePhysics(Vector3.Zero(), globalThis.HKP))
 			throw new PongError("The physics engine hasn't been initialized !", "quitPong");
 
-		assetsManager.addMeshTask("scene", null, "/scenes/", sceneName)
+		this._assetsManager.addMeshTask("scene", null, "/scenes/", sceneName)
 
-		await SceneManager.LoadRuntimeAssets(assetsManager, [ sceneName ], () => {
-			cam.dispose(); // removing the unecessary camera
-			this.onSceneLoaded(scene);
-			globalThis.HKP = undefined;
+		SceneManager.OnSceneReadyObservable.add(() => {
+			SceneManager.OnSceneReadyObservable.clear();
 			scene.clearColor = new Color4(0, 0, 0, 1);
+			this._assetsManager = null;
+			cam.dispose(); // removing the unecessary camera
+			scene.activeCameras = scene.cameras;
+			globalThis.HKP = undefined;
+			this._loadingGUI.hideLoadingUI();
 		});
+		await this._assetsManager.loadAsync();
 
 		return scene;
 	}
 
-	private onSceneLoaded(scene : Scene) : void {
-		SceneManager.HideLoadingScreen(this._engine);
-		SceneManager.FocusRenderCanvas(scene);
-		scene.activeCameras = scene.cameras;
-		// scene.activeCameras[0].attachControl();
-	}
-
 	private disposeScene()
 	{
+		SceneManager.OnSceneReadyObservable.clear();
+		this._assetsManager?.reset();
 		if (this._scene === undefined)
 			return ;
 		const	sceneData = getFrontendSceneData(this._scene);

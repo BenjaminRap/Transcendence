@@ -3,6 +3,7 @@ import { UsersService} from "../services/UsersService.js";
 import { CommonSchema } from "@shared/common.schema";
 import { UsersSchema } from "../schemas/users.schema.js";
 import { UsersException, UsersError } from "../error_handlers/Users.error.js";
+import { ErrorWrapper } from "../error_handlers/ErrorWrapper.js";
 
 export class UsersController {
     constructor(
@@ -14,7 +15,6 @@ export class UsersController {
     async getById(request: FastifyRequest<{ Params: {id: string} }>, reply: FastifyReply) {
         try {
             const userId = Number((request as any).user.userId);
-            // params validation
             const idData = CommonSchema.idParam.safeParse(request.params['id']);
             if (!idData.success) {
                 return reply.status(400).send({
@@ -31,19 +31,11 @@ export class UsersController {
                 user
             });
         } catch (error) {
-            if (error instanceof UsersException) {
-                switch(error.code) {
-                    case UsersError.USER_NOT_FOUND:
-                        return reply.status(404).send({ success: false, message: error.message });
-                    default:
-                        return reply.status(400).send({ success: false, message: error.message });
-                }
-            }
-
-            request.log.error(error);
-            return reply.status(500).send({
+            const err = ErrorWrapper.analyse(error);
+            console.log(err.message);
+            return reply.status(err.code).send({
                 success: false,
-                message: 'Internal server error'
+                message: err.message,
             });
         }
     }
@@ -53,7 +45,6 @@ export class UsersController {
     async getByName(request: FastifyRequest<{ Params: {username: string} }>, reply: FastifyReply) {
         try {
             const userId = Number((request as any).user.userId);
-            // params validation
             const searchedUser = UsersSchema.fetchedName.safeParse(request.params['username']);
             if (!searchedUser.success) {
                 throw new UsersException(UsersError.INVALID_NAME, UsersError.INVALID_NAME);
@@ -68,20 +59,12 @@ export class UsersController {
                 user: users
             });
         } catch (error) {
-            if (error instanceof UsersException) {
-                switch(error.code) {
-                    case UsersError.USER_NOT_FOUND:
-                        return reply.status(404).send({ success: false, message: error.message });
-                    default:
-                        return reply.status(400).send({ success: false, message: error.message });
-                }
-            }
-
-            request.log.error(error);
-            return reply.status(500).send({
+            const err = ErrorWrapper.analyse(error);
+            console.log(err.message);
+            return reply.status(err.code).send({
                 success: false,
-                message: 'Internal server error'
-            })
+                message: err.message,
+            });
         }
     }
 }

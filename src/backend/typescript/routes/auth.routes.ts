@@ -17,8 +17,4 @@ export function authRoutes(
 	fastify.get('/refresh', {
         preHandler: middleware.refreshAuthenticate,
     }, controller.refresh.bind(controller));
-
-	fastify.post('/logout', {
-		preHandler: middleware.authenticate,
-	}, controller.logout.bind(controller));
 }

@@ -2,7 +2,6 @@ import type { TournamentCreationSettings, TournamentDescription, TournamentId } 
 import { ServerTournament } from "./ServerTournament";
 import { error, success, type Result } from "@shared/utils";
 import type { ServerType } from "..";
-import type { SocketData } from "./SocketData";
 import type { DefaultSocket } from "../controllers/SocketEventController";
 
 const	tournamentsByName = new Map<string, ServerTournament>();
@@ -27,13 +26,13 @@ export class	TournamentMaker
 		return success(tournament);
 	}
 
-	public joinTournament(tournamentId : TournamentId, socket : DefaultSocket) : Result<ServerTournament>
+	public async joinTournament(tournamentId : TournamentId, socket : DefaultSocket) : Promise<Result<ServerTournament>>
 	{
 		const	tournament = tournamentsById.get(tournamentId);
 
 		if (tournament === undefined)
 			return error("Invalid Tournament Id !");
-		const	result = tournament.addParticipant(socket);
+		const	result = await tournament.addParticipant(socket);
 		if (!result.success)
 			return result;
 		return success(tournament);
@@ -56,15 +55,16 @@ export class	TournamentMaker
 	}
 }
 
-export function	getPublicTournamentsDescriptions(socket : DefaultSocket) : TournamentDescription[]
+export async function	getPublicTournamentsDescriptions(socket : DefaultSocket) : Promise<TournamentDescription[]>
 {
 	const	descriptions : TournamentDescription[] = [];
 
-	tournamentsByName.forEach(tournament => {
-		const	description = tournament.getDescriptionIfAvailable(socket);
+	for (const tournament of tournamentsByName.values())
+	{
+		const	description = await tournament.getDescriptionIfAvailable(socket);
 
 		if (description !== null)
 			descriptions.push(description);
-	});
+	}
 	return descriptions;
 }

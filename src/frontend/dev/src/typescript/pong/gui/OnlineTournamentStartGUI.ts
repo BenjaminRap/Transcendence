@@ -1,4 +1,4 @@
-import type { TournamentId } from "@shared/ServerMessage";
+import type { Profile, TournamentId } from "@shared/ServerMessage";
 import { initMenu, type IGUI } from "./IGUI";
 import { OnlineTournamentProfileGUI } from "./OnlineTournamentProfileGUI";
 import { Observable } from "@babylonjs/core";
@@ -16,9 +16,10 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 	private _inputs : OnlineTournamentStartGUIInputs;
 	private _tournamentId : HTMLParagraphElement;
 	private _participantsContainer : HTMLDivElement;
-	private _participants = new Map<string, HTMLElement>();
+	private _participants = new Map<string, OnlineTournamentProfileGUI>();
 	private _onBanParticipantObservable = new Observable<string>();
 	private _onKickParticipantObservable = new Observable<string>();
+	private _onSetAliasObservable = new Observable<{guestName: string, newAlias:string}>();
 
 	constructor()
 	{
@@ -69,35 +70,54 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 		return this._onKickParticipantObservable;
 	}
 
-	public addParticipant(addKickAndBanButtons : boolean, name : string)
+	public onSetAlias()
 	{
-		const	existingGUI = this._participants.get(name);
+		return this._onSetAliasObservable;
+	}
+
+	public addParticipant(addKickAndBanButtons : boolean, profile : Profile, isNameInput : boolean)
+	{
+		const	existingGUI = this._participants.get(profile.guestName);
 
 		if (existingGUI)
 			return ;
-		const	gui = new OnlineTournamentProfileGUI(addKickAndBanButtons, name);
+		const	gui = new OnlineTournamentProfileGUI(addKickAndBanButtons, profile.shownName, isNameInput);
 
 		gui.classList.add("w-1/4", "text-[1.5cqw]", "ml-[3%]", "mr-[3%]")
 		initMenu(gui, {
-			ban: () => this._onBanParticipantObservable.notifyObservers(name),
-			kick: () => this._onKickParticipantObservable.notifyObservers(name),
+			setAlias: () => this._onSetAliasObservable.notifyObservers({guestName: profile.guestName, newAlias: gui.getAlias()}),
+			ban: () => this._onBanParticipantObservable.notifyObservers(profile.guestName),
+			kick: () => this._onKickParticipantObservable.notifyObservers(profile.guestName),
 		}, this._participantsContainer, false);
-		this._participants.set(name, gui);
+		this._participants.set(profile.guestName, gui);
 	}
 
-	public addParticipants(addKickAndBanButtons : boolean, ...names : string[])
+	public validate(guestName : string)
 	{
-		names.forEach(profile => this.addParticipant(addKickAndBanButtons, profile));
+		const	gui = this._participants.get(guestName);
+
+		if (!gui)
+			return ;
+		gui.validate();
 	}
 
-	public removeParticipant(name : string)
+	public removeParticipant(guestName : string)
 	{
-		const	gui = this._participants.get(name);
+		const	gui = this._participants.get(guestName);
 
 		if (!gui)
 			return ;
 		this._participantsContainer.removeChild(gui);
-		this._participants.delete(name);
+		this._participants.delete(guestName);
+	}
+
+	public	changeAlias(guestName : string, newAlias : string)
+	{
+		const	gui = this._participants.get(guestName);
+
+		if (!gui)
+			return ;
+		gui.setAlias(newAlias);
 	}
 
 	public init(type : "creator" | "creator-player" | "player", tournamentId : TournamentId)

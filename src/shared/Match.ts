@@ -4,8 +4,8 @@ import type { ProfileWithScore } from "./TournamentHelper";
 
 export class	Match<T>
 {
-	private _winner? : ProfileWithScore<T>;
-	private _winnerSide? : "left" | "right";
+	private _winner? : ProfileWithScore<T> | null;
+	private _winnerSide? : "left" | "right" | "draw";
 
 	constructor(
 		private _left : Match<T> | ProfileWithScore<T>,
@@ -16,22 +16,26 @@ export class	Match<T>
 	{
 		if (this._winner !== undefined)
 			return ;
-		if (endData.winner === "draw")
-			throw new PongError("A game can't be a draw in a tournament !", "quitPong");
 		this._winnerSide = endData.winner;
+		if (endData.winner === "draw")
+		{
+			this._winner = null;
+			return ;
+		}
 		const	winnerOrMatch = (endData.winner === "left") ? this._left : this._right;
 
 		if (winnerOrMatch instanceof Match)
 		{
 			const	winnerProfile = winnerOrMatch.winner;
 
-			if (!winnerProfile)
+			if (winnerProfile === undefined)
 				throw new PongError("setting the winner of a match while the child matches aren't finished !", "quitPong")
 			this._winner = winnerProfile;
 		}
 		else
 			this._winner = winnerOrMatch;
-		this._winner.score += 1;
+		if (this._winner !== null)
+			this._winner.score += 1;
 	}
 
 	public get winner()
@@ -58,16 +62,17 @@ export class	Match<T>
 		return this._left;
 	}
 
-	public get loser()
+	public get losers()
 	{
+		const	losers = [];
 		const	left = this.left;
 		const	right = this.right;
 
-		if (this._winner === left)
-			return right;
-		if (this._winner === right)
-			return left;
-		return undefined;
+		if (right && this._winner !== right)
+			losers.push(right);
+		if (left && this._winner !== left)
+			losers.push(left);
+		return losers;
 	}
 }
 

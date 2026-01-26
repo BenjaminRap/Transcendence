@@ -1,7 +1,7 @@
 import { Deferred, Observable } from "@babylonjs/core";
 import type { ClientToServerEvents, ServerToClientEvents } from "@shared/MessageType";
 import { PongError } from "@shared/pongError/PongError";
-import { type GameInfos, type GameInit, type GameStartInfos, type TournamentCreationSettings, type TournamentDescription, type TournamentEvent, type TournamentId, zodGameInit } from "@shared/ServerMessage";
+import { type GameInfos, type GameInit, type GameStartInfos, type Profile, type TournamentCreationSettings, type TournamentDescription, type TournamentEvent, type TournamentId, zodGameInit } from "@shared/ServerMessage";
 import type { Result } from "@shared/utils";
 import { io, Socket } from "socket.io-client";
 import type { TournamentEventAndJoinedGame } from "./FrontendEventsManager";
@@ -13,44 +13,46 @@ export class	FrontendSocketHandler
 {
 	private static readonly _apiUrl = "/api/socket.io/";
 
-	private _socket : DefaultSocket;
 	private _onGameMessageObservable = new Observable<GameInfos>();
 	private _onDisconnectObservable  = new Observable<void>();
 	private _onTournamentEventObservable = new Observable<TournamentEventAndJoinedGame>();
 	private _onGameJoinObservable = new Observable<GameInit>();
 
-	private constructor(socket : DefaultSocket)
+	private constructor(
+		private _socket : DefaultSocket,
+		public readonly guestName: string)
 	{
-		this._socket = socket;
-		socket.on("game-infos", gameInfos => { this._onGameMessageObservable.notifyObservers(gameInfos) });
-		socket.on("tournament-event", tournamentEvent => this._onTournamentEventObservable.notifyObservers(tournamentEvent));
-		socket.on("joined-game", gameInit => this._onGameJoinObservable.notifyObservers(gameInit));
+		this._socket.on("game-infos", gameInfos => { this._onGameMessageObservable.notifyObservers(gameInfos) });
+		this._socket.on("tournament-event", tournamentEvent => this._onTournamentEventObservable.notifyObservers(tournamentEvent));
+		this._socket.on("joined-game", gameInit => this._onGameJoinObservable.notifyObservers(gameInit));
 		this._onDisconnectObservable.add(() => {
 			this.onDisconnectEvent();
-		})
+		});
 	}
 
 	public static async createFrontendSocketHandler()
 	{
-        const socket = io("/", {
+        const socket : DefaultSocket = io("/", {
             path: FrontendSocketHandler._apiUrl,
             autoConnect: false,
         });
 
-		const	connectionPromise = new Promise<void>((resolve, reject) => {
+		const	connectionPromise = new Promise<string>((resolve, reject) => {
 			socket.once("connect", () => {
 				socket.off("connect_error");
-				resolve();
 			});
-			socket!.once("connect_error", (error : Error) => {
+			socket.once("connect_error", (error : Error) => {
 				socket.off("connect");
 				reject(error);
+			});
+			socket.once("init", guestName => {
+				resolve(guestName);
 			});
 		});
 		socket.connect();
 
-		await connectionPromise;
-		const	frontendSocketHandler = new FrontendSocketHandler(socket);
+		const	guestName = await connectionPromise;
+		const	frontendSocketHandler = new FrontendSocketHandler(socket, guestName);
 
 		return frontendSocketHandler;
 	}
@@ -67,7 +69,12 @@ export class	FrontendSocketHandler
 			else
 				deferred.resolve(gameInit.data);
 		});
-		this._socket.emit("join-matchmaking");
+		this._socket.emit("join-matchmaking", result => {
+			if (result.success)
+				return ;
+			this._socket.off("joined-game");
+			deferred.reject(result.error);
+		});
 		return deferred;
 	}
 
@@ -135,6 +142,18 @@ export class	FrontendSocketHandler
 		return deferred;
 	}
 
+	public setAlias(newAlias : string) : Deferred<void>
+	{
+		const	deferred = new Deferred<void>();
+		this._socket.emit("set-alias", newAlias, (result : Result<null>) => {
+			if (result.success)
+				deferred.resolve();
+			else
+				deferred.reject(new PongError(result.error, "show"));
+		});
+		return deferred;
+	}
+
 	public startTournament() : Deferred<void>
 	{
 		const	deferred = new Deferred<void>();
@@ -148,11 +167,11 @@ export class	FrontendSocketHandler
 		return deferred;
 	}
 
-	public joinTournament(tournamentId : TournamentId) : Deferred<string[]>
+	public joinTournament(tournamentId : TournamentId) : Deferred<Profile[]>
 	{
-		const	deferred = new Deferred<string[]>();
+		const	deferred = new Deferred<Profile[]>();
 
-		this._socket.emit("join-tournament", tournamentId, (participants : Result<string[]>) => {
+		this._socket.emit("join-tournament", tournamentId, (participants : Result<Profile[]>) => {
 			if (participants.success)
 				deferred.resolve(participants.value);
 			else

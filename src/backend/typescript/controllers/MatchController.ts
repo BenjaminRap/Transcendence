@@ -1,6 +1,5 @@
 import { MatchService } from '../services/MatchService.js';
 import type { MatchData } from '../types/match.types.js';
-import { randomUUID } from 'crypto';
 
 export class MatchController {
 	constructor(
@@ -15,14 +14,16 @@ export class MatchController {
         let match;
         try {
             match = await this.matchService.registerMatch(data);
+            if (!match)
+                return { success: false, messageError: "An error occurred when fetching the database" };
+
+            return { success: true, matchId: match }
         }
         catch (error) {
+            console.log(error);
+
             return { success: false, messageError: "An error occurred when fetching the database" };
         }
-        if (!match)
-            return { success: false, messageError: "An error occurred when fetching the database" };
-
-        return { success: true, matchId: match }
     }
 
     // --------------------------------------------------------------------------------- //
@@ -31,19 +32,15 @@ export class MatchController {
         let match;
         try {
             match = await this.matchService.registerTournamentMatch(tournamentId, data);
+            if (!match)
+                return { success: false, messageError: "An error occurred when fetching the database" };
+    
+            return { success: true, matchId: match }
         }
         catch (error) {
+            console.log(error);
+
             return { success: false, messageError: "An error occurred when fetching the database" };
         }
-        if (!match)
-            return { success: false, messageError: "An error occurred when fetching the database" };
-
-        return { success: true, matchId: match }
     }
-
-    // --------------------------------------------------------------------------------- //
-    public generateName(level: string): string {
-        return `${level}${randomUUID().split('-')[0]}`;
-    }
-
 }

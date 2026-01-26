@@ -1,4 +1,4 @@
-import type { GameInfos, GameInit, GameStartInfos, GameStats, KeysUpdate, SanitizedUser, TournamentCreationSettings, TournamentDescription, TournamentEvent, TournamentId, Username } from "./ServerMessage";
+import type { GameInfos, GameInit, GameStartInfos, GameStats, KeysUpdate, Profile, SanitizedUser, TournamentCreationSettings, TournamentDescription, TournamentEvent, TournamentId, Username } from "./ServerMessage";
 import type { Result } from "./utils";
 
 export type ClientMessage = "join-matchmaking" |
@@ -25,7 +25,7 @@ export type ClientMessageData<T extends ClientMessage> =
 	T extends "input-infos" ? [KeysUpdate] :
 	T extends "create-tournament" ? [TournamentCreationSettings, (tournamentId : Result<TournamentId>) => void] :
 	T extends "start-tournament" ? [(result : Result<null>) => void] :
-	T extends "join-tournament" ? [TournamentId, (participants : Result<string[]>) => void] :
+	T extends "join-tournament" ? [TournamentId, (participants : Result<Profile[]>) => void] :
 	T extends "get-tournaments" ? [(descriptions : TournamentDescription[]) => void] :
 	T extends "ban-participant" ? [string] :
 	T extends "kick-participant" ? [string] :
@@ -34,6 +34,8 @@ export type ClientMessageData<T extends ClientMessage> =
 	T extends "unwatch-profile" ? [profileId: number[]] :
     T extends "authenticate" ? [data: { token: string }, ack: (result: Result<null>) => void] :
     T extends "set-alias" ? [alias: Username, ack: (result : Result<null>) => void] :
+    T extends "join-matchmaking" ? [ack: (result : Result<null>) => void] :
+    T extends "logout" ? [token: string] :
 	[];
 
 export type ServerEvents = "game-infos" |
@@ -44,7 +46,8 @@ export type ServerEvents = "game-infos" |
                             "profile-update" | 
                             "game-stats-update" |
                             "account-deleted" |
-							"friend-status-update";
+							"friend-status-update" |
+							"init";
 
 export type ServerEventsData<T extends ServerEvents> =
 	T extends "game-infos" ? [GameInfos] :
@@ -55,6 +58,7 @@ export type ServerEventsData<T extends ServerEvents> =
     T extends "game-stats-update" ? [{ stats: GameStats }] :
 	T extends "friend-status-update" ? [{ fromUserId: number, status: 'PENDING' | 'ACCEPTED' }] :
 	T extends "ready" ? [GameStartInfos] :
+	T extends "init" ? [guestName: string] :
 	[]
 
 

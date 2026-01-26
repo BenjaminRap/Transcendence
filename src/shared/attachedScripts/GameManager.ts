@@ -12,7 +12,10 @@ import { toXYZ } from "@shared/utils";
 
 export type EndData = {
 	winner : "left" | "right" | "draw",
-	forfeit : boolean
+	forfeit : boolean,
+	scoreRight: number,
+	scoreLeft: number,
+	duration: number
 }
 
 export class GameManager extends CustomScriptComponent {
@@ -28,6 +31,7 @@ export class GameManager extends CustomScriptComponent {
 	private _sceneData : SceneData;
 	private _isGamePaused : boolean = false;
 	private _defaultTimeStep : number;
+	private _startDate : number = 0;
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "GameManager") {
         super(transform, scene, properties, alias);
@@ -95,7 +99,10 @@ export class GameManager extends CustomScriptComponent {
 		this._ended = true;
 		const	endData : EndData = {
 			winner: (winner === "highestScore") ? this.getHighestScoreSide() : winner,
-			forfeit: forfeit
+			forfeit: forfeit,
+			scoreLeft: this._scoreLeft,
+			scoreRight: this._scoreRight,
+			duration: Math.round((Date.now() - this._startDate) / 1000)
 		}
 		this._sceneData.events.getObservable("end").notifyObservers(endData);
 	}
@@ -111,6 +118,7 @@ export class GameManager extends CustomScriptComponent {
 
 	private	reset()
 	{
+		this._startDate = Date.now()
 		this._ended = false;
 		this._scoreLeft = 0;
 		this._scoreRight = 0;

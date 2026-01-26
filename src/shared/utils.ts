@@ -1,4 +1,5 @@
 import { Vector3 } from "@babylonjs/core";
+import type { EndData } from "./attachedScripts/GameManager";
 
 export function isPowerOfTwo (value : number) {
 	return value !== 0 && (value & (value - 1)) === 0;
@@ -41,4 +42,21 @@ export function	toVec3(xyz : {x : number, y : number, z : number})
 export function	toXYZ(v : Vector3)
 {
 	return { x: v.x, y: v.y, z: v.z };
+}
+
+export function	getEndDataOnInvalidMatch(isLeftValid : boolean, isRightValid: boolean) : EndData
+{
+	const	winner =
+		(isLeftValid && !isRightValid) ? "left" :
+		(!isLeftValid && isRightValid) ? "right" :
+		"draw";
+	const	endData : EndData = {
+		winner: winner,
+		forfeit: true,
+		scoreLeft: 0,
+		scoreRight: 0,
+		duration: 0
+	};
+	
+	return endData;
 }

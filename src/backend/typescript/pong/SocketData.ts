@@ -17,9 +17,11 @@ export type	OnlineProfile = {
 	image: string
 }
 
+export type SocketState = "unactive" | "waiting" | "playing" | "tournament-waiting" | "tournament-playing";
+
 export class	SocketData
 {
-	private _state : "unactive" | "waiting" | "playing" | "tournament-waiting" | "tournament-playing" = "unactive";
+	private _state : SocketState = "unactive";
 	private _room : Room | null = null;
 	private _tournament : ServerTournament | null = null;
 	private _onlineProfile : OnlineProfile | null = null;
@@ -70,7 +72,7 @@ export class	SocketData
 		this._state = "tournament-waiting";
 	}
 
-	public setAlias(alias : string)
+	public setAlias(alias : string | null)
 	{
 		this._alias = alias;
 	}
@@ -92,10 +94,12 @@ export class	SocketData
 		this._tournament?.onSocketQuit(this._socket);
 		this._tournament = null;
 		this._onlineProfile = null;
+		this._state = "unactive";
 	}
 
 	public authenticate(userId : number, userName : string, image : string)
 	{
+		this.disconnectOrLogout();
 		this._onlineProfile = {
 			username: userName,
 			image,
@@ -110,7 +114,7 @@ export class	SocketData
 
 	public getUserId()
 	{
-		return this._onlineProfile?.userId ?? -1;
+		return this._onlineProfile?.userId;
 	}
 
 	public getProfile() {
@@ -124,5 +128,10 @@ export class	SocketData
 			guestName: this._guestName,
 			image: image
 		};
+	}
+
+	public getAlias()
+	{
+		return this._alias;
 	}
 }

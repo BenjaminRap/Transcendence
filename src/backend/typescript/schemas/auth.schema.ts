@@ -23,4 +23,8 @@ export const AuthSchema = {
             .regex(/(?=.*[@$!%*?&.#_\-+=()\[\]{}|:;,<>~])/, 'Bad password'),
     }).strict(),
 
+    code: z.object({
+        code: z.string().trim().min(1, 'Authorization code cannot be empty'),
+    }).strict()
+
 }

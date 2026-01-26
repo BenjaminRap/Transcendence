@@ -22,7 +22,8 @@ certificates:
 	  -subj "/C=FR/ST=Auvergne-Rhône-Alpes/L=Brignais/O=42/CN=brappo"
 
 cp-scenes:
-	cp -r ./src/backend/dev/scenes ./dockerFiles/fastify/app_src/dev/.
+	mkdir	-p ./dockerFiles/fastify/app_src/dev
+	cp		-r ./src/backend/dev/scenes ./dockerFiles/fastify/app_src/dev/.
 
 create-upload-folders:
 	mkdir -p ./dockerFiles/fastify/app_src/uploads/avatars

@@ -22,8 +22,8 @@ export class	ProfileCreationGUI extends HTMLElement
 				<div class="ml-[1cqw] p-[0.1cqw] w-2/5 border-[0.1cqw] border-(--file-color) border-solid">
 					<input type="text" maxlength="${TournamentHelper.maxNameLength}" placeholder="pseudo" class="text-[0.75cqw] w-full outline-none border-transparent border-solid border-b-[0.2cqw] focus:border-(--file-color) transition-all duration-75 font-(family-name:--font) text-(--profile-text-color) placeholder-(--profile-text-color) h-11/12">
 				</div>
-				<input type="file" accept=".png,.jpg" class="text-[0.75cqw] file:bg-(--file-color) file:font(family-name:--font) file:text-(--file-text-color) file:p-[0.5cqw] border-(--file-color) border-[0.1cqw] rounded-lg border-solid w-3/5 hover:scale-[105%] transition-all font-(family-name:--font) text-(--profile-text-color)">
-				<button class="h-[110%] aspect-square bg-(--remove-button-color) rounded-md mr-[1cqw] hover:scale-(--remove-button-hover-scale) transition-all">
+				<input type="file" accept=".png,.jpg" class="text-[0.75cqw] file:bg-(--file-color) file:font(family-name:--font) file:text-(--file-text-color) file:p-[0.5cqw] border-(--file-color) border-[0.1cqw] rounded-lg border-solid w-3/5 hover:not-disabled:scale-[105%] transition-all font-(family-name:--font) text-(--profile-text-color)">
+				<button class="h-[110%] aspect-square bg-(--remove-button-color) rounded-md mr-[1cqw] hover:not-disabled:scale-(--remove-button-hover-scale) transition-all">
 					<div class="w-3/5 h-1/12 bg-black m-auto"></div>
 				</button>
 			</div>

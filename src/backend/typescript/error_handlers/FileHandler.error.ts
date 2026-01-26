@@ -1,5 +1,4 @@
-export enum FileError
-{
+export enum FileError {
 	NO_FILE = 'No file provided',
     BAD_FORMAT = 'File format not allowed. Accepted: JPEG, PNG, WEBP',
 	TOO_LARGE = 'File too large. Maximum size: 2 MB',
