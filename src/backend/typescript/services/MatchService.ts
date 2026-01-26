@@ -120,16 +120,37 @@ export class MatchService {
 
     // ----------------------------------------------------------------------------- //
     private async formatMatchSummary(matchs: MatchWithRelations[], userId: number): Promise<MatchSummary[]> {
-        return await Promise.all(matchs.map(async (m) => {
-            const isUserLeft = m.playerLeftId && m.playerLeftId === userId ? true : false;
-            const opponentPlayer = isUserLeft ? m.playerRight : m.playerLeft;
+        return await Promise.all(matchs.map(async (m: MatchWithRelations) => {
+            // Déterminer si l'utilisateur est le joueur de gauche ou de droite
+            console.log("Formatting match for userId:", userId, "PlayerLeftId:", m.playerLeft?.id);
+            const isUserLeft = m.playerLeft?.id === userId;
+            const isUserRight = m.playerRight?.id === userId;
+
+            // Déterminer l'adversaire en fonction de la position de l'utilisateur
+            let opponentPlayer;
+            let opponentGuestName;
+            
+            if (isUserLeft) {
+                opponentPlayer = m.playerRight;
+                opponentGuestName = m.playerRightGuestName;
+            } else if (isUserRight) {
+                opponentPlayer = m.playerLeft;
+                opponentGuestName = m.playerLeftGuestName;
+            } else {
+                // Cas où userId ne correspond à aucun joueur (ne devrait pas arriver)
+                opponentPlayer = null;
+                opponentGuestName = 'Guest';
+            }
+            
             const opponentId = opponentPlayer?.id;
 
-            const isWinner = (isUserLeft && m.winnerIndicator === 'left') || (!isUserLeft && m.winnerIndicator === 'right');
+            // Déterminer si l'utilisateur est le gagnant
+            const isWinner = (isUserLeft && m.winnerIndicator === 'left') || 
+                            (isUserRight && m.winnerIndicator === 'right');
 
             const opponent: OpponentSummary = {
                 id: opponentId,
-                username: opponentPlayer?.username ?? (isUserLeft ? m.playerRightGuestName : m.playerLeftGuestName),
+                username: opponentPlayer?.username ?? opponentGuestName ?? 'Unknown',
                 avatar: opponentPlayer?.avatar ?? "/api/static/public/avatarDefault.webp",
                 isFriend: opponentId ? await this.friendService.areFriends(userId, opponentId) : false,
             };
@@ -137,8 +158,12 @@ export class MatchService {
             const winnerScore = m.winnerIndicator === 'left' ? m.scoreLeft : m.scoreRight;
             const loserScore = m.winnerIndicator === 'left' ? m.scoreRight : m.scoreLeft;
 
-            const winner = m.winnerIndicator === 'left' ? (m.playerLeft ?? { username: m.playerLeftGuestName }) : (m.playerRight ?? { username: m.playerRightGuestName });
-            const loser = m.winnerIndicator === 'left' ? (m.playerRight ?? { username: m.playerRightGuestName }) : (m.playerLeft ?? { username: m.playerLeftGuestName });
+            const winner = m.winnerIndicator === 'left' 
+                ? (m.playerLeft ?? { username: m.playerLeftGuestName }) 
+                : (m.playerRight ?? { username: m.playerRightGuestName });
+            const loser = m.winnerIndicator === 'left' 
+                ? (m.playerRight ?? { username: m.playerRightGuestName }) 
+                : (m.playerLeft ?? { username: m.playerLeftGuestName });
 
             console.log("Match", m);
             return {
@@ -147,8 +172,8 @@ export class MatchService {
                 match: {
                     matchId: m.id,
                     createdAt: m.createdAt,
-                    winnerId: m.winnerIndicator === 'left' ? m.playerLeftId : m.playerRightId,
-                    loserId: m.winnerIndicator === 'left' ? m.playerRightId : m.playerLeftId,
+                    winnerId: m.winnerIndicator === 'left' ? m.playerLeft?.id : m.playerRight?.id,
+                    loserId: m.winnerIndicator === 'left' ? m.playerRight?.id : m.playerLeft?.id,
                     winnerName: winner.username ?? '',
                     loserName: loser.username ?? '',
                     scoreWinner: winnerScore,
@@ -159,7 +184,7 @@ export class MatchService {
             };
         }));
     }
-    
+
     // ----------------------------------------------------------------------------- //
     private async countWins(id: number): Promise<number> {
         return await this.prisma.match.count({

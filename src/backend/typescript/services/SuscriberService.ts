@@ -44,7 +44,6 @@ export class SuscriberService {
                 receivedRequests: { include: { requester: true } }, 
             },
         });
-        console.log("wefkhebgjrebrngr");
         if (!user) {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
         }
