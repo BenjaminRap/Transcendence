@@ -7,6 +7,7 @@ import { RequestBackendModule } from './terminalUtils/requestBackend';
 import { PongUtils, TerminalFileSystem, TerminalUserManagement, socketUtils } from './terminal'
 import { io } from "socket.io-client";
 import { WriteOnTerminal } from './terminalUtils/writeOnTerminal';
+import { is } from 'zod/v4/locales';
 
 
 export interface GameStats
@@ -42,6 +43,7 @@ interface Match {
 
 export interface MatchSummary
 {
+		isWinner: boolean,
 		opponent: { id: string, username: string, avatar: string,} | null,
 		match: Match | null,
 }
@@ -266,7 +268,7 @@ function createMatchElement() : HTMLElement
 			continue;
 		}
 		let result;
-		if (match.match.winnerId && match.match.winnerId === profile.id) {
+		if (match.isWinner) {
 			result = "Win";
 		} else {
 			result = "Loose";
@@ -282,7 +284,7 @@ function createMatchElement() : HTMLElement
 				<div class="flex flex-1 items-center justify-between pr-2 min-w-0">
 					<div class="flex flex-col gap-y-0 min-w-0">
 						<p class="p-0 m-0 truncate">${result}</p>
-						<p class="truncate" style="font-size: 10px;">${match.match.createdAt}</p>
+						<p class="truncate" style="font-size: 10px;">${new Date(match.match.createdAt).toLocaleDateString()}</p>
 					</div>
 					<div class="flex flex-col justify-center items-center shrink-0 px-1">
 						<p>${score}</p>

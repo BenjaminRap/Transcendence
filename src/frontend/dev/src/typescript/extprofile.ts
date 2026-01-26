@@ -37,8 +37,9 @@ export interface GameStats
 
 export interface MatchSummary
 {
-		opponent: { id: string, username: string, avatar: string,} | null,
-		match: Match | null,
+	isWinner: boolean,
+	opponent: { id: string, username: string, avatar: string,} | null,
+	match: Match | null,
 }
 
 export interface SuscriberProfile
@@ -116,7 +117,7 @@ function createMatchElement() : HTMLElement
 		if (!match || !match.match || !match.opponent) 
 			continue;
 		let result;
-		if (match.match.winnerId && match.match.winnerId === profile.id) {
+		if (match.isWinner) {
 			result = "Win";
 		} else {
 			result = "Loose";
@@ -132,7 +133,7 @@ function createMatchElement() : HTMLElement
 				<div class="flex flex-1 items-center justify-between pr-2 min-w-0">
 					<div class="flex flex-col gap-y-0 min-w-0">
 						<p class="p-0 m-0 truncate">${result}</p>
-						<p class="truncate" style="font-size: 10px;">${match.match.createdAt.toLocaleDateString()}</p>
+						<p class="truncate" style="font-size: 10px;">${match.match.createdAt}</p>
 					</div>
 					<div class="flex flex-col justify-center items-center shrink-0 px-1">
 						<p>${score}</p>
