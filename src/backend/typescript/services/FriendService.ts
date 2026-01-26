@@ -32,6 +32,8 @@ export class FriendService {
         const user = await this.getById(userId);
         user.isOnline = SocketEventController.isUserOnline(userId);
         user.requesterId = userId;
+
+        console.log("Friend request created:", user);
         
         return user;
     }

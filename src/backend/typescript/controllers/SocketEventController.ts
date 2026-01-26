@@ -77,7 +77,10 @@ export class SocketEventController {
     // ----------------------------------------------------------------------------- //
     static async sendToFriends(userId: number, event: string, data: any): Promise<void>
     {
-        if (!userId) return;
+        if (!userId) {
+            console.log("sendToFriends called with invalid userId:", userId);
+            return;
+        }
 
         try {
             if (SocketEventController.socketInstance)
