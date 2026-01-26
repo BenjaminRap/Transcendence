@@ -205,7 +205,6 @@ export class SocketEventController {
         ack(success(null));
 
         const userId = Number(authResult.value);
-        this.setupSocketAuthMiddleware(socket, token, userId);
         this.updateUserConnectionStatus(socket, userId);
     }
 
@@ -235,32 +234,6 @@ export class SocketEventController {
         } catch (err) {
             return error("Invalid token");
         }
-    }
-
-    // ----------------------------------------------------------------------------- //
-    private setupSocketAuthMiddleware(socket: DefaultSocket, token: string, userId: number): void {
-        socket.use((packet, next) => {
-            if (!socket.data.getUserId()) {
-                return next();
-            }
-            
-            const [event] = packet;
-            try {
-                if (event === 'authenticate' || event === 'disconnect') {
-                    return next();
-                }
-                if (this.tokenManager.verify(token, false)) {
-                    return next();
-                } else {
-                    console.error(`Invalid token for event '${event}' from user ${userId}. Disconnecting socket.`);
-                    socket.disconnect();
-                    return next(new Error('Authentication error'));
-                }                
-            } catch (error) {
-                console.error(`Error while verifying token for event '${event}' from user ${userId}:`, error);
-            }
-
-        });
     }
 
     // ----------------------------------------------------------------------------- //

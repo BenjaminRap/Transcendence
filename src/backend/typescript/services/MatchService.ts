@@ -160,7 +160,7 @@ export class MatchService {
                 isFriend = false;
             else
             {
-                console.log("Checking friendship between", opponentId, "and", m.playerLeft.id);
+                // console.log("Checking friendship between", opponentId, "and", m.playerLeft.id);
                 isFriend = opponentId ? await this.friendService.areFriends(opponentId, m.playerLeft.id) : false;
             }
             const opponent: OpponentSummary = {
@@ -176,7 +176,7 @@ export class MatchService {
             const winner = m.winnerIndicator === 'left' ? (m.playerLeft ?? { username: m.playerLeftGuestName }) : (m.playerRight ?? { username: m.playerRightGuestName });
             const loser = m.winnerIndicator === 'left' ? (m.playerRight ?? { username: m.playerRightGuestName }) : (m.playerLeft ?? { username: m.playerLeftGuestName });
 
-            console.log("Match", m);
+            // console.log("Match", m);
             return {
                 opponent,
                 isWinner,
@@ -196,10 +196,10 @@ export class MatchService {
         }));
     }
     
-
+    // ----------------------------------------------------------------------------- //
     public async formatMatchSummaryRight(matchs: MatchWithRelations[]): Promise<MatchSummary[]> {
         return await Promise.all(matchs.map(async (m) => {
-            console.log("----------------", m, "----------------");
+            // console.log("----------------", m, "----------------");
             // const isUserLeft = m.playerLeftId && m.playerLeftId === userId ? true : false;
             const opponentPlayer = m.playerLeft;
             const opponentId = opponentPlayer?.id;
@@ -211,7 +211,7 @@ export class MatchService {
                 isFriend = false;
             else
             {
-                console.log("Checking friendship between", opponentId, "and", m.playerRight.id);
+                // console.log("Checking friendship between", opponentId, "and", m.playerRight.id);
                 isFriend = opponentId ? await this.friendService.areFriends(opponentId, m.playerRight.id) : false;
             }
 
@@ -228,7 +228,7 @@ export class MatchService {
             const winner = m.winnerIndicator === 'right' ? (m.playerRight ?? { username: m.playerRightGuestName }) : (m.playerLeft ?? { username: m.playerLeftGuestName });
             const loser = m.winnerIndicator === 'right' ? (m.playerLeft ?? { username: m.playerLeftGuestName }) : (m.playerRight ?? { username: m.playerRightGuestName });
 
-            console.log("Match", m);
+            // console.log("Match", m);
             return {
                 opponent,
                 isWinner,
@@ -248,10 +248,10 @@ export class MatchService {
         }));
     }
 
+    // ----------------------------------------------------------------------------- //
     private async formatMatchSummary(matchs: MatchWithRelations[], userId: number): Promise<MatchSummary[]> {
         return await Promise.all(matchs.map(async (m: MatchWithRelations) => {
             // Déterminer si l'utilisateur est le joueur de gauche ou de droite
-            console.log("Formatting match for userId:", userId, "PlayerLeftId:", m.playerLeft?.id);
             const isUserLeft = m.playerLeft?.id === userId;
             const isUserRight = m.playerRight?.id === userId;
 
@@ -294,7 +294,6 @@ export class MatchService {
                 ? (m.playerRight ?? { username: m.playerRightGuestName }) 
                 : (m.playerLeft ?? { username: m.playerLeftGuestName });
 
-            console.log("Match", m);
             return {
                 opponent,
                 isWinner,

@@ -52,6 +52,8 @@ export class FriendService {
         if (friendship.status === 'ACCEPTED')
             throw new FriendException(FriendError.ACCEPTED, FriendError.ACCEPTED);
 
+        console.log("Friendship to accept:", friendship);
+
         // if the requester try to accept the friend request
         if (friendship.receiverId !== userId)
             throw new FriendException(FriendError.INVALID_ID, "the user can't accept this friend request");
@@ -100,7 +102,9 @@ export class FriendService {
                     { receiverId: Number(userId) },
                     { requesterId: Number(userId) },
                 ],
-                status: 'ACCEPTED',
+                status: {
+                in: ['ACCEPTED', 'PENDING']
+                },
             },
             select: {
                 id: true,
@@ -124,8 +128,10 @@ export class FriendService {
             }
         });
 
-        if (friendList.length === 0)
+        if (friendList.length === 0) {
+            console.log('SuscriberService - getProfile - friendList is empty');
             return [];
+        }
 
         return await this.formatList(friendList, userId);
     }
@@ -186,7 +192,7 @@ export class FriendService {
 
     // ----------------------------------------------------------------------------- //
     async areFriends(friendId: number, userId: number): Promise<boolean> {
-        console.log("Checking friendship between", userId, "and", friendId);
+        // console.log("Checking friendship between", userId, "and", friendId);
         if ( await this.checkId(friendId) == false || await this.checkId(userId) == false )
             throw new FriendException(FriendError.USR_NOT_FOUND, FriendError.USR_NOT_FOUND);
 
@@ -227,8 +233,7 @@ export class FriendService {
                     { requesterId: Number(friendId), receiverId: Number(userId) },
                     { requesterId: Number(userId), receiverId: Number(friendId) }
                 ]
-            },
-            select: { id: true }
+            }
         })
         return friendship as Friendship;
     }
@@ -237,6 +242,7 @@ export class FriendService {
     private async formatList(list: any[], userId: number): Promise<ListFormat[]> {
         return await Promise.all(
             list.map(async (friendship) => {
+                console.log("Formatting friendship:", friendship);
                 const friend = friendship.requesterId === userId
                     ? friendship.receiver
                     : friendship.requester;
