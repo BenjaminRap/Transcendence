@@ -39,5 +39,5 @@ export interface MatchResult
 export interface MatchSummary
 {
     opponent:       OpponentSummary,
-    matchResult:    MatchResult,
+    match:    MatchResult,
 }

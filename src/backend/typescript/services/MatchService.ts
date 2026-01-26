@@ -1,8 +1,23 @@
-import { type PrismaClient } from '@prisma/client';
+import { Prisma, type Match, type PrismaClient } from '@prisma/client';
 import { FriendService } from './FriendService.js';
 import type { GameStats } from '@shared/ServerMessage.js';
 import type { MatchData, MatchSummary, OpponentSummary } from '../types/match.types.js';
+import { tr } from 'zod/v4/locales';
 
+type MatchWithRelations = Prisma.MatchGetPayload<{
+    include: {
+        winnerIndicator: true,
+        scoreLeft: true,
+        scoreRight: true,
+        duration: true,
+        playerRight: true,
+        playerLeft: true,
+        playerRightGuestName: true,
+        playerLeftGuestName: true,
+        id: true,
+        tournamentId: true,
+    }
+}>;
 
 export class MatchService {
 	constructor(
@@ -67,24 +82,23 @@ export class MatchService {
     {
             const matchs = await this.prisma.match.findMany({ 
             where: {
-                playerLeftId: Number(userId),
+                OR: [
+                    { playerLeftId: Number(userId) },
+                    { playerRightId: Number(userId) },
+                ],
             },
             select: {
                 winnerIndicator: true,
-                playerRight: {
-                    select: {
-                        id: true,
-                        username: true,
-                        avatar: true
-                    }
-                },
-                playerLeft: {
-                    select: {
-                        id: true,
-                        username: true,
-                        avatar: true
-                    }
-                },
+                scoreLeft: true,
+                scoreRight: true,
+                duration: true,
+                playerRight: true,
+                playerLeft: true,
+                playerRightGuestName: true,
+                playerLeftGuestName: true,
+                id: true,
+                createdAt: true,
+                tournamentId: true,
             },
             orderBy: {
                 createdAt: 'desc'
@@ -92,7 +106,7 @@ export class MatchService {
             take: Number(limit),
         });
 
-        return await this.formatMatchSummary(matchs, userId);
+        return await this.formatMatchSummary(matchs as MatchWithRelations[], userId);
     }
 
 	// ----------------------------------------------------------------------------- //
@@ -106,7 +120,7 @@ export class MatchService {
 	// ================================== PRIVATE ================================== //
 
     // ----------------------------------------------------------------------------- //
-	private async formatMatchSummary(matchs: any[], userId: number): Promise<MatchSummary[]> {
+    private async formatMatchSummary(matchs: MatchWithRelations[], userId: number): Promise<MatchSummary[]> {
         return await Promise.all(matchs.map(async (m) => {
             const isUserLeft = m.playerLeftId && m.playerLeftId === userId ? true : false;
             const opponentPlayer = isUserLeft ? m.playerRight : m.playerLeft;
@@ -124,19 +138,24 @@ export class MatchService {
             const winnerScore = m.winnerIndicator === 'left' ? m.scoreLeft : m.scoreRight;
             const loserScore = m.winnerIndicator === 'left' ? m.scoreRight : m.scoreLeft;
 
-            const winner = m.winnerIndicator === 'left' ? (m.left ?? { username: m.leftGuestName }) : (m.right ?? { username: m.rightGuestName });
-            const loser = m.winnerIndicator === 'left' ? (m.right ?? { username: m.rightGuestName }) : (m.left ?? { username: m.leftGuestName });
+            const winner = m.winnerIndicator === 'left' ? (m.playerLeft ?? { username: m.playerLeftGuestName }) : (m.playerRight ?? { username: m.playerRightGuestName });
+            const loser = m.winnerIndicator === 'left' ? (m.playerRight ?? { username: m.playerRightGuestName }) : (m.playerLeft ?? { username: m.playerLeftGuestName });
 
+            console.log("Match", m);
             return {
                 opponent,
                 isWinner,
-                matchResult: {
+                match: {
                     matchId: m.id,
+                    createdAt: m.createdAt,
+                    winnerId: m.winnerIndicator === 'left' ? m.playerLeftId : m.playerRightId,
+                    loserId: m.winnerIndicator === 'left' ? m.playerRightId : m.playerLeftId,
+                    winnerName: winner.username ?? '',
+                    loserName: loser.username ?? '',
                     scoreWinner: winnerScore,
                     scoreLoser: loserScore,
                     duration: m.duration,
-                    winnerName: winner.username,
-                    loserName: loser.username,
+                    tournamentId: m.tournamentId
                 },
             };
         }));

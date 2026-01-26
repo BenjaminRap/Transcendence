@@ -32,9 +32,7 @@ interface Match {
 	id: number;
 	createdAt: Date;
 	winnerId: number | null;
-	winnerLevel: string | null;
 	loserId: number | null;
-	loserLevel: string | null;
 	scoreWinner: number;
 	scoreLoser: number;
 	duration: number;
@@ -259,10 +257,14 @@ function createMatchElement() : HTMLElement
 	matchElement.className = "border py-4 border-green-500 flex flex-col gap-y-4 h-full";
 	matchElement.id = "match-list";
 	for (let i = 0; i < Math.min(profile.lastMatchs.length, 4); i++) {
+		console.log("Creating match element for match:", profile.lastMatchs[i]);
 		const match = profile.lastMatchs[i];
 		const matchDiv = document.createElement('div');
 		if (!match || !match.match || !match.opponent) 
+		{
+			console.log("Skipping invalid match:", match);
 			continue;
+		}
 		let result;
 		if (match.match.winnerId && match.match.winnerId === profile.id) {
 			result = "Win";
@@ -280,7 +282,7 @@ function createMatchElement() : HTMLElement
 				<div class="flex flex-1 items-center justify-between pr-2 min-w-0">
 					<div class="flex flex-col gap-y-0 min-w-0">
 						<p class="p-0 m-0 truncate">${result}</p>
-						<p class="truncate" style="font-size: 10px;">${match.match.createdAt.toLocaleDateString()}</p>
+						<p class="truncate" style="font-size: 10px;">${match.match.createdAt}</p>
 					</div>
 					<div class="flex flex-col justify-center items-center shrink-0 px-1">
 						<p>${score}</p>
@@ -322,6 +324,7 @@ function createMatchHistory(profileElement: HTMLElement | null): HTMLElement | v
 	});
 	profileElement.appendChild(matchHistory);
 	const matchElement = createMatchElement();
+	console.log("Created match element:", matchElement);
 	matchHistory.appendChild(matchElement);
 	profileElement.appendChild(matchHistory);
 	return matchHistory;
@@ -422,8 +425,10 @@ async function fetchProfileData(user: string): Promise<string> {
 		});
 		const data = await response.json();
 		if (data.success) {
+			console.log("Data fetched successfully:", data.user);
 			profile = data.user;
-			console.log(profile);
+			// console.log(profile);
+			// console.log(profile.lastMatchs)
 			return "OK";
 		}
 		if (data.message === 'Invalid or expired token') {
