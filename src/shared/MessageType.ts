@@ -23,19 +23,30 @@ export type ClientMessage = "join-matchmaking" |
 
 export type ClientMessageData<T extends ClientMessage> =
 	T extends "input-infos" ? [KeysUpdate] :
-	T extends "create-tournament" ? [TournamentCreationSettings, (tournamentId : Result<TournamentId>) => void] :
-	T extends "start-tournament" ? [(result : Result<null>) => void] :
-	T extends "join-tournament" ? [TournamentId, (participants : Result<Profile[]>) => void] :
-	T extends "get-tournaments" ? [(descriptions : Result<TournamentDescription[]>) => void] :
+	T extends "create-tournament" ? [TournamentCreationSettings] :
+	T extends "join-tournament" ? [TournamentId] :
 	T extends "ban-participant" ? [string] :
 	T extends "kick-participant" ? [string] :
-	T extends "get-online-users" ? [(users: number[]) => void] :
 	T extends "watch-profile" ? [profileId: number[]] :
 	T extends "unwatch-profile" ? [profileId: number[]] :
-    T extends "authenticate" ? [data: { token: string }, ack: (result: Result<null>) => void] :
-    T extends "set-alias" ? [alias: Username, ack: (result : Result<null>) => void] :
-    T extends "join-matchmaking" ? [ack: (result : Result<null>) => void] :
+    T extends "authenticate" ? [data: { token: string }] :
+    T extends "set-alias" ? [alias: Username] :
 	[];
+
+export type ClientMessageAcknowledgement<T extends ClientMessage> = 
+	T extends "create-tournament" ? (tournamentId : Result<TournamentId>) => void :
+	T extends "start-tournament" ? (result : Result<null>) => void :
+	T extends "join-tournament" ? (participants : Result<Profile[]>) => void :
+	T extends "get-tournaments" ? (descriptions : Result<TournamentDescription[]>) => void :
+	T extends "get-online-users" ? (users: number[]) => void :
+    T extends "authenticate" ? (result: Result<null>) => void :
+    T extends "set-alias" ? (result : Result<null>) => void :
+    T extends "join-matchmaking" ? (result : Result<null>) => void :
+	undefined;
+
+export type ClientMessageParameters<T extends ClientMessage> =
+	ClientMessageAcknowledgement<T> extends undefined ? ClientMessageData<T> :
+	[...ClientMessageData<T>, ClientMessageAcknowledgement<T>];
 
 export type ServerEvents = "game-infos" |
 							"joined-game" |
@@ -58,13 +69,20 @@ export type ServerEventsData<T extends ServerEvents> =
 	T extends "friend-status-update" ? [{ fromUserId: number, status: 'PENDING' | 'ACCEPTED' }] :
 	T extends "ready" ? [GameStartInfos] :
 	T extends "init" ? [guestName: string] :
-	[]
+	[];
+
+export type ServerEventsAcknowledgement<T extends ServerEvents> = 
+	undefined;
+
+export type ServerEventsParameters<T extends ServerEvents> =
+	ServerEventsAcknowledgement<T> extends undefined ? ServerEventsData<T> :
+	[...ServerEventsData<T>, ServerEventsAcknowledgement<T>];
 
 
 export type ClientToServerEvents = {
-    [T in ClientMessage]: (...data: ClientMessageData<T>) => void;
+    [T in ClientMessage]: (...data: ClientMessageParameters<T>) => void;
 };
 
 export type ServerToClientEvents = {
-    [T in ServerEvents]: (...data: ServerEventsData<T>) => void;
+    [T in ServerEvents]: (...data: ServerEventsParameters<T>) => void;
 };
