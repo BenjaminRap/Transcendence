@@ -1,7 +1,7 @@
 import { Observable } from "@babylonjs/core";
-import type { ClientToServerEvents, ServerToClientEvents } from "@shared/MessageType";
+import type { ClientMessage, ClientMessageAcknowledgement, ClientMessageData, ClientMessageParameters, ClientToServerEvents, ServerToClientEvents } from "@shared/MessageType";
 import { PongError } from "@shared/pongError/PongError";
-import { type GameInfos, type GameInit, type GameStartInfos, type Profile, type TournamentCreationSettings, type TournamentDescription, type TournamentId, zodGameInit } from "@shared/ServerMessage";
+import { type GameInfos, type GameInit, type GameStartInfos, zodGameInit } from "@shared/ServerMessage";
 import type { Result } from "@shared/utils";
 import { io, Socket } from "socket.io-client";
 import type { TournamentEventAndJoinedGame } from "./FrontendEventsManager";
@@ -9,6 +9,11 @@ import { CancellablePromise } from "./CancellablePromise";
 
 export type EventWithNoResponse = "forfeit" | "input-infos" | "leave-matchmaking" | "ready" | "leave-tournament" | "cancel-tournament" | "ban-participant" | "kick-participant";
 type DefaultSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
+
+type ResultType<T extends ClientMessage>
+	= ClientMessageAcknowledgement<T> extends (result: Result<infer R>) => void 
+		? R 
+		: never
 
 export class	FrontendSocketHandler
 {
@@ -105,25 +110,6 @@ export class	FrontendSocketHandler
 		this._onGameMessageObservable.clear();
 	}
 
-	public getTournaments() : CancellablePromise<TournamentDescription[]>
-	{
-		let	ack : ((tournamentDescriptions : Result<TournamentDescription[]>) => void) | null = null;
-
-		const	promise = new CancellablePromise<TournamentDescription[]>((resolve, reject) => {
-			ack = tournamentDescriptions => {
-				if (tournamentDescriptions.success)
-					resolve(tournamentDescriptions.value);
-				else
-					reject(new PongError(tournamentDescriptions.error, "show"));
-			}
-			this._socket.emit("get-tournaments", tournamentDescriptions => ack?.(tournamentDescriptions));
-		}, () => {
-			ack = null;
-		});
-
-		return promise;
-	}
-
 	public onGameReady() : CancellablePromise<GameStartInfos>
 	{
 		let	ack : ((gameStartInfos : GameStartInfos) => void);
@@ -155,80 +141,29 @@ export class	FrontendSocketHandler
 		this._socket.emit(event, ...args);
 	}
 
-	public createTournament(settings : TournamentCreationSettings) : CancellablePromise<TournamentId>
-	{
-		let	ack : ((tournamentId : Result<string>) => void) | null = null;
-
-		const	promise = new CancellablePromise<TournamentId>((resolve, reject) => {
-			ack = tournamentId => {
-				if (tournamentId.success)
-					resolve(tournamentId.value);
-				else
-					reject(new PongError(tournamentId.error, "show"));
-			}
-			this._socket.emit("create-tournament", settings, tournamentId => ack?.(tournamentId));
-		}, () => {
-			ack = null;
-		});
-
-		return promise;
-	}
-
-	public setAlias(newAlias : string) : CancellablePromise<void>
-	{
-		let	ack : ((result : Result<null>) => void) | null = null;
-
-		const	promise = new CancellablePromise<void>((resolve, reject) => {
-			ack = result => {
-				if (result.success)
-					resolve();
-				else
-					reject(new PongError(result.error, "show"));
-			}
-			this._socket.emit("set-alias", newAlias, result => ack?.(result));
-		}, () => {
-			ack = null;
-		});
-
-		return promise;
-	}
-
-	public startTournament() : CancellablePromise<void>
-	{
-		let	ack : ((result : Result<null>) => void) | null = null;
-
-		const	promise = new CancellablePromise<void>((resolve, reject) => {
-			ack = result => {
-				if (result.success)
-					resolve();
-				else
-					reject(new PongError(result.error, "show"));
-			}
-			this._socket.emit("start-tournament", result => ack?.(result));
-		}, () => {
-			ack = null;
-		});
-
-		return promise;
-	}
-
-	public joinTournament(tournamentId : TournamentId) : CancellablePromise<Profile[]>
-	{
-		let	ack : ((result : Result<Profile[]>) => void) | null = null;
-
-		const	promise = new CancellablePromise<Profile[]>((resolve, reject) => {
-			ack = result => {
-				if (result.success)
+	public sendEventWithAck<T extends ClientMessage>(
+		event: T,
+		...args: ClientMessageData<T>
+	): CancellablePromise<ResultType<T>> {
+		let ack: ((result :  Result<ResultType<T>>) => void) | null = null;
+		
+		const promise = new CancellablePromise((resolve, reject) => {
+			ack = ((result: Result<ResultType<T>>) => {
+				if (result.success) {
 					resolve(result.value);
-				else
+				} else {
 					reject(new PongError(result.error, "show"));
-			}
-			this._socket.emit("join-tournament", tournamentId, result => ack?.(result));
+				}
+			});
+			
+			const params = [...args, ((result : Result<ResultType<T>>) => ack?.(result))] as Parameters<ClientToServerEvents[T]>;
+			
+			this._socket.emit(event, ...params);
 		}, () => {
 			ack = null;
 		});
-
-		return promise;
+		
+		return promise as any;
 	}
 
 	public onDisconnect()

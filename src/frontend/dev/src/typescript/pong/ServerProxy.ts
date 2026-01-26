@@ -164,7 +164,7 @@ export class	ServerProxy
 	public createTournament(settings : TournamentCreationSettings) : Promise<TournamentId>
 	{
 		this.verifyState("connected");
-		const cancellable =  this._frontendSocketHandler.createTournament(settings);
+		const cancellable =  this._frontendSocketHandler.sendEventWithAck("create-tournament", settings);
 
 		this._state = "waiting";
 		cancellable.promise
@@ -186,7 +186,7 @@ export class	ServerProxy
 	public joinTournament(tournamentId : TournamentId) : Promise<Profile[]>
 	{
 		this.verifyState("connected");
-		const	cancellable = this._frontendSocketHandler.joinTournament(tournamentId);
+		const	cancellable = this._frontendSocketHandler.sendEventWithAck("join-tournament", tournamentId);
 
 		this._state = "waiting";
 		cancellable.promise
@@ -209,7 +209,7 @@ export class	ServerProxy
 		this.verifyState("tournament-creator");
 		this._state = "waiting";
 
-		const	cancellable = this._frontendSocketHandler.joinTournament(this._tournamentData!.id);
+		const	cancellable = this._frontendSocketHandler.sendEventWithAck("join-tournament", this._tournamentData!.id);
 
 		cancellable.promise
 			.then(() => {
@@ -231,11 +231,11 @@ export class	ServerProxy
 		this._frontendSocketHandler.sendEventWithNoResponse("cancel-tournament");
 	}
 
-	public startTournament() : Promise<void>
+	public startTournament() : Promise<null>
 	{
 		this.verifyState("tournament-creator", "tournament-creator-player");
 		const	previousState = this._state;
-		const	cancellable =  this._frontendSocketHandler.startTournament();
+		const	cancellable =  this._frontendSocketHandler.sendEventWithAck("start-tournament");
 
 		this.replaceCurrentPromise(cancellable);
 		this._state = "waiting";
@@ -259,7 +259,7 @@ export class	ServerProxy
 	public async getTournaments() : Promise<TournamentDescription[]>
 	{
 		this.verifyState("connected");
-		const cancellable = this._frontendSocketHandler.getTournaments();
+		const cancellable = this._frontendSocketHandler.sendEventWithAck("get-tournaments");
 
 		cancellable.promise
 			.catch(() => {})
@@ -285,7 +285,7 @@ export class	ServerProxy
 	{
 		this.verifyState("tournament-creator-player", "tournament-player");
 		const previousState = this._state;
-		const cancellable = this._frontendSocketHandler.setAlias(newAlias);
+		const cancellable = this._frontendSocketHandler.sendEventWithAck("set-alias", newAlias);
 
 		this._state = "waiting";
 		cancellable.promise
