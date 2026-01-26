@@ -70,7 +70,6 @@ let profileIds: number[];
 
 function sortFriendList()
 {
-	// Online > Pending > Offline
 	let pendingFriends = [];
 	let onlineFriends = [];
 	let offlineFriends = [];
@@ -109,6 +108,7 @@ function sortFriendList()
 			socketUtils.socket?.emit("unwatch-profile", oldId);
 		}
 	}
+	updateWatchIds();
 }
 
 
@@ -195,18 +195,20 @@ function updateFriendDiv()
 
 function updateMatchDiv()
 {
-	console.log("Updating match div...");
 	if (!profileDiv)
-	{
-		console.log("Bitch")
 		return;
-	}
 	const newMatchListElement = createMatchElement();
 	if (!newMatchListElement)
-	{
-		console.log("No match element");
 		return;
+	if (watchMatchIds.length > 4)
+	{
+		watchMatchIds.pop();
+		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
 	}
+	else
+		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
+	updateWatchIds();
+	console.log("Updated watching match IDs:", watchMatchIds);
 	const oldMatchListElement = document.getElementById('match-list');
 	if (oldMatchListElement && oldMatchListElement.parentElement) {
 		oldMatchListElement.parentElement.replaceChild(newMatchListElement, oldMatchListElement);
@@ -451,6 +453,12 @@ async function fetchProfileData(user: string): Promise<string> {
 	}
 }
 
+
+function updateWatchIds()
+{
+	profileIds = watchFriendIds.concat(watchMatchIds);
+}
+
 export namespace ProfileBuilder {
 	export async function buildProfile(user: string): Promise<string> {
 		const result = await fetchProfileData(user);
@@ -481,7 +489,6 @@ export namespace ProfileBuilder {
 
 			socketUtils.socket.on("match-update", (data: MatchSummary) => {
 				console.log("Match updated:", data);
-				// Update lastMatchs
 				profile.lastMatchs.unshift(data);
 				if (profile.lastMatchs.length > 4)
 					profile.lastMatchs.pop();
@@ -493,8 +500,6 @@ export namespace ProfileBuilder {
 				profile.gameStats = data;
 				ProfileUpdater.updateProfileCard(profile);
 			});
-
-
 
 			socketUtils.socket.on("friend-status-update", (data: {requester: {id: number, username: string, avatar: string, isOnline: boolean, requesterId: number}, status: string}) => {
 				let friendToAdd: Friend = {
@@ -511,7 +516,9 @@ export namespace ProfileBuilder {
 			});
 			watchMatchIds = getWathIdMatch();
 			watchFriendIds = getWathIdFriend();
-			profileIds = watchFriendIds.concat(watchMatchIds);
+			console.log("Watching friend IDs:", watchFriendIds);
+			console.log("Watching match IDs:", watchMatchIds);
+			updateWatchIds();
 			console.log("Watching profile IDs:", profileIds);
 			socketUtils.socket.emit("watch-profile", { profileId: profileIds });
 		}
@@ -533,7 +540,9 @@ export namespace ProfileBuilder {
 			socketUtils.socket.off("friend-status-update");
 			socketUtils.socket.off("profile-update");
 		}
-
+		watchFriendIds = [];
+		watchMatchIds = [];
+		profileIds = [];
 	}
 	export let isActive = false;
 }
@@ -545,8 +554,8 @@ function getWathIdMatch(): number[]
 	let ids: number[] = [];
 	for (let i = 0; i < 4; i++)
 	{
-		if (profile.lastMatchs[i] && profile.lastMatchs[i].match)
-			ids.push(profile.lastMatchs[i].match!.id);
+		if (profile.lastMatchs[i] && profile.lastMatchs[i].opponent)
+			ids.push(parseInt(profile.lastMatchs[i].opponent!.id));
 	}
 	return ids;
 }

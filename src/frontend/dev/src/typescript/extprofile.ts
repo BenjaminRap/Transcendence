@@ -34,6 +34,8 @@ export interface GameStats
 	winRate:    number,
 }
 
+let watchMatchIds: number[];
+
 
 export interface MatchSummary
 {
@@ -56,8 +58,6 @@ let profile: ExtProfile;
 
 let profileDiv : HTMLElement | null;
 
-
-
 export function updateProfileCard(profile: ExtProfile) {
 	if (!profileDiv)
 		return;
@@ -69,8 +69,6 @@ export function updateProfileCard(profile: ExtProfile) {
 								<p>W/L: ${(profile.gameStats.wins / (profile.gameStats.losses + profile.gameStats.wins)).toFixed(2)}</p>
 							</div>`;
 	}
-
-
 
 function createProfileCard(profileElement: HTMLElement | null): HTMLElement | void {
 	if (!profileElement)
@@ -96,16 +94,26 @@ function updateMatchDiv()
 	const newMatchListElement = createMatchElement();
 	if (!newMatchListElement)
 		return;
+	if (watchMatchIds.length > 4)
+	{
+		watchMatchIds.pop();
+		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
+	}
+	else
+		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
+	console.log("Updated watching match IDs:", watchMatchIds);
 	const oldMatchListElement = document.getElementById('match-list');
 	if (oldMatchListElement && oldMatchListElement.parentElement) {
 		oldMatchListElement.parentElement.replaceChild(newMatchListElement, oldMatchListElement);
 	} else if (oldMatchListElement) {
-		oldMatchListElement.remove();
+		oldMatchListElement.remove();			// Send unwatch for oldId
+
 		profileDiv.appendChild(newMatchListElement);
 	} else {
 		profileDiv.appendChild(newMatchListElement);
 	}
 }
+
 
 function createMatchElement() : HTMLElement
 {
@@ -296,7 +304,10 @@ export namespace ExtProfileBuilder {
 				profile.gameStats = data;
 				updateProfileCard(profile);
 			});
-
+			
+			watchMatchIds = getWathIdMatch();
+			socketUtils.socket.emit("watch-profile", { profileId: watchMatchIds });
+			console.log("Watching match IDs:", watchMatchIds);
 		}
 	}
 	export function removeExtProfile() {
@@ -305,10 +316,32 @@ export namespace ExtProfileBuilder {
 			document.body.removeChild(profileElement);
 			isActive = false;
 			history.pushState({}, '', `/`);
+			watchMatchIds = [];
+			if (socketUtils && socketUtils.socket)
+			{
+				socketUtils.socket.emit("unwatch-profile", profile.id);
+				socketUtils.socket.emit("unwatch-profile", { profileId: watchMatchIds });
+			}
 		}
 	}
 	export let isActive = false;
 }
+
+
+
+function getWathIdMatch(): number[]
+{
+	if (!profile.lastMatchs)
+		return [];
+	let ids: number[] = [];
+	for (let i = 0; i < 4; i++)
+	{
+		if (profile.lastMatchs[i] && profile.lastMatchs[i].opponent)
+			ids.push(parseInt(profile.lastMatchs[i].opponent!.id));
+	}
+	return ids;
+}
+
 
 // POST /friend/request/:id
 async function sendFriendRequest(id: number) 
