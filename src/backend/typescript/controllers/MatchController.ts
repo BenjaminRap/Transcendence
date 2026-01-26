@@ -1,5 +1,6 @@
 import { MatchService } from '../services/MatchService.js';
 import type { MatchData } from '../types/match.types.js';
+import { SocketEventController } from './SocketEventController.js';
 
 export class MatchController {
 	constructor(
@@ -17,7 +18,10 @@ export class MatchController {
             if (!match)
                 return { success: false, messageError: "An error occurred when fetching the database" };
 
-            return { success: true, matchId: match }
+            SocketEventController.notifyProfileChange(match.playerLeftId, 'match-update', match);
+            SocketEventController.notifyProfileChange(match.playerRightId, 'match-update', match);
+
+            return { success: true, matchId: match.id }
         }
         catch (error) {
             console.log(error);
