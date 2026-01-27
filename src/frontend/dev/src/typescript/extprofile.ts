@@ -73,6 +73,9 @@ export function updateProfileCard(profile: ExtProfile) {
 function createProfileCard(profileElement: HTMLElement | null): HTMLElement | void {
 	if (!profileElement)
 		return;
+	let ratio = (profile.gameStats.wins / (profile.gameStats.losses + profile.gameStats.wins)).toFixed(2);
+	if (ratio === 'NaN')
+		ratio = '0.00';
 	const profileCard = document.createElement('div');
 	profileCard.className = "flex flex-col px-[2vw] py-[1vh] shadow-lg border border-green-500 items-center h-[19.7%] overflow-hidden";
 	profileCard.innerHTML = `<img src="${profile.avatar}" alt="Avatar" class="w-[12vh] h-[12vh] border border-green-500 object-cover"></img>
@@ -80,7 +83,7 @@ function createProfileCard(profileElement: HTMLElement | null): HTMLElement | vo
 							<div class="flex gap-[1vw] text-[0.9vh]">
 								<p>Win: ${profile.gameStats.wins}</p>
 								<p>Loss: ${profile.gameStats.losses}</p>
-								<p>W/L: ${(profile.gameStats.wins / (profile.gameStats.losses + profile.gameStats.wins)).toFixed(2)}</p>
+								<p>W/L: ${ratio}</p>
 							</div>`;
 	profileElement.appendChild(profileCard);
 	profileDiv = profileCard;

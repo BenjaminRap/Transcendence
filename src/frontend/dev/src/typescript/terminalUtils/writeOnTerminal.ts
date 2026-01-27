@@ -52,16 +52,16 @@ export namespace WriteOnTerminal {
 			const titleStr = ` ${title} `;
 			const left = Math.floor((innerWidth - titleStr.length) / 2);
 			const right = innerWidth - titleStr.length - left;
-			WriteOnTerminal.displayOnTerminal('╭' + '─'.repeat(left) + titleStr + '─'.repeat(right) + '╮', false);
+			WriteOnTerminal.displayOnTerminal( '─'.repeat(left) + titleStr + '─'.repeat(right) , false);
 		} else {
-			WriteOnTerminal.displayOnTerminal('╭' + '─'.repeat(innerWidth) + '╮', false);
+			WriteOnTerminal.displayOnTerminal('─'.repeat(innerWidth), false);
 		}
 
 		for (const line of lines) {
 			const padded = line.padEnd(maxLen, ' ');
-			WriteOnTerminal.displayOnTerminal('│ ' + padded + ' │', false);
+			WriteOnTerminal.displayOnTerminal( padded,  false);
 		}
-		WriteOnTerminal.displayOnTerminal('╰' + '─'.repeat(innerWidth) + '╯', false);
+		WriteOnTerminal.displayOnTerminal('─'.repeat(innerWidth), false);
 	}
 
 	export let skipAnimation = false;
