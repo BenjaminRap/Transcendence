@@ -5,7 +5,7 @@ import type { Result } from "@shared/utils";
 import { io, Socket } from "socket.io-client";
 import type { TournamentEventAndJoinedGame } from "./FrontendEventsManager";
 import { CancellablePromise } from "./CancellablePromise";
-import type { ServerToClientEvents } from "@shared/ServerMessageHelpers";
+import type { ServerMessage, ServerMessageData, ServerToClientEvents } from "@shared/ServerMessageHelpers";
 import type { ClientMessage, ClientMessageAcknowledgement, ClientMessageData, ClientToServerEvents } from "@shared/ClientMessageHelpers";
 
 export type EventWithNoResponse = "forfeit" | "input-infos" | "leave-matchmaking" | "ready" | "leave-tournament" | "cancel-tournament" | "ban-participant" | "kick-participant";
@@ -15,9 +15,6 @@ type ResultType<T extends ClientMessage>
 	= ClientMessageAcknowledgement<T> extends (result: Result<infer R>) => void 
 		? R 
 		: never
-
-type AckResult<T extends ClientMessage> =
-  ClientMessageAcknowledgement<T> extends (result: Result<infer R>) => void ? R : never;
 
 export class	FrontendSocketHandler
 {
@@ -114,17 +111,17 @@ export class	FrontendSocketHandler
 		this._onGameMessageObservable.clear();
 	}
 
-	public onGameReady() : CancellablePromise<GameStartInfos>
+	public waitForEvent<T extends ServerMessage>(event : T) : CancellablePromise<ServerMessageData<T>>
 	{
-		let	ack : ((gameStartInfos : GameStartInfos) => void);
+		let	callback : (...args: ServerMessageData<T>) => void;
 
-		const	promise = new CancellablePromise<GameStartInfos>((resolve) => {
-			ack = gameStartInfos => {
-				resolve(gameStartInfos);
+		const	promise = new CancellablePromise<ServerMessageData<T>>((resolve) => {
+			callback = (...data : ServerMessageData<T>) => {
+				resolve(data);
 			}
-			this._socket.once("ready", ack);
+			this._socket.once(event, callback as any);
 		}, () => {
-			this._socket.off("ready", ack);
+			this._socket.off(event, callback as any);
 		});
 
 		return promise;

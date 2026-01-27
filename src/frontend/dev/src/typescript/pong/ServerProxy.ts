@@ -88,10 +88,10 @@ export class	ServerProxy
 		this._state = "connected";
 	}
 
-	public onGameReady() : Promise<GameStartInfos>
+	public onGameReady() : Promise<[GameStartInfos]>
 	{
 		this.verifyState("in-game", "in-tournament");
-		const	cancellable = this._frontendSocketHandler.onGameReady();
+		const	cancellable = this._frontendSocketHandler.waitForEvent("ready");
 
 		this.replaceCurrentPromise(cancellable);
 		return cancellable.promise;
