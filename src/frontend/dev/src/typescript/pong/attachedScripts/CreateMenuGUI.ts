@@ -26,11 +26,10 @@ import { PongError } from "@shared/pongError/PongError";
 import type { TournamentEventAndJoinedGame } from "../FrontendEventsManager";
 import type { FrontendGameSceneName } from "@shared/SceneData";
 
-type EnemyType = "Local" | "Multiplayer" | "Bot";
+const enemyTypes = ["Local", "Multiplayer", "Bot"] as const;
+type EnemyType = typeof enemyTypes[number];
 
 export class CreateMenuGUI extends CustomScriptComponent {
-	private static readonly _enemyTypes = [ "Local", "Multiplayer", "Bot" ];
-
 	@Imported(TransformNode) private _scenesParent! : TransformNode;
 	@Imported("TimerManager") private _timerManager! : TimerManager;
 
@@ -177,7 +176,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			onItemChange: this.onSceneChange.bind(this)
 		};
 		const	enemyTypesButtonSwitch : SwitchButton = {
-			items: CreateMenuGUI._enemyTypes,
+			items: enemyTypes,
 			currentItemIndex: 0,
 			onItemChange: this.onEnemyTypeChange.bind(this)
 		};
@@ -222,8 +221,8 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 	private	onEnemyTypeChange(_currentIndex : number, _newIndex : number) : boolean
 	{
-		const	currentType = CreateMenuGUI._enemyTypes[_currentIndex];
-		const	newType = CreateMenuGUI._enemyTypes[_newIndex];
+		const	currentType = enemyTypes[_currentIndex];
+		const	newType = enemyTypes[_newIndex];
 
 		this._sceneData.events.getObservable("enemy-type-change").notifyObservers([currentType, newType]);
 		return true;
@@ -239,7 +238,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			return ;
 		}
 
-		const	enemyType = CreateMenuGUI._enemyTypes[enemyTypeIndex];
+		const	enemyType = enemyTypes[enemyTypeIndex];
 
 		if (enemyType === "Bot")
 			this.startGame(sceneName, enemyType, undefined);
