@@ -164,7 +164,7 @@ export class PongGame extends HTMLElement {
 
 	public async searchOnlineGame(sceneName : FrontendGameSceneName) : Promise<void>
 	{
-		const	gameInit = await this._serverProxy.joinGame();
+		const	[gameInit] = await this._serverProxy.joinGame();
 
 		this.joinOnlineGame(gameInit, sceneName);
 	}

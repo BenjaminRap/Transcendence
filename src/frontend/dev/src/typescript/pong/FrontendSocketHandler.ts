@@ -1,6 +1,6 @@
 import { Observable } from "@babylonjs/core";
 import { PongError } from "@shared/pongError/PongError";
-import { type GameInfos, type GameInit, type GameStartInfos, zodGameInit } from "@shared/ZodMessageType";
+import { type GameInfos, type GameInit } from "@shared/ZodMessageType";
 import type { Result } from "@shared/utils";
 import { io, Socket } from "socket.io-client";
 import type { TournamentEventAndJoinedGame } from "./FrontendEventsManager";
@@ -63,37 +63,6 @@ export class	FrontendSocketHandler
 
 		return frontendSocketHandler;
 	}
-
-	public joinGame() : CancellablePromise<GameInit>
-	{
-		let	callback : (data : any) => void;
-		let	ack : ((result : Result<null>) => void) | null = null;
-
-		const	promise = new CancellablePromise<GameInit>((resolve, reject) => {
-			callback = (data : any) => {
-				const	gameInit = zodGameInit.safeParse(data);
-
-				if (!gameInit.success)
-					reject(new PongError(`Server sent wrong data ! : ${gameInit.error}`, "quitPong"));
-				else
-					resolve(gameInit.data);
-			};
-			ack = (result : Result<null>) => {
-				if (result.success)
-					return ;
-				this._socket.off("joined-game");
-				reject(new PongError(result.error, "show"));
-			};
-			this._socket.once("joined-game", callback);
-			this._socket.emit("join-matchmaking", result => ack?.(result));
-		}, () => {
-			this._socket.off("joined-game", callback);
-			ack = null;
-		});
-
-		return promise;
-	}
-
 	public get socket() : DefaultSocket
 	{
 		return this._socket;

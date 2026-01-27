@@ -56,19 +56,28 @@ export class	ServerProxy
 		});
 	}
 
-	public async joinGame() : Promise<GameInit>
+	public async joinGame() : Promise<[GameInit]>
 	{
 		this.verifyState("connected");
-		const	cancellable = this._frontendSocketHandler.joinGame();
-
-		this.replaceCurrentPromise(cancellable);
 		this._state = "in-matchmaking";
-		cancellable.promise.then(() => {
-			this._state = "in-game";
-		}).catch(() => {
-			this._state = "connected";
-		});
-		return cancellable.promise;
+		const	joinMatchmakingCancellable = this._frontendSocketHandler.sendEventWithAck("join-matchmaking");
+		const	joinGameCancellable = this._frontendSocketHandler.waitForEvent("joined-game");
+
+		joinMatchmakingCancellable.promise
+			.catch(() => {
+				joinGameCancellable.cancel();
+			});
+		joinGameCancellable.promise
+			.then(() => {
+				this._state = "in-game";
+			})
+			.catch(() => {
+				this._state = "connected";
+			});
+
+
+		this.replaceCurrentPromise(joinGameCancellable);
+		return joinGameCancellable.promise;
 	}
 
 	public leave() : void
