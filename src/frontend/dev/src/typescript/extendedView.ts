@@ -37,6 +37,8 @@ interface MatchSummary
 	match: Match | null,
 }
 
+let searchBar: HTMLInputElement;
+
 let matches: MatchSummary[] = [];
 let friends: Friend[] = [];
 
@@ -284,7 +286,7 @@ export namespace ExtendedView {
 
 		const container = document.createElement('div');
 		container.className = "flex flex-col px-2 h-full";
-		const searchBar = document.createElement('input');
+		searchBar = document.createElement('input');
 		searchBar.id = "searchBar";
 		searchBar.type = "text";
 		searchBar.placeholder = "Search "+ (dataType === 'friend' ? 'friends' : 'matches');
@@ -354,6 +356,7 @@ export namespace ExtendedView {
 
 	export function addMatch(match: MatchSummary) {
 		matches.unshift(match);
+		console.log("Matches after adding new match:", matches);
 		refreshMatchList();
 	}
 
@@ -374,6 +377,11 @@ function removeFriend(username: string) {
 
 
 function refreshFriendList() {
+	const filter = searchBar.value.toLowerCase();
+	if (filter === '')
+		FriendDisplay = [...friends];
+	else
+		FriendDisplay = friends.filter(friend => friend.user.username.toLowerCase().startsWith(filter));
 	const oldList = document.getElementById('friendList');
 	if (oldList && oldList.parentNode)
 		oldList.parentNode.removeChild(oldList);
@@ -394,6 +402,11 @@ function refreshFriendList() {
 
 function refreshMatchList() 
 {
+	const filter = searchBar.value.toLowerCase();
+	if (filter === '')
+		MatchDisplay = [...matches]; // Sa evite les shadow copy
+	else
+		MatchDisplay = matches.filter(match => match.opponent?.username.toLowerCase().startsWith(filter));
 	const matchList = document.getElementById('matchList');
 	if (matchList && matchList.parentNode)
 		matchList.parentNode.removeChild(matchList);
@@ -415,19 +428,10 @@ function refreshMatchList()
 function searchBarFunctionality(searchBar: HTMLInputElement) {
 	
 	searchBar.addEventListener('input', () => {
-		const filter = searchBar.value.toLowerCase();
 		if (ExtendedView.type === 'friend') {
-			if (filter === '')
-				FriendDisplay = [...friends];
-			else
-				FriendDisplay = friends.filter(friend => friend.user.username.toLowerCase().startsWith(filter));
 			refreshFriendList();
 		}
 		else if (ExtendedView.type === 'match') {
-			if (filter === '')
-				MatchDisplay = [...matches]; // Sa evite les shadow copy
-			else
-				MatchDisplay = matches.filter(match => match.opponent?.username.toLowerCase().startsWith(filter));
 			refreshMatchList();
 		}});
 }
