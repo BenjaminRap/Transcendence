@@ -23,8 +23,8 @@ import { OnlineTournamentJoinPublicGUI } from "../gui/OnlineTournamentJoinPublic
 import { OnlineTournamentChoiceGUI } from "../gui/OnlineTournamentChoiceGUI";
 import { OnlineTournamentStartGUI } from "../gui/OnlineTournamentStartGUI";
 import { PongError } from "@shared/pongError/PongError";
-import type { TournamentEventAndJoinedGame } from "../FrontendEventsManager";
 import type { FrontendGameSceneName } from "@shared/SceneData";
+import type { TournamentEvent } from "@shared/ZodMessageType";
 
 const enemyTypes = ["Local", "Multiplayer", "Bot"] as const;
 type EnemyType = typeof enemyTypes[number];
@@ -394,7 +394,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		}
 	}
 
-	private	onTournamentEvent(tournamentEvent : TournamentEventAndJoinedGame)
+	private	onTournamentEvent(tournamentEvent : TournamentEvent)
 	{
 		const	tournamentData = this._sceneData.serverProxy.getTournamentData();
 

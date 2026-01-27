@@ -1,12 +1,7 @@
 import { Observable } from "@babylonjs/core/Misc/observable";
 import { EventsManager } from "@shared/EventsManager";
 import type { ClientInput } from "./FrontendSceneData";
-import type { GameInfos, GameInit, Profile, TournamentEvent } from "@shared/ZodMessageType";
-
-export type TournamentEventAndJoinedGame = TournamentEvent | { 
-	type: "joined-game",
-	gameInit : GameInit
-}
+import type { GameInfos, Profile, TournamentEvent } from "@shared/ZodMessageType";
 
 export class	FrontendEventsManager extends EventsManager
 {
@@ -20,7 +15,7 @@ export class	FrontendEventsManager extends EventsManager
 			"enemy-type-change" : new Observable<[string, string]>,
 			"scene-change" : new Observable<[string, string]>,
 			"set-participants" : new Observable<[Profile, Profile]>,
-			"tournament-event": new Observable<TournamentEventAndJoinedGame>,
+			"tournament-event": new Observable<TournamentEvent>,
 			"game-infos": new Observable<GameInfos>,
 		};
 		this._allEvents = { ...this._events, ...additionalEvents }

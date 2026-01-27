@@ -18,8 +18,7 @@ import { ErrorGUI } from "./gui/ErrorGUI";
 import { initMenu } from "./gui/IGUI";
 import { CloseGUI } from "./gui/CloseGUI";
 import { PongError } from "@shared/pongError/PongError";
-import type { GameInfos, GameInit, Profile } from "@shared/ZodMessageType";
-import type { TournamentEventAndJoinedGame } from "./FrontendEventsManager";
+import type { GameInfos, GameInit, Profile, TournamentEvent } from "@shared/ZodMessageType";
 
 import { PongUtils } from '../terminal'
 import { LoadingGUI } from "./gui/LoadingGUI";
@@ -188,7 +187,7 @@ export class PongGame extends HTMLElement {
 		sceneData.events.getObservable("game-start").notifyObservers(gameStartInfos);
 	}
 
-	private onTournamentMessage(tournamentEvent : TournamentEventAndJoinedGame)
+	private onTournamentMessage(tournamentEvent : TournamentEvent)
 	{
 		if (!this._scene)
 			return ;
