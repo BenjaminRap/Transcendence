@@ -4,7 +4,7 @@ import { OpponentGUI } from "./OpponentGUI";
 import type { IGUI } from "./IGUI";
 import { PongError } from "@shared/pongError/PongError";
 import { isPowerOfTwo } from "@shared/utils";
-import type { MatchWinningDescription, Profile } from "@shared/ServerMessage";
+import type { MatchWinningDescription, Profile } from "@shared/ZodMessageType";
 
 export class	TournamentGUI extends HTMLElement implements IGUI<void>
 {

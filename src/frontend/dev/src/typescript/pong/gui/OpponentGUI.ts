@@ -1,5 +1,5 @@
 import { defaultProfile } from "@shared/Profile";
-import type { Profile } from "@shared/ServerMessage";
+import type { Profile } from "@shared/ZodMessageType";
 
 export class	OpponentGUI extends HTMLElement
 {

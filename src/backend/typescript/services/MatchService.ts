@@ -1,6 +1,6 @@
 import { type PrismaClient } from '@prisma/client';
 import { FriendService } from './FriendService.js';
-import type { GameStats } from '@shared/ServerMessage.js';
+import type { GameStats } from '@shared/ZodMessageType.js';
 import type { MatchData, MatchSummary, OpponentSummary, PlayerInfo } from '../types/match.types.js';
 
 

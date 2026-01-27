@@ -1,4 +1,4 @@
-import type { Profile } from "@shared/ServerMessage";
+import type { Profile } from "@shared/ZodMessageType";
 import { OpponentGUI } from "./OpponentGUI";
 import { DrawGUI } from "./DrawGUI";
 

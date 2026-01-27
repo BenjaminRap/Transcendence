@@ -1,4 +1,4 @@
-import type { GameStats } from "@shared/ServerMessage"
+import type { GameStats } from "@shared/ZodMessageType"
 import type { MatchSummary } from "./match.types"
 
 export interface PublicProfile

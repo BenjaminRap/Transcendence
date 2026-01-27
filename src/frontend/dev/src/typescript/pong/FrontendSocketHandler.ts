@@ -1,7 +1,7 @@
 import { Observable } from "@babylonjs/core";
 import type { ClientMessage, ClientMessageAcknowledgement, ClientMessageData, ClientMessageParameters, ClientToServerEvents, ServerToClientEvents } from "@shared/MessageType";
 import { PongError } from "@shared/pongError/PongError";
-import { type GameInfos, type GameInit, type GameStartInfos, zodGameInit } from "@shared/ServerMessage";
+import { type GameInfos, type GameInit, type GameStartInfos, zodGameInit } from "@shared/ZodMessageType";
 import type { Result } from "@shared/utils";
 import { io, Socket } from "socket.io-client";
 import type { TournamentEventAndJoinedGame } from "./FrontendEventsManager";

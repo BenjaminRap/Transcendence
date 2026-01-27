@@ -1,7 +1,7 @@
 import { ServerSceneData } from "./ServerSceneData";
 import { ServerPongGame } from "./ServerPongGame";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
-import { type GameInit, type GameStartInfos, type KeysUpdate, type Profile, zodKeysUpdate } from "@shared/ServerMessage"
+import { type GameInit, type GameStartInfos, type KeysUpdate, type Profile, zodKeysUpdate } from "@shared/ZodMessageType"
 import { ClientProxy } from "./ClientProxy";
 import { type int, Observable, Vector3 } from "@babylonjs/core";
 import type { ServerMessage, ServerToClientEvents } from "@shared/MessageType";

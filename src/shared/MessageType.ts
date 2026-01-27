@@ -1,5 +1,5 @@
 import zod from "zod";
-import { resultOf, zodGameInfos, zodGameInit, zodGameStartInfos, zodGameStats, zodKeysUpdate, zodProfile, zodSanitizedUser, zodTournamentCreationSettings, zodTournamentDescription, zodTournamentEvent, zodTournamentId} from "./ServerMessage";
+import { resultOf, zodGameInfos, zodGameInit, zodGameStartInfos, zodGameStats, zodKeysUpdate, zodProfile, zodSanitizedUser, zodTournamentCreationSettings, zodTournamentDescription, zodTournamentEvent, zodTournamentId} from "./ZodMessageType";
 import { CommonSchema } from "./common.schema";
 
 type InferArray<T extends readonly zod.ZodType[]> = {

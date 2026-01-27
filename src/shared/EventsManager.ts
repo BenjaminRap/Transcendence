@@ -1,6 +1,6 @@
 import { type int, Observable } from "@babylonjs/core";
 import type { EndData } from "./attachedScripts/GameManager";
-import type { GameStartInfos } from "./ServerMessage";
+import type { GameStartInfos } from "./ZodMessageType";
 
 export abstract class	EventsManager
 {

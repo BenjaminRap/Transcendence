@@ -1,7 +1,7 @@
 import { Deferred, HavokPlugin, Scene } from "@babylonjs/core";
 import { EventsManager } from "./EventsManager";
 import { PongError } from "./pongError/PongError";
-import type { GameStartInfos } from "./ServerMessage";
+import type { GameStartInfos } from "./ZodMessageType";
 
 export type ServerGameType = "Server";
 export type FrontendGameType = "Local" | "Multiplayer" | "Bot" | "Menu";

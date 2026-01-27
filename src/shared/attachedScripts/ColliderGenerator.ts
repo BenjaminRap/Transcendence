@@ -6,7 +6,7 @@ import { PhysicsShape, PhysicsShapeContainer } from "@babylonjs/core/Physics/v2/
 import { PhysicsMotionType, Quaternion, Vector3 } from "@babylonjs/core";
 import zod from "zod";
 import { Imported } from "@shared/ImportedDecorator";
-import { zodVector3 } from "@shared/ServerMessage";
+import { zodVector3 } from "@shared/ZodMessageType";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { PongError } from "@shared/pongError/PongError";
 

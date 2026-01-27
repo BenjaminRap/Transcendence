@@ -2,7 +2,7 @@ import type { Match } from "@shared/Match";
 import type { EndData } from "@shared/attachedScripts/GameManager";
 import type { FrontendEventsManager } from "./FrontendEventsManager";
 import { Tournament } from "@shared/Tournament";
-import type { Profile } from "@shared/ServerMessage";
+import type { Profile } from "@shared/ZodMessageType";
 import { getEndDataOnInvalidMatch } from "@shared/utils";
 
 export class	LocalTournament extends Tournament<Profile>

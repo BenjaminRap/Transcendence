@@ -1,4 +1,4 @@
-import type { TournamentDescription, TournamentId } from "@shared/ServerMessage";
+import type { TournamentDescription, TournamentId } from "@shared/ZodMessageType";
 import type { IGUI } from "./IGUI";
 
 const	defaultDescription : TournamentDescription = {

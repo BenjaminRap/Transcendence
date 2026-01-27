@@ -1,7 +1,7 @@
 import { ProfileCreationGUI } from "./ProfileCreationGUI";
 import type { IGUI } from "./IGUI";
 import { TournamentHelper } from "@shared/TournamentHelper";
-import type { Profile } from "@shared/ServerMessage";
+import type { Profile } from "@shared/ZodMessageType";
 
 export type TournamentCreationGUIInputs = {
 	start : HTMLButtonElement,

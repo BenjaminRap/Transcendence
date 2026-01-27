@@ -2,7 +2,7 @@ import { Scene } from "@babylonjs/core/scene";
 import { TransformNode } from "@babylonjs/core/Meshes";
 import { SceneManager } from "@babylonjs-toolkit/next";
 import { ServerSceneData } from "../ServerSceneData";
-import type { GameInfos, KeysUpdate } from "@shared/ServerMessage";
+import type { GameInfos, KeysUpdate } from "@shared/ZodMessageType";
 import { InputManager, PlayerInput } from "@shared/attachedScripts/InputManager";
 import { InputKey } from "@shared/InputKey";
 import type { SocketMessage } from "../Room";

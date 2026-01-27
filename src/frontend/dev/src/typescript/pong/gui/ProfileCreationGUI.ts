@@ -1,4 +1,4 @@
-import type { Profile } from "@shared/ServerMessage";
+import type { Profile } from "@shared/ZodMessageType";
 import { TournamentHelper } from "@shared/TournamentHelper";
 
 export type	ProfileCreationInputs = {

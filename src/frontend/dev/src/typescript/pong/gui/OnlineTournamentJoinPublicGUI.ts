@@ -1,4 +1,4 @@
-import type { TournamentDescription } from "@shared/ServerMessage";
+import type { TournamentDescription } from "@shared/ZodMessageType";
 import { initMenu, type IGUI } from "./IGUI";
 import { TournamentDescriptionGUI } from "./TournamentDescriptionGUI";
 import { Observable } from "@babylonjs/core";

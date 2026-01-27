@@ -1,6 +1,6 @@
 import { TournamentHelper } from "@shared/TournamentHelper";
 import type { IGUI } from "./IGUI";
-import type { TournamentCreationSettings } from "@shared/ServerMessage";
+import type { TournamentCreationSettings } from "@shared/ZodMessageType";
 
 export type OnlineTournamentCreationGUIInputs = {
 	create: HTMLButtonElement,

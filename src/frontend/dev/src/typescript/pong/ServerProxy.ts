@@ -1,4 +1,4 @@
-import type { GameInfos, GameInit, GameStartInfos, KeysUpdate, Profile, TournamentCreationSettings, TournamentDescription, TournamentId } from "@shared/ServerMessage";
+import type { GameInfos, GameInit, GameStartInfos, KeysUpdate, Profile, TournamentCreationSettings, TournamentDescription, TournamentId } from "@shared/ZodMessageType";
 import { FrontendSocketHandler } from "./FrontendSocketHandler";
 import type { int, Observable, Observer } from "@babylonjs/core";
 import { PongError } from "@shared/pongError/PongError";

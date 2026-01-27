@@ -13,7 +13,7 @@ import { Ball } from "@shared/attachedScripts/Ball";
 import { Paddle } from "@shared/attachedScripts/Paddle";
 import type { Platform } from "@shared/attachedScripts/Platform";
 import { PongError } from "@shared/pongError/PongError";
-import type { GameInfos } from "@shared/ServerMessage";
+import type { GameInfos } from "@shared/ZodMessageType";
 import { toVec3 } from "@shared/utils";
 
 export class ClientSync extends CustomScriptComponent {

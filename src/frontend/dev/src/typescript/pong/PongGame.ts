@@ -18,7 +18,7 @@ import { ErrorGUI } from "./gui/ErrorGUI";
 import { initMenu } from "./gui/IGUI";
 import { CloseGUI } from "./gui/CloseGUI";
 import { PongError } from "@shared/pongError/PongError";
-import type { GameInfos, GameInit, Profile } from "@shared/ServerMessage";
+import type { GameInfos, GameInit, Profile } from "@shared/ZodMessageType";
 import type { TournamentEventAndJoinedGame } from "./FrontendEventsManager";
 
 import { PongUtils } from '../terminal'

@@ -1,4 +1,4 @@
-import type { Profile, TournamentId } from "@shared/ServerMessage";
+import type { Profile, TournamentId } from "@shared/ZodMessageType";
 import { initMenu, type IGUI } from "./IGUI";
 import { OnlineTournamentProfileGUI } from "./OnlineTournamentProfileGUI";
 import { Observable } from "@babylonjs/core";

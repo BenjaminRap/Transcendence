@@ -1,4 +1,4 @@
-import type { Profile } from "./ServerMessage";
+import type { Profile } from "./ZodMessageType";
 
 export const	defaultProfile : Profile = {
 	shownName: "unkown",

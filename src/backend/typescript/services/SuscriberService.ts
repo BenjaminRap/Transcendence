@@ -9,7 +9,7 @@ import path from "path";
 import { SocketEventController } from "../controllers/SocketEventController.js";
 import type { Friend } from "../types/suscriber.types.js";
 import type { MatchService } from "./MatchService.js";
-import type { GameStats, SanitizedUser } from "@shared/ServerMessage.js";
+import type { GameStats, SanitizedUser } from "@shared/ZodMessageType.js";
 
 export class SuscriberService {
     constructor(

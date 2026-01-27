@@ -1,4 +1,4 @@
-import type { Profile, TournamentCreationSettings, TournamentDescription, TournamentId, Username } from "@shared/ServerMessage";
+import type { Profile, TournamentCreationSettings, TournamentDescription, TournamentId, Username } from "@shared/ZodMessageType";
 import type { ServerType } from "..";
 import { error, getEndDataOnInvalidMatch, success, type Result } from "@shared/utils";
 import { Tournament } from "@shared/Tournament";
