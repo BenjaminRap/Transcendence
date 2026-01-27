@@ -156,7 +156,7 @@ export class MatchService {
             const isWinner = (m.winnerIndicator === 'left') ? true : false;
 
             let isFriend; 
-            if (!opponentId || !m.playerLeft || m.playerLeft.id === null)
+            if (!opponentId || !m.playerLeft || m.playerLeft?.id === null)
                 isFriend = false;
             else
             {

@@ -44,7 +44,6 @@ export class SuscriberService {
                 receivedRequests: { include: { requester: true } }, 
             },
         });
-        // console.log("wefkhebgjrebrngr");
         if (!user) {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
         }
@@ -54,9 +53,7 @@ export class SuscriberService {
         const stats: GameStats = await this.matchService.getStat(id);
 
         const friendList = await this.friendService.getFriendsList(id);
-        console.log('SuscriberService - getProfile - friendList: ', friendList);
         const sortedFriends = this.getSortedFriendlist(friendList, 4);
-        console.log('SuscriberService - getProfile - sortedFriends: ', sortedFriends);
 
         return {
             id: user.id,

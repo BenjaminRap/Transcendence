@@ -27,10 +27,10 @@ export class MatchController {
             let leftId = match.playerLeftId ? match.playerLeftId : 0;
             let rightId = match.playerRightId ? match.playerRightId : 0;
             console.log("=======", resultLeft[0], "=========");
-            SocketEventController.notifyProfileChange(leftId, 'match-update', resultLeft[0]);
-            SocketEventController.notifyProfileChange(rightId, 'match-update', resultRight[0]);
-            SocketEventController.notifyProfileChange(leftId, 'stat-update',  await this.matchService.getStat(leftId));
-            SocketEventController.notifyProfileChange(rightId, 'stat-update', await this.matchService.getStat(rightId));
+            SocketEventController.sendToUser(leftId, 'match-update', resultLeft[0]);
+            SocketEventController.sendToUser(rightId, 'match-update', resultRight[0]);
+            SocketEventController.sendToUser(leftId, 'stat-update',  await this.matchService.getStat(leftId));
+            SocketEventController.sendToUser(rightId, 'stat-update', await this.matchService.getStat(rightId));
             return { success: true, matchId: match.id }
         }
         catch (error) {
