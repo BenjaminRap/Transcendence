@@ -4,10 +4,12 @@ import { CommonSchema } from "@shared/common.schema";
 import { UsersSchema } from "../schemas/users.schema.js";
 import { UsersException, UsersError } from "../error_handlers/Users.error.js";
 import { ErrorWrapper } from "../error_handlers/ErrorWrapper.js";
+import type { MatchService } from "../services/MatchService.js";
 
 export class UsersController {
     constructor(
-        private usersService: UsersService
+        private usersService: UsersService,
+        private matchService: MatchService,
     ) {}
     
     // ----------------------------------------------------------------------------- //
@@ -57,6 +59,36 @@ export class UsersController {
                 success: true,
                 message: 'Profiles successfully retrieved',
                 user: users
+            });
+        } catch (error) {
+            const err = ErrorWrapper.analyse(error);
+            console.log(err.message);
+            return reply.status(err.code).send({
+                success: false,
+                message: err.message,
+            });
+        }
+    }
+
+    // ----------------------------------------------------------------------------- //
+    // GET /users/id/:id/allmatches
+    async getAllMatches(request: FastifyRequest<{ Params: {id: number} }>, reply: FastifyReply) {
+        try {
+            const idData = CommonSchema.idParam.safeParse(request.params['id']);
+            if (!idData.success) {
+                return reply.status(400).send({
+                    success: false,
+                    message: idData.error?.issues?.[0]?.message || 'Invalid input'
+                });
+            }
+
+            // fetch user list or empty list if nothing match
+            const matches = await this.matchService.getAllMatches(idData.data);
+
+            return reply.status(200).send({
+                success: true,
+                message: 'Profiles successfully retrieved',
+                matches
             });
         } catch (error) {
             const err = ErrorWrapper.analyse(error);
