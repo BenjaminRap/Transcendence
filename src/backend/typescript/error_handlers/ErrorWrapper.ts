@@ -77,7 +77,7 @@ export class ErrorWrapper {
                 else
                     return { code: 400, message: tournamentError?.message || tournamentError.code };
             default:
-                return { code: 500, message: error.message || 'An unknown error occurred' };
+                return { code: 422, message: 'The data cannot be processed' };
         }
     }
 }
