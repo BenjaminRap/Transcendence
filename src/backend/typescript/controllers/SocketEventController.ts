@@ -47,10 +47,12 @@ export class SocketEventController {
     // ----------------------------------------------------------------------------- //
 	static sendToUser(userId: number, event: string, data: any): void
 	{
-        if (!userId) return;
+        if (!userId) {
+            console.log(`Cannot send event "${event}" to invalid user ID: ${userId}`);
+            return;
+        }
 
         try {
-            console.log(`Emitting event "${event}" to user ${userId}`);
             if (SocketEventController.socketInstance) {
                 SocketEventController.socketInstance.io.to('user-' + Number(userId)).emit(event as any, data);
             }
@@ -324,6 +326,7 @@ export class SocketEventController {
     {
         try {
             const ids = Array.isArray(profileId) ? profileId : [profileId];
+            console.log("Adding to watch profiles:", ids);
             for (const id of ids) {
                 socket.join('watching-' + id);
             }            
@@ -337,6 +340,7 @@ export class SocketEventController {
     {
         try {
             const ids = Array.isArray(profileId) ? profileId : [profileId];
+            console.log("Removing from watch profiles:", ids);
             for (const id of ids) {
                 socket.leave('watching-' + id);
             }            
