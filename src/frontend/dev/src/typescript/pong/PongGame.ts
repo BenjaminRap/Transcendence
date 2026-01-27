@@ -58,8 +58,8 @@ export class PongGame extends HTMLElement {
 		}, this, false);
 
 		this.append(this._canvas);
-		this._serverProxy.onTournamentMessage().add(tournamentEvent => this.onTournamentMessage(tournamentEvent), undefined, true);
-		this._serverProxy.onGameMessage().add(gameEvent => this.onGameMessage(gameEvent), undefined, true);
+		this._serverProxy.getObservable("tournament-event").add(([tournamentEvent]) => this.onTournamentMessage(tournamentEvent), undefined, true);
+		this._serverProxy.getObservable("game-infos").add(([gameEvent]) => this.onGameMessage(gameEvent), undefined, true);
 		this.loadGame();
 	}
 

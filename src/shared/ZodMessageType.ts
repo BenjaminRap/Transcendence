@@ -127,6 +127,10 @@ export const	zodTournamentEvent = zod.discriminatedUnion("type", [
 		type: zod.literal("tournament-canceled")
 	}),
 	zod.object({
+		type: zod.literal("joined-game"),
+		gameInit: zodGameInit
+	}),
+	zod.object({
 		type: zod.literal("tournament-gui-create"),
 		qualified: zod.array(zodProfile)
 	}),

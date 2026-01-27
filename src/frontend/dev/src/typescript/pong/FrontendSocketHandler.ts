@@ -1,11 +1,9 @@
 import { Observable } from "@babylonjs/core";
 import { PongError } from "@shared/pongError/PongError";
-import { type GameInfos, type GameInit } from "@shared/ZodMessageType";
 import type { Result } from "@shared/utils";
 import { io, Socket } from "socket.io-client";
-import type { TournamentEventAndJoinedGame } from "./FrontendEventsManager";
 import { CancellablePromise } from "./CancellablePromise";
-import type { ServerMessage, ServerMessageData, ServerToClientEvents } from "@shared/ServerMessageHelpers";
+import type { AllServerMessage, ServerMessage, ServerMessageData, ServerReservedMessage, ServerToClientEvents } from "@shared/ServerMessageHelpers";
 import type { ClientMessage, ClientMessageAcknowledgement, ClientMessageData, ClientToServerEvents } from "@shared/ClientMessageHelpers";
 
 type DefaultSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
@@ -15,23 +13,58 @@ type ResultType<T extends ClientMessage>
 		? R 
 		: never;
 
+type EventHandler = {
+	observable: Observable<any>,
+	callback: (...args: any[]) => void
+}
+
 export class	FrontendSocketHandler
 {
 	private static readonly _apiUrl = "/api/socket.io/";
 
-	private _onGameMessageObservable = new Observable<GameInfos>();
-	private _onDisconnectObservable  = new Observable<void>();
-	private _onTournamentEventObservable = new Observable<TournamentEventAndJoinedGame>();
-	private _onGameJoinObservable = new Observable<GameInit>();
+	private _observables = new Map<string, Map<AllServerMessage, EventHandler>>
+
+	public getObservable<T extends AllServerMessage>(groupName : string, event : T) : Observable<T extends ServerMessage ? ServerMessageData<T> : void>
+	{
+		if (!this._observables.has(groupName))
+			this._observables.set(groupName, new Map());
+		const	group = this._observables.get(groupName)!;
+
+		if (!group.has(event))
+		{
+			const	observable = new Observable<any>();
+			const	callback = (...args : any[]) => {
+				observable.notifyObservers(args);
+			};
+
+			group.set(event, {observable, callback});
+			this._socket.on(event, callback as any);
+		}
+		return group.get(event)!.observable;
+	}
+
+	public clearObservable(groupName : string)
+	{
+		const	group = this._observables.get(groupName);
+
+		if (!group)
+			return ;
+		group.forEach((value, key) => {
+			this._socket.off(key, value.callback);
+		});
+		this._observables.delete(groupName);
+	}
+
+	private clearObservables()
+	{
+		this._observables.keys().forEach(key => this.clearObservable(key));
+	}
 
 	private constructor(
 		private _socket : DefaultSocket,
 		public readonly guestName: string)
 	{
-		this._socket.on("game-infos", gameInfos => { this._onGameMessageObservable.notifyObservers(gameInfos) });
-		this._socket.on("tournament-event", tournamentEvent => this._onTournamentEventObservable.notifyObservers(tournamentEvent));
-		this._socket.on("joined-game", gameInit => this._onGameJoinObservable.notifyObservers(gameInit));
-		this._onDisconnectObservable.add(() => {
+		this.getObservable("FrontendSocketHandler", "disconnect").add(() => {
 			this.onDisconnectEvent();
 		});
 	}
@@ -70,13 +103,13 @@ export class	FrontendSocketHandler
 	public disconnect()
 	{
 		this._socket.disconnect();
-		this._onDisconnectObservable.notifyObservers();
+		this.clearObservables();
 	}
 
 	private	onDisconnectEvent()
 	{
 		this._socket.off();
-		this._onGameMessageObservable.clear();
+		this.clearObservables();
 	}
 
 	public waitForEvent<T extends ServerMessage>(event : T) : CancellablePromise<ServerMessageData<T>>
@@ -93,16 +126,6 @@ export class	FrontendSocketHandler
 		});
 
 		return promise;
-	}
-
-	public onGameMessage() : Observable<GameInfos>
-	{
-		return this._onGameMessageObservable;
-	}
-	
-	public onJoinGame() : Observable<GameInit>
-	{
-		return this._onGameJoinObservable;
 	}
 
 	public sendEventWithNoResponse<T extends ClientMessage>(event : ClientMessageAcknowledgement<T> extends undefined ? T : never, ...args: Parameters<ClientToServerEvents[T]>)
@@ -134,15 +157,5 @@ export class	FrontendSocketHandler
 	  });
 
 	  return promise;
-	}
-
-	public onDisconnect()
-	{
-		return this._onDisconnectObservable;
-	}
-
-	public onTournamentMessage()
-	{
-		return this._onTournamentEventObservable;
 	}
 }

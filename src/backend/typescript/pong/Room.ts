@@ -112,7 +112,10 @@ export class	Room
             participants: participants
         }
 		socket.data.ready = false;
-		socket.emit("joined-game", gameInit);
+		if (socket.data.getState() === "tournament-playing")
+			socket.emit("tournament-event", {type: "joined-game", gameInit});
+		else
+			socket.emit("joined-game", gameInit);
 		socket.once("ready", () => { this.setSocketReady(socket) } );
 	}
 

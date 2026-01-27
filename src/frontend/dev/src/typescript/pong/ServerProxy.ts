@@ -1,9 +1,9 @@
-import type { GameInfos, GameInit, GameStartInfos, KeysUpdate, Profile, TournamentCreationSettings, TournamentDescription, TournamentId } from "@shared/ZodMessageType";
+import type { GameInit, GameStartInfos, KeysUpdate, Profile, TournamentCreationSettings, TournamentDescription, TournamentId } from "@shared/ZodMessageType";
 import { FrontendSocketHandler } from "./FrontendSocketHandler";
-import type { int, Observable, Observer } from "@babylonjs/core";
+import type { int } from "@babylonjs/core";
 import { PongError } from "@shared/pongError/PongError";
-import type { TournamentEventAndJoinedGame } from "./FrontendEventsManager";
 import type { CancellablePromise } from "./CancellablePromise";
+import type { AllServerMessage } from "@shared/ServerMessageHelpers";
 
 type SocketState = "not-connected" | "connected" | "in-matchmaking" | "in-game" | "tournament-creator" | "tournament-player" | "tournament-creator-player" | "in-tournament" | "waiting";
 
@@ -18,21 +18,20 @@ export class	ServerProxy
 	private _playerIndex : int = 0;
 	private _currentPromise : CancellablePromise<any> | null = null;
 	private _tournamentData : tournamentData | null = null;
-	private _disconnectedObserver : Observer<void>;
 
 	constructor(
 		private _frontendSocketHandler : FrontendSocketHandler,
 	) {
 		this._state = "connected";
-		this._frontendSocketHandler.onGameMessage().add((gameInfos : GameInfos) => {
+		this.getObservable("game-infos").add(([gameInfos]) => {
 			if (gameInfos.type === "room-closed" && this._state === "in-game")
 				this._state = "connected";
 		});
-		this._disconnectedObserver = this._frontendSocketHandler.onDisconnect().add(() => {
+		this.getObservable("disconnect").add(() => {
 			this._state = "not-connected";
 			this.replaceCurrentPromise(null);
 		});
-		this._frontendSocketHandler.onTournamentMessage().add((tournamentEvent : TournamentEventAndJoinedGame) => {
+		this.getObservable("tournament-event").add(([tournamentEvent]) => {
 			const	removeFromTournament = ["banned", "kicked", "tournament-canceled"].includes(tournamentEvent.type);
 			const	tournamentEnd = ["win", "lose"].includes(tournamentEvent.type);
 
@@ -45,14 +44,8 @@ export class	ServerProxy
 			else if (this._state === "tournament-player" && tournamentEvent.type === "tournament-start")
 				this._state = "in-tournament";
 		});
-		this._frontendSocketHandler.onJoinGame().add(gameInit => {
+		this.getObservable("joined-game").add(([gameInit]) => {
 			this._playerIndex = gameInit.playerIndex;
-			if (this._state !== "in-tournament")
-				return ;
-			this._frontendSocketHandler.onTournamentMessage().notifyObservers({
-				type: "joined-game",
-				gameInit: gameInit
-			});
 		});
 	}
 
@@ -150,14 +143,9 @@ export class	ServerProxy
 		this._frontendSocketHandler.sendEventWithNoResponse("input-infos", keysUpdate);
 	}
 
-	public onGameMessage() : Observable<GameInfos>
+	public getObservable<T extends AllServerMessage>(event : T)
 	{
-		return this._frontendSocketHandler.onGameMessage();
-	}
-
-	public onTournamentMessage() : Observable<TournamentEventAndJoinedGame>
-	{
-		return this._frontendSocketHandler.onTournamentMessage();
+		return this._frontendSocketHandler.getObservable("ServerProxy", event);
 	}
 
 	public getPlayerIndex() : int
@@ -331,10 +319,7 @@ export class	ServerProxy
 
 	public dispose()
 	{
-		this._frontendSocketHandler.onGameMessage().clear();
-		this._frontendSocketHandler.onTournamentMessage().clear();
-		this._frontendSocketHandler.onJoinGame().clear();
-		this._frontendSocketHandler.onDisconnect().remove(this._disconnectedObserver);
+		this._frontendSocketHandler.clearObservable("ServerProxy");
 		this.leave();
 	}
 }

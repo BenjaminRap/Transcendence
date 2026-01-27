@@ -33,3 +33,7 @@ export type ServerMessageParameters<T extends ServerMessage> = ServerMessageData
 export type ServerToClientEvents = {
     [T in ServerMessage]: (...data: ServerMessageParameters<T>) => void;
 };
+
+export type ServerReservedMessage = "connect" | "connect_error" | "disconnect";
+
+export type AllServerMessage = ServerMessage | ServerReservedMessage;
