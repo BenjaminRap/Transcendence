@@ -50,6 +50,7 @@ export class SocketEventController {
         if (!userId) return;
 
         try {
+            console.log(`Emitting event "${event}" to user ${userId}`);
             if (SocketEventController.socketInstance) {
                 SocketEventController.socketInstance.io.to('user-' + Number(userId)).emit(event as any, data);
             }
@@ -88,6 +89,7 @@ export class SocketEventController {
                 await SocketEventController.socketInstance.friendService.getFriendsIds(userId)
                     .then((friendsIds: number[]) => {
                         friendsIds.forEach((friendId) => {
+                            console.log(`Emitting event "${event}" to friend ${friendId}`); 
                             SocketEventController.sendToUser(friendId, event, data);
                         });
                     }).catch((error) => {
@@ -376,8 +378,8 @@ export class SocketEventController {
             socket.rooms.forEach((room) => {
                room !== `${socket.id}` ? socket.leave(room) : null;
             });
-            socket.data.disconnectOrLogout();
             const userId = socket.data.getUserId();
+            socket.data.disconnectOrLogout();
     
             if (!userId)
                 return ;
@@ -390,7 +392,9 @@ export class SocketEventController {
                 SocketEventController.connectedUsers.delete(userId);
                 SocketEventController.sendToProfileWatchers(userId, 'user-status-change', { userId: userId, status: 'offline' });
                 SocketEventController.sendToFriends(userId, 'user-status-change', { userId: userId, status: 'offline' });
-            }            
+            }
+            else
+                console.log(`User ${userId} logged out from one tab, still connected on others.`);
         } catch (error) {
             console.error("Error while logging out user:", error);
         }

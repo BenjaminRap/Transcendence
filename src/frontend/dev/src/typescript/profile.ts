@@ -501,15 +501,26 @@ export namespace ProfileBuilder {
 				ProfileUpdater.updateProfileCard(profile);
 			});
 
-			socketUtils.socket.on("friend-status-update", (data: {requester: {id: number, username: string, avatar: string, isOnline: boolean, requesterId: number}, status: string}) => {
-				let friendToAdd: Friend = {
-					id: data.requester.id,
-					username: data.requester.username,
-					avatar: data.requester.avatar,
-					isOnline: data.requester.isOnline,
-					status: data.status,
-					requesterId: data.requester.requesterId,
-				};
+            socketUtils.socket.on("friend-status-update", (data: {
+                requester?: {id: number, username: string, avatar: string, isOnline: boolean, requesterId: number}, 
+                friendProfile?: {id: number, username: string, avatar: string, isOnline: boolean, requesterId: number}, 
+                status: string
+            }) => {
+                console.log("Friend status updated DATA:", data);
+                
+                // Récupère les données utilisateur, qu'elles soient dans 'requester' ou 'friendProfile'
+                const userData = data.requester || data.friendProfile;
+
+                if (!userData) return;
+
+                let friendToAdd: Friend = {
+                    id: userData.id,
+                    username: userData.username,
+                    avatar: userData.avatar,
+                    isOnline: userData.isOnline,
+                    status: data.status,
+                    requesterId: userData.requesterId,
+                };
 				profile.friends.push(friendToAdd);
 				sortFriendList();
 				updateFriendDiv();
