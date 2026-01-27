@@ -24,7 +24,7 @@ export class MatchController {
 
             if (match.playerLeftId) {
                 resLeft = await this.matchService.getLastMatches(match.playerLeftId, 1);
-                console.log(`left id: ${match.playerLeftId} resLeft:`, resLeft);
+                // console.log(`left id: ${match.playerLeftId} resLeft:`, resLeft);
                 if (resLeft.length > 0) {
                     SocketEventController.sendToUser(match.playerLeftId, 'match-update', resLeft[0]);
                     SocketEventController.sendToProfileWatchers(match.playerLeftId, 'match-update', resLeft[0]);
@@ -38,7 +38,7 @@ export class MatchController {
 
             if (match.playerRightId) {
                 resRight = await this.matchService.getLastMatches(match.playerRightId, 1);
-                console.log("resRight:", resRight);
+                // console.log("resRight:", resRight);
                 if (resRight.length > 0) {
                     SocketEventController.sendToUser(match.playerRightId, 'match-update', resRight[0]);
                     SocketEventController.sendToProfileWatchers(match.playerRightId, 'match-update', resRight[0]);

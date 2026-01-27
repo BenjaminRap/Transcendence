@@ -48,7 +48,7 @@ export class SocketEventController {
 	static sendToUser(userId: number, event: string, data: any): void
 	{
         if (!userId) {
-            console.log(`Cannot send event "${event}" to invalid user ID: ${userId}`);
+            // console.log(`Cannot send event "${event}" to invalid user ID: ${userId}`);
             return;
         }
 
@@ -69,7 +69,7 @@ export class SocketEventController {
 
         try {
             if (SocketEventController.socketInstance) {
-                console.log(`Emitting event "${event}" to watchers of profile ${userId} with data: `, data);
+                // console.log(`Emitting event "${event}" to watchers of profile ${userId} with data: `, data);
                 SocketEventController.socketInstance.io.to('watching-' + Number(userId)).emit(event as any, data);
             }
         } catch (error) {
@@ -91,7 +91,7 @@ export class SocketEventController {
                 await SocketEventController.socketInstance.friendService.getFriendsIds(userId)
                     .then((friendsIds: number[]) => {
                         friendsIds.forEach((friendId) => {
-                            console.log(`Emitting event "${event}" to friend ${friendId}`); 
+                            // console.log(`Emitting event "${event}" to friend ${friendId}`); 
                             SocketEventController.sendToUser(friendId, event, data);
                         });
                     }).catch((error) => {
@@ -251,7 +251,7 @@ export class SocketEventController {
 
         try {
             socket.join('user-' + userId);
-            console.log(`User ${userId} authenticated and joined their socket room!`);
+            // console.log(`User ${userId} authenticated and joined their socket room!`);
         } catch (error) {
             console.error(`Error while user ${userId} was joining their socket room:`, error);
         }
@@ -327,7 +327,7 @@ export class SocketEventController {
     {
         try {
             const ids = Array.isArray(profileId) ? profileId : [profileId];
-            console.log("Adding to watch profiles:", ids);
+            // console.log("Adding to watch profiles:", ids);
             for (const id of ids) {
                 socket.join('watching-' + Number(id));
             }            
@@ -341,7 +341,7 @@ export class SocketEventController {
     {
         try {
             const ids = Array.isArray(profileId) ? profileId : [profileId];
-            console.log("Removing from watch profiles:", ids);
+            // console.log("Removing from watch profiles:", ids);
             for (const id of ids) {
                 socket.leave('watching-' + Number(id));
             }            

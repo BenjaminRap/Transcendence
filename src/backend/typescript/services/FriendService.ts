@@ -33,7 +33,7 @@ export class FriendService {
         user.isOnline = SocketEventController.isUserOnline(userId);
         user.requesterId = userId;
 
-        console.log("Friend request created:", user);
+        // console.log("Friend request created:", user);
         
         return user;
     }
@@ -54,7 +54,7 @@ export class FriendService {
         if (friendship.status === 'ACCEPTED')
             throw new FriendException(FriendError.ACCEPTED, FriendError.ACCEPTED);
 
-        console.log("Friendship to accept:", friendship);
+        // console.log("Friendship to accept:", friendship);
 
         // if the requester try to accept the friend request
         if (friendship.receiverId !== userId)
@@ -131,7 +131,7 @@ export class FriendService {
         });
 
         if (friendList.length === 0) {
-            console.log('SuscriberService - getProfile - friendList is empty');
+            // console.log('SuscriberService - getProfile - friendList is empty');
             return [];
         }
 

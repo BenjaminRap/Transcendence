@@ -71,7 +71,7 @@ export class SuscriberService {
 
         const matches = await this.matchService.getAllMatches(id);
 
-        console.log('SuscriberService - getAllMatches - matches: ', matches);
+        // console.log('SuscriberService - getAllMatches - matches: ', matches);
         return matches;
     }
     
