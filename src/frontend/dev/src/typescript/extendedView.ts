@@ -365,6 +365,47 @@ export namespace ExtendedView {
 		sortFriendList();
 		refreshFriendList();
 	}
+
+
+	export function updateFriendStatus(id:number, status: string) {
+		console.log("Updating friend status for ID:", id, "to status:", status);
+		for (let i = 0; i < friends.length; i++) {
+			const f = friends[i];
+			if (f.user.id === id) {
+				f.user.isOnline = (status === 'online');
+			}
+		}
+		sortFriendList();
+		refreshFriendList();
+	}
+
+	export function updateFriendInfo(id:number, username: string, status: string, avatar: string) {
+		for (let i = 0; i < friends.length; i++) {
+			const f = friends[i];
+			if (f.user.id === id) {
+				f.user.username = username;
+				if (status !== '')
+					f.status = status;
+				f.user.avatar = avatar;
+			}
+		}
+		sortFriendList();
+		refreshFriendList();
+	}
+
+	export function updateMatchOpponent(id: number, username: string, avatar: string)
+	{
+		for (let i = 0; i < matches.length; i++) {
+			const m = matches[i];
+			if (!m || m.opponent == null)
+				continue;
+			if (parseInt(m.opponent.id) === id) {
+				m.opponent.username = username;
+				m.opponent.avatar = avatar;
+			}
+		}
+		refreshMatchList();
+	}
 }
 
 function acceptFriendRequest(username: string) {

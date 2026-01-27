@@ -166,32 +166,32 @@ function updateFriendDiv()
 	}
 }
 
-function updateMatchDiv()
+function updateMatchDiv(flagAdd: boolean)
 {
 	if (!profileDiv)
 		return;
 	const newMatchListElement = createMatchElement();
 	if (!newMatchListElement)
 		return;
-	if (watchMatchIds.length > 3)
+	if (watchMatchIds.length > 3 && flagAdd)
 	{
-		socketUtils.socket?.emit("unwatch-profile", { profileId: [watchMatchIds[3]] });
+		socketUtils.socket?.emit("unwatch-profile", [watchMatchIds[3]] );
 		watchMatchIds.pop();
 
 		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
-		socketUtils.socket?.emit("watch-profile", { profileId: [watchMatchIds[0]] });
-	}
-	else
+		socketUtils.socket?.emit("watch-profile", [watchMatchIds[0]] );
+	} 
+	else if (flagAdd)
 	{
 		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
-		socketUtils.socket?.emit("watch-profile", { profileId: [watchMatchIds[0]] });
+		socketUtils.socket?.emit("watch-profile", [watchMatchIds[0]] );
 	}
 	console.log("Updated watching match IDs:", watchMatchIds);
 	const oldMatchListElement = document.getElementById('match-list');
 	if (oldMatchListElement && oldMatchListElement.parentElement) {
 		oldMatchListElement.parentElement.replaceChild(newMatchListElement, oldMatchListElement);
 	} else if (oldMatchListElement) {
-		oldMatchListElement.remove();			// Send unwatch for oldId
+		oldMatchListElement.remove();
 		profileDiv.appendChild(newMatchListElement);
 	} else {
 		profileDiv.appendChild(newMatchListElement);
@@ -451,11 +451,54 @@ export namespace ProfileBuilder {
 		if (socketUtils && socketUtils.socket)
 		{
 			socketUtils.socket.on("profile-update", (data : {user: { id: string; username: string; avatar: string }}) => {
-				console.log("Profile updated:", data.user.id);
-				ProfileUpdater.updateFriendProfile(parseInt(data.user.id), data.user.username, data.user.avatar);
+				// console.log("Profile updated:", data.user.id);
+				// ProfileUpdater.updateFriendProfile(parseInt(data.user.id), data.user.username, data.user.avatar);
+				console.log("Profile updated:", data.user.id, ' : ', data.user.username, ' : ', data.user.avatar);
+				if (parseInt(data.user.id) === profile.id) {
+					profile.username = data.user.username;
+					profile.avatar = data.user.avatar;
+					history.replaceState({}, '', `/profile/${profile.username}`);
+					ProfileUpdater.updateProfileCard(profile);
+				}
+				else
+				{
+					for (let i = 0; i < profile.lastMatchs.length; i++)
+					{
+						if (profile.lastMatchs[i].opponent && parseInt(profile.lastMatchs[i].opponent!.id) === parseInt(data.user.id))
+						{
+							profile.lastMatchs[i].opponent!.username = data.user.username;
+							profile.lastMatchs[i].opponent!.avatar = data.user.avatar;
+							updateMatchDiv(false);
+							break ;
+						}
+					}
+					for (let i = 0; i < profile.friends.length; i++)
+					{
+						if (profile.friends[i].id === parseInt(data.user.id))
+						{
+							profile.friends[i].username = data.user.username;
+							profile.friends[i].avatar = data.user.avatar;
+							sortFriendList();
+							updateFriendDiv();
+							break ;
+						}
+					}
+					if (ExtendedView.isExtendedViewIsActive && ExtendedView.type === 'friend')
+					{
+						ExtendedView.updateFriendInfo(parseInt(data.user.id), data.user.username, '', data.user.avatar);
+					}
+					if (ExtendedView.isExtendedViewIsActive && ExtendedView.type === 'match')
+					{
+						ExtendedView.updateMatchOpponent(parseInt(data.user.id), data.user.username, data.user.avatar);
+					}
+				}
 			});
 			socketUtils.socket.on("user-status-change", (data: { userId: string; status: string }) => {
 				ProfileUpdater.updateFriendList(parseInt(data.userId), data.status);
+				if (ExtendedView.isExtendedViewIsActive && ExtendedView.type === 'friend')
+				{
+					ExtendedView.updateFriendStatus(parseInt(data.userId), data.status);
+				}
 			});
 
 			socketUtils.socket.on("match-update", (data: MatchSummary) => {
@@ -463,7 +506,7 @@ export namespace ProfileBuilder {
 				profile.lastMatchs.unshift(data);
 				if (profile.lastMatchs.length > 4)
 					profile.lastMatchs.pop();
-				updateMatchDiv();
+				updateMatchDiv(true);
 			});
 
 			socketUtils.socket.on("stat-update", (data: GameStats) => {
@@ -497,6 +540,7 @@ export namespace ProfileBuilder {
 				updateFriendDiv();
 			});
 			watchMatchIds = getWathIdMatch();
+			socketUtils.socket.emit("watch-profile", watchMatchIds);
 			console.log("Watching match IDs:", watchMatchIds);
 		}
 		return 'Profil ouvert. Tapez "kill profile" pour le fermer.';
@@ -512,7 +556,7 @@ export namespace ProfileBuilder {
 		}
 		if (socketUtils && socketUtils.socket)
 		{
-			socketUtils.socket.emit("unwatch-profile", { profileId: watchMatchIds });
+			socketUtils.socket.emit("unwatch-profile", watchMatchIds);
 			socketUtils.socket.off("user-status-change");
 			socketUtils.socket.off("friend-status-update");
 			socketUtils.socket.off("profile-update");

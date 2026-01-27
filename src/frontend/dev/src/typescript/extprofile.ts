@@ -4,6 +4,7 @@ import { socketUtils } from './terminal'
 import { TerminalUtils } from "./terminalUtils/terminalUtils";
 import { RequestBackendModule } from "./terminalUtils/requestBackend";
 import { WriteOnTerminal } from "./terminalUtils/writeOnTerminal";
+import { fa } from "zod/v4/locales";
 
 
 
@@ -86,25 +87,25 @@ function createProfileCard(profileElement: HTMLElement | null): HTMLElement | vo
 	return profileCard;
 }
 
-function updateMatchDiv()
+function updateMatchDiv(flagAdd: boolean)
 {
 	if (!profileDiv)
 		return;
 	const newMatchListElement = createMatchElement();
 	if (!newMatchListElement)
 		return;
-	if (watchMatchIds.length > 3)
+	if (watchMatchIds.length > 3 && flagAdd)
 	{
-		socketUtils.socket?.emit("unwatch-profile", { profileId: [watchMatchIds[3]] });
+		socketUtils.socket?.emit("unwatch-profile", [watchMatchIds[3]] );
 		watchMatchIds.pop();
 
 		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
-		socketUtils.socket?.emit("watch-profile", { profileId: [watchMatchIds[0]] });
-	}
-	else
+		socketUtils.socket?.emit("watch-profile", [watchMatchIds[0]] );
+	} 
+	else if (flagAdd)
 	{
 		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
-		socketUtils.socket?.emit("watch-profile", { profileId: [watchMatchIds[0]] });
+		socketUtils.socket?.emit("watch-profile", [watchMatchIds[0]] );
 	}
 	console.log("Updated watching match IDs:", watchMatchIds);
 	const oldMatchListElement = document.getElementById('match-list');
@@ -292,6 +293,23 @@ export namespace ExtProfileBuilder {
 					history.replaceState({}, '', `/profile/${profile.username}`);
 					updateProfileCard(profile);
 				}
+				else
+				{
+					for (let i = 0; i < profile.lastMatchs.length; i++)
+					{
+						if (profile.lastMatchs[i].opponent && parseInt(profile.lastMatchs[i].opponent!.id) === parseInt(data.user.id))
+						{
+							profile.lastMatchs[i].opponent!.username = data.user.username;
+							profile.lastMatchs[i].opponent!.avatar = data.user.avatar;
+							updateMatchDiv(false);
+							break ;
+						}
+					}
+					if (ExtendedView.isExtendedViewIsActive && ExtendedView.type === 'match')
+					{
+						ExtendedView.updateMatchOpponent(parseInt(data.user.id), data.user.username, data.user.avatar);
+					}
+				}
 			});
 
 			socketUtils.socket.on("match-update", (data: MatchSummary) => {
@@ -306,7 +324,7 @@ export namespace ExtProfileBuilder {
 				profile.lastMatchs.unshift(data);
 				if (profile.lastMatchs.length > 4)
 					profile.lastMatchs.pop();
-				updateMatchDiv();
+				updateMatchDiv(true);
 			});
 
 			socketUtils.socket.on("stat-update", (data: GameStats) => {
@@ -316,7 +334,7 @@ export namespace ExtProfileBuilder {
 			});
 			
 			watchMatchIds = getWathIdMatch();
-			socketUtils.socket.emit("watch-profile", { profileId: watchMatchIds });
+			socketUtils.socket.emit("watch-profile", watchMatchIds);
 			console.log("Watching match IDs:", watchMatchIds);
 		}
 	}
@@ -330,7 +348,7 @@ export namespace ExtProfileBuilder {
 			if (socketUtils && socketUtils.socket)
 			{
 				socketUtils.socket.emit("unwatch-profile", profile.id);
-				socketUtils.socket.emit("unwatch-profile", { profileId: watchMatchIds });
+				socketUtils.socket.emit("unwatch-profile", watchMatchIds);
 			}
 		}
 	}
