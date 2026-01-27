@@ -539,6 +539,8 @@ export namespace ProfileBuilder {
 			socketUtils.socket.off("user-status-change");
 			socketUtils.socket.off("friend-status-update");
 			socketUtils.socket.off("profile-update");
+			socketUtils.socket.off("match-update");
+			socketUtils.socket.off("stat-update");
 		}
 		watchFriendIds = [];
 		watchMatchIds = [];
