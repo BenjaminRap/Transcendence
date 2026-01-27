@@ -43,7 +43,6 @@ let friends: Friend[] = [];
 let MatchDisplay: MatchSummary[] = [...matches];
 let FriendDisplay: Friend[] = [...friends];
 
-let profileId = 0;
 
 
 
@@ -51,10 +50,10 @@ function createListMatches() : HTMLDivElement
 {
 	const matchElement = document.createElement('div');
 	matchElement.id = "matchList";
-	matchElement.className = "flex flex-col gap-y-4 px-2 h-full overflow-y-auto";
+	matchElement.className = "terminal-font flex flex-col gap-y-4 px-2 h-full overflow-y-auto";
 	const lign = document.createElement('hr');
 	lign.className = "border-green-500";
-	for (let i = 0; i < Math.min(MatchDisplay.length, 4); i++) {
+	for (let i = 0; i < MatchDisplay.length; i++) {
 		const match = MatchDisplay[i];
 		const matchDiv = document.createElement('div');
 		if (!match || !match.match || !match.opponent) 
@@ -133,7 +132,7 @@ function createFriendList() : HTMLDivElement
 					<p class="truncate" style="font-size: 10px;">${status}</p>
 				</div>
 		`
-		if (friend.status === "PENDING" && friend.user.requesterId !== profileId) {
+		if (friend.status === "PENDING" && friend.user.requesterId !== ExtendedView.profileId) {
 			const pendingTag = document.createElement('div');
 			pendingTag.className = "flex gap-x-2";
 			pendingTag.innerHTML = `
@@ -200,15 +199,16 @@ async function fetchFriendData() : Promise<void>
 	}
 }
 
-
-async function fetchMatchData() {
+// GET /users/id/:id/allmatches
+async function fetchMatchData(id: number) : Promise<void>
+{
 	try {
 		const token = TerminalUtils.getCookie('accessToken') || '';
 		if (token === '') {
 			console.error("No access token found.");
 			return;
 		}
-		const response = await fetch('/api/suscriber/profile/allmatches', {
+		const response = await fetch(`/api/users/id/${id}/allmatches`, {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',
@@ -230,11 +230,28 @@ async function fetchMatchData() {
 	}
 }
 
+function sortFriendList()
+{
+	let pendingFriends = [];
+	let onlineFriends = [];
+	let offlineFriends = [];
+
+	for (const friend of friends) {
+		if (friend.user.isOnline) {
+			onlineFriends.push(friend);
+		} else if (friend.status === "PENDING") {
+			pendingFriends.push(friend);
+		} else {
+			offlineFriends.push(friend);
+		}
+	}
+	FriendDisplay = [...onlineFriends, ...pendingFriends, ...offlineFriends];
+}
 
 export namespace ExtendedView { 
 	export var isExtendedViewIsActive = false;
 
-	export async function makeExtendedView(dataType: 'match' | 'friend', username: string | '') {
+	export async function makeExtendedView(dataType: 'match' | 'friend', username: string | '', id : number | 0) {
 		if (isExtendedViewIsActive || PongUtils.isPongLaunched)
 			return;
 		ExtendedView.type = dataType;
@@ -242,7 +259,7 @@ export namespace ExtendedView {
 			await fetchFriendData();
 		}
 		else if (dataType === 'match') {
-			await fetchMatchData();
+			await fetchMatchData(id);
 		}
 		const view = document.createElement('div');
 		view.className = "terminal-font fixed top-[50%] left-[50%] border p-4 border-green-500 bg-black z-2 flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 w-[20%] max-h-[50vh] overflow-y-auto focus:outline-none";
@@ -332,11 +349,18 @@ export namespace ExtendedView {
 	};
 
 	export let type = '';
+	export let profileId = 0;
 
-	export function addMatch(match: Match) {
+
+	export function addMatch(match: MatchSummary) {
+		matches.unshift(match);
+		refreshMatchList();
 	}
 
 	export function addFriend(friend: Friend) {
+		friends.unshift(friend);
+		sortFriendList();
+		refreshFriendList();
 	}
 }
 
@@ -344,12 +368,48 @@ function acceptFriendRequest(username: string) {
 	console.log(`Accepted friend request from: ${username}`);
 }
 
-function refuseFriendRequest(username: string) {
-	console.log(`Refused friend request from: ${username}`);
-}
-
 function removeFriend(username: string) {
 	console.log(`Removing friend: ${username}`);
+}
+
+
+function refreshFriendList() {
+	const oldList = document.getElementById('friendList');
+	if (oldList && oldList.parentNode)
+		oldList.parentNode.removeChild(oldList);
+	if (FriendDisplay.length === 0) {
+		const noFriendMessage = document.createElement('p');
+		noFriendMessage.id = "friendList";
+		noFriendMessage.className = "terminal-font text-center mt-4";
+		noFriendMessage.textContent = "No friends found.";
+		document.getElementById('view')?.appendChild(noFriendMessage);
+		return;
+	}
+	else
+	{
+		const newFriendList = createFriendList();
+		document.getElementById('view')?.appendChild(newFriendList);
+	}
+}
+
+function refreshMatchList() 
+{
+	const matchList = document.getElementById('matchList');
+	if (matchList && matchList.parentNode)
+		matchList.parentNode.removeChild(matchList);
+	if (MatchDisplay.length === 0) {
+		const noMatchMessage = document.createElement('p');
+		noMatchMessage.id = "matchList";
+		noMatchMessage.className = "terminal-font text-center mt-4";
+		noMatchMessage.textContent = "No matches found.";
+		document.getElementById('view')?.appendChild(noMatchMessage);
+		return;
+	}
+	else
+	{
+		const newMatchList = createListMatches();
+		document.getElementById('view')?.appendChild(newMatchList);
+	}
 }
 
 function searchBarFunctionality(searchBar: HTMLInputElement) {
@@ -361,45 +421,14 @@ function searchBarFunctionality(searchBar: HTMLInputElement) {
 				FriendDisplay = [...friends];
 			else
 				FriendDisplay = friends.filter(friend => friend.user.username.toLowerCase().startsWith(filter));
-			const oldList = document.getElementById('friendList');
-			if (oldList && oldList.parentNode)
-				oldList.parentNode.removeChild(oldList);
-			if (FriendDisplay.length === 0) {
-				const noFriendMessage = document.createElement('p');
-				noFriendMessage.id = "friendList";
-				noFriendMessage.className = "terminal-font text-center mt-4";
-				noFriendMessage.textContent = "No friends found.";
-				document.getElementById('view')?.appendChild(noFriendMessage);
-				return;
-			}
-			else
-			{
-				const newFriendList = createFriendList();
-				document.getElementById('view')?.appendChild(newFriendList);
-			}
+			refreshFriendList();
 		}
 		else if (ExtendedView.type === 'match') {
 			if (filter === '')
 				MatchDisplay = [...matches]; // Sa evite les shadow copy
 			else
 				MatchDisplay = matches.filter(match => match.opponent?.username.toLowerCase().startsWith(filter));
-			const matchList = document.getElementById('matchList');
-			if (matchList && matchList.parentNode)
-				matchList.parentNode.removeChild(matchList);
-			if (MatchDisplay.length === 0) {
-				const noMatchMessage = document.createElement('p');
-				noMatchMessage.id = "matchList";
-				noMatchMessage.className = "terminal-font text-center mt-4";
-				noMatchMessage.textContent = "No matches found.";
-				document.getElementById('view')?.appendChild(noMatchMessage);
-				return;
-			}
-			else
-			{
-				const newMatchList = createListMatches();
-				document.getElementById('view')?.appendChild(newMatchList);
-			}
-		}
-	});
+			refreshMatchList();
+		}});
 }
 

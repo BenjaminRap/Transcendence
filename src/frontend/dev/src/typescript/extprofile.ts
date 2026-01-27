@@ -1,11 +1,10 @@
 import type { boolean } from "zod";
 import { ExtendedView } from "./extendedView";
-import { PongUtils, socketUtils } from './terminal'
+import { socketUtils } from './terminal'
 import { TerminalUtils } from "./terminalUtils/terminalUtils";
 import { RequestBackendModule } from "./terminalUtils/requestBackend";
 import { WriteOnTerminal } from "./terminalUtils/writeOnTerminal";
-import { ProfileUpdater } from "./profile";
-import type { HtmlElementTexture } from "@babylonjs/core";
+
 
 
 
@@ -180,7 +179,7 @@ function createMatchHistory(profileElement: HTMLElement | null): HTMLElement | v
 							</div>`
 	const moreMatchButton = matchHistory.querySelector('#moreMatch');
 	moreMatchButton?.addEventListener('click', () => {
-		ExtendedView.makeExtendedView('match', '');
+		ExtendedView.makeExtendedView('match', '', profile.id);
 	});
 	profileElement.appendChild(matchHistory);
 	const matchElement = createMatchElement();
@@ -291,8 +290,12 @@ export namespace ExtProfileBuilder {
 			});
 
 			socketUtils.socket.on("match-update", (data: MatchSummary) => {
-				console.log("Match updated:", data);
-				// Update lastMatchs
+				console.log("SANEJNKJWF", data);
+				if (ExtendedView.isExtendedViewIsActive && ExtendedView.type === 'match' && ExtendedView.profileId === profile.id)
+				{
+					console.log("Adding match to extended view:", data);
+					ExtendedView.addMatch(data);
+				}
 				profile.lastMatchs.unshift(data);
 				if (profile.lastMatchs.length > 4)
 					profile.lastMatchs.pop();

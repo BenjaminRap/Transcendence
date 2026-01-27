@@ -65,16 +65,12 @@ let profile: SuscriberProfile;
 let profileDiv: HTMLDivElement | null = null;
 
 let watchMatchIds: number[];
-let watchFriendIds: number[];
-let profileIds: number[];
 
 function sortFriendList()
 {
 	let pendingFriends = [];
 	let onlineFriends = [];
 	let offlineFriends = [];
-
-	console.log(watchFriendIds)
 
 	for (const friend of profile.friends) {
 		if (friend.isOnline) {
@@ -86,29 +82,6 @@ function sortFriendList()
 		}
 	}
 	profile.friends = [...onlineFriends, ...pendingFriends, ...offlineFriends];
-	console.log("Sorted friend list:", profile.friends);
-
-	let newIds: number[] = [];
-	newIds = profile.friends.slice(0, 4).map(friend => friend.id);
-
-	for (let i = 0; i < 4; i++) {
-		let id = newIds[i];
-		if (id && !watchFriendIds.includes(id)) {
-			watchFriendIds.push(id);
-			console.log("Watching new friend ID:", id);
-			socketUtils.socket?.emit("watch-profile", id);
-		}
-		let oldId = watchFriendIds[i];
-		if (oldId && !newIds.includes(oldId)) {
-			const index = watchFriendIds.indexOf(oldId);
-			if (index > -1) {
-				watchFriendIds.splice(index, 1);
-			}
-			console.log("Unwatching friend ID:", oldId);
-			socketUtils.socket?.emit("unwatch-profile", oldId);
-		}
-	}
-	updateWatchIds();
 }
 
 
@@ -200,14 +173,13 @@ function updateMatchDiv()
 	const newMatchListElement = createMatchElement();
 	if (!newMatchListElement)
 		return;
-	if (watchMatchIds.length > 4)
+	if (watchMatchIds.length > 3)
 	{
 		watchMatchIds.pop();
 		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
 	}
 	else
 		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
-	updateWatchIds();
 	console.log("Updated watching match IDs:", watchMatchIds);
 	const oldMatchListElement = document.getElementById('match-list');
 	if (oldMatchListElement && oldMatchListElement.parentElement) {
@@ -327,7 +299,7 @@ function createMatchHistory(profileElement: HTMLElement | null): HTMLElement | v
 							</div>`
 	const moreMatchButton = matchHistory.querySelector('#moreMatch');
 	moreMatchButton?.addEventListener('click', () => {
-		ExtendedView.makeExtendedView('match', '');
+		ExtendedView.makeExtendedView('match', '', profile.id);
 	});
 	profileElement.appendChild(matchHistory);
 	const matchElement = createMatchElement();
@@ -409,7 +381,7 @@ function createFriendDiv(profileElement: HTMLElement | null): HTMLElement | void
 	`
 	const moreFriendsButton = friendList.querySelector('#moreFriends');
 	moreFriendsButton?.addEventListener('click', () => {
-		ExtendedView.makeExtendedView('friend', '');
+		ExtendedView.makeExtendedView('friend', '', profile.id);
 	});
 	const friendElement = createFriendElement();
 	friendList.appendChild(friendElement);
@@ -451,12 +423,6 @@ async function fetchProfileData(user: string): Promise<string> {
 		console.error("Error:", error);
 		return 'Erreur lors de la récupération des données du profil.';
 	}
-}
-
-
-function updateWatchIds()
-{
-	profileIds = watchFriendIds.concat(watchMatchIds);
 }
 
 export namespace ProfileBuilder {
@@ -526,12 +492,7 @@ export namespace ProfileBuilder {
 				updateFriendDiv();
 			});
 			watchMatchIds = getWathIdMatch();
-			watchFriendIds = getWathIdFriend();
-			console.log("Watching friend IDs:", watchFriendIds);
 			console.log("Watching match IDs:", watchMatchIds);
-			updateWatchIds();
-			console.log("Watching profile IDs:", profileIds);
-			socketUtils.socket.emit("watch-profile", { profileId: profileIds });
 		}
 		return 'Profil ouvert. Tapez "kill profile" pour le fermer.';
 	}
@@ -546,16 +507,14 @@ export namespace ProfileBuilder {
 		}
 		if (socketUtils && socketUtils.socket)
 		{
-			socketUtils.socket.emit("unwatch-profile", { profileId: profileIds });
+			socketUtils.socket.emit("unwatch-profile", { profileId: watchMatchIds });
 			socketUtils.socket.off("user-status-change");
 			socketUtils.socket.off("friend-status-update");
 			socketUtils.socket.off("profile-update");
 			socketUtils.socket.off("match-update");
 			socketUtils.socket.off("stat-update");
 		}
-		watchFriendIds = [];
 		watchMatchIds = [];
-		profileIds = [];
 	}
 	export let isActive = false;
 }
