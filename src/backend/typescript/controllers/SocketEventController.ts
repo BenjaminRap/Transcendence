@@ -50,6 +50,7 @@ export class SocketEventController {
         if (!userId) return;
 
         try {
+            console.log(`Emitting event "${event}" to user ${userId}`);
             if (SocketEventController.socketInstance) {
                 SocketEventController.socketInstance.io.to('user-' + Number(userId)).emit(event as any, data);
             }
@@ -77,7 +78,10 @@ export class SocketEventController {
     // ----------------------------------------------------------------------------- //
     static async sendToFriends(userId: number, event: string, data: any): Promise<void>
     {
-        if (!userId) return;
+        if (!userId) {
+            console.log("sendToFriends called with invalid userId:", userId);
+            return;
+        }
 
         try {
             if (SocketEventController.socketInstance)
@@ -85,6 +89,7 @@ export class SocketEventController {
                 await SocketEventController.socketInstance.friendService.getFriendsIds(userId)
                     .then((friendsIds: number[]) => {
                         friendsIds.forEach((friendId) => {
+                            console.log(`Emitting event "${event}" to friend ${friendId}`); 
                             SocketEventController.sendToUser(friendId, event, data);
                         });
                     }).catch((error) => {
@@ -205,7 +210,6 @@ export class SocketEventController {
         ack(success(null));
 
         const userId = Number(authResult.value);
-        this.setupSocketAuthMiddleware(socket, token, userId);
         this.updateUserConnectionStatus(socket, userId);
     }
 
@@ -235,32 +239,6 @@ export class SocketEventController {
         } catch (err) {
             return error("Invalid token");
         }
-    }
-
-    // ----------------------------------------------------------------------------- //
-    private setupSocketAuthMiddleware(socket: DefaultSocket, token: string, userId: number): void {
-        socket.use((packet, next) => {
-            if (!socket.data.getUserId()) {
-                return next();
-            }
-            
-            const [event] = packet;
-            try {
-                if (event === 'authenticate' || event === 'disconnect') {
-                    return next();
-                }
-                if (this.tokenManager.verify(token, false)) {
-                    return next();
-                } else {
-                    console.error(`Invalid token for event '${event}' from user ${userId}. Disconnecting socket.`);
-                    socket.disconnect();
-                    return next(new Error('Authentication error'));
-                }                
-            } catch (error) {
-                console.error(`Error while verifying token for event '${event}' from user ${userId}:`, error);
-            }
-
-        });
     }
 
     // ----------------------------------------------------------------------------- //
@@ -400,8 +378,8 @@ export class SocketEventController {
             socket.rooms.forEach((room) => {
                room !== `${socket.id}` ? socket.leave(room) : null;
             });
-            socket.data.disconnectOrLogout();
             const userId = socket.data.getUserId();
+            socket.data.disconnectOrLogout();
     
             if (!userId)
                 return ;
@@ -414,7 +392,9 @@ export class SocketEventController {
                 SocketEventController.connectedUsers.delete(userId);
                 SocketEventController.sendToProfileWatchers(userId, 'user-status-change', { userId: userId, status: 'offline' });
                 SocketEventController.sendToFriends(userId, 'user-status-change', { userId: userId, status: 'offline' });
-            }            
+            }
+            else
+                console.log(`User ${userId} logged out from one tab, still connected on others.`);
         } catch (error) {
             console.error("Error while logging out user:", error);
         }

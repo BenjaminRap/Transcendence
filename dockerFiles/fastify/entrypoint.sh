@@ -13,7 +13,7 @@ if [ "${PROFILE:-prod}" = "dev" ]; then
   exec npm run start-dev
 else
   echo "Applying migrations (prod)..."
-  npx prisma migrate deploy
+  npx prisma db push --accept-data-loss
 
   echo "Starting in PROD mode..."
   exec npm run start-prod

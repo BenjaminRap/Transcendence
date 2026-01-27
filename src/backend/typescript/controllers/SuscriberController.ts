@@ -2,7 +2,6 @@ import type { FastifyRequest, FastifyReply } from "fastify";
 import { SuscriberService } from "../services/SuscriberService.js";
 import { FileController } from "../controllers/FileController.js";
 import type { UpdatePassword } from "../types/suscriber.types.js";
-import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
 import { SuscriberSchema } from "../schemas/suscriber.schema.js";
 import { SocketEventController } from "./SocketEventController.js";
 import { sanitizeUser } from "../types/auth.types.js";
@@ -21,7 +20,9 @@ export class SuscriberController {
             const id = (request as any).user.userId;
 
             // returns user or throw exception USER NOT FOUND
-            const user =  await this.suscriberService.getProfile(Number(id))
+            const user =  await this.suscriberService.getProfile(Number(id));
+
+            console.log('SuscriberController - getProfile - user - friendList: ', user.friends);
 
             return reply.status(200).send({
                 success: true,
