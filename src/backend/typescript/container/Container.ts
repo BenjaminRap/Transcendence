@@ -117,7 +117,8 @@ export class Container {
         ));
 
         this.registerService('UsersController', () => new UsersController(
-            this.getService('UsersService')
+            this.getService('UsersService'),
+            this.getService('MatchService')
         ));
 
         this.registerService('SuscriberController', () => new SuscriberController(
