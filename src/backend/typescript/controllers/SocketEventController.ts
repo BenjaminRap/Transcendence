@@ -1,6 +1,6 @@
 import { MatchMaker } from "../pong/MatchMaker.js";
 import { type DefaultEventsMap, Server, Socket } from 'socket.io';
-import { parseClientMessageParameters, type ClientMessage, type ClientMessageParameters, type ClientToServerEvents, type ServerToClientEvents } from '@shared/MessageType';
+import { clientMessages, isClientMessage, parseClientMessageParameters, type ClientMessage, type ClientMessageParameters, type ClientToServerEvents, type ServerToClientEvents } from '@shared/MessageType';
 import { SocketData, type SocketState } from '../pong/SocketData';
 import { Container } from "../container/Container.js";
 import { TokenManager } from "../utils/TokenManager.js";
@@ -10,6 +10,7 @@ import { getPublicTournamentsDescriptions, TournamentMaker } from "../pong/Tourn
 import { zodTournamentCreationSettings, type Profile, type TournamentDescription, type TournamentId } from "@shared/ServerMessage.js";
 import { error, success, type Result } from "@shared/utils.js";
 import type { FriendProfile } from "../types/friend.types.js";
+import type { Event } from "socket.io";
 
 export type DefaultSocket = Socket<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>;
 
@@ -52,26 +53,6 @@ export class SocketEventController {
         } catch (error) {
             console.warn(`\nFailed to emit event "${event}" to user ${userId} :`, error);
         }			
-	}
-
-	static onEvent<T extends ClientMessage>(socket : DefaultSocket, event : T, callback: (...args : ClientMessageParameters<T>) => void)
-	{
-		socket.on(event as any, (...args : any[]) => {
-			const	result = parseClientMessageParameters(event, args);
-
-			if (result.success)
-				callback(...result.data);
-		});
-	}
-
-	static onceEvent<T extends ClientMessage>(socket : DefaultSocket, event : T, callback: (...args : ClientMessageParameters<T>) => void)
-	{
-		socket.once(event as any, (...args : any[]) => {
-			const	result = parseClientMessageParameters(event, args);
-
-			if (result.success)
-				callback(...result.data);
-		});
 	}
 
     // send message to all users watching a specific profile
@@ -234,9 +215,25 @@ export class SocketEventController {
 		});
 	}
 
+	private static middleware(event : Event, next: (err?: Error) => void)
+	{
+		const	[eventName, ...args] = event;
+
+
+		if (isClientMessage(eventName))
+		{
+			const	parsed = parseClientMessageParameters(eventName, args);
+
+			if (!parsed.success)
+				next(new Error(parsed.error.message));
+		}
+		next();
+	}
+
 	// ----------------------------------------------------------------------------- //
 	private async handleConnection(socket: DefaultSocket)
 	{
+		socket.use(SocketEventController.middleware)
 		this.sockets.add(socket);
 
 		socket.data = new SocketData(socket);

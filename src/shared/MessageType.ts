@@ -38,6 +38,11 @@ export const clientMessages = ["join-matchmaking",
                             "authenticate",
 							"set-alias"] as const;
 
+export function	isClientMessage(eventName : string) : eventName is ClientMessage
+{
+	return clientMessages.find(value => value === eventName) !== undefined;
+}
+
 export type ClientMessage = typeof clientMessages[number];
 
 export const zodClientMessageData  = {
@@ -188,5 +193,5 @@ export function	parseClientMessageParameters<T extends ClientMessage>(event : T,
 	const	zodChecker = zodClientMessageParameters[event];
 	const	result = zodChecker.safeParse(args);
 
-	return result as zod.ZodSafeParseResult<ClientMessageParameters<T>>;
+	return result;
 }
