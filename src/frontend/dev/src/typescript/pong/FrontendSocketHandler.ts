@@ -8,13 +8,12 @@ import { CancellablePromise } from "./CancellablePromise";
 import type { ServerMessage, ServerMessageData, ServerToClientEvents } from "@shared/ServerMessageHelpers";
 import type { ClientMessage, ClientMessageAcknowledgement, ClientMessageData, ClientToServerEvents } from "@shared/ClientMessageHelpers";
 
-export type EventWithNoResponse = "forfeit" | "input-infos" | "leave-matchmaking" | "ready" | "leave-tournament" | "cancel-tournament" | "ban-participant" | "kick-participant";
 type DefaultSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 type ResultType<T extends ClientMessage>
 	= ClientMessageAcknowledgement<T> extends (result: Result<infer R>) => void 
 		? R 
-		: never
+		: never;
 
 export class	FrontendSocketHandler
 {
@@ -106,7 +105,7 @@ export class	FrontendSocketHandler
 		return this._onGameJoinObservable;
 	}
 
-	public sendEventWithNoResponse<T extends EventWithNoResponse>(event : T, ...args: Parameters<ClientToServerEvents[T]>)
+	public sendEventWithNoResponse<T extends ClientMessage>(event : ClientMessageAcknowledgement<T> extends undefined ? T : never, ...args: Parameters<ClientToServerEvents[T]>)
 	{
 		this._socket.emit(event, ...args);
 	}
