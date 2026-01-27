@@ -73,13 +73,13 @@ export class AuthService {
     async loginWith42(code: string): Promise<{ user: SanitizedUser; tokens: TokenPair; msg: string }> {
         const tokenResponse = await fetch('https://api.intra.42.fr/oauth/token', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
                 grant_type: 'authorization_code',
-                client_id: process.env.FORTY_TWO_UID,
-                client_secret: process.env.FORTY_TWO_SECRET,
+                client_id: process.env.FORTY_TWO_UID || "",
+                client_secret: process.env.FORTY_TWO_SECRET || "",
                 code,
-                redirect_uri: process.env.FORTY_TWO_CALLBACK_URL,
+                redirect_uri: process.env.FORTY_TWO_CALLBACK_URL || "",
             }),
         });
 
@@ -116,8 +116,9 @@ export class AuthService {
             });
 			msg = 'New user created and logged in with 42';
         }
-		if (msg === '')
+		if (msg === '') {
 			msg = 'User logged in with 42';
+        }
 
         const tokens = await this.tokenManager.generatePair(String(user.id), user.email);
 

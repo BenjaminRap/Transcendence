@@ -15,6 +15,10 @@ export async function suscriberRoute(
     fastify.get('/profile', {
         preHandler: middleware.auth.authenticate,
     }, controller.getProfile.bind(controller));
+
+    fastify.get('/profile/allmatches', {
+        preHandler: middleware.auth.authenticate,
+    }, controller.getAllMatches.bind(controller));
     
     fastify.put<{ Body: { username: string } }>('/update/username', {
         preHandler: middleware.auth.authenticate,

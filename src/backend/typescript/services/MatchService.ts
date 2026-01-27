@@ -28,6 +28,7 @@ export class MatchService {
 
     // =================================== PUBLIC ==================================== //
 
+	// ----------------------------------------------------------------------------- //
     async getFirstMAtch(match: Match): Promise<MatchWithRelations[]>{
         return await this.prisma.match.findMany({ 
             where: {
@@ -52,6 +53,7 @@ export class MatchService {
             take: 1,
         }) as MatchWithRelations[];
     }
+
 	// ----------------------------------------------------------------------------- //
     async registerMatch(match: MatchData): Promise<Match | undefined> {
         const data = {
@@ -100,6 +102,36 @@ export class MatchService {
         });
 
         return newmatch ? newmatch.id : null;
+    }
+
+    // ----------------------------------------------------------------------------- //
+    async getAllMatches(userId: number): Promise<MatchSummary[]> {
+            const matchs = await this.prisma.match.findMany({ 
+            where: {
+                OR: [
+                    { playerLeftId: Number(userId) },
+                    { playerRightId: Number(userId) },
+                ],
+            },
+            select: {
+                winnerIndicator: true,
+                scoreLeft: true,
+                scoreRight: true,
+                duration: true,
+                playerRight: true,
+                playerLeft: true,
+                playerRightGuestName: true,
+                playerLeftGuestName: true,
+                id: true,
+                createdAt: true,
+                tournamentId: true,
+            },
+            orderBy: {
+                createdAt: 'desc'
+            },
+        });
+
+        return await this.formatMatchSummary(matchs as MatchWithRelations[], userId);
     }
 
     // ----------------------------------------------------------------------------- //

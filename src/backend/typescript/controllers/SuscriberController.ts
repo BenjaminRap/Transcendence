@@ -40,6 +40,30 @@ export class SuscriberController {
     }
 
     // ----------------------------------------------------------------------------- //
+    // GET /suscriber/profile/allmatches
+    async getAllMatches(request: FastifyRequest, reply: FastifyReply) {
+        try {
+            const id = (request as any).user.userId;
+
+            // returns user or throw exception USER NOT FOUND
+            const matches =  await this.suscriberService.getAllMatches(Number(id));
+
+            return reply.status(200).send({
+                success: true,
+                message: 'Matches successfully retrieved',
+                matches
+            });            
+        } catch (error) {
+            const err = ErrorWrapper.analyse(error);
+            console.log(err.message);
+            return reply.status(err.code).send({
+                success: false,
+                message: err.message,
+            });
+        }
+    }
+
+    // ----------------------------------------------------------------------------- //
     // PUT /suscriber/update/password
     async updatePassword(request: FastifyRequest<{ Body: UpdatePassword }>, reply: FastifyReply) {
         try {

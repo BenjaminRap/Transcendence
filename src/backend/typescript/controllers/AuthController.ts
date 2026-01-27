@@ -104,15 +104,13 @@ export class AuthController {
 	async callback42(request: FastifyRequest<{ Querystring: VerifData }>, reply: FastifyReply) {
 		try {
             const { code } = request.query;
-            const validation =  AuthSchema.code.safeParse(code);
 
-            if (!code || ! validation.success ) {
+            if (!code || code.length === 0) {
                 return reply.status(400).send({
                     success: false,
-                    message: validation.error?.issues?.[0]?.message || 'Authorization code missing',
+                    message: 'Authorization code missing',
                 });
             }
-
 			const result = await this.authService.loginWith42(code);
 
 			return reply.status(200).send({

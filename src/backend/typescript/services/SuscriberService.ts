@@ -10,6 +10,7 @@ import type { MatchService } from "./MatchService.js";
 import type { GameStats, SanitizedUser } from "@shared/ServerMessage.js";
 import type { FriendService } from "./FriendService.js";
 import type { ListFormat } from "../types/friend.types.js";
+import type { MatchSummary } from "../types/match.types.js";
 
 export class SuscriberService {
     constructor(
@@ -63,6 +64,15 @@ export class SuscriberService {
             lastMatchs: lastsMatchs,
             friends: sortedFriends,
         };
+    }
+
+    // ----------------------------------------------------------------------------- //
+    async getAllMatches(id: number): Promise<MatchSummary[]> {
+
+        const matches = await this.matchService.getAllMatches(id);
+
+        console.log('SuscriberService - getAllMatches - matches: ', matches);
+        return matches;
     }
     
 	// ----------------------------------------------------------------------------- //
