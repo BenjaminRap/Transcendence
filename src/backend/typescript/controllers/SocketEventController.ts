@@ -69,7 +69,8 @@ export class SocketEventController {
 
         try {
             if (SocketEventController.socketInstance) {
-                SocketEventController.socketInstance.io.to('watching-' + userId).emit(event as any, data);
+                console.log(`Emitting event "${event}" to watchers of profile ${userId} with data: `, data);
+                SocketEventController.socketInstance.io.to('watching-' + Number(userId)).emit(event as any, data);
             }
         } catch (error) {
             console.warn(`\nFailed to emit event "${event}" to watchers of profile ${userId} :`, error);
@@ -328,7 +329,7 @@ export class SocketEventController {
             const ids = Array.isArray(profileId) ? profileId : [profileId];
             console.log("Adding to watch profiles:", ids);
             for (const id of ids) {
-                socket.join('watching-' + id);
+                socket.join('watching-' + Number(id));
             }            
         } catch (error) {
             console.error("Error while adding profile to watch:", error);
@@ -342,7 +343,7 @@ export class SocketEventController {
             const ids = Array.isArray(profileId) ? profileId : [profileId];
             console.log("Removing from watch profiles:", ids);
             for (const id of ids) {
-                socket.leave('watching-' + id);
+                socket.leave('watching-' + Number(id));
             }            
         } catch (error) {
             console.error("Error while removing profile to watch:", error);

@@ -244,7 +244,7 @@ export class FriendService {
     private async formatList(list: any[], userId: number): Promise<ListFormat[]> {
         return await Promise.all(
             list.map(async (friendship) => {
-                console.log("Formatting friendship:", friendship);
+                // console.log("Formatting friendship:", friendship);
                 const friend = friendship.requesterId === userId
                     ? friendship.receiver
                     : friendship.requester;
