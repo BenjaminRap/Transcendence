@@ -295,8 +295,10 @@ export namespace ExtProfileBuilder {
 			});
 
 			socketUtils.socket.on("match-update", (data: MatchSummary) => {
-				console.log("SANEJNKJWF", data);
-				if (ExtendedView.isExtendedViewIsActive && ExtendedView.type === 'match' && ExtendedView.profileId === profile.id)
+				console.log("Extended View", ExtendedView.isExtendedViewIsActive, ExtendedView.type, ExtendedView.profileId);
+				if (data.opponent != null && parseInt(data.opponent.id) === profile.id)
+					return ;
+				if (ExtendedView.isExtendedViewIsActive && ExtendedView.type === 'match')
 				{
 					console.log("Adding match to extended view:", data);
 					ExtendedView.addMatch(data);
