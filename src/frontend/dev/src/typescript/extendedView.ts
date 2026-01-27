@@ -50,8 +50,10 @@ let profileId = 0;
 function createListMatches() : HTMLDivElement
 {
 	const matchElement = document.createElement('div');
-	matchElement.className = "border py-4 border-green-500 flex flex-col gap-y-4 h-full";
-	matchElement.id = "match-list";
+	matchElement.id = "matchList";
+	matchElement.className = "flex flex-col gap-y-4 px-2 h-full overflow-y-auto";
+	const lign = document.createElement('hr');
+	lign.className = "border-green-500";
 	for (let i = 0; i < Math.min(MatchDisplay.length, 4); i++) {
 		const match = MatchDisplay[i];
 		const matchDiv = document.createElement('div');
@@ -91,6 +93,8 @@ function createListMatches() : HTMLDivElement
 				</div>
 			`
 		matchElement.appendChild(matchDiv);
+		if (i < MatchDisplay.length - 1)
+			matchElement.appendChild(lign.cloneNode());
 	}
 	if (MatchDisplay.length === 0) {
 		const noMatchMessage = document.createElement('div');
@@ -105,7 +109,7 @@ function createListMatches() : HTMLDivElement
 
 function createFriendList() : HTMLDivElement
 {
-	const friendElement = document.createElement('div');
+		const friendElement = document.createElement('div');
 	friendElement.id = "friendList";
 	const lign = document.createElement('hr');
 	lign.className = "border-green-500";
@@ -160,6 +164,8 @@ function createFriendList() : HTMLDivElement
 			friendDiv.appendChild(pendingTag);
 		}
 		friendElement.appendChild(friendDiv);
+		if (i < FriendDisplay.length - 1)
+			friendElement.appendChild(lign.cloneNode());
 	}
 	return friendElement;
 }
@@ -195,6 +201,36 @@ async function fetchFriendData() : Promise<void>
 }
 
 
+async function fetchMatchData() {
+	try {
+		const token = TerminalUtils.getCookie('accessToken') || '';
+		if (token === '') {
+			console.error("No access token found.");
+			return;
+		}
+		const response = await fetch('/api/suscriber/profile/allmatches', {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': 'Bearer ' + token
+			},
+		});
+		const data = await response.json();
+		if (data.success)
+		{
+			matches = data.matches as MatchSummary[];
+			MatchDisplay = [...matches];
+			console.log("Match data fetched successfully:", MatchDisplay);
+		}
+		else
+			console.error("Failed to fetch match data:", data.message);
+	}
+	catch (error) {
+		console.error("Error fetching match data:", error);
+	}
+}
+
+
 export namespace ExtendedView { 
 	export var isExtendedViewIsActive = false;
 
@@ -202,9 +238,11 @@ export namespace ExtendedView {
 		if (isExtendedViewIsActive || PongUtils.isPongLaunched)
 			return;
 		ExtendedView.type = dataType;
-		// Fetch
 		if (dataType === 'friend') {
 			await fetchFriendData();
+		}
+		else if (dataType === 'match') {
+			await fetchMatchData();
 		}
 		const view = document.createElement('div');
 		view.className = "terminal-font fixed top-[50%] left-[50%] border p-4 border-green-500 bg-black z-2 flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 w-[20%] max-h-[50vh] overflow-y-auto focus:outline-none";
@@ -238,7 +276,7 @@ export namespace ExtendedView {
 		searchBarFunctionality(searchBar);
 		container.appendChild(searchBar);
 
-				view.appendChild(container);
+		view.appendChild(container);
 
 		if (dataType === 'friend') {
 			const friendList = createFriendList();
