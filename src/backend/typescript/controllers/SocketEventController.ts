@@ -1,6 +1,6 @@
 import { MatchMaker } from "../pong/MatchMaker.js";
 import { type DefaultEventsMap, Server, Socket } from 'socket.io';
-import type { ClientToServerEvents, ServerToClientEvents } from '@shared/MessageType';
+import { parseClientMessageParameters, type ClientMessage, type ClientMessageParameters, type ClientToServerEvents, type ServerToClientEvents } from '@shared/MessageType';
 import { SocketData, type SocketState } from '../pong/SocketData';
 import { Container } from "../container/Container.js";
 import { TokenManager } from "../utils/TokenManager.js";
@@ -52,6 +52,26 @@ export class SocketEventController {
         } catch (error) {
             console.warn(`\nFailed to emit event "${event}" to user ${userId} :`, error);
         }			
+	}
+
+	static onEvent<T extends ClientMessage>(socket : DefaultSocket, event : T, callback: (...args : ClientMessageParameters<T>) => void)
+	{
+		socket.on(event as any, (...args : any[]) => {
+			const	result = parseClientMessageParameters(event, args);
+
+			if (result.success)
+				callback(...result.data);
+		});
+	}
+
+	static onceEvent<T extends ClientMessage>(socket : DefaultSocket, event : T, callback: (...args : ClientMessageParameters<T>) => void)
+	{
+		socket.once(event as any, (...args : any[]) => {
+			const	result = parseClientMessageParameters(event, args);
+
+			if (result.success)
+				callback(...result.data);
+		});
 	}
 
     // send message to all users watching a specific profile

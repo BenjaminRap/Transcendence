@@ -15,6 +15,9 @@ type ResultType<T extends ClientMessage>
 		? R 
 		: never
 
+type AckResult<T extends ClientMessage> =
+  ClientMessageAcknowledgement<T> extends (result: Result<infer R>) => void ? R : never;
+
 export class	FrontendSocketHandler
 {
 	private static readonly _apiUrl = "/api/socket.io/";
@@ -141,29 +144,30 @@ export class	FrontendSocketHandler
 		this._socket.emit(event, ...args);
 	}
 
+
 	public sendEventWithAck<T extends ClientMessage>(
-		event: T,
-		...args: ClientMessageData<T>
-	): CancellablePromise<ResultType<T>> {
-		let ack: ((result :  Result<ResultType<T>>) => void) | null = null;
-		
-		const promise = new CancellablePromise((resolve, reject) => {
-			ack = ((result: Result<ResultType<T>>) => {
-				if (result.success) {
-					resolve(result.value);
-				} else {
-					reject(new PongError(result.error, "show"));
-				}
-			});
-			
-			const params = [...args, ((result : Result<ResultType<T>>) => ack?.(result))] as Parameters<ClientToServerEvents[T]>;
-			
-			this._socket.emit(event, ...params);
-		}, () => {
-			ack = null;
-		});
-		
-		return promise as any;
+	  event: T,
+	  ...args: ClientMessageData<T>
+	): CancellablePromise<any> {
+
+	  let ack: ((result: Result<any>) => void) | null = null;
+
+	  const promise = new CancellablePromise((resolve, reject) => {
+		ack = (result: Result<any>) => {
+			if (result.success)
+				resolve(result.value);
+			else
+				reject(new PongError(result.error, "show"));
+		};
+
+		const params = [...args, ((result: Result<any>) => ack?.(result))];
+
+		this._socket.emit(event, ...params as Parameters<ClientToServerEvents[T]>);
+	  }, () => {
+		ack = null;
+	  });
+
+	  return promise;
 	}
 
 	public onDisconnect()

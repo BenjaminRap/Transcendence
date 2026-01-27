@@ -186,9 +186,3 @@ export function	resultOf<T extends zod.ZodType>(valueType: T)
 		})
 	]);
 }
-
-export function funcOf<T extends zod.ZodType>(onlyArgument : T)
-
-{
-	return zod.function({input: [onlyArgument], output: zod.void()});
-}
