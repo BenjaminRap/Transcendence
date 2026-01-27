@@ -93,20 +93,25 @@ function updateMatchDiv()
 	const newMatchListElement = createMatchElement();
 	if (!newMatchListElement)
 		return;
-	if (watchMatchIds.length > 4)
+	if (watchMatchIds.length > 3)
 	{
+		socketUtils.socket?.emit("unwatch-profile", { profileId: [watchMatchIds[3]] });
 		watchMatchIds.pop();
+
 		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
+		socketUtils.socket?.emit("watch-profile", { profileId: [watchMatchIds[0]] });
 	}
 	else
+	{
 		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
+		socketUtils.socket?.emit("watch-profile", { profileId: [watchMatchIds[0]] });
+	}
 	console.log("Updated watching match IDs:", watchMatchIds);
 	const oldMatchListElement = document.getElementById('match-list');
 	if (oldMatchListElement && oldMatchListElement.parentElement) {
 		oldMatchListElement.parentElement.replaceChild(newMatchListElement, oldMatchListElement);
 	} else if (oldMatchListElement) {
-		oldMatchListElement.remove();			// Send unwatch for oldId
-
+		oldMatchListElement.remove();
 		profileDiv.appendChild(newMatchListElement);
 	} else {
 		profileDiv.appendChild(newMatchListElement);

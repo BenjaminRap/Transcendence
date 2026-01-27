@@ -175,18 +175,23 @@ function updateMatchDiv()
 		return;
 	if (watchMatchIds.length > 3)
 	{
+		socketUtils.socket?.emit("unwatch-profile", { profileId: [watchMatchIds[3]] });
 		watchMatchIds.pop();
+
 		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
+		socketUtils.socket?.emit("watch-profile", { profileId: [watchMatchIds[0]] });
 	}
 	else
+	{
 		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
+		socketUtils.socket?.emit("watch-profile", { profileId: [watchMatchIds[0]] });
+	}
 	console.log("Updated watching match IDs:", watchMatchIds);
 	const oldMatchListElement = document.getElementById('match-list');
 	if (oldMatchListElement && oldMatchListElement.parentElement) {
 		oldMatchListElement.parentElement.replaceChild(newMatchListElement, oldMatchListElement);
 	} else if (oldMatchListElement) {
 		oldMatchListElement.remove();			// Send unwatch for oldId
-
 		profileDiv.appendChild(newMatchListElement);
 	} else {
 		profileDiv.appendChild(newMatchListElement);
@@ -467,26 +472,26 @@ export namespace ProfileBuilder {
 				ProfileUpdater.updateProfileCard(profile);
 			});
 
-            socketUtils.socket.on("friend-status-update", (data: {
-                requester?: {id: number, username: string, avatar: string, isOnline: boolean, requesterId: number}, 
-                friendProfile?: {id: number, username: string, avatar: string, isOnline: boolean, requesterId: number}, 
-                status: string
-            }) => {
-                console.log("Friend status updated DATA:", data);
-                
-                // Récupère les données utilisateur, qu'elles soient dans 'requester' ou 'friendProfile'
-                const userData = data.requester || data.friendProfile;
+			socketUtils.socket.on("friend-status-update", (data: {
+				requester?: {id: number, username: string, avatar: string, isOnline: boolean, requesterId: number}, 
+				friendProfile?: {id: number, username: string, avatar: string, isOnline: boolean, requesterId: number}, 
+				status: string
+			}) => {
+				console.log("Friend status updated DATA:", data);
+				
+				// Récupère les données utilisateur, qu'elles soient dans 'requester' ou 'friendProfile'
+				const userData = data.requester || data.friendProfile;
 
-                if (!userData) return;
+				if (!userData) return;
 
-                let friendToAdd: Friend = {
-                    id: userData.id,
-                    username: userData.username,
-                    avatar: userData.avatar,
-                    isOnline: userData.isOnline,
-                    status: data.status,
-                    requesterId: userData.requesterId,
-                };
+				let friendToAdd: Friend = {
+					id: userData.id,
+					username: userData.username,
+					avatar: userData.avatar,
+					isOnline: userData.isOnline,
+					status: data.status,
+					requesterId: userData.requesterId,
+				};
 				profile.friends.push(friendToAdd);
 				sortFriendList();
 				updateFriendDiv();
