@@ -1,6 +1,5 @@
 import { MatchMaker } from "../pong/MatchMaker.js";
 import { type DefaultEventsMap, Server, Socket } from 'socket.io';
-import { isClientMessage, parseClientMessageParameters, type ClientToServerEvents, type ServerToClientEvents } from '@shared/MessageType';
 import { SocketData, type SocketState } from '../pong/SocketData';
 import { Container } from "../container/Container.js";
 import { TokenManager } from "../utils/TokenManager.js";
@@ -11,6 +10,8 @@ import { zodTournamentCreationSettings, type Profile, type TournamentDescription
 import { error, success, type Result } from "@shared/utils.js";
 import type { FriendProfile } from "../types/friend.types.js";
 import type { Event } from "socket.io";
+import { isClientMessage, parseClientMessageParameters, type ClientToServerEvents } from "@shared/ClientMessageHelpers.js";
+import type { ServerToClientEvents } from "@shared/ServerMessageHelpers.js";
 
 export type DefaultSocket = Socket<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>;
 

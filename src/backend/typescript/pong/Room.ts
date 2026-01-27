@@ -3,12 +3,12 @@ import { ServerPongGame } from "./ServerPongGame";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
 import { type GameInit, type GameStartInfos, type KeysUpdate, type Profile, zodKeysUpdate } from "@shared/ZodMessageType"
 import { ClientProxy } from "./ClientProxy";
-import { type int, Observable, Vector3 } from "@babylonjs/core";
-import type { ServerMessage, ServerToClientEvents } from "@shared/MessageType";
+import { type int, Observable } from "@babylonjs/core";
 import type { ServerType } from "../index";
 import type { EndData } from "@shared/attachedScripts/GameManager";
 import type { DefaultSocket } from "../controllers/SocketEventController";
 import { getEndDataOnInvalidMatch } from "@shared/utils";
+import type { ServerMessage, ServerToClientEvents } from "@shared/ServerMessageHelpers";
 
 export type SocketMessage = {
 	socketIndex : int,

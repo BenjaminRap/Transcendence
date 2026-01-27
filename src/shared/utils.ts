@@ -60,3 +60,10 @@ export function	getEndDataOnInvalidMatch(isLeftValid : boolean, isRightValid: bo
 	
 	return endData;
 }
+
+export function isKey<T extends object, K extends PropertyKey>(
+    key: K,
+    object: T
+): key is K & keyof T {
+    return key in object;
+}

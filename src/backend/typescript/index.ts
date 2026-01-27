@@ -11,10 +11,11 @@ import { Server, type DefaultEventsMap } from 'socket.io';
 import fs from 'fs';
 import path from 'path';
 import HavokPhysics from "@babylonjs/havok";
-import type { ClientToServerEvents, ServerToClientEvents } from '@shared/MessageType';
 import { SocketEventController } from './controllers/SocketEventController.js';
 import type { SocketData } from './pong/SocketData.js';
 import { Container } from './container/Container.js';
+import type { ClientToServerEvents } from '@shared/ClientMessageHelpers.js';
+import type { ServerToClientEvents } from '@shared/ServerMessageHelpers.js';
 
 const fastify = Fastify({
 	logger: true

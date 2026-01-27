@@ -1,7 +1,7 @@
 import { Observable } from "@babylonjs/core/Misc/observable";
 import { type SocketMessage, Room } from "./Room";
 import type { int } from "@babylonjs/core/types";
-import type { ServerToClientEvents } from "@shared/MessageType";
+import type { ServerToClientEvents } from "@shared/ServerMessageHelpers";
 
 export class	ClientProxy
 {

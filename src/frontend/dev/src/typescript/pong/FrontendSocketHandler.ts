@@ -1,11 +1,12 @@
 import { Observable } from "@babylonjs/core";
-import type { ClientMessage, ClientMessageAcknowledgement, ClientMessageData, ClientMessageParameters, ClientToServerEvents, ServerToClientEvents } from "@shared/MessageType";
 import { PongError } from "@shared/pongError/PongError";
 import { type GameInfos, type GameInit, type GameStartInfos, zodGameInit } from "@shared/ZodMessageType";
 import type { Result } from "@shared/utils";
 import { io, Socket } from "socket.io-client";
 import type { TournamentEventAndJoinedGame } from "./FrontendEventsManager";
 import { CancellablePromise } from "./CancellablePromise";
+import type { ServerToClientEvents } from "@shared/ServerMessageHelpers";
+import type { ClientMessage, ClientMessageAcknowledgement, ClientMessageData, ClientToServerEvents } from "@shared/ClientMessageHelpers";
 
 export type EventWithNoResponse = "forfeit" | "input-infos" | "leave-matchmaking" | "ready" | "leave-tournament" | "cancel-tournament" | "ban-participant" | "kick-participant";
 type DefaultSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
@@ -148,11 +149,11 @@ export class	FrontendSocketHandler
 	public sendEventWithAck<T extends ClientMessage>(
 	  event: T,
 	  ...args: ClientMessageData<T>
-	): CancellablePromise<any> {
+	): CancellablePromise<ResultType<T>> {
 
 	  let ack: ((result: Result<any>) => void) | null = null;
 
-	  const promise = new CancellablePromise((resolve, reject) => {
+	  const promise = new CancellablePromise<ResultType<T>>((resolve, reject) => {
 		ack = (result: Result<any>) => {
 			if (result.success)
 				resolve(result.value);

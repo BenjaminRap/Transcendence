@@ -1,7 +1,6 @@
 import * as zod from "zod";
 import { TournamentHelper } from "./TournamentHelper";
 import { CommonSchema } from "./common.schema";
-import { openpbrThinFilmLayerDataWGSL } from "@babylonjs/core/ShadersWGSL/ShadersInclude/openpbrThinFilmLayerData";
 
 export const zodVector3 = zod.object({
 	x: zod.number(),
@@ -172,17 +171,3 @@ export const zodGameStartInfos = zod.object({
 	ballStartDirection: zodVector3
 });
 export type GameStartInfos = zod.infer<typeof zodGameStartInfos>;
-
-export function	resultOf<T extends zod.ZodType>(valueType: T)
-{
-	return zod.discriminatedUnion("success", [
-		zod.object({
-			success: zod.literal(true),
-			value: valueType
-		}),
-		zod.object({
-			success: zod.literal(false),
-			error: zod.string()
-		})
-	]);
-}
