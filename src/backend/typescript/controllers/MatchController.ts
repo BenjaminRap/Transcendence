@@ -19,18 +19,37 @@ export class MatchController {
             if (!match)
                 return { success: false, messageError: "An error occurred when fetching the database" };
 
-            const matchs = await this.matchService.getFirstMAtch(match);
-            let resultLeft = await this.matchService.formatMatchSummaryLeft(matchs as MatchWithRelations[]);
-            let resultRight = await this.matchService.formatMatchSummaryRight(matchs as MatchWithRelations[]);
+            let resLeft;
+            let resRight;
 
+            if (match.playerLeftId) {
+                resLeft = await this.matchService.getLastMatches(match.playerLeftId, 1);
+                console.log(`left id: ${match.playerLeftId} resLeft:`, resLeft);
+                if (resLeft.length > 0) {
+                    SocketEventController.sendToUser(match.playerLeftId, 'match-update', resLeft[0]);
+                    SocketEventController.sendToProfileWatchers(match.playerLeftId, 'match-update', resLeft[0]);
 
-            let leftId = match.playerLeftId ? match.playerLeftId : 0;
-            let rightId = match.playerRightId ? match.playerRightId : 0;
-            console.log("=======", resultLeft[0], "=========");
-            SocketEventController.sendToUser(leftId, 'match-update', resultLeft[0]);
-            SocketEventController.sendToUser(rightId, 'match-update', resultRight[0]);
-            SocketEventController.sendToUser(leftId, 'stat-update',  await this.matchService.getStat(leftId));
-            SocketEventController.sendToUser(rightId, 'stat-update', await this.matchService.getStat(rightId));
+                    SocketEventController.sendToUser(match.playerLeftId, 'stat-update',  await this.matchService.getStat(match.playerLeftId));
+                    SocketEventController.sendToProfileWatchers(match.playerLeftId, 'stat-update',  await this.matchService.getStat(match.playerLeftId));
+                }
+                else
+                    console.log(`No recent matches found for playerLeftId: ${match.playerLeftId}`);
+            }
+
+            if (match.playerRightId) {
+                resRight = await this.matchService.getLastMatches(match.playerRightId, 1);
+                console.log("resRight:", resRight);
+                if (resRight.length > 0) {
+                    SocketEventController.sendToUser(match.playerRightId, 'match-update', resRight[0]);
+                    SocketEventController.sendToProfileWatchers(match.playerRightId, 'match-update', resRight[0]);
+
+                    SocketEventController.sendToUser(match.playerRightId, 'stat-update', await this.matchService.getStat(match.playerRightId));
+                    SocketEventController.sendToProfileWatchers(match.playerRightId, 'stat-update', await this.matchService.getStat(match.playerRightId));
+                }
+                else
+                    console.log(`No recent matches found for playerRightId: ${match.playerRightId}`);
+            }
+
             return { success: true, matchId: match.id }
         }
         catch (error) {
