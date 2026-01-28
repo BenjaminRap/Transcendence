@@ -110,12 +110,15 @@ export namespace ProfileUpdater {
 	export function updateProfileCard(profile: SuscriberProfile) {
 	if (!profileDiv)
 		return;
+	let ratio = (profile.gameStats.wins / (profile.gameStats.losses + profile.gameStats.wins)).toFixed(2);
+	if (ratio === 'NaN')
+		ratio = '0.00';
 	profileDiv.innerHTML = `<img src="${profile.avatar}" alt="Avatar" class="w-[12vh] h-[12vh] border border-green-500 object-cover"></img>
 							<h1 class="text-center text-[1.5vh]">${profile.username}</h1>
 							<div class="flex gap-[1vw] text-[0.9vh]">
 								<p>Win: ${profile.gameStats.wins}</p>
 								<p>Loss: ${profile.gameStats.losses}</p>
-								<p>W/L: ${(profile.gameStats.wins / (profile.gameStats.losses + profile.gameStats.wins)).toFixed(2)}</p>
+								<p>W/L: ${ratio}</p>
 							</div>`;
 	}
 
@@ -400,6 +403,12 @@ function createFriendElement() : HTMLElement
 		}
 		friendElement.appendChild(friendDiv);
 	}
+	if (profile.friends.length === 0) {
+		const noMatchMessage = document.createElement('div');
+		noMatchMessage.className = "text-center text-gray-500";
+		noMatchMessage.innerText = "Aucun ami trouvé.";
+		friendElement.appendChild(noMatchMessage);
+	}
 	return friendElement;
 }
 
@@ -429,6 +438,7 @@ async function fetchProfileData(user: string): Promise<string> {
 	if (token === '') {
 		return `Vous n'êtes pas connecté.`;
 	}
+	let data;
 	try {
 		const response = await fetch('/api/suscriber/profile', {
 			method: 'GET',
@@ -437,12 +447,10 @@ async function fetchProfileData(user: string): Promise<string> {
 				'Authorization': 'Bearer ' + token
 			},
 		});
-		const data = await response.json();
+		data = await response.json();
 		if (data.success) {
 			console.log("Data fetched successfully:", data.user);
 			profile = data.user;
-			// console.log(profile);
-			// console.log(profile.lastMatchs)
 			return "OK";
 		}
 		if (data.message === 'Invalid or expired token') {
@@ -452,10 +460,8 @@ async function fetchProfileData(user: string): Promise<string> {
 			}
 			return "OK";
 		}
-		console.error("Error fetching profile data:", data.message);
-		return 'Erreur lors de la récupération des données du profil.';
+		return data.message;
 	} catch (error) {
-		console.error("Error:", error);
 		return 'Erreur lors de la récupération des données du profil.';
 	}
 }
@@ -660,7 +666,7 @@ async function requetChangeName(newName: string): Promise<boolean> {
 		});
 		const data = await response.json();
 		if (data.success) {
-			console.log("Name changed successfully");
+			WriteOnTerminal.printErrorOnTerminal("Le nom a été changé avec succès.");
 			TerminalUserManagement.username = newName;
 			TerminalUtils.updatePromptText( TerminalUserManagement.username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ " );
 			return true ;
@@ -729,6 +735,7 @@ async function requestChangePassword(currentPassword: string, newPassword: strin
 			}
 			return await requestChangePassword(currentPassword, newPassword, confirmNewPassword);
 		}
+		WriteOnTerminal.printErrorOnTerminal(data.message || "Error changing password.");
 		return false;
 	} catch (error) {
 		console.error("Error:", error);
@@ -765,7 +772,7 @@ async function requestChangeAvatar(formData: FormData): Promise<boolean> {
 		});
 		const data = await response.json();
 		if (data.success) {
-			console.log("Avatar changed successfully");
+			WriteOnTerminal.printErrorOnTerminal("Avatar changé avec succès.");
 			return true;
 		}
 		if (data.message === 'Invalid or expired token') {
@@ -776,6 +783,7 @@ async function requestChangeAvatar(formData: FormData): Promise<boolean> {
 			}
 			return await requestChangeAvatar(formData);
 		}
+		WriteOnTerminal.printErrorOnTerminal(data.message || "Error changing avatar.");
 		return false;
 	} catch (error) {
 		console.error("Error:", error);

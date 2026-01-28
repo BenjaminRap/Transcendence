@@ -6,7 +6,7 @@ Comment exécuter une commande :
 - Le terminal enverra une réponse; chaque réponse commence par le caractère ">".
 
 Statut actuel :
-- Vous êtes actuellement pas connecté.
+- Vous n'êtes actuellement pas connecté.
 
 Créer un compte (register) :
 - Tapez: register
@@ -40,8 +40,12 @@ Vous pouvez profiter de votre compte sur pong ainsi qu'acceder aux fonctionnalit
 - profile : afficher votre profil (ex: profile)
 - profile <username> : afficher le profil d'un autre utilisateur (ex: profile sben-rho)
 
-Vous pouvez vous deconnecter avec la commande 'logout'
-Si vous chercher de l'aide, tapez 'help' ou 'help 2' pour des commandes systeme supplementaires !`
+Vous pouvez également jouer à pong avec la commande 'pong' !
+
+Pour ajouter un ami, vous devez passer par son profil.
+
+Vous pouvez vous déconnecter avec la commande 'logout'
+Si vous cherchez de l'aide, tapez 'help' ou 'help 2' pour des commandes système supplémentaires !`
 
 export let HELP_SECONDARY =
 `==================== COMMANDES SYSTÈME (BASH) ====================
