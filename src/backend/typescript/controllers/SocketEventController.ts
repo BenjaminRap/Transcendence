@@ -233,19 +233,19 @@ export class SocketEventController {
 		const	[eventName, ...args] = event;
 
 
-		if (isClientMessage(eventName))
-		{
-			const	parsed = parseClientMessageParameters(eventName, args);
-
-			if (!parsed.success)
-			{
-				socket.emit("force-disconnect", "client error");
-				socket.disconnect();
-				console.log(`Socket sent the wrong data type on event : ${eventName}`)
-				next(new Error(parsed.error.message));
-				return ;
-			}
-		}
+		// if (isClientMessage(eventName))
+		// {
+		// 	const	parsed = parseClientMessageParameters(eventName, args);
+		//
+		// 	if (!parsed.success)
+		// 	{
+		// 		socket.emit("force-disconnect", "client error");
+		// 		socket.disconnect();
+		// 		console.log(`Socket sent the wrong data type on event : ${eventName}, args : ${args}`);
+		// 		next(new Error(parsed.error.message));
+		// 		return ;
+		// 	}
+		// }
 		next();
 	}
 
