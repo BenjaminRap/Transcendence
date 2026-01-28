@@ -29,6 +29,20 @@ export interface Friend
 }
 
 
+
+interface ExtendedFriend
+{
+	status: string,
+	updatedAt: Date,
+	user: {
+		id: number,
+		username: string,
+		avatar: string,
+		isOnline: boolean,
+		requesterId: number,
+	}
+}
+
 interface Match {
 	id: number;
 	createdAt: Date;
@@ -147,6 +161,19 @@ export namespace ProfileUpdater {
 	}
 }
 
+function FriendToExtendedFriend(friend: Friend): ExtendedFriend {
+	return {
+		status: friend.status,
+		updatedAt: new Date(),
+		user: {
+			id: friend.id,
+			username: friend.username,
+			avatar: friend.avatar,
+			isOnline: friend.isOnline,
+			requesterId: friend.requesterId,
+		}
+	};
+}
 
 function updateFriendDiv()
 {
@@ -166,32 +193,32 @@ function updateFriendDiv()
 	}
 }
 
-function updateMatchDiv()
+function updateMatchDiv(flagAdd: boolean)
 {
 	if (!profileDiv)
 		return;
 	const newMatchListElement = createMatchElement();
 	if (!newMatchListElement)
 		return;
-	if (watchMatchIds.length > 3)
+	if (watchMatchIds.length > 3 && flagAdd)
 	{
-		socketUtils.socket?.emit("unwatch-profile", { profileId: [watchMatchIds[3]] });
+		socketUtils.socket?.emit("unwatch-profile", [watchMatchIds[3]] );
 		watchMatchIds.pop();
 
 		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
-		socketUtils.socket?.emit("watch-profile", { profileId: [watchMatchIds[0]] });
-	}
-	else
+		socketUtils.socket?.emit("watch-profile", [watchMatchIds[0]] );
+	} 
+	else if (flagAdd)
 	{
 		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
-		socketUtils.socket?.emit("watch-profile", { profileId: [watchMatchIds[0]] });
+		socketUtils.socket?.emit("watch-profile", [watchMatchIds[0]] );
 	}
 	console.log("Updated watching match IDs:", watchMatchIds);
 	const oldMatchListElement = document.getElementById('match-list');
 	if (oldMatchListElement && oldMatchListElement.parentElement) {
 		oldMatchListElement.parentElement.replaceChild(newMatchListElement, oldMatchListElement);
 	} else if (oldMatchListElement) {
-		oldMatchListElement.remove();			// Send unwatch for oldId
+		oldMatchListElement.remove();
 		profileDiv.appendChild(newMatchListElement);
 	} else {
 		profileDiv.appendChild(newMatchListElement);
@@ -201,6 +228,9 @@ function updateMatchDiv()
 function createProfileCard(profileElement: HTMLElement | null): HTMLElement | void {
 	if (!profileElement)
 		return;
+	let ratio = (profile.gameStats.wins / (profile.gameStats.losses + profile.gameStats.wins)).toFixed(2);
+	if (ratio === 'NaN')
+		ratio = '0.00';
 	const profileCard = document.createElement('div');
 	profileCard.className = "flex flex-col px-[2vw] py-[1vh] shadow-lg border border-green-500 items-center h-[19.7%] overflow-hidden";
 	profileCard.innerHTML = `<img src="${profile.avatar}" alt="Avatar" class="w-[12vh] h-[12vh] border border-green-500 object-cover"></img>
@@ -208,7 +238,7 @@ function createProfileCard(profileElement: HTMLElement | null): HTMLElement | vo
 							<div class="flex gap-[1vw] text-[0.9vh]">
 								<p>Win: ${profile.gameStats.wins}</p>
 								<p>Loss: ${profile.gameStats.losses}</p>
-								<p>W/L: ${(profile.gameStats.wins / (profile.gameStats.losses + profile.gameStats.wins)).toFixed(2)}</p>
+								<p>W/L: ${ratio}</p>
 							</div>`;
 	profileElement.appendChild(profileCard);
 	profileDiv = profileCard;
@@ -348,10 +378,10 @@ function createFriendElement() : HTMLElement
 			const buttonAccept = pendingTag.querySelector('#AcceptRequest');
 			const buttonRefuse = pendingTag.querySelector('#RefuseRequest');
 			buttonAccept?.addEventListener('click', () => {
-				acceptFriendRequest(friend.id);
+				FriendRequestController.acceptFriendRequest(friend.id);
 			});
 			buttonRefuse?.addEventListener('click', () => {
-				removeFriend(friend.id);
+				FriendRequestController.removeFriend(friend.id);
 			});
 			friendDiv.appendChild(pendingTag);
 		}
@@ -364,7 +394,7 @@ function createFriendElement() : HTMLElement
 			`
 			const removeButton = pendingTag.querySelector('#removeFriendButton');
 			removeButton?.addEventListener('click', () => {
-				removeFriend(friend.id);
+				FriendRequestController.removeFriend(friend.id);
 			});
 			friendDiv.appendChild(pendingTag);
 		}
@@ -451,11 +481,54 @@ export namespace ProfileBuilder {
 		if (socketUtils && socketUtils.socket)
 		{
 			socketUtils.socket.on("profile-update", (data : {user: { id: string; username: string; avatar: string }}) => {
-				console.log("Profile updated:", data.user.id);
-				ProfileUpdater.updateFriendProfile(parseInt(data.user.id), data.user.username, data.user.avatar);
+				// console.log("Profile updated:", data.user.id);
+				// ProfileUpdater.updateFriendProfile(parseInt(data.user.id), data.user.username, data.user.avatar);
+				console.log("Profile updated:", data.user.id, ' : ', data.user.username, ' : ', data.user.avatar);
+				if (parseInt(data.user.id) === profile.id) {
+					profile.username = data.user.username;
+					profile.avatar = data.user.avatar;
+					history.replaceState({}, '', `/profile/${profile.username}`);
+					ProfileUpdater.updateProfileCard(profile);
+				}
+				else
+				{
+					for (let i = 0; i < profile.lastMatchs.length; i++)
+					{
+						if (profile.lastMatchs[i].opponent && parseInt(profile.lastMatchs[i].opponent!.id) === parseInt(data.user.id))
+						{
+							profile.lastMatchs[i].opponent!.username = data.user.username;
+							profile.lastMatchs[i].opponent!.avatar = data.user.avatar;
+							updateMatchDiv(false);
+							break ;
+						}
+					}
+					for (let i = 0; i < profile.friends.length; i++)
+					{
+						if (profile.friends[i].id === parseInt(data.user.id))
+						{
+							profile.friends[i].username = data.user.username;
+							profile.friends[i].avatar = data.user.avatar;
+							sortFriendList();
+							updateFriendDiv();
+							break ;
+						}
+					}
+					if (ExtendedView.isExtendedViewIsActive && ExtendedView.type === 'friend')
+					{
+						ExtendedView.updateFriendInfo(parseInt(data.user.id), data.user.username, '', data.user.avatar);
+					}
+					if (ExtendedView.isExtendedViewIsActive && ExtendedView.type === 'match')
+					{
+						ExtendedView.updateMatchOpponent(parseInt(data.user.id), data.user.username, data.user.avatar);
+					}
+				}
 			});
 			socketUtils.socket.on("user-status-change", (data: { userId: string; status: string }) => {
 				ProfileUpdater.updateFriendList(parseInt(data.userId), data.status);
+				if (ExtendedView.isExtendedViewIsActive && ExtendedView.type === 'friend')
+				{
+					ExtendedView.updateFriendStatus(parseInt(data.userId), data.status);
+				}
 			});
 
 			socketUtils.socket.on("match-update", (data: MatchSummary) => {
@@ -463,7 +536,7 @@ export namespace ProfileBuilder {
 				profile.lastMatchs.unshift(data);
 				if (profile.lastMatchs.length > 4)
 					profile.lastMatchs.pop();
-				updateMatchDiv();
+				updateMatchDiv(true);
 			});
 
 			socketUtils.socket.on("stat-update", (data: GameStats) => {
@@ -492,11 +565,21 @@ export namespace ProfileBuilder {
 					status: data.status,
 					requesterId: userData.requesterId,
 				};
+				if (data.status === "ACCEPTED") {
+					WriteOnTerminal.printErrorOnTerminal(`You are now friends with ${userData.username}.`);
+				} else if (data.status === "PENDING") {
+					WriteOnTerminal.notification([`New friend request`, `New friend request from ${userData.username}. Check your 'profile'to accept it.`]);
+					if (ExtendedView.isExtendedViewIsActive && ExtendedView.type === 'friend')
+					{
+							ExtendedView.addFriend(FriendToExtendedFriend(friendToAdd));
+					}
+				}
 				profile.friends.push(friendToAdd);
 				sortFriendList();
 				updateFriendDiv();
 			});
 			watchMatchIds = getWathIdMatch();
+			socketUtils.socket.emit("watch-profile", watchMatchIds);
 			console.log("Watching match IDs:", watchMatchIds);
 		}
 		return 'Profil ouvert. Tapez "kill profile" pour le fermer.';
@@ -512,7 +595,7 @@ export namespace ProfileBuilder {
 		}
 		if (socketUtils && socketUtils.socket)
 		{
-			socketUtils.socket.emit("unwatch-profile", { profileId: watchMatchIds });
+			socketUtils.socket.emit("unwatch-profile", watchMatchIds);
 			socketUtils.socket.off("user-status-change");
 			socketUtils.socket.off("friend-status-update");
 			socketUtils.socket.off("profile-update");
@@ -713,75 +796,83 @@ function DeleteAccount() {
 	});
 }
 
-async function acceptFriendRequest(id: number): Promise<boolean> {
-	try {
-		const response = await fetch(`/api/friend/accept/${id}`, {
-			method: 'PUT',
-			headers: {
-				'Authorization': 'Bearer ' + TerminalUtils.getCookie('accessToken')
+export namespace FriendRequestController {
+	export async function acceptFriendRequest(id: number): Promise<boolean> {
+		try {
+			const response = await fetch(`/api/friend/accept/${id}`, {
+				method: 'PUT',
+				headers: {
+					'Authorization': 'Bearer ' + TerminalUtils.getCookie('accessToken')
+				}
+			});
+			if (response.status === 204) {
+				const friend = profile.friends.find(friend => friend.id === id);
+				if (friend) {
+					friend.status = "ACCEPTED";
+					WriteOnTerminal.displayOnTerminal(`${friend.username} est maintenant votre ami.`, false);
+					
+				}
+				sortFriendList();
+				updateFriendDiv();
+				return true;
 			}
-		});
-		if (response.status === 204) {
-			const friend = profile.friends.find(friend => friend.id === id);
-			if (friend) {
-				friend.status = "ACCEPTED";
+			const data = await response.json();
+			if (data.message === 'Invalid or expired token') {
+				const refreshed = await RequestBackendModule.tryRefreshToken();
+				if (!refreshed) {
+					WriteOnTerminal.printErrorOnTerminal("Veuillez vous connecter.");
+					return false;
+				}
+				return await acceptFriendRequest(id);
 			}
-			sortFriendList();
-			updateFriendDiv();
-			return true;
+			return false;
+		} catch (error) {
+			console.error("Error:", error);
+			return false;
 		}
-		const data = await response.json();
-		if (data.success) {
-			WriteOnTerminal.printErrorOnTerminal("Friend request accepted");
-			return true;
-		}
-		if (data.message === 'Invalid or expired token') {
-			const refreshed = await RequestBackendModule.tryRefreshToken();
-			if (!refreshed) {
-				WriteOnTerminal.printErrorOnTerminal("Veuillez vous connecter.");
-				return false;
-			}
-			return await acceptFriendRequest(id);
-		}
-		return false;
-	} catch (error) {
-		console.error("Error:", error);
-		return false;
 	}
+
+	export async function removeFriend(id: number): Promise<boolean> {
+		try {
+			const response = await fetch(`/api/friend/delete/${id}`, {
+				method: 'DELETE',
+				headers: {
+					'Authorization': 'Bearer ' + TerminalUtils.getCookie('accessToken')
+				}
+			});
+			if (response.status === 204) {
+				{
+					const friend = profile.friends.find(friend => friend.id === id);
+					if (friend)
+						WriteOnTerminal.displayOnTerminal(`Vous avez supprimé ${friend.username} de votre liste d'amis.`, false);
+				}
+				ProfileUpdater.removeFriend(id);
+				fetchProfileData('');
+				sortFriendList();
+				updateFriendDiv();
+				return true;
+			}
+			const data = await response.json();
+			if (data.success) {
+
+				return true;
+			}
+			if (data.message === 'Invalid or expired token') {
+				const refreshed = await RequestBackendModule.tryRefreshToken();
+				if (!refreshed) {
+					WriteOnTerminal.printErrorOnTerminal("Veuillez vous connecter.");
+					return false;
+				}
+				return await removeFriend(id);
+			}
+			return false;
+		} catch (error) {
+			console.error("Error:", error);
+			return false;
+		}
+	}
+
+
 }
 
-async function removeFriend(id: number): Promise<boolean> {
-	try {
-		const response = await fetch(`/api/friend/delete/${id}`, {
-			method: 'DELETE',
-			headers: {
-				'Authorization': 'Bearer ' + TerminalUtils.getCookie('accessToken')
-			}
-		});
-		if (response.status === 204) {
-			console.log("Friend removed successfully");
-			ProfileUpdater.removeFriend(id);
-			fetchProfileData('');
-			sortFriendList();
-			updateFriendDiv();
-			return true;
-		}
-		const data = await response.json();
-		if (data.success) {
 
-			return true;
-		}
-		if (data.message === 'Invalid or expired token') {
-			const refreshed = await RequestBackendModule.tryRefreshToken();
-			if (!refreshed) {
-				WriteOnTerminal.printErrorOnTerminal("Veuillez vous connecter.");
-				return false;
-			}
-			return await removeFriend(id);
-		}
-		return false;
-	} catch (error) {
-		console.error("Error:", error);
-		return false;
-	}
-}

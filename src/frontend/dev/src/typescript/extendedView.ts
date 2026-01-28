@@ -1,6 +1,8 @@
 import { WriteOnTerminal } from "./terminalUtils/writeOnTerminal";
 import { PongUtils } from './terminal'
 import { TerminalUtils } from "./terminalUtils/terminalUtils";
+import { FriendRequestController } from "./profile";
+import { RequestBackendModule } from "./terminalUtils/requestBackend";
 
 
 
@@ -106,8 +108,6 @@ function createListMatches() : HTMLDivElement
 	return matchElement;
 }
 
-
-
 function createFriendList() : HTMLDivElement
 {
 		const friendElement = document.createElement('div');
@@ -143,11 +143,32 @@ function createFriendList() : HTMLDivElement
 			`
 			const buttonAccept = pendingTag.querySelector('#AcceptRequest');
 			const buttonRefuse = pendingTag.querySelector('#RefuseRequest');
-			buttonAccept?.addEventListener('click', () => {
-				acceptFriendRequest(FriendDisplay[i].user.username);
+			buttonAccept?.addEventListener('click', async () => {
+				const result = await FriendRequestController.acceptFriendRequest(FriendDisplay[i].user.id);
+				if (!result) {
+					WriteOnTerminal.printErrorOnTerminal("Failed to accept friend request.");
+				}
+				else
+				{
+					WriteOnTerminal.displayOnTerminal(`${FriendDisplay[i].user.username} est maintenant votre ami.`, false);
+					friends.find(f => f.user.id === FriendDisplay[i].user.id)!.status = "ACCEPTED";
+					sortFriendList();
+					refreshFriendList();
+				}
+				
 			});
-			buttonRefuse?.addEventListener('click', () => {
-				removeFriend(FriendDisplay[i].user.username);
+			buttonRefuse?.addEventListener('click', async () => {
+				const result = await FriendRequestController.removeFriend(FriendDisplay[i].user.id);
+				if (!result) {
+					WriteOnTerminal.printErrorOnTerminal("Failed to refuse friend request.");
+				}
+				else
+				{
+					WriteOnTerminal.displayOnTerminal(`Demande d'ami de ${FriendDisplay[i].user.username} refusée.`, false);
+					friends = friends.filter(f => f.user.id !== FriendDisplay[i].user.id);
+					sortFriendList();
+					refreshFriendList();
+				}
 			});
 			friendDiv.appendChild(pendingTag);
 		}
@@ -159,8 +180,18 @@ function createFriendList() : HTMLDivElement
 				<button id="removeFriendButton" class="ml-auto p-1 border border-green-500 hover:underline hover:underline-offset-2 cursor-pointer">Remove</button>
 			`
 			const removeButton = pendingTag.querySelector('#removeFriendButton');
-			removeButton?.addEventListener('click', () => {
-				removeFriend(FriendDisplay[i].user.username);
+			removeButton?.addEventListener('click', async () => {
+				const result = await FriendRequestController.removeFriend(FriendDisplay[i].user.id);
+				if (!result) {
+					WriteOnTerminal.printErrorOnTerminal("Failed to remove friend.");
+				}
+				else
+				{
+					WriteOnTerminal.displayOnTerminal(`Vous avez supprimé ${FriendDisplay[i].user.username} de votre liste d'amis.`, false);
+					friends = friends.filter(f => f.user.id !== FriendDisplay[i].user.id);
+					sortFriendList();
+					refreshFriendList();
+				}
 			});
 			friendDiv.appendChild(pendingTag);
 		}
@@ -365,15 +396,56 @@ export namespace ExtendedView {
 		sortFriendList();
 		refreshFriendList();
 	}
+
+
+	export function updateFriendStatus(id:number, status: string) {
+		console.log("Updating friend status for ID:", id, "to status:", status);
+		for (let i = 0; i < friends.length; i++) {
+			const f = friends[i];
+			if (f.user.id === id) {
+				f.user.isOnline = (status === 'online');
+			}
+		}
+		sortFriendList();
+		refreshFriendList();
+	}
+
+	export function updateFriendInfo(id:number, username: string, status: string, avatar: string) {
+		for (let i = 0; i < friends.length; i++) {
+			const f = friends[i];
+			if (f.user.id === id) {
+				f.user.username = username;
+				if (status !== '')
+					f.status = status;
+				f.user.avatar = avatar;
+			}
+		}
+		sortFriendList();
+		refreshFriendList();
+	}
+
+	export function updateMatchOpponent(id: number, username: string, avatar: string)
+	{
+		for (let i = 0; i < matches.length; i++) {
+			const m = matches[i];
+			if (!m || m.opponent == null)
+				continue;
+			if (parseInt(m.opponent.id) === id) {
+				m.opponent.username = username;
+				m.opponent.avatar = avatar;
+			}
+		}
+		refreshMatchList();
+	}
 }
 
-function acceptFriendRequest(username: string) {
-	console.log(`Accepted friend request from: ${username}`);
-}
+// function acceptFriendRequest(username: string) {
+// 	console.log(`Accepted friend request from: ${username}`);
+// }
 
-function removeFriend(username: string) {
-	console.log(`Removing friend: ${username}`);
-}
+// function removeFriend(username: string) {
+// 	console.log(`Removing friend: ${username}`);
+// }
 
 
 function refreshFriendList() {

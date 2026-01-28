@@ -4,6 +4,7 @@ import { socketUtils } from './terminal'
 import { TerminalUtils } from "./terminalUtils/terminalUtils";
 import { RequestBackendModule } from "./terminalUtils/requestBackend";
 import { WriteOnTerminal } from "./terminalUtils/writeOnTerminal";
+import { fa } from "zod/v4/locales";
 
 
 
@@ -72,6 +73,9 @@ export function updateProfileCard(profile: ExtProfile) {
 function createProfileCard(profileElement: HTMLElement | null): HTMLElement | void {
 	if (!profileElement)
 		return;
+	let ratio = (profile.gameStats.wins / (profile.gameStats.losses + profile.gameStats.wins)).toFixed(2);
+	if (ratio === 'NaN')
+		ratio = '0.00';
 	const profileCard = document.createElement('div');
 	profileCard.className = "flex flex-col px-[2vw] py-[1vh] shadow-lg border border-green-500 items-center h-[19.7%] overflow-hidden";
 	profileCard.innerHTML = `<img src="${profile.avatar}" alt="Avatar" class="w-[12vh] h-[12vh] border border-green-500 object-cover"></img>
@@ -79,32 +83,32 @@ function createProfileCard(profileElement: HTMLElement | null): HTMLElement | vo
 							<div class="flex gap-[1vw] text-[0.9vh]">
 								<p>Win: ${profile.gameStats.wins}</p>
 								<p>Loss: ${profile.gameStats.losses}</p>
-								<p>W/L: ${(profile.gameStats.wins / (profile.gameStats.losses + profile.gameStats.wins)).toFixed(2)}</p>
+								<p>W/L: ${ratio}</p>
 							</div>`;
 	profileElement.appendChild(profileCard);
 	profileDiv = profileCard;
 	return profileCard;
 }
 
-function updateMatchDiv()
+function updateMatchDiv(flagAdd: boolean)
 {
 	if (!profileDiv)
 		return;
 	const newMatchListElement = createMatchElement();
 	if (!newMatchListElement)
 		return;
-	if (watchMatchIds.length > 3)
+	if (watchMatchIds.length > 3 && flagAdd)
 	{
-		socketUtils.socket?.emit("unwatch-profile", { profileId: [watchMatchIds[3]] });
+		socketUtils.socket?.emit("unwatch-profile", [watchMatchIds[3]] );
 		watchMatchIds.pop();
 
 		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
-		socketUtils.socket?.emit("watch-profile", { profileId: [watchMatchIds[0]] });
-	}
-	else
+		socketUtils.socket?.emit("watch-profile", [watchMatchIds[0]] );
+	} 
+	else if (flagAdd)
 	{
 		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
-		socketUtils.socket?.emit("watch-profile", { profileId: [watchMatchIds[0]] });
+		socketUtils.socket?.emit("watch-profile", [watchMatchIds[0]] );
 	}
 	console.log("Updated watching match IDs:", watchMatchIds);
 	const oldMatchListElement = document.getElementById('match-list');
@@ -292,6 +296,23 @@ export namespace ExtProfileBuilder {
 					history.replaceState({}, '', `/profile/${profile.username}`);
 					updateProfileCard(profile);
 				}
+				else
+				{
+					for (let i = 0; i < profile.lastMatchs.length; i++)
+					{
+						if (profile.lastMatchs[i].opponent && parseInt(profile.lastMatchs[i].opponent!.id) === parseInt(data.user.id))
+						{
+							profile.lastMatchs[i].opponent!.username = data.user.username;
+							profile.lastMatchs[i].opponent!.avatar = data.user.avatar;
+							updateMatchDiv(false);
+							break ;
+						}
+					}
+					if (ExtendedView.isExtendedViewIsActive && ExtendedView.type === 'match')
+					{
+						ExtendedView.updateMatchOpponent(parseInt(data.user.id), data.user.username, data.user.avatar);
+					}
+				}
 			});
 
 			socketUtils.socket.on("match-update", (data: MatchSummary) => {
@@ -306,7 +327,7 @@ export namespace ExtProfileBuilder {
 				profile.lastMatchs.unshift(data);
 				if (profile.lastMatchs.length > 4)
 					profile.lastMatchs.pop();
-				updateMatchDiv();
+				updateMatchDiv(true);
 			});
 
 			socketUtils.socket.on("stat-update", (data: GameStats) => {
@@ -316,7 +337,7 @@ export namespace ExtProfileBuilder {
 			});
 			
 			watchMatchIds = getWathIdMatch();
-			socketUtils.socket.emit("watch-profile", { profileId: watchMatchIds });
+			socketUtils.socket.emit("watch-profile", watchMatchIds);
 			console.log("Watching match IDs:", watchMatchIds);
 		}
 	}
@@ -330,7 +351,7 @@ export namespace ExtProfileBuilder {
 			if (socketUtils && socketUtils.socket)
 			{
 				socketUtils.socket.emit("unwatch-profile", profile.id);
-				socketUtils.socket.emit("unwatch-profile", { profileId: watchMatchIds });
+				socketUtils.socket.emit("unwatch-profile", watchMatchIds);
 			}
 		}
 	}
