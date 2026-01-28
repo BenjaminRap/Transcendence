@@ -352,6 +352,7 @@ export class SocketEventController {
         this.matchMaker.removeUserFromMatchMaking(socket);
 		SocketEventController.disconnectSocketToUser(socket);
 		socket.data.disconnectOrLogout();
+		console.log(`Socket disconnected !`);
 	}
 
 	// ----------------------------------------------------------------------------- //
