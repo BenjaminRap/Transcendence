@@ -313,8 +313,6 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 			if (!tournamentData)
 				this.switchMenu(this._onlineTournamentChoiceGUI);
-			else
-				this._sceneData.pongHTMLElement.startOnlineTournament(this._currentSceneFileName);
 		} catch (error) {
 			this._sceneData.pongHTMLElement.setButtonEnable(true);
 			this._sceneData.pongHTMLElement.onError(error);
