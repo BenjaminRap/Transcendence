@@ -26,7 +26,7 @@ import { PongError } from "@shared/pongError/PongError";
 import type { FrontendGameSceneName } from "@shared/SceneData";
 import type { TournamentEvent } from "@shared/ZodMessageType";
 import { BotDifficultyChoiceGUI } from "../gui/BotDifficultyChoiceGUI";
-import type { BotDifficulty } from "../BotDiificulties";
+import type { BotDifficulty } from "../BotDifficulty";
 
 const enemyTypes = ["Local", "Multiplayer", "Bot"] as const;
 

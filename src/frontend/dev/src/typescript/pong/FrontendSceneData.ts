@@ -4,7 +4,7 @@ import { type FrontendGameSceneName, type FrontendMenuSceneName, SceneData } fro
 import { ServerProxy } from "./ServerProxy";
 import { FrontendEventsManager } from "./FrontendEventsManager";
 import type { LocalTournament } from "./LocalTournament";
-import type { BotDifficulty } from "./BotDiificulties";
+import type { BotDifficulty } from "./BotDifficulty";
 
 export interface	ClientInput
 {

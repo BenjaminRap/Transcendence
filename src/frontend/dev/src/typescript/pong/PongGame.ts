@@ -9,7 +9,7 @@ import { HavokPlugin } from "@babylonjs/core/Physics";
 import HavokPhysics from "@babylonjs/havok";
 import { type ClientInput, FrontendSceneData, type FrontendSceneProperties } from "./FrontendSceneData";
 import { Color4, type int } from "@babylonjs/core";
-import { type FrontendGameType, type SceneName, type FrontendSceneName, type FrontendGameSceneName } from "@shared/SceneData";
+import { type FrontendGameType, type SceneName, type FrontendGameSceneName } from "@shared/SceneData";
 import { Settings } from "./Settings";
 import { ServerProxy } from "./ServerProxy";
 import type { LocalTournament } from "./LocalTournament";
@@ -22,7 +22,7 @@ import type { GameInfos, GameInit, Profile, TournamentEvent } from "@shared/ZodM
 
 import { PongUtils } from '../terminal'
 import { LoadingGUI } from "./gui/LoadingGUI";
-import type { BotDifficulty } from "./BotDiificulties";
+import type { BotDifficulty } from "./BotDifficulty";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});

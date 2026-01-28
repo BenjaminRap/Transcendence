@@ -16,13 +16,12 @@ import { Range } from "../Range"
 import { PongError } from "@shared/pongError/PongError";
 
 export class Paddle extends CustomScriptComponent {
-	public static _range : number = 7.56;
-	public static _hitAcceleration : number = 1.05;
-	public static _ballXSpeedRange = new Range(8, 15);
-	public static _ballmaxSpeed = 17;
-	public static _speed : number = 9;
-
-	public static _maxAngle : number = Math.PI / 3;
+	public static range : number = 7.56;
+	public static hitAcceleration : number = 1.05;
+	public static ballXSpeedRange = new Range(8, 15);
+	public static ballmaxSpeed = 17;
+	public static speed : number = 9;
+	public static maxAngle : number = Math.PI / 3;
 
 	@Imported("InputManager") private	_inputManager! : InputManager;
 	@Imported(zodInt) private _playerIndex! : int;
@@ -91,7 +90,7 @@ export class Paddle extends CustomScriptComponent {
 		const	directionSign = Math.sign(this._ball.transform.absolutePosition.y - this.transform.absolutePosition.y);
 		const	newVelocity = currentVelocity.clone();
 
-		newVelocity.y = Paddle._speed * 1.2 * directionSign;
+		newVelocity.y = Paddle.speed * 1.2 * directionSign;
 
 		return newVelocity;
 	}
@@ -114,7 +113,7 @@ export class Paddle extends CustomScriptComponent {
 		if (Math.abs(collidedPosInPaddleLocal.y) < 0.04)
 			collidedPosInPaddleLocal.y = 0;
 		const	prct = Clamp(collidedPosInPaddleLocal.y * 2, -1, 1);
-		const	angle = Paddle._maxAngle * prct;
+		const	angle = Paddle.maxAngle * prct;
 		const	rotation = Quaternion.RotationAxis(Vector3.LeftHandedForwardReadOnly, angle);
 		const	direction = this.transform.right.applyRotationQuaternion(rotation);
 
@@ -123,7 +122,7 @@ export class Paddle extends CustomScriptComponent {
 
 	public getHeightDisplacementForAngle(angle : number) : number
 	{
-		const	prct = angle / Paddle._maxAngle;
+		const	prct = angle / Paddle.maxAngle;
 		const	collidePosPaddleLocal = prct / 2;
 		const	heightDisplacementWorld = collidePosPaddleLocal * this.transform.absoluteScaling.y;
 
@@ -132,10 +131,10 @@ export class Paddle extends CustomScriptComponent {
 
 	private getNewSpeed(currentVelocity : Vector3, newDirection : Vector3) : number
 	{
-		const	newXVelocity = Math.abs(currentVelocity.x) * Paddle._hitAcceleration;
-		const	clampedNewXVelocity = Clamp(newXVelocity, Paddle._ballXSpeedRange.min, Paddle._ballXSpeedRange.max);
+		const	newXVelocity = Math.abs(currentVelocity.x) * Paddle.hitAcceleration;
+		const	clampedNewXVelocity = Clamp(newXVelocity, Paddle.ballXSpeedRange.min, Paddle.ballXSpeedRange.max);
 		const	newSpeed = clampedNewXVelocity / Math.abs(newDirection.x);
-		const	clampedNewSpeed = Math.min(newSpeed, Paddle._ballmaxSpeed);
+		const	clampedNewSpeed = Math.min(newSpeed, Paddle.ballmaxSpeed);
 
 		return clampedNewSpeed;
 	}
@@ -157,20 +156,20 @@ export class Paddle extends CustomScriptComponent {
 			return ;
 		const	isUpPressed : boolean = this._playerInput.up.isKeyDown();
 		const	isDownPressed : boolean = this._playerInput.down.isKeyDown();
-		const	canMoveUp : boolean = this.transform.position.y < Paddle._range / 2;
-		const	canMoveDown : boolean = this.transform.position.y > -Paddle._range / 2;
+		const	canMoveUp : boolean = this.transform.position.y < Paddle.range / 2;
+		const	canMoveDown : boolean = this.transform.position.y > -Paddle.range / 2;
 		let		yVelocity : number = 0;
 
 		if (!canMoveUp)
-			this.transform.position.y = Paddle._range / 2;
+			this.transform.position.y = Paddle.range / 2;
 		if (!canMoveDown)
-			this.transform.position.y = -Paddle._range / 2;
+			this.transform.position.y = -Paddle.range / 2;
 		if (isUpPressed && !isDownPressed && canMoveUp)
 			yVelocity = 1;
 		else if (isDownPressed && !isUpPressed && canMoveDown)
 			yVelocity = -1;
 
-		this._physicsBody.setLinearVelocity(Vector3.Up().scale(yVelocity * Paddle._speed));
+		this._physicsBody.setLinearVelocity(Vector3.Up().scale(yVelocity * Paddle.speed));
 	}
 
 	private	reset()
