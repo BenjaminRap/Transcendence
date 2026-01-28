@@ -17,6 +17,7 @@ import { initMenu } from "../gui/IGUI";
 import { TournamentGUI } from "../gui/TournamentGUI";
 import { TournamentEndGUI } from "../gui/TournamentEndGUI";
 import type { FrontendGameSceneName } from "@shared/SceneData";
+import type { TournamentEvent } from "@shared/ZodMessageType";
 
 export class CreateInGameGUI extends CustomScriptComponent {
 	@Imported("InputManager") private _inputManager! : InputManager;
@@ -102,34 +103,43 @@ export class CreateInGameGUI extends CustomScriptComponent {
 			this._matchOpponentsGUI.setInputs(clientInputs);
 		});
 		this._sceneData.events.getObservable("tournament-event").add(tournamentEvent => {
-			switch (tournamentEvent.type)
-			{
-				case "win":
-					this._tournamentEndGUI.setWinner(this._tournamentGUI);
-					this.switchToGUI(this._tournamentEndGUI);
-					break ;
-				case "lose":
-					this._tournamentEndGUI.setLoser(tournamentEvent.isQualifications, tournamentEvent.roundParticipantsCount, this._tournamentGUI);
-					this.switchToGUI(this._tournamentEndGUI);
-					break ;
-				case "show-tournament":
-					if (this._tournamentGUI)
-						this.switchToGUI(this._tournamentGUI);
-					break ;
-				case "tournament-gui-create":
-					if (!this._tournamentGUI)
-						this._tournamentGUI = initMenu(new TournamentGUI(tournamentEvent.qualified), undefined, this._menuParent);
-					break ;
-				case "tournament-gui-set-winners":
-					this._tournamentGUI?.setWinners(tournamentEvent.round, tournamentEvent.matches);
-					break ;
-				case "joined-game":
+			this.onTournamentEvent(tournamentEvent);
+		});
+	}
+
+	private	onTournamentEvent(tournamentEvent : TournamentEvent)
+	{
+		switch (tournamentEvent.type)
+		{
+			case "win":
+				this._tournamentEndGUI.setWinner(this._tournamentGUI);
+				this.switchToGUI(this._tournamentEndGUI);
+				break ;
+			case "lose":
+				this._tournamentEndGUI.setLoser(tournamentEvent.isQualifications, tournamentEvent.roundParticipantsCount, this._tournamentGUI);
+				this.switchToGUI(this._tournamentEndGUI);
+				break ;
+			case "show-tournament":
+				if (this._tournamentGUI)
+					this.switchToGUI(this._tournamentGUI);
+				break ;
+			case "tournament-gui-create":
+				if (!this._tournamentGUI)
+					this._tournamentGUI = initMenu(new TournamentGUI(tournamentEvent.qualified), undefined, this._menuParent);
+				break ;
+			case "tournament-gui-set-winners":
+				this._tournamentGUI?.setWinners(tournamentEvent.round, tournamentEvent.matches);
+				break ;
+			case "joined-game":
+				try {
 					const	sceneName = this._sceneData.sceneName as FrontendGameSceneName;
 
 					this._sceneData.pongHTMLElement.joinOnlineGame(tournamentEvent.gameInit, sceneName);
-					break ;
-			}
-		});
+				} catch (error) {
+					this._sceneData.pongHTMLElement.onError(error);
+				}
+				break ;
+		}
 	}
 
 	private	onGameEnd(endData : EndData)
