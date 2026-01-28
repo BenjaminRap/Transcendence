@@ -97,7 +97,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		this._players.forEach(socket => {
 			socket.removeAllListeners("set-alias");
 			socket.data.ready = false;
-			socket.once("ready", () => {
+			SocketEventController.once(socket, "ready", () => {
 				socket.data.ready = true;
 				this._socketReadyCount++;
 				this.startMatchesIfReady();
@@ -211,8 +211,8 @@ export class	ServerTournament extends Tournament<DefaultSocket>
         });
 		socket.join(this._tournamentId);
 		socket.data.joinTournament(this);
-		socket.once("leave-tournament", () => this.removePlayerFromTournament(socket));
-		socket.on("set-alias", (alias, ack) => this.changeAlias(socket, alias, ack));
+		SocketEventController.once(socket, "leave-tournament", () => this.removePlayerFromTournament(socket));
+		SocketEventController.on(socket, "set-alias", (alias, ack) => this.changeAlias(socket, alias, ack));
 		return success(undefined);
 	}
 

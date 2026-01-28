@@ -11,6 +11,8 @@ export type InferZodAck<F> =
 
 export type SetInArray<Value> = Value extends any[] ? Value : Value extends undefined ? [] : [Value];
 
+export const zodDefaultFunction = zod.function({input: [], output: zod.void()});
+
 export function	resultOf<T extends zod.ZodType>(valueType: T)
 {
 	return zod.discriminatedUnion("success", [

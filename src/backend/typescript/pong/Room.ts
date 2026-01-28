@@ -6,7 +6,7 @@ import { ClientProxy } from "./ClientProxy";
 import { type int, Observable } from "@babylonjs/core";
 import type { ServerType } from "../index";
 import type { EndData } from "@shared/attachedScripts/GameManager";
-import type { DefaultSocket } from "../controllers/SocketEventController";
+import { SocketEventController, type DefaultSocket } from "../controllers/SocketEventController";
 import { getEndDataOnInvalidMatch } from "@shared/utils";
 import type { ServerMessage, ServerToClientEvents } from "@shared/ServerMessageHelpers";
 
@@ -117,7 +117,7 @@ export class	Room
 			socket.emit("tournament-event", {type: "joined-game", gameInit});
 		else
 			socket.emit("joined-game", gameInit);
-		socket.once("ready", () => { this.setSocketReady(socket) } );
+		SocketEventController.once(socket, "ready", () => { this.setSocketReady(socket) } );
 	}
 
 	private	setSocketReady(socket : DefaultSocket)
@@ -142,7 +142,7 @@ export class	Room
 			this._sceneData!.events.getObservable("end").add(endData => { this.gameEnd(endData) });
 			this.sendMessageToRoom("ready", gameStartInfos);
 			this._sockets.forEach((socket : DefaultSocket, index : int) => {
-				socket.once("forfeit", () => {
+				SocketEventController.once(socket, "forfeit", () => {
 					socket.broadcast.to(this._roomId).emit("game-infos", { type: "forfeit" });
 					const	winningSide = (index === 0) ? "right" : "left";
 
@@ -212,7 +212,7 @@ export class	Room
 		const	observable = new Observable<SocketMessage>();
 
 		this._sockets.forEach((socket : DefaultSocket, index : number) => {
-			socket.on(event, (keysUpdate : KeysUpdate) => {
+			SocketEventController.on(socket, event, (keysUpdate : KeysUpdate) => {
 				const	clientMessage : SocketMessage = {
 					socketIndex : index,
 					data : keysUpdate

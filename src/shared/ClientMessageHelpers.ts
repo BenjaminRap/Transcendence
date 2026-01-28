@@ -1,5 +1,5 @@
 import zod from "zod";
-import type { InferArray, InferZodAck, SetInArray } from "./ZodHelper";
+import { zodDefaultFunction, type InferArray, type InferZodAck, type SetInArray } from "./ZodHelper";
 import { isKey } from "./utils";
 import { clientMessages, zodClientMessageAcknowledgementParameters, zodClientMessageData } from "./ClientMessage";
 
@@ -52,13 +52,16 @@ export const zodClientMessageParameters = Object.fromEntries(
 		if (isKey(event, zodClientMessageData))
 			types.push(...zodClientMessageData[event]);
 		if (isKey(event, zodClientMessageAcknowledgement))
-			types.push(zodClientMessageAcknowledgement[event]);
+			types.push(zodDefaultFunction);
 
 		return [event, zod.tuple(types as any)];
 	})
 ) as unknown as {
-	[T in ClientMessage]: zod.ZodTuple<[...SetInArray<ZodClientMessageData<T>>, ...SetInArray<ZodClientMessageAcknowledgement<T>>], null>
-
+	[T in ClientMessage]: zod.ZodTuple<[
+		...SetInArray<ZodClientMessageData<T>>, 
+		...T extends keyof typeof zodClientMessageAcknowledgement ? [typeof zodDefaultFunction] : []
+	]
+	, null>
 }
 
 export type ClientMessageParameters<T extends ClientMessage> = 
@@ -68,10 +71,10 @@ export type ClientToServerEvents = {
     [T in ClientMessage]: (...data: ClientMessageParameters<T>) => void;
 };
 
-export function	parseClientMessageParameters<T extends ClientMessage>(event : T, ...args : any[])
+export function	areParametersValid<T extends ClientMessage>(event : T, args : any[]) : args is ClientMessageParameters<T>
 {
 	const	zodChecker = zodClientMessageParameters[event];
 	const	result = zodChecker.safeParse(args);
 
-	return result;
+	return result.success;
 }

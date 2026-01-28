@@ -6,11 +6,10 @@ import { TokenManager } from "../utils/TokenManager.js";
 import type { FriendService } from "../services/FriendService.js";
 import type { ServerType } from "../index.js";
 import { getPublicTournamentsDescriptions, TournamentMaker } from "../pong/TournamentMaker.js";
-import { zodTournamentCreationSettings, type Profile, type TournamentCreationSettings, type TournamentDescription, type TournamentId } from "@shared/ZodMessageType.js";
+import { type Profile, type TournamentCreationSettings, type TournamentDescription, type TournamentId } from "@shared/ZodMessageType.js";
 import { error, success, type Result } from "@shared/utils.js";
 import type { FriendProfile } from "../types/friend.types.js";
-import type { Event } from "socket.io";
-import { isClientMessage, parseClientMessageParameters, type ClientToServerEvents } from "@shared/ClientMessageHelpers.js";
+import { areParametersValid, type ClientMessage, type ClientMessageAcknowledgement, type ClientMessageParameters, type ClientToServerEvents } from "@shared/ClientMessageHelpers.js";
 import type { ServerToClientEvents } from "@shared/ServerMessageHelpers.js";
 
 export type DefaultSocket = Socket<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>;
@@ -186,39 +185,39 @@ export class SocketEventController {
 		this.io.on('connection', (socket : DefaultSocket) => {
 			this.handleConnection(socket);
 
-            socket.once("authenticate", (data: { token: string }, ack: (result: Result<null>) => void) => {
+            SocketEventController.once(socket, "authenticate", (data: { token: string }, ack: (result: Result<null>) => void) => {
                 this.handleAuthenticate(socket, data.token, ack);
             });
 
-			socket.on("get-tournaments", (ack : (descriptions : Result<TournamentDescription[]>) => void) => {
+			SocketEventController.on(socket, "get-tournaments", (ack : (descriptions : Result<TournamentDescription[]>) => void) => {
 				this.handleGetTournaments(socket, ack);
 			});
 
-			socket.on("join-tournament", (tournamentId : TournamentId, ack: (participants : Result<Profile[]>) => void) => {
+			SocketEventController.on(socket, "join-tournament", (tournamentId : TournamentId, ack: (participants : Result<Profile[]>) => void) => {
 				this.handleJoinTournament(socket, tournamentId, ack);
 			});
 
-			socket.on("create-tournament", (data : any, ack : (tournamentId : Result<string>) => void) => {
-				this.handleCreateTournament(socket, data, ack);
+			SocketEventController.on(socket, "create-tournament", (settings : TournamentCreationSettings, ack : (tournamentId : Result<string>) => void) => {
+				this.handleCreateTournament(socket, settings, ack);
 			});
 
-			socket.on("join-matchmaking", (ack: (data: Result<null>) => void) => {
+			SocketEventController.on(socket, "join-matchmaking", (ack: (data: Result<null>) => void) => {
 				this.handleMatchMakingRequest(socket, ack);
 			});
 
-            socket.on("get-online-users", (callback) => {
+            SocketEventController.on(socket, "get-online-users", (callback) => {
 				this.handleGetStatus(callback);
             });
 
-            socket.on("watch-profile", (profileId: number[]) => {
+            SocketEventController.on(socket, "watch-profile", (profileId: number[]) => {
                 this.addProfileToWatch(socket, profileId);
             });
 
-            socket.on("unwatch-profile", (profileId: number[]) => {
+            SocketEventController.on(socket, "unwatch-profile", (profileId: number[]) => {
                 this.removeProfileToWatch(socket, profileId);
             });
 
-            socket.on("logout", () => {
+            SocketEventController.on(socket, "logout", () => {
                 this.handleLogout(socket);
             });
 
@@ -228,32 +227,36 @@ export class SocketEventController {
 		});
 	}
 
-	private static middleware(socket : DefaultSocket, event : Event, next: (err?: Error) => void)
+	private static runCallbackIfValid<T extends ClientMessage>(socket : DefaultSocket, event : T, callback : ClientToServerEvents[T], args : any[])
 	{
-		const	[eventName, ...args] = event;
-
-
-		if (isClientMessage(eventName))
+		if (areParametersValid(event, args))
+			callback(...args);
+		else
 		{
-			const	parsed = parseClientMessageParameters(eventName, args);
-
-			if (!parsed.success)
-			{
-				socket.emit("force-disconnect", "client error");
-				socket.disconnect();
-				console.log(`Socket sent the wrong data type on event : ${eventName}`)
-				next(new Error(parsed.error.message));
-				return ;
-			}
+			socket.emit("force-disconnect", "client error");
+			socket.disconnect();
+			console.log(`Client ${socket.data.getProfile().shownName} sent wrong data in event : ${event}`);
 		}
-		next();
+	}
+
+	public static on<T extends ClientMessage>(socket : DefaultSocket, event : T, callback : ClientToServerEvents[T])
+	{
+		socket.on(event as any, (...args : any[]) => {
+			SocketEventController.runCallbackIfValid(socket, event, callback, args);
+		});
+	}
+
+	public static once<T extends ClientMessage>(socket : DefaultSocket, event : T, callback : ClientToServerEvents[T])
+	{
+		socket.once(event as any, (...args : any[]) => {
+			SocketEventController.runCallbackIfValid(socket, event, callback, args);
+		});
 	}
 
 	// ----------------------------------------------------------------------------- //
 	private async handleConnection(socket: DefaultSocket)
 	{
         try {
-			socket.use(SocketEventController.middleware.bind(null, socket))
             this.sockets.add(socket);
     
             socket.data = new SocketData(socket);
@@ -309,7 +312,6 @@ export class SocketEventController {
 		}
 		const	description = tournament.value.getDescription();
 
-		console.log(`tournament created : ${description.name}`);
 		ack(success(description.id));
 	}
 
