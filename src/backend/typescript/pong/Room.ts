@@ -49,10 +49,11 @@ export class	Room
 		this.delay(() => {
 			this.onReadyTimeout();
 		}, Room._readyTimeout);
+
 		for (let index = 0; index < this._sockets.length; index++) {
 			const socket = this._sockets[index];
 
-			await this.addSocketToRoom(socket, index, participants);
+			this.addSocketToRoom(socket, index, participants);
 		}
 
 		const	clientProxy = new ClientProxy(this);
@@ -103,10 +104,10 @@ export class	Room
 		socket.removeAllListeners("forfeit");
 	}
 
-	private async addSocketToRoom(socket : DefaultSocket, playerIndex : number, participants : Profile[])
+	private addSocketToRoom(socket : DefaultSocket, playerIndex : number, participants : Profile[])
 	{
 		socket.data.joinRoom(this);
-		await socket.join(this._roomId);
+		socket.join(this._roomId);
 		const	gameInit : GameInit = {
             playerIndex: playerIndex,
             participants: participants
