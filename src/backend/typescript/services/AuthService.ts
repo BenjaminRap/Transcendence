@@ -107,14 +107,11 @@ export class AuthService {
                 throw new AuthException(AuthError.INVALID_CREDENTIALS, 'Your 42 login is not a valid username for our platform (contain invalid characters)');
             }
 
-            const randomPassword = Math.random().toString(36).slice(-8);
-            const hashedPassword = await this.passwordHasher.hash(randomPassword);
-
             user = await this.prisma.user.create({
                 data: {
                     username: userData.login,
                     email: userData.email,
-                    password: hashedPassword,
+                    password: '',
                     avatar: userData.image?.link || "api/static/public/avatarDefault.webp",
                 },
             });
