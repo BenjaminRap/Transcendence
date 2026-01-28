@@ -21,7 +21,7 @@ export class	OnlineTournamentJoinPublicGUI extends HTMLElement implements IGUI<O
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm");
 		this.innerHTML = `
 			<fieldset class="w-11/12 h-3/5 overflow-y-scroll pointer-events-auto border-solid border-(--border-color) border-(length:--border-width) m-auto mt-[1%] scrollbar-thumb-white scrollbar-track-[transparent] cursor-all-scroll">
-				<legend class="m-auto pr-[2%] pl-[2%] text-[3cqw] text-(--text-color) font-(family-name:--font)">Participants</legend>
+				<legend class="m-auto pr-[2%] pl-[2%] text-[3cqw] text-(--text-color) font-(family-name:--font)">Tournaments</legend>
 				<div class="OnlineTournamentJoinPublicGUITournamentsDescriptions text-[length:2cqw] w-1/3 m-auto"></div>
 			</fieldset>
 			<div class="flex flex-col size-full h-1/3 w-1/4 m-auto">
