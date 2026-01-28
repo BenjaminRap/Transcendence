@@ -131,13 +131,12 @@ export class CreateInGameGUI extends CustomScriptComponent {
 				this._tournamentGUI?.setWinners(tournamentEvent.round, tournamentEvent.matches);
 				break ;
 			case "joined-game":
-				try {
-					const	sceneName = this._sceneData.sceneName as FrontendGameSceneName;
+				const	sceneName = this._sceneData.sceneName as FrontendGameSceneName;
 
-					this._sceneData.pongHTMLElement.joinOnlineGame(tournamentEvent.gameInit, sceneName);
-				} catch (error) {
-					this._sceneData.pongHTMLElement.onError(error);
-				}
+				this._sceneData.pongHTMLElement.joinOnlineGame(tournamentEvent.gameInit, sceneName)
+					.catch((error) => {
+						this._sceneData.pongHTMLElement.onError(error);
+					})
 				break ;
 		}
 	}
