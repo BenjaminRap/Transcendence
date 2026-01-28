@@ -95,14 +95,17 @@ else if (path.startsWith('/profile/')) {
 	}
 	else
 	{
+		let result: string;
 		if (user === TerminalUserManagement.username || user === '')
-			ProfileBuilder.buildProfile('');
+			result = await ProfileBuilder.buildProfile('');
 		else
-			ExtProfileBuilder.buildExtProfile(user);
+			result = await ExtProfileBuilder.buildExtProfile(user);
+		if (!result.startsWith('Profil ouvert. Tapez "kill profile" pour le fermer.'))
+		{
+			WriteOnTerminal.printErrorOnTerminal(result);
+			history.pushState({}, '', `/`);
+		}
 	}
 }
 else
-{
 	Error404();
-	console.log('404 Not Found');
-}
