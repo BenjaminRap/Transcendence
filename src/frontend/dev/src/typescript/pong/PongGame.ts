@@ -107,14 +107,7 @@ export class PongGame extends HTMLElement {
 
 	private async changeScene(properties : FrontendSceneProperties) : Promise<FrontendSceneData>
 	{
-		if (this._scene)
-		{
-			const	sceneData = getFrontendSceneData(this._scene);
-
-			if (sceneData.sceneName === properties.sceneName)
-				return sceneData;
-			this.disposeScene();
-		}
+		this.disposeScene();
 		this._scene = await this.getNewScene(properties);
 
 		const	sceneData = getFrontendSceneData(this._scene);
@@ -143,7 +136,6 @@ export class PongGame extends HTMLElement {
 
 	public async startBotGame(sceneName : FrontendGameSceneName, difficulty : keyof BotDifficulty)
 	{
-		console.log("Difficulty");
 		const	sceneData = await this.changeScene({sceneName, gameType: "Bot", difficulty});
 
 		this.setInputs(sceneData, 0);
@@ -165,7 +157,8 @@ export class PongGame extends HTMLElement {
 	{
 		const	[gameInit] = await this._serverProxy.joinGame();
 
-		this.joinOnlineGame(gameInit, sceneName);
+		await this.changeScene({sceneName, gameType: "Multiplayer"});
+		this.startOnlineGame(gameInit);
 	}
 
 	public async startOnlineTournament(sceneName : FrontendGameSceneName)
@@ -175,9 +168,9 @@ export class PongGame extends HTMLElement {
 		this._serverProxy.setReady();
 	}
 
-	public async joinOnlineGame(gameInit : GameInit, sceneName : FrontendGameSceneName) : Promise<void>
+	public async startOnlineGame(gameInit : GameInit) : Promise<void>
 	{
-		const	sceneData = await this.changeScene({sceneName, gameType: "Multiplayer"});
+		const	sceneData = getFrontendSceneData(this._scene!);
 
 		this.setInputs(sceneData, gameInit.playerIndex);
 		this._serverProxy.setReady();
