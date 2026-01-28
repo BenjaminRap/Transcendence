@@ -4,7 +4,7 @@ export class	Settings
 {
 	public readonly _playerInputs : readonly ClientInput[] = [{
 		index: 0,
-		upKey: "z",
+		upKey: "w",
 		downKey:"s"
 	},
 	{
