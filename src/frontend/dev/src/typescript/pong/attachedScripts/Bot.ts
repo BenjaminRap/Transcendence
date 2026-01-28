@@ -67,7 +67,10 @@ export class Bot extends CustomScriptComponent {
 	{
 		const	delay = RandomRange(0, this._difficultySettings.refreshIntervalMaxAdditionMs);
 		const	targetHeight = this.getTargetHeight();
+		const	randomError = RandomRange(-this._difficultySettings.rangeForRandom / 2, this._difficultySettings.rangeForRandom / 2);
+		const	randomizedTargetHeight = targetHeight + randomError;
 
+		this._targetHeight = randomizedTargetHeight;
 		this._timerManager.setTimeout(() => {
 			this._targetHeight = targetHeight;
 		}, delay);
@@ -116,7 +119,7 @@ export class Bot extends CustomScriptComponent {
 	private	getHeightTargetAttack() : number
 	{
 		if (Math.random() > this._difficultySettings.shootAtOppositeProbability)
-			return RandomRange(-this._difficultySettings.rangeForRandom / 2, this._difficultySettings.rangeForRandom / 2);
+			return RandomRange(-Paddle.range / 2, Paddle.range / 2);
 		if (this._paddleLeft.transform.absolutePosition.y > 0)
 			return -Paddle.range / 2 + 0.1;
 		return Paddle.range / 2 + 0.1;
