@@ -256,7 +256,7 @@ async function fetchProfileData(user: string) : Promise <string>
 			return "OK";
 		}
 		console.error("Error fetching profile data:", data.message);
-		return 'Erreur lors de la récupération des données du profil.';
+		return data.message || 'Erreur lors de la récupération des données du profil.';
 	} catch (error) {
 		console.error("Error:", error);
 		return 'Erreur lors de la récupération des données du profil.';
