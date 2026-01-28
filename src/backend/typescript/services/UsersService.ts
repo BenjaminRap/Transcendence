@@ -44,25 +44,21 @@ export class UsersService {
             throw new UsersException(UsersError.USER_NOT_FOUND, 'No suscriber found');
         }
 
-        const takeLimit = 10;
-        // Ajout de _count pour avoir les vraies stats
         const users = await this.prisma.user.findMany({
             where: { username: { contains: username } },
             select: { id: true, avatar: true, username: true },
-            take: takeLimit
+            take: 10
         });
 
         if (!users || users.length === 0)
             throw new UsersException(UsersError.USER_NOT_FOUND, 'User not found');
 
         return await Promise.all(users.map(async (user) => {
-            const stats = await this.matchService.getStat(user.id);
-
             return {
                 id: user.id,
                 avatar: user.avatar,
                 username: user.username,
-                stats: stats,
+                stats: await this.matchService.getStat(user.id),
                 lastMatchs: await this.matchService.getLastMatches(user.id, 4),
                 isFriend: await this.friendService.areFriends(user.id, userId),
                 isOnline: SocketEventController.isUserOnline(user.id),
@@ -72,14 +68,10 @@ export class UsersService {
 
     // --------------------------------------------------------------------------------- //
     async checkIfUserExists(id: number): Promise<boolean> {
-        const user = await this.prisma.user.findUnique({
-            where: { id: Number(id) },
-            select: { id: true }
+        const res = await this.prisma.user.count({
+            where: { id: Number(id) }
         });
-        if (!user) {
-            return false;
-        }
-        return true;
-    }
 
+        return res > 0;
+    }
 }

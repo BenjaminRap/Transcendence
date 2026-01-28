@@ -5,6 +5,7 @@ import { type TokenPair } from '../types/tokenManager.types.js';
 import { AuthException, AuthError } from '../error_handlers/Auth.error.js';
 import { type RegisterData, sanitizeUser } from '../types/auth.types.js';
 import type { SanitizedUser } from '@shared/ZodMessageType.js';
+import { CommonSchema } from '@shared/common.schema.js';
 
 export class AuthService {
     constructor(
@@ -69,17 +70,16 @@ export class AuthService {
     }
 
     // --------------------------------------------------------------------------------- //
-    // a revoir
     async loginWith42(code: string): Promise<{ user: SanitizedUser; tokens: TokenPair; msg: string }> {
         const tokenResponse = await fetch('https://api.intra.42.fr/oauth/token', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
                 grant_type: 'authorization_code',
-                client_id: process.env.FORTY_TWO_UID,
-                client_secret: process.env.FORTY_TWO_SECRET,
+                client_id: process.env.FORTY_TWO_UID || "",
+                client_secret: process.env.FORTY_TWO_SECRET || "",
                 code,
-                redirect_uri: process.env.FORTY_TWO_CALLBACK_URL,
+                redirect_uri: process.env.FORTY_TWO_CALLBACK_URL || "",
             }),
         });
 
@@ -111,13 +111,14 @@ export class AuthService {
                     username: userData.login,
                     email: userData.email,
                     password: hashedPassword,
-                    avatar: userData.image?.link,
+                    avatar: userData.image?.link || "api/static/public/avatarDefault.webp",
                 },
             });
 			msg = 'New user created and logged in with 42';
         }
-		if (msg === '')
+		if (msg === '') {
 			msg = 'User logged in with 42';
+        }
 
         const tokens = await this.tokenManager.generatePair(String(user.id), user.email);
 
@@ -130,26 +131,15 @@ export class AuthService {
 
     // --------------------------------------------------------------------------------- //
     async refreshTokens(userId: string, email: string): Promise<TokenPair> {
+        if ( !CommonSchema.id.safeParse(userId).success )
+            throw new AuthException(AuthError.INVALID_CREDENTIALS, AuthError.INVALID_CREDENTIALS)
+
         // check if user exist
         if ( !await this.findById(Number(userId)) ) {
             throw new AuthException(AuthError.USR_NOT_FOUND, AuthError.USR_NOT_FOUND);
         }
-        return await this.tokenManager.generatePair(userId, email);
+        return await this.tokenManager.generatePair(String(userId), email);
     }
-
-	// --------------------------------------------------------------------------------- //
-	async logout(userId: number): Promise<void> {
-		// notifier la websocket pour deconnecter les autres sessions si besoin
-		// rien a faire pour l'instant car les tokens sont stateless
-		// on pourrait implementer une blacklist des tokens si besoin
-		// mais ca complexifie inutilement le systeme
-		// donc on laisse comme ca pour l'instant
-
-		// est il possible de decompter le nombre de sessions actives pour un utilisateur ?
-		// et de notifier tout le monde uniquement quand la derniere session se deconnecte ?
-		
-		return;
-	}
 
     // ==================================== PRIVATE ==================================== //
 
@@ -163,22 +153,21 @@ export class AuthService {
                 ],
             },
         });
-        if (!user?.id) {
-            return null;
-        }
-        return user;
+
+        return user?.id ? user : null;
     }
 
     // --------------------------------------------------------------------------------- //
     private async findById(id: number): Promise<User | null> {
+        if ( ! CommonSchema.id.safeParse(id).success )
+            return null;
+
         const user = await this.prisma.user.findUnique({
             where: {
                 id: Number(id),
             },
         });
-        if (!user?.id) {
-            return null;
-        }
-        return user;
+
+        return user ? user : null;
     }
 }

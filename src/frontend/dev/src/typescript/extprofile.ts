@@ -1,11 +1,10 @@
 import type { boolean } from "zod";
 import { ExtendedView } from "./extendedView";
-import { PongUtils, socketUtils } from './terminal'
+import { socketUtils } from './terminal'
 import { TerminalUtils } from "./terminalUtils/terminalUtils";
 import { RequestBackendModule } from "./terminalUtils/requestBackend";
 import { WriteOnTerminal } from "./terminalUtils/writeOnTerminal";
-import { ProfileUpdater } from "./profile";
-import type { HtmlElementTexture } from "@babylonjs/core";
+
 
 
 
@@ -34,29 +33,31 @@ export interface GameStats
 	winRate:    number,
 }
 
+let watchMatchIds: number[];
+
 
 export interface MatchSummary
 {
-		opponent: { id: string, username: string, avatar: string,} | null,
-		match: Match | null,
+	isWinner: boolean,
+	opponent: { id: string, username: string, avatar: string,} | null,
+	match: Match | null,
 }
 
-export interface SuscriberProfile
+export interface ExtProfile
 {
 	id:         number,
 	avatar:     string,
 	username:   string,
 	gameStats:  GameStats,
 	lastMatchs: MatchSummary[],
+	isFriend: 	boolean
 }
 
-let profile: SuscriberProfile;
+let profile: ExtProfile;
 
 let profileDiv : HTMLElement | null;
 
-
-
-function updateProfileCard() {
+export function updateProfileCard(profile: ExtProfile) {
 	if (!profileDiv)
 		return;
 	profileDiv.innerHTML = `<img src="${profile.avatar}" alt="Avatar" class="w-[12vh] h-[12vh] border border-green-500 object-cover"></img>
@@ -66,9 +67,7 @@ function updateProfileCard() {
 								<p>Loss: ${profile.gameStats.losses}</p>
 								<p>W/L: ${(profile.gameStats.wins / (profile.gameStats.losses + profile.gameStats.wins)).toFixed(2)}</p>
 							</div>`;
-	history.pushState({}, '', `/profile/${profile.username}`);
-
-}
+	}
 
 function createProfileCard(profileElement: HTMLElement | null): HTMLElement | void {
 	if (!profileElement)
@@ -94,6 +93,20 @@ function updateMatchDiv()
 	const newMatchListElement = createMatchElement();
 	if (!newMatchListElement)
 		return;
+	if (watchMatchIds.length > 3)
+	{
+		socketUtils.socket?.emit("unwatch-profile", { profileId: [watchMatchIds[3]] });
+		watchMatchIds.pop();
+
+		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
+		socketUtils.socket?.emit("watch-profile", { profileId: [watchMatchIds[0]] });
+	}
+	else
+	{
+		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
+		socketUtils.socket?.emit("watch-profile", { profileId: [watchMatchIds[0]] });
+	}
+	console.log("Updated watching match IDs:", watchMatchIds);
 	const oldMatchListElement = document.getElementById('match-list');
 	if (oldMatchListElement && oldMatchListElement.parentElement) {
 		oldMatchListElement.parentElement.replaceChild(newMatchListElement, oldMatchListElement);
@@ -104,6 +117,7 @@ function updateMatchDiv()
 		profileDiv.appendChild(newMatchListElement);
 	}
 }
+
 
 function createMatchElement() : HTMLElement
 {
@@ -116,7 +130,7 @@ function createMatchElement() : HTMLElement
 		if (!match || !match.match || !match.opponent) 
 			continue;
 		let result;
-		if (match.match.winnerId && match.match.winnerId === profile.id) {
+		if (match.isWinner) {
 			result = "Win";
 		} else {
 			result = "Loose";
@@ -132,7 +146,7 @@ function createMatchElement() : HTMLElement
 				<div class="flex flex-1 items-center justify-between pr-2 min-w-0">
 					<div class="flex flex-col gap-y-0 min-w-0">
 						<p class="p-0 m-0 truncate">${result}</p>
-						<p class="truncate" style="font-size: 10px;">${match.match.createdAt.toLocaleDateString()}</p>
+						<p class="truncate" style="font-size: 10px;">${new Date(match.match.createdAt).toLocaleDateString()}</p>
 					</div>
 					<div class="flex flex-col justify-center items-center shrink-0 px-1">
 						<p>${score}</p>
@@ -170,7 +184,7 @@ function createMatchHistory(profileElement: HTMLElement | null): HTMLElement | v
 							</div>`
 	const moreMatchButton = matchHistory.querySelector('#moreMatch');
 	moreMatchButton?.addEventListener('click', () => {
-		ExtendedView.makeExtendedView('match', '');
+		ExtendedView.makeExtendedView('match', '', profile.id);
 	});
 	profileElement.appendChild(matchHistory);
 	const matchElement = createMatchElement();
@@ -185,12 +199,18 @@ function createButtons(profileElement: HTMLElement | null) {
 		return;
 	const buttonContainer = document.createElement('div');
 	buttonContainer.className = "flex gap-2";
-	buttonContainer.innerHTML = `<button id="addFriendButton" class=" w-full p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Add Friend</button>`
-								// <button class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Block User</button>`
-								// 	<button class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Change Avatar</button>
-								// <button class="p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Delete Account</button>
-	const addFriendButton = buttonContainer.querySelector('#addFriendButton');
-	addFriendButton?.addEventListener('click', () => sendFriendRequest(profile.id));
+	if (!profile.isFriend)
+	{
+		buttonContainer.innerHTML = `<button id="addFriendButton" class=" w-full p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Add Friend</button>`
+		const addFriendButton = buttonContainer.querySelector('#addFriendButton');
+		addFriendButton?.addEventListener('click', () => sendFriendRequest(profile.id));
+	}
+	else
+	{
+		buttonContainer.innerHTML = `<button id="removeFriendButton" class=" w-full p-2 border border-green-500 cursor-pointer hover:underline hover:underline-offset-2">Remove Friend</button>`
+		const removeFriendButton = buttonContainer.querySelector('#removeFriendButton');
+		removeFriendButton?.addEventListener('click', () =>  removeFriend(profile.id));
+	}	
 	profileElement.appendChild(buttonContainer);
 }
 
@@ -212,13 +232,14 @@ async function fetchProfileData(user: string) : Promise <string>
 		});
 		const data = await response.json();
 		if (data.success) {
-
-			let user : SuscriberProfile = {
+			console.log('data :', data);
+			let user : ExtProfile = {
 				id:         data.user[0].id,
 				avatar:     data.user[0].avatar,
 				username:   data.user[0].username,
 				gameStats:  data.user[0].stats,
 				lastMatchs: data.user[0].lastMatchs,
+				isFriend:   data.user[0].isFriend,
 			}
 			profile = user;
 			return "OK";
@@ -261,14 +282,42 @@ export namespace ExtProfileBuilder {
 
 		if (socketUtils && socketUtils.socket)
 		{
+			socketUtils.socket.emit("watch-profile", profile.id);
+
 			socketUtils.socket.on("profile-update", (data : {user: { id: string; username: string; avatar: string }}) => {
 				console.log("Profile updated:", data.user.id, ' : ', data.user.username, ' : ', data.user.avatar);
 				if (parseInt(data.user.id) === profile.id) {
 					profile.username = data.user.username;
 					profile.avatar = data.user.avatar;
-					updateProfileCard();
+					history.replaceState({}, '', `/profile/${profile.username}`);
+					updateProfileCard(profile);
 				}
 			});
+
+			socketUtils.socket.on("match-update", (data: MatchSummary) => {
+				console.log("Extended View", ExtendedView.isExtendedViewIsActive, ExtendedView.type, ExtendedView.profileId);
+				if (data.opponent != null && parseInt(data.opponent.id) === profile.id)
+					return ;
+				if (ExtendedView.isExtendedViewIsActive && ExtendedView.type === 'match')
+				{
+					console.log("Adding match to extended view:", data);
+					ExtendedView.addMatch(data);
+				}
+				profile.lastMatchs.unshift(data);
+				if (profile.lastMatchs.length > 4)
+					profile.lastMatchs.pop();
+				updateMatchDiv();
+			});
+
+			socketUtils.socket.on("stat-update", (data: GameStats) => {
+				console.log("Stat updated:", data);
+				profile.gameStats = data;
+				updateProfileCard(profile);
+			});
+			
+			watchMatchIds = getWathIdMatch();
+			socketUtils.socket.emit("watch-profile", { profileId: watchMatchIds });
+			console.log("Watching match IDs:", watchMatchIds);
 		}
 	}
 	export function removeExtProfile() {
@@ -277,10 +326,32 @@ export namespace ExtProfileBuilder {
 			document.body.removeChild(profileElement);
 			isActive = false;
 			history.pushState({}, '', `/`);
+			watchMatchIds = [];
+			if (socketUtils && socketUtils.socket)
+			{
+				socketUtils.socket.emit("unwatch-profile", profile.id);
+				socketUtils.socket.emit("unwatch-profile", { profileId: watchMatchIds });
+			}
 		}
 	}
 	export let isActive = false;
 }
+
+
+
+function getWathIdMatch(): number[]
+{
+	if (!profile.lastMatchs)
+		return [];
+	let ids: number[] = [];
+	for (let i = 0; i < 4; i++)
+	{
+		if (profile.lastMatchs[i] && profile.lastMatchs[i].opponent)
+			ids.push(parseInt(profile.lastMatchs[i].opponent!.id));
+	}
+	return ids;
+}
+
 
 // POST /friend/request/:id
 async function sendFriendRequest(id: number) 
@@ -312,6 +383,40 @@ async function sendFriendRequest(id: number)
 		if (data.message === 'Friendship in pending mod')
 		{
 			WriteOnTerminal.printErrorOnTerminal('Votre demande d\'ami est en attente.');
+			return "OK";
+		}
+		console.error("Error fetching profile data:", data.message);
+		WriteOnTerminal.printErrorOnTerminal('Erreur lors de la récupération des données du profil.');
+	} catch (error) {
+		console.error("Error:", error);
+		WriteOnTerminal.printErrorOnTerminal('Erreur lors de la récupération des données du profil.');
+	}
+}
+
+async function removeFriend(id: number)
+{
+	const token = TerminalUtils.getCookie('accessToken') || '';
+	if (token === '') {
+		return `Vous n'êtes pas connecté.`;
+	}
+	try {
+		const response = await fetch(`/api/friend/remove/${id}`, {
+			method: 'DELETE',
+			headers: {
+				'Authorization': 'Bearer ' + token
+			},
+		});
+		const data = await response.json();
+		if (data.success) {
+			console.log('data :', data);
+			WriteOnTerminal.printErrorOnTerminal(`${profile.username} a été retiré de vos amis.`);
+			return "OK";
+		}
+		if (data.message === 'Invalid or expired token') {
+			const refreshed = await RequestBackendModule.tryRefreshToken();
+			if (!refreshed) {
+				WriteOnTerminal.printErrorOnTerminal(`Vous n'êtes pas connecté.`);
+			}
 			return "OK";
 		}
 		console.error("Error fetching profile data:", data.message);

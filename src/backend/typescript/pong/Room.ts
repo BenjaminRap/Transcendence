@@ -1,7 +1,7 @@
 import { ServerSceneData } from "./ServerSceneData";
 import { ServerPongGame } from "./ServerPongGame";
 import { HavokPlugin } from "@babylonjs/core/Physics/v2/Plugins/havokPlugin";
-import { type GameInit, type GameStartInfos, type KeysUpdate, type Profile, zodKeysUpdate } from "@shared/ZodMessageType"
+import { type GameInit, type GameStartInfos, type KeysUpdate, type Profile } from "@shared/ZodMessageType"
 import { ClientProxy } from "./ClientProxy";
 import { type int, Observable } from "@babylonjs/core";
 import type { ServerType } from "../index";
@@ -212,13 +212,10 @@ export class	Room
 		const	observable = new Observable<SocketMessage>();
 
 		this._sockets.forEach((socket : DefaultSocket, index : number) => {
-			socket.on(event, (data : any) => {
-				const	keysUpdate = zodKeysUpdate.safeParse(data);
-				if (!keysUpdate.success)
-					return ;
+			socket.on(event, (keysUpdate : KeysUpdate) => {
 				const	clientMessage : SocketMessage = {
 					socketIndex : index,
-					data : keysUpdate.data
+					data : keysUpdate
 				};
 				observable.notifyObservers(clientMessage);
 			});

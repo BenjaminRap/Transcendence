@@ -103,9 +103,9 @@ export class Container {
             prisma,
             this.getService('PasswordHasher'),
             this.getService('FileService'),
-            this.getService('MatchService')
+            this.getService('MatchService'),
+            this.getService('FriendService'),
         ));
-
 
 		this.registerService('TournamentService', () => new TournamentService(
 			prisma,
@@ -117,7 +117,8 @@ export class Container {
         ));
 
         this.registerService('UsersController', () => new UsersController(
-            this.getService('UsersService')
+            this.getService('UsersService'),
+            this.getService('MatchService')
         ));
 
         this.registerService('SuscriberController', () => new SuscriberController(

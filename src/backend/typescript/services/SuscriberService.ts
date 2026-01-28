@@ -1,14 +1,15 @@
-import { PrismaClient, type User, type Friendship  } from "@prisma/client";
-import { type UpdateData } from "../types/suscriber.types.js";
+import { PrismaClient, type User } from "@prisma/client";
 import { PasswordHasher } from "../utils/PasswordHasher.js";
 import { FileService } from "./FileService.js";
 import { sanitizeUser } from '../types/auth.types.js'
 import type { SuscriberProfile } from "../types/suscriber.types.js";
 import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
 import path from "path";
-import { SocketEventController } from "../controllers/SocketEventController.js";
 import type { Friend } from "../types/suscriber.types.js";
 import type { MatchService } from "./MatchService.js";
+import type { FriendService } from "./FriendService.js";
+import type { ListFormat } from "../types/friend.types.js";
+import type { MatchSummary } from "../types/match.types.js";
 import type { GameStats, SanitizedUser } from "@shared/ZodMessageType.js";
 
 export class SuscriberService {
@@ -17,6 +18,7 @@ export class SuscriberService {
         private passwordHasher: PasswordHasher,
         private fileService: FileService,
         private matchService: MatchService,
+        private friendService: FriendService,
     ) {}
     private api_url = process.env.API_URL || 'https://localhost:8080/api';
     private default_avatar_filename = 'avatarDefault.webp';
@@ -24,7 +26,6 @@ export class SuscriberService {
 
     // ----------------------------------------------------------------------------- //
     async getProfile(id: number): Promise<SuscriberProfile> {
-        // we are limited to 10 matches won and 10 matches lost to get last matches
         const takeLimit = 10; 
 
         const user = await this.prisma.user.findUnique({
@@ -44,7 +45,6 @@ export class SuscriberService {
                 receivedRequests: { include: { requester: true } }, 
             },
         });
-
         if (!user) {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
         }
@@ -53,8 +53,8 @@ export class SuscriberService {
 
         const stats: GameStats = await this.matchService.getStat(id);
 
-        // Sorted 4 friends
-        const sortedFriends = this.getSortedFriendlist(user.sentRequests, user.receivedRequests, 4, user.id);
+        const friendList = await this.friendService.getFriendsList(id);
+        const sortedFriends = this.getSortedFriendlist(friendList, 4);
 
         return {
             id: user.id,
@@ -65,10 +65,19 @@ export class SuscriberService {
             friends: sortedFriends,
         };
     }
+
+    // ----------------------------------------------------------------------------- //
+    async getAllMatches(id: number): Promise<MatchSummary[]> {
+
+        const matches = await this.matchService.getAllMatches(id);
+
+        // console.log('SuscriberService - getAllMatches - matches: ', matches);
+        return matches;
+    }
     
 	// ----------------------------------------------------------------------------- //
     async updatePassword(id: number, currentPassword: string, newPassword: string): Promise<void> {
-        const user = await this.getById(Number(id));
+        const user = await this.prisma.user.findUnique({ where: { id: Number(id) }, select: { password: true } });
         if (!user) {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
         }
@@ -92,30 +101,25 @@ export class SuscriberService {
     }
 
     // ----------------------------------------------------------------------------- //
-    async updateUsername(id: number, data: UpdateData): Promise<User> {
+    async updateUsername(id: number, newName: string): Promise<User> {
         const user = await this.getById(Number(id));
         if (!user) {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
         }
 
         // throw SuscriberException if data match
-		if (this.hasChanged(user, data) === false)
+		if (user.username === newName)
 			throw new SuscriberException(SuscriberError.USRNAME_ERROR, SuscriberError.USRNAME_ERROR);
 
         // check username availability
-        const existingUser = await this.prisma.user.findUnique({
-            where: { username: data.username }
-        });
-        if (existingUser) {
+        if (await this.prisma.user.count({ where: { username: newName } }) > 0) {
             throw new SuscriberException(SuscriberError.USRNAME_ALREADY_USED,SuscriberError.USRNAME_ALREADY_USED);
         }
 
         // update user in DB
         const updatedUser = await this.prisma.user.update({
             where: { id: Number(id) },
-            data: {
-                username: data.username ?? user.username,
-            },
+            data: { username: newName },
         });
 
         return updatedUser;
@@ -127,13 +131,15 @@ export class SuscriberService {
         if (!user)
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
 
-       // upload avatar, never throw but return empty string if an error occured
+       // upload avatar, never throw but returns empty string if an error occured
         const avatarFileName = await this.fileService.uploadAvatarSafe(buffer, String(userId));
         if (!avatarFileName)
             throw new SuscriberException(SuscriberError.UPLOAD_ERROR, SuscriberError.UPLOAD_ERROR);
         
         const oldAvatarUrl = user.avatar;
         const newAvatarUrl = `${this.api_url}/static/avatars/${path.basename(avatarFileName)}`;
+
+        // this try catch is used to rollback avatar upload if DB update fails
         try {
             const updatedUser = await this.prisma.user.update({
                 where: { id: Number(userId) },
@@ -181,9 +187,7 @@ export class SuscriberService {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
         }
 
-        await this.prisma.user.delete({
-            where: { id: Number(id) }
-        });
+        await this.prisma.user.delete({ where: { id: Number(id) } });
     }
 
     // ================================== PRIVATE ================================== //
@@ -194,53 +198,38 @@ export class SuscriberService {
     }
 
     // ----------------------------------------------------------------------------- //
-    private hasChanged(user: User, data: UpdateData) : boolean {
-		return user.username != data.username;
-    }
+    private getSortedFriendlist(list: ListFormat[], limit: number): Friend[] {
+        if (list.length === 0) return [];
 
-    // ----------------------------------------------------------------------------- //
-    private getSortedFriendlist(requester: any[], receiver: any[], limit: number, userId: number): Friend[] {
-        const allFriendships = [
-            ...(requester || []),
-            ...(receiver || []),
-        ];
+        list.sort((a, b) => {
+            if (!a.user || !b.user) return 0;
 
-        // 1. Tri
-        allFriendships.sort((a, b) => {
-            const getFriendId = (r: Friendship) => r.requesterId === userId ? r.receiverId : r.requesterId;
-            
-            const isOnlineA = SocketEventController.isUserOnline(getFriendId(a));
-            const isOnlineB = SocketEventController.isUserOnline(getFriendId(b));
+            const isOnlineA = a.user.isOnline;
+            const isOnlineB = b.user.isOnline;
 
-            /* Priority Score:
-               2 -> Ami (ACCEPTED) et Connecté
-               1 -> Demande en attente (PENDING)
-               0 -> Ami déconnecté ou autre
-            */
-            const getScore = (r: any, isOnline: boolean) => {
-                if (r.status === 'ACCEPTED' && isOnline) return 2;
-                if (r.status === 'PENDING') return 1;
+            // Priority Score: 2: accepted and online, 1: pending, 0: offline or other
+            const getScore = (item: ListFormat, isOnline: boolean) => {
+                if (item.status === 'ACCEPTED' && isOnline) return 2;
+                if (item.status === 'PENDING') return 1;
                 return 0;
             };
 
             return getScore(b, isOnlineB) - getScore(a, isOnlineA);
         });
 
-        // 2. Limite
-        const sliced = allFriendships.slice(0, limit);
+        const formatedList = list.slice(0, limit);
 
-        // 3. Transformation / Nettoyage
-        return sliced.map(relation => {
-            // On détermine qui est l'ami (l'autre personne dans la relation)
-            const friend = relation.requesterId === userId ? relation.receiver : relation.requester;
-            
+        return formatedList.map(item => {
+            if (!item.user) {
+                throw new SuscriberException(SuscriberError.USER_NOT_FOUND, 'A ghost user was found in friend list');
+            }
             return {
-                id: Number(friend.id),
-                username: friend.username,
-                avatar: friend.avatar,
-                isOnline: SocketEventController.isUserOnline(friend.id),
-                status: relation.status,
-                requesterId: relation.requesterId,
+                id: item.user.id,
+                username: item.user.username,
+                avatar: item.user.avatar,
+                isOnline: item.user.isOnline,
+                status: item.status,
+                requesterId: item.user.requesterId,
             };
         });
     }

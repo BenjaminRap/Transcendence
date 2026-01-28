@@ -1,319 +1,50 @@
 import { WriteOnTerminal } from "./terminalUtils/writeOnTerminal";
 import { PongUtils } from './terminal'
+import { TerminalUtils } from "./terminalUtils/terminalUtils";
+
+
+
+
+interface Friend
+{
+	status: string,
+	updatedAt: Date,
+	user: {
+		id: number,
+		username: string,
+		avatar: string,
+		isOnline: boolean,
+		requesterId: number,
+	}
+}
 
 
 interface Match {
-	state: string;
-	opponent: string;
-	result: string;
-	date: string;
-	profilelinkopponent: string;
-	score: string;
+	id: number;
+	createdAt: Date;
+	winnerId: number | null;
+	loserId: number | null;
+	scoreWinner: number;
+	scoreLoser: number;
+	duration: number;
+	tournamentId: number | null;
 }
 
-interface Friend {
-	username: string;
-	linkofavatar: string;
-	status: string;
-	pending: boolean;
+interface MatchSummary
+{
+	isWinner: boolean,
+	opponent: { id: string, username: string, avatar: string,} | null,
+	match: Match | null,
 }
 
+let searchBar: HTMLInputElement;
 
-let type = '';
+let matches: MatchSummary[] = [];
+let friends: Friend[] = [];
 
-const friends: Friend[] = [
-	{
-		username: "Friend1",
-		linkofavatar: "https://i.pravatar.cc/150?img=5",
-		status: "Online",
-		pending: true
-	},
-	{
-		username: "Friend2",
-		linkofavatar: "https://i.pravatar.cc/150?img=6",
-		status: "Online: 2 hours ago",
-		pending: true
-	},
-	{
-		username: "Friend3",
-		linkofavatar: "https://i.pravatar.cc/150?img=7",
-		status: "In Game",
-		pending: true
-	},
-	{
-		username: "Friend4",
-		linkofavatar: "https://i.pravatar.cc/150?img=8",
-		status: "Online",
-		pending: true
-	},{
-		username: "Friend1",
-		linkofavatar: "https://i.pravatar.cc/150?img=5",
-		status: "Online",
-		pending: false
-
-	},
-	{
-		username: "Frieqqqqqqqqqqqqqqq",
-		linkofavatar: "https://i.pravatar.cc/150?img=6",
-		status: "Online: 2 hours ago",
-		pending: false
-	},
-	{
-		username: "Friend3",
-		linkofavatar: "https://i.pravatar.cc/150?img=7",
-		status: "In Game",
-		pending: false
-	},
-	{
-		username: "Friend4",
-		linkofavatar: "https://i.pravatar.cc/150?img=8",
-		status: "Online",
-		pending: false
-	},{
-		username: "Friend1",
-		linkofavatar: "https://i.pravatar.cc/150?img=5",
-		status: "Online",
-		pending: false
-	},
-	{
-		username: "Friend2",
-		linkofavatar: "https://i.pravatar.cc/150?img=6",
-		status: "Online: 2 hours ago",
-		pending: false
-	},
-	{
-		username: "Friend3",
-		linkofavatar: "https://i.pravatar.cc/150?img=7",
-		status: "In Game",
-		pending: false
-	},
-	{
-		username: "Friend4",
-		linkofavatar: "https://i.pravatar.cc/150?img=8",
-		status: "Online",
-		pending: false
-	},{
-		username: "Friend1",
-		linkofavatar: "https://i.pravatar.cc/150?img=5",
-		status: "Online",
-		pending: false
-	},
-	{
-		username: "Friend2",
-		linkofavatar: "https://i.pravatar.cc/150?img=6",
-		status: "Online: 2 hours ago",
-		pending: false
-	},
-	{
-		username: "Friend3",
-		linkofavatar: "https://i.pravatar.cc/150?img=7",
-		status: "In Game",
-		pending: false
-	},
-	{
-		username: "Friend4",
-		linkofavatar: "https://i.pravatar.cc/150?img=8",
-		status: "Online",
-		pending: false
-	},{
-		username: "Friend1",
-		linkofavatar: "https://i.pravatar.cc/150?img=5",
-		status: "Online",
-		pending: false
-	},
-	{
-		username: "Friend2",
-		linkofavatar: "https://i.pravatar.cc/150?img=6",
-		status: "Online: 2 hours ago",
-		pending: false
-	},
-	{
-		username: "Friend3",
-		linkofavatar: "https://i.pravatar.cc/150?img=7",
-		status: "In Game",
-		pending: false
-	},
-	{
-		username: "Friend4",
-		linkofavatar: "https://i.pravatar.cc/150?img=8",
-		status: "Online",
-		pending: false
-	},{
-		username: "Friend1",
-		linkofavatar: "https://i.pravatar.cc/150?img=5",
-		status: "Online",
-		pending: false
-	},
-	{
-		username: "Friend2",
-		linkofavatar: "https://i.pravatar.cc/150?img=6",
-		status: "Online: 2 hours ago",
-		pending: false
-	},
-	{
-		username: "Friend3",
-		linkofavatar: "https://i.pravatar.cc/150?img=7",
-		status: "In Game",
-		pending: false
-	},
-	{
-		username: "Friend4",
-		linkofavatar: "https://i.pravatar.cc/150?img=8",
-		status: "Online",
-		pending: false
-	},{
-		username: "Friend1",
-		linkofavatar: "https://i.pravatar.cc/150?img=5",
-		status: "Online",
-		pending: false
-	},
-	{
-		username: "Friend2",
-		linkofavatar: "https://i.pravatar.cc/150?img=6",
-		status: "Online: 2 hours ago",
-		pending: false
-	},
-	{
-		username: "Friend3",
-		linkofavatar: "https://i.pravatar.cc/150?img=7",
-		status: "In Game",
-		pending: false
-	},
-	{
-		username: "Friend4",
-		linkofavatar: "https://i.pravatar.cc/150?img=8",
-		status: "Online",
-		pending: false
-	},{
-		username: "Friend1",
-		linkofavatar: "https://i.pravatar.cc/150?img=5",
-		status: "Online",
-		pending: false
-	},
-	{
-		username: "Friend2",
-		linkofavatar: "https://i.pravatar.cc/150?img=6",
-		status: "Online: 2 hours ago",
-		pending: false
-	},
-	{
-		username: "Friend3",
-		linkofavatar: "https://i.pravatar.cc/150?img=7",
-		status: "In Game",
-		pending: false
-	},
-	{
-		username: "Friend4",
-		linkofavatar: "https://i.pravatar.cc/150?img=8",
-		status: "Online",
-		pending: false
-	},
-];
-
-
-const matches: Match[] = [
-	{
-		state: "Finished",
-		opponent: "Opponent1",
-		result: "Win",
-		date: "2023-10-01",
-		profilelinkopponent: "https://i.pravatar.cc/150?img=1",
-		score: "1-0"
-	},
-	{
-		state: "Finished",
-		opponent: "Opponent2",
-		result: "Loss",
-		date: "2023-10-02",
-		profilelinkopponent: "https://i.pravatar.cc/150?img=2",
-		score: "0-1"
-	},
-	{
-		state: "Finished",
-		opponent: "Opponent3",
-		result: "Win",
-		date: "2023-10-03",
-		profilelinkopponent: "https://i.pravatar.cc/150?img=3",
-		score: "1-0"
-	},
-	{
-		state: "Finished",
-		opponent: "Opponent4",
-		result: "Loss",
-		date: "2023-10-04",
-		profilelinkopponent: "https://i.pravatar.cc/150?img=4",
-		score: "0-1"
-	},
-	{
-		state: "Finished",
-		opponent: "Opponent4",
-		result: "Loss",
-		date: "2023-10-04",
-		profilelinkopponent: "https://i.pravatar.cc/150?img=4",
-		score: "0-1"
-	},
-	{
-		state: "Finished",
-		opponent: "Opponent4",
-		result: "Loss",
-		date: "2023-10-04",
-		profilelinkopponent: "https://i.pravatar.cc/150?img=4",
-		score: "0-1"
-	},
-	{
-		state: "Finished",
-		opponent: "Opponent4",
-		result: "Loss",
-		date: "2023-10-04",
-		profilelinkopponent: "https://i.pravatar.cc/150?img=4",
-		score: "0-1"
-	},
-	{
-		state: "Finished",
-		opponent: "Opponent4",
-		result: "Loss",
-		date: "2023-10-04",
-		profilelinkopponent: "https://i.pravatar.cc/150?img=4",
-		score: "0-1"
-	},
-	{
-		state: "Finished",
-		opponent: "Opponent4",
-		result: "Loss",
-		date: "2023-10-04",
-		profilelinkopponent: "https://i.pravatar.cc/150?img=4",
-		score: "0-1"
-	},
-	{
-		state: "Finished",
-		opponent: "Opponent4",
-		result: "Loss",
-		date: "2023-10-04",
-		profilelinkopponent: "https://i.pravatar.cc/150?img=4",
-		score: "0-1"
-	},
-	{
-		state: "Finished",
-		opponent: "Opponent4",
-		result: "Loss",
-		date: "2023-10-04",
-		profilelinkopponent: "https://i.pravatar.cc/150?img=4",
-		score: "0-1"
-	},
-	{
-		state: "Finished",
-		opponent: "Opponent4",
-		result: "Loss",
-		date: "2023-10-04",
-		profilelinkopponent: "https://i.pravatar.cc/150?img=4",
-		score: "0-1"
-	}
-];
-
-
-
-let MatchDiplay: Match[] = [...matches];
+let MatchDisplay: MatchSummary[] = [...matches];
 let FriendDisplay: Friend[] = [...friends];
+
 
 
 
@@ -321,36 +52,56 @@ function createListMatches() : HTMLDivElement
 {
 	const matchElement = document.createElement('div');
 	matchElement.id = "matchList";
-	matchElement.className = "flex flex-col gap-y-4 px-2 h-full overflow-y-auto";
+	matchElement.className = "terminal-font flex flex-col gap-y-4 px-2 h-full overflow-y-auto";
 	const lign = document.createElement('hr');
 	lign.className = "border-green-500";
-	for (let i = 0; i < MatchDiplay.length; i++) {
-		const match = MatchDiplay[i];
+	for (let i = 0; i < MatchDisplay.length; i++) {
+		const match = MatchDisplay[i];
 		const matchDiv = document.createElement('div');
+		if (!match || !match.match || !match.opponent) 
+			continue;
+		let result;
+		if (match.isWinner) {
+			result = "Win";
+		} else {
+			result = "Loose";
+		}
+		let score;
+		if (result === "Win") {
+			score = `${match.match.scoreWinner} - ${match.match.scoreLoser}`;
+		} else {
+			score = `${match.match.scoreLoser} - ${match.match.scoreWinner}`;
+		}
 		matchDiv.className = "flex px-4 shadow-lg place-content-between";
 		matchDiv.innerHTML = `
-				<div class="flex w-1/2 place-content-between pr-4">
-					<div class="flex flex-col gap-y-0">
-						<p class="p-0 m-0">Win</p>
-						<p class="" style="font-size: 10px;">${match.date}</p>
+				<div class="flex flex-1 items-center justify-between pr-2 min-w-0">
+					<div class="flex flex-col gap-y-0 min-w-0">
+						<p class="p-0 m-0 truncate">${result}</p>
+						<p class="truncate" style="font-size: 10px;">${new Date(match.match.createdAt).toLocaleDateString()}</p>
 					</div>
-					<div class="flex flex-col justify-center items-center">
-						<p>${match.score}</p>
-						<p>vs</p>
+					<div class="flex flex-col justify-center items-center shrink-0 px-1">
+						<p>${score}</p>
+						<p style="font-size: 10px;">vs</p>
 					</div>
 				</div>
-				<div class="card flex justify-center items-center gap-2 max-w-1/2 relative ">
-					<div class="group w-full max-w-[80%]">
-						<p class="truncate cursor-pointer">${match.opponent}</p>
-						<p class="absolute right-0 z-50 hidden group-hover:block border p-1 border-green-500 bg-black ${i == 0 ? 'top-[34px]' : 'top-[-24px]'}">${match.opponent}</p>
+				<div class="flex flex-1 justify-end items-center gap-2 min-w-0 relative">
+					<div class="group relative min-w-0 text-right">
+						<p class="truncate cursor-pointer">${match.opponent.username}</p>
+						<p class="absolute bottom-full right-0 mb-1 hidden group-hover:block border p-1 border-green-500 bg-black whitespace-nowrap">${match.opponent.username}</p>
 					</div>
-					<img src="${match.profilelinkopponent}" alt="Avatar"
-						class="w-10 h-10 border border-green-500 object-cover"></img>
+					<img src="${match.opponent.avatar}" alt="Avatar"
+						class="w-8 h-8 sm:w-10 sm:h-10 border border-green-500 object-cover shrink-0"></img>
 				</div>
 			`
 		matchElement.appendChild(matchDiv);
-		if (i < MatchDiplay.length - 1)
+		if (i < MatchDisplay.length - 1)
 			matchElement.appendChild(lign.cloneNode());
+	}
+	if (MatchDisplay.length === 0) {
+		const noMatchMessage = document.createElement('div');
+		noMatchMessage.className = "text-center text-gray-500";
+		noMatchMessage.innerText = "Aucun match trouvé.";
+		matchElement.appendChild(noMatchMessage);
 	}
 	return matchElement;
 }
@@ -359,27 +110,31 @@ function createListMatches() : HTMLDivElement
 
 function createFriendList() : HTMLDivElement
 {
-	const friendElement = document.createElement('div');
+		const friendElement = document.createElement('div');
 	friendElement.id = "friendList";
 	const lign = document.createElement('hr');
 	lign.className = "border-green-500";
-	friendElement.className = "flex flex-col gap-y-4 px-2 h-full overflow-y-auto";
+	friendElement.className = "terminal-font flex flex-col gap-y-4 px-2 h-full overflow-y-auto";
 	for (let i = 0; i < FriendDisplay.length; i++) {
 		const friend = FriendDisplay[i];
 		const friendDiv = document.createElement('div');
-		friendDiv.className = "flex flex-wrap items-center gap-x-4 place-content-between h-full";
+		let status;
+		if (friend.status === "PENDING")
+			status = "Pending...";
+		else if (friend.user.isOnline)
+			status = "Online.";
+		else
+			status = "Offline.";
+		friendDiv.className = "flex items-center px-4 gap-x-4 min-w-0";
 		friendDiv.innerHTML = `
-				<div class="flex flex-wrap items-center gap-x-4 w-auto border-red-600">
-					<img src="${friend.linkofavatar}" alt="Avatar" class="w-10 h-10 border border-green-500 object-cover"></img>
-					<div class="flex flex-col gap-y-0">
-						<div class="flex flex-wrap">
-							<p>${friend.username}</p>
-						</div>
-						<p style="font-size: 10px;">${friend.status}</p>
-					</div>
+		<img src="${friend.user.avatar}" alt="Avatar"
+					class="w-8 h-8 sm:w-10 sm:h-10 border border-green-500 object-cover shrink-0"></img>
+				<div class="flex flex-col gap-y-0 min-w-0 flex-1">
+					<p class="truncate">${friend.user.username}</p>
+					<p class="truncate" style="font-size: 10px;">${status}</p>
 				</div>
 		`
-		if (friend.pending) {
+		if (friend.status === "PENDING" && friend.user.requesterId !== ExtendedView.profileId) {
 			const pendingTag = document.createElement('div');
 			pendingTag.className = "flex gap-x-2";
 			pendingTag.innerHTML = `
@@ -389,10 +144,10 @@ function createFriendList() : HTMLDivElement
 			const buttonAccept = pendingTag.querySelector('#AcceptRequest');
 			const buttonRefuse = pendingTag.querySelector('#RefuseRequest');
 			buttonAccept?.addEventListener('click', () => {
-				acceptFriendRequest(friend.username);
+				acceptFriendRequest(FriendDisplay[i].user.username);
 			});
 			buttonRefuse?.addEventListener('click', () => {
-				refuseFriendRequest(friend.username);
+				removeFriend(FriendDisplay[i].user.username);
 			});
 			friendDiv.appendChild(pendingTag);
 		}
@@ -405,7 +160,7 @@ function createFriendList() : HTMLDivElement
 			`
 			const removeButton = pendingTag.querySelector('#removeFriendButton');
 			removeButton?.addEventListener('click', () => {
-				removeFriend(friend.username);
+				removeFriend(FriendDisplay[i].user.username);
 			});
 			friendDiv.appendChild(pendingTag);
 		}
@@ -416,15 +171,101 @@ function createFriendList() : HTMLDivElement
 	return friendElement;
 }
 
+async function fetchFriendData() : Promise<void>
+{
+	try {
+		const token = TerminalUtils.getCookie('accessToken') || '';
+		if (token === '') {
+			console.error("No access token found.");
+			return;
+		}
+		const response = await fetch('/api/friend/search/myfriends', {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': 'Bearer ' + token
+			},
+		});
+		const data = await response.json();
+		if (data.success)
+		{
+			friends = data.friendList as Friend[];
+			FriendDisplay = [...friends];
+			console.log("Friend data fetched successfully:", FriendDisplay);
+		}
+		else
+			console.error("Failed to fetch friend data:", data.message);
+	}
+	catch (error) {
+		console.error("Error fetching friend data:", error);
+	}
+}
+
+// GET /users/id/:id/allmatches
+async function fetchMatchData(id: number) : Promise<void>
+{
+	try {
+		const token = TerminalUtils.getCookie('accessToken') || '';
+		if (token === '') {
+			console.error("No access token found.");
+			return;
+		}
+		const response = await fetch(`/api/users/id/${id}/allmatches`, {
+			method: 'GET',
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': 'Bearer ' + token
+			},
+		});
+		const data = await response.json();
+		if (data.success)
+		{
+			matches = data.matches as MatchSummary[];
+			MatchDisplay = [...matches];
+			console.log("Match data fetched successfully:", MatchDisplay);
+		}
+		else
+			console.error("Failed to fetch match data:", data.message);
+	}
+	catch (error) {
+		console.error("Error fetching match data:", error);
+	}
+}
+
+function sortFriendList()
+{
+	let pendingFriends = [];
+	let onlineFriends = [];
+	let offlineFriends = [];
+
+	for (const friend of friends) {
+		if (friend.user.isOnline) {
+			onlineFriends.push(friend);
+		} else if (friend.status === "PENDING") {
+			pendingFriends.push(friend);
+		} else {
+			offlineFriends.push(friend);
+		}
+	}
+	FriendDisplay = [...onlineFriends, ...pendingFriends, ...offlineFriends];
+}
+
 export namespace ExtendedView { 
 	export var isExtendedViewIsActive = false;
 
-	export function makeExtendedView(dataType: 'match' | 'friend', username: string | '') {
+	export async function makeExtendedView(dataType: 'match' | 'friend', username: string | '', id : number | 0) {
 		if (isExtendedViewIsActive || PongUtils.isPongLaunched)
 			return;
-		type = dataType;
+		ExtendedView.type = dataType;
+		if (dataType === 'friend') {
+			await fetchFriendData();
+		}
+		else if (dataType === 'match') {
+			await fetchMatchData(id);
+		}
 		const view = document.createElement('div');
-		view.className = "fixed top-[50%] left-[50%] border p-4 border-green-500 bg-black z-2 flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 w-[20%] max-h-[50vh]";
+		view.className = "terminal-font fixed top-[50%] left-[50%] border p-4 border-green-500 bg-black z-2 flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 w-[20%] max-h-[50vh] overflow-y-auto focus:outline-none";
+		view.style = "width: 30%"
 		view.id = "view";
 
 		view.setAttribute('tabindex', '0');
@@ -432,6 +273,7 @@ export namespace ExtendedView {
 
 		view.addEventListener('keydown', (event: KeyboardEvent) => {
 			if (event.key === 'Escape' || (event.key === 'c' && event.ctrlKey)) {
+				console.log("Kill signal recu par :", event.key);
 				event.preventDefault();
 				closeExtendedView();
 				WriteOnTerminal.displayOnTerminal("^C", true);
@@ -444,7 +286,7 @@ export namespace ExtendedView {
 
 		const container = document.createElement('div');
 		container.className = "flex flex-col px-2 h-full";
-		const searchBar = document.createElement('input');
+		searchBar = document.createElement('input');
 		searchBar.id = "searchBar";
 		searchBar.type = "text";
 		searchBar.placeholder = "Search "+ (dataType === 'friend' ? 'friends' : 'matches');
@@ -453,7 +295,7 @@ export namespace ExtendedView {
 		searchBarFunctionality(searchBar);
 		container.appendChild(searchBar);
 
-				view.appendChild(container);
+		view.appendChild(container);
 
 		if (dataType === 'friend') {
 			const friendList = createFriendList();
@@ -467,8 +309,8 @@ export namespace ExtendedView {
 		setTimeout(() => {
 			window?.addEventListener('click', handleOutsideClick);
 		}, 0);
-
 		closeButton.addEventListener('click', closeExtendedView);
+
 		view.appendChild(closeButton);
 		const terminal = document.getElementById('terminal');
 		if (terminal) {
@@ -507,68 +349,90 @@ export namespace ExtendedView {
 		else
 			event.stopPropagation();
 	};
+
+	export let type = '';
+	export let profileId = 0;
+
+
+	export function addMatch(match: MatchSummary) {
+		matches.unshift(match);
+		console.log("Matches after adding new match:", matches);
+		refreshMatchList();
+	}
+
+	export function addFriend(friend: Friend) {
+		friends.unshift(friend);
+		sortFriendList();
+		refreshFriendList();
+	}
 }
 
 function acceptFriendRequest(username: string) {
 	console.log(`Accepted friend request from: ${username}`);
 }
 
-function refuseFriendRequest(username: string) {
-	console.log(`Refused friend request from: ${username}`);
-}
-
 function removeFriend(username: string) {
 	console.log(`Removing friend: ${username}`);
+}
+
+
+function refreshFriendList() {
+	const filter = searchBar.value.toLowerCase();
+	if (filter === '')
+		FriendDisplay = [...friends];
+	else
+		FriendDisplay = friends.filter(friend => friend.user.username.toLowerCase().startsWith(filter));
+	const oldList = document.getElementById('friendList');
+	if (oldList && oldList.parentNode)
+		oldList.parentNode.removeChild(oldList);
+	if (FriendDisplay.length === 0) {
+		const noFriendMessage = document.createElement('p');
+		noFriendMessage.id = "friendList";
+		noFriendMessage.className = "terminal-font text-center mt-4";
+		noFriendMessage.textContent = "No friends found.";
+		document.getElementById('view')?.appendChild(noFriendMessage);
+		return;
+	}
+	else
+	{
+		const newFriendList = createFriendList();
+		document.getElementById('view')?.appendChild(newFriendList);
+	}
+}
+
+function refreshMatchList() 
+{
+	const filter = searchBar.value.toLowerCase();
+	if (filter === '')
+		MatchDisplay = [...matches]; // Sa evite les shadow copy
+	else
+		MatchDisplay = matches.filter(match => match.opponent?.username.toLowerCase().startsWith(filter));
+	const matchList = document.getElementById('matchList');
+	if (matchList && matchList.parentNode)
+		matchList.parentNode.removeChild(matchList);
+	if (MatchDisplay.length === 0) {
+		const noMatchMessage = document.createElement('p');
+		noMatchMessage.id = "matchList";
+		noMatchMessage.className = "terminal-font text-center mt-4";
+		noMatchMessage.textContent = "No matches found.";
+		document.getElementById('view')?.appendChild(noMatchMessage);
+		return;
+	}
+	else
+	{
+		const newMatchList = createListMatches();
+		document.getElementById('view')?.appendChild(newMatchList);
+	}
 }
 
 function searchBarFunctionality(searchBar: HTMLInputElement) {
 	
 	searchBar.addEventListener('input', () => {
-		const filter = searchBar.value.toLowerCase();
-		if (type === 'friend') {
-			if (filter === '')
-				FriendDisplay = [...friends];
-			else
-				FriendDisplay = friends.filter(friend => friend.username.toLowerCase().startsWith(filter));
-			const oldList = document.getElementById('friendList');
-			if (oldList && oldList.parentNode)
-				oldList.parentNode.removeChild(oldList);
-			if (FriendDisplay.length === 0) {
-				const noFriendMessage = document.createElement('p');
-				noFriendMessage.id = "friendList";
-				noFriendMessage.className = "terminal-font text-center mt-4";
-				noFriendMessage.textContent = "No friends found.";
-				document.getElementById('view')?.appendChild(noFriendMessage);
-				return;
-			}
-			else
-			{
-				const newFriendList = createFriendList();
-				document.getElementById('view')?.appendChild(newFriendList);
-			}
+		if (ExtendedView.type === 'friend') {
+			refreshFriendList();
 		}
-		else if (type === 'match') {
-			if (filter === '')
-				MatchDiplay = [...matches]; // Sa evite les shadow copy
-			else
-				MatchDiplay = matches.filter(match => match.opponent.toLowerCase().startsWith(filter));
-			const matchList = document.getElementById('matchList');
-			if (matchList && matchList.parentNode)
-				matchList.parentNode.removeChild(matchList);
-			if (MatchDiplay.length === 0) {
-				const noMatchMessage = document.createElement('p');
-				noMatchMessage.id = "matchList";
-				noMatchMessage.className = "terminal-font text-center mt-4";
-				noMatchMessage.textContent = "No matches found.";
-				document.getElementById('view')?.appendChild(noMatchMessage);
-				return;
-			}
-			else
-			{
-				const newMatchList = createListMatches();
-				document.getElementById('view')?.appendChild(newMatchList);
-			}
-		}
-	});
+		else if (ExtendedView.type === 'match') {
+			refreshMatchList();
+		}});
 }
 

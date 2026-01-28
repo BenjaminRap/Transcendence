@@ -6,7 +6,6 @@ export class HeaderMiddleware {
     // --------------------------------------------------------------------------------- //
     checkFormData = async (request: FastifyRequest, reply: FastifyReply) => {
         const contentType = request.headers['content-type'] || '';
-        console.log('Content-Type:', contentType);
         if (!contentType.includes('multipart/form-data')) {
             return reply.status(400).send({
                 success: false,
@@ -14,15 +13,4 @@ export class HeaderMiddleware {
             });
         }
     };
-
-    // --------------------------------------------------------------------------------- //
-    checkGameSecret = async (request: FastifyRequest, reply: FastifyReply) => {
-        const gameSecret = request.headers['x-game-secret'];
-        if (gameSecret !== this.expectedGameSecret) {
-            return reply.code(403).send({
-                success: false,
-                message: 'Forbidden'
-            });
-        }
-    }
 }

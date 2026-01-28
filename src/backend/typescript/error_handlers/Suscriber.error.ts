@@ -1,7 +1,7 @@
 export enum SuscriberError
 {
-    BAD_FORMAT = 'Data is not in the correct format',
     USER_NOT_FOUND = 'User not found',
+    BAD_FORMAT = 'Data is not in the correct format',
     USRNAME_ERROR = 'Username must change',
     PASSWD_ERROR = 'Password must change',
     INVALID_CREDENTIALS = 'Invalid credentials',

@@ -1,10 +1,9 @@
 import { TerminalUtils } from "./terminalUtils";
 import { WriteOnTerminal } from "./writeOnTerminal";
 import { TerminalFileSystem, TerminalUserManagement } from "../terminal";
-import { CommandHelpMessage } from './helpText/help';
-import { io } from "socket.io-client";
 import { socketUtils } from '../terminal'
 import type { Result } from "@shared/utils";
+import { ProfileBuilder } from "../profile";
 
 
 export namespace RequestBackendModule {
@@ -74,14 +73,15 @@ export namespace RequestBackendModule {
 			return ;
 		// socketUtils.socket.emit('authenticate', { token: token });
 
-        socketUtils.socket.emit("authenticate", { token: token }, (result: Result<null>) => {
-            if (result.success) {
-                console.log("Connecté en tant qu'utilisateur !");
-            } else {
-                console.error("Échec auth:", result.error);
-            }
-        });
+		socketUtils.socket.emit("authenticate", { token: token }, (result: Result<null>) => {
+			if (result.success) {
+				console.log("Connecté en tant qu'utilisateur !");
+			} else {
+				console.error("Échec auth:", result.error);
+			}
+		});
 		socketUtils.socket.onAny((event, ...args) => {
+			console.log(`Reçu l'événement Socket.IO : ${event}`, args);
 		});
 	}
 
@@ -193,12 +193,14 @@ export namespace RequestBackendModule {
 			return 'You are not logged in.';
 		if (args.length > 1)
 			return description;
-		// API LOGOUT (avant delete token :) )
+		socketUtils.socket?.emit('logout', {});
 		document.cookie = 'accessToken=; path=/;';
 		document.cookie = 'refreshToken=; path=/;';
 		TerminalUserManagement.isLoggedIn = false;
 		TerminalUserManagement.username = 'usah';
 		TerminalUtils.updatePromptText( TerminalUserManagement.username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ " );
+		ProfileBuilder.removeProfile();
 		return 'Déconnexion réussie.';
 	}
 }
+ 

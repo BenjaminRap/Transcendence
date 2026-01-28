@@ -124,6 +124,7 @@ export namespace TerminalCommand {
 		new Command('42' , CommandHelpMessage.HELP_42, OauthCommand),
 		new Command('pong', CommandHelpMessage.HELP_PONG, pongCommand),
 		new Command('rm', 'Remove files or directories', rmCommand),
+        new Command('sudo', 'Execute a command with superuser privileges', sudoCommand)
 	];
 	export let commandHistory: string[] = [];
 	export let indexCommandHistory = -2;
@@ -134,8 +135,14 @@ export namespace TerminalCommand {
 
 // ------------------------------------------------------------------------ Command ---------------------------------------------------------------------
 
+function sudoCommand(): string {
+	clearOutput();
+	return CommandHelpMessage.SALAMANCA_ROLL;
+}
+
 function rmCommand(): string {
-	return 'Chef ? Laisse mes fichiers tranquilles !';
+	clearOutput();
+	return CommandHelpMessage.RICK_ROLL;
 }
 
 function pongCommand(args: string[], description: string): string {
@@ -157,7 +164,7 @@ function pongCommand(args: string[], description: string): string {
 
 function OauthCommand(args: string[], description: string): string {
 	const redirectUri = encodeURIComponent('https://localhost:8080/');
-	const uri = `https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-add813989568aed927d34847da79446b327e2cce154f4c1313b970f9796da37c&redirect_uri=${redirectUri}&response_type=code`;
+	const uri = `https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-c059880dbba480439dcbeb47c67c3cfb6744af5eb566b4887f9b3b9b3a3a924b&redirect_uri=${redirectUri}&response_type=code`;
 
 	if (TerminalUserManagement.isLoggedIn)
 		return 'Vous êtes déjà connecté.';

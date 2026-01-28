@@ -6,7 +6,7 @@ import { TokenManager } from "../utils/TokenManager.js";
 import type { FriendService } from "../services/FriendService.js";
 import type { ServerType } from "../index.js";
 import { getPublicTournamentsDescriptions, TournamentMaker } from "../pong/TournamentMaker.js";
-import { zodTournamentCreationSettings, type Profile, type TournamentDescription, type TournamentId } from "@shared/ZodMessageType.js";
+import { zodTournamentCreationSettings, type Profile, type TournamentCreationSettings, type TournamentDescription, type TournamentId } from "@shared/ZodMessageType.js";
 import { error, success, type Result } from "@shared/utils.js";
 import type { FriendProfile } from "../types/friend.types.js";
 import type { Event } from "socket.io";
@@ -18,7 +18,8 @@ export type DefaultSocket = Socket<ClientToServerEvents, ServerToClientEvents, D
 export class SocketEventController {
 	constructor (
 		private io: ServerType,
-        private friendService: FriendService = Container.getInstance().getService('FriendService'),
+        private friendService: FriendService,
+        private tokenManager: TokenManager,
 	) {
 		this.matchMaker = new MatchMaker(io);
 		this.sockets = new Set<DefaultSocket>();
@@ -37,7 +38,11 @@ export class SocketEventController {
 	static initInstance( io: Server<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>): void
 	{
 		if (!SocketEventController.socketInstance) {
-			SocketEventController.socketInstance = new SocketEventController (io);
+			SocketEventController.socketInstance = new SocketEventController (
+                io,
+                Container.getInstance().getService('FriendService'),
+                Container.getInstance().getService('TokenManager')
+            );
 		}
 	}
 
@@ -45,7 +50,10 @@ export class SocketEventController {
     // ----------------------------------------------------------------------------- //
 	static sendToUser(userId: number, event: string, data: any): void
 	{
-        if (!userId) return;
+        if (!userId) {
+            // console.log(`Cannot send event "${event}" to invalid user ID: ${userId}`);
+            return;
+        }
 
         try {
             if (SocketEventController.socketInstance) {
@@ -64,7 +72,8 @@ export class SocketEventController {
 
         try {
             if (SocketEventController.socketInstance) {
-                SocketEventController.socketInstance.io.to('watching-' + userId).emit(event as any, data);
+                // console.log(`Emitting event "${event}" to watchers of profile ${userId} with data: `, data);
+                SocketEventController.socketInstance.io.to('watching-' + Number(userId)).emit(event as any, data);
             }
         } catch (error) {
             console.warn(`\nFailed to emit event "${event}" to watchers of profile ${userId} :`, error);
@@ -75,20 +84,22 @@ export class SocketEventController {
     // ----------------------------------------------------------------------------- //
     static async sendToFriends(userId: number, event: string, data: any): Promise<void>
     {
-        if (!userId) return;
+        if (!userId) {
+            return;
+        }
 
         try {
             if (SocketEventController.socketInstance)
             {
-                const friendService: FriendService = Container.getInstance().getService('FriendService');
-    
-                await friendService.getFriendsIds(userId).then((friendsIds: number[]) => {
-                    friendsIds.forEach((friendId) => {
-                        SocketEventController.sendToUser(friendId, event, data);
+                await SocketEventController.socketInstance.friendService.getFriendsIds(userId)
+                    .then((friendsIds: number[]) => {
+                        friendsIds.forEach((friendId) => {
+                            // console.log(`Emitting event "${event}" to friend ${friendId}`); 
+                            SocketEventController.sendToUser(friendId, event, data);
+                        });
+                    }).catch((error) => {
+                        console.warn(`Error retrieving friends of user ${userId} :`, error);
                     });
-                }).catch((error) => {
-                    console.warn(`Error retrieving friends of user ${userId} :`, error);
-                });
             }            
         } catch (error) {
             console.warn(`Error sending socket event to friends of user ${userId} :`, error);
@@ -97,8 +108,9 @@ export class SocketEventController {
 
     // notify profile change to user, friends and watchers
     // ----------------------------------------------------------------------------- //
-    static notifyProfileChange(id: number, event: string, data: any): void
+    static notifyProfileChange(id: number | null, event: string, data: any): void
     {
+        if (!id || id < 0) return;
         SocketEventController.sendToUser(id, event, data);
         SocketEventController.sendToFriends(id, event, data);
         SocketEventController.sendToProfileWatchers(id, event, data);
@@ -107,7 +119,7 @@ export class SocketEventController {
     // check if a user is online
     // ----------------------------------------------------------------------------- //
     static isUserOnline(userId: number): boolean {
-        // console.log(`checking if user ${userId} is online in the list : `, SocketEventController.connectedUsers);
+        if (!userId || userId < 0) return false;
         return SocketEventController.connectedUsers.has(userId);
     }
 
@@ -234,13 +246,18 @@ export class SocketEventController {
 	// ----------------------------------------------------------------------------- //
 	private async handleConnection(socket: DefaultSocket)
 	{
-		socket.use(SocketEventController.middleware)
-		this.sockets.add(socket);
+        try {
+			socket.use(SocketEventController.middleware)
+            this.sockets.add(socket);
+    
+            socket.data = new SocketData(socket);
+    
+            socket.emit("init", socket.data.getGuestName());
 
-		socket.data = new SocketData(socket);
-
-		socket.emit("init", socket.data.getGuestName());
-		console.log(`Guest connected !`);
+            console.log(`Guest connected !`);            
+        } catch (error) {
+            console.error("Error during socket connection handling:", error);
+        }
 	}
 
 	// ----------------------------------------------------------------------------- //
@@ -275,16 +292,9 @@ export class SocketEventController {
 	}
 
     // ----------------------------------------------------------------------------- //
-	private	handleCreateTournament(socket : DefaultSocket, data : any, ack : (tournamentId : Result<string>) => void)
+	private	handleCreateTournament(socket : DefaultSocket, settings : TournamentCreationSettings, ack : (tournamentId : Result<string>) => void)
 	{
-		const	parsed = zodTournamentCreationSettings.safeParse(data);
-
-		if (!parsed.success)
-		{
-			ack(error("Invalid Data !"));
-			return ;
-		}
-		const	tournament = this.tournamentMaker.createTournament(parsed.data, socket);
+		const	tournament = this.tournamentMaker.createTournament(settings, socket);
 
 		if (!tournament.success)
 		{
@@ -329,18 +339,28 @@ export class SocketEventController {
 	// ----------------------------------------------------------------------------- //
     private addProfileToWatch(socket: DefaultSocket, profileId: number[]): void
     {
-        const ids = Array.isArray(profileId) ? profileId : [profileId];
-        for (const id of ids) {
-            socket.join('watching-' + id);
+        try {
+            const ids = Array.isArray(profileId) ? profileId : [profileId];
+            // console.log("Adding to watch profiles:", ids);
+            for (const id of ids) {
+                socket.join('watching-' + Number(id));
+            }            
+        } catch (error) {
+            console.error("Error while adding profile to watch:", error);
         }
     }
     
     // ----------------------------------------------------------------------------- //
     private removeProfileToWatch(socket: DefaultSocket, profileId: number[]): void
     {
-        const ids = Array.isArray(profileId) ? profileId : [profileId];
-        for (const id of ids) {
-            socket.leave('watching-' + id);
+        try {
+            const ids = Array.isArray(profileId) ? profileId : [profileId];
+            // console.log("Removing from watch profiles:", ids);
+            for (const id of ids) {
+                socket.leave('watching-' + Number(id));
+            }            
+        } catch (error) {
+            console.error("Error while removing profile to watch:", error);
         }
     }
 

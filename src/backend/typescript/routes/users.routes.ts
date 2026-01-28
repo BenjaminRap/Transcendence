@@ -14,4 +14,8 @@ export function usersRoutes(
     fastify.get<{ Params: {username: string} }>('/search/username/:username', {
         preHandler: middleware.authenticate,
     }, controller.getByName.bind(controller));
+
+    fastify.get<{ Params: {id: number} }>('/id/:id/allmatches', {
+        preHandler: middleware.authenticate,
+    }, controller.getAllMatches.bind(controller));
 }

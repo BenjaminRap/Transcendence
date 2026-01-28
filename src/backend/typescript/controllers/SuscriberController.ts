@@ -2,10 +2,10 @@ import type { FastifyRequest, FastifyReply } from "fastify";
 import { SuscriberService } from "../services/SuscriberService.js";
 import { FileController } from "../controllers/FileController.js";
 import type { UpdatePassword } from "../types/suscriber.types.js";
-import { SuscriberException, SuscriberError } from "../error_handlers/Suscriber.error.js";
 import { SuscriberSchema } from "../schemas/suscriber.schema.js";
 import { SocketEventController } from "./SocketEventController.js";
 import { sanitizeUser } from "../types/auth.types.js";
+import { ErrorWrapper } from "../error_handlers/ErrorWrapper.js";
 
 export class SuscriberController {
     constructor(
@@ -20,7 +20,9 @@ export class SuscriberController {
             const id = (request as any).user.userId;
 
             // returns user or throw exception USER NOT FOUND
-            const user =  await this.suscriberService.getProfile(Number(id))
+            const user =  await this.suscriberService.getProfile(Number(id));
+
+            // console.log('SuscriberController - getProfile - user - friendList: ', user.friends);
 
             return reply.status(200).send({
                 success: true,
@@ -28,15 +30,35 @@ export class SuscriberController {
                 user
             });            
         } catch (error) {
-            if (error instanceof SuscriberException) {
-                if (error.code === SuscriberError.USER_NOT_FOUND)
-                    return reply.status(404).send({ success: false, message: error.code });
-            }
-
-            request.log.error(error);
-            return reply.status(500).send({
+            const err = ErrorWrapper.analyse(error);
+            console.log(err.message);
+            return reply.status(err.code).send({
                 success: false,
-                message: 'Internal server error'
+                message: err.message,
+            });
+        }
+    }
+
+    // ----------------------------------------------------------------------------- //
+    // GET /suscriber/profile/allmatches
+    async getAllMatches(request: FastifyRequest, reply: FastifyReply) {
+        try {
+            const id = (request as any).user.userId;
+
+            // returns user or throw exception USER NOT FOUND
+            const matches =  await this.suscriberService.getAllMatches(Number(id));
+
+            return reply.status(200).send({
+                success: true,
+                message: 'Matches successfully retrieved',
+                matches
+            });            
+        } catch (error) {
+            const err = ErrorWrapper.analyse(error);
+            console.log(err.message);
+            return reply.status(err.code).send({
+                success: false,
+                message: err.message,
             });
         }
     }
@@ -51,7 +73,7 @@ export class SuscriberController {
                 return reply.status(400).send({
                     success: false,
                     message: validation.error?.issues?.[0]?.message || 'Invalid input',
-                    redirectTo: '/suscriber/updatepassword'
+                    redirectTo: '/suscriber/update/password'
                 });
             }
             
@@ -66,23 +88,11 @@ export class SuscriberController {
             });
 
         } catch (error) {
-            if (error instanceof SuscriberException) {
-                switch (error.code) {
-                    case SuscriberError.USER_NOT_FOUND:
-                        return reply.status(404).send({ success: false, message: error.message });
-                    default:
-                        return reply.status(409).send({
-                            success: false,
-                            message: error.message,
-                            redirectTo: '/suscriber/updatepassword'
-                        });
-                }
-            }
-            
-            request.log.error(error);
-            return reply.status(500).send({
+            const err = ErrorWrapper.analyse(error);
+            console.log(err.message);
+            return reply.status(err.code).send({
                 success: false,
-                message: 'Internal server error'
+                message: err.message,
             });
         }
     }
@@ -102,7 +112,7 @@ export class SuscriberController {
             }
 
             // check data, user existence, username availability then update and returns user or throw exception
-            const user = await this.suscriberService.updateUsername(id, validation.data);
+            const user = await this.suscriberService.updateUsername(id, validation.data.username);
 
             SocketEventController.notifyProfileChange(Number(id), 'profile-update', { user: sanitizeUser(user) });
             
@@ -113,24 +123,12 @@ export class SuscriberController {
                 user: sanitizeUser(user)
             }); 
         } catch (error) {
-            if (error instanceof SuscriberException) {
-                switch (error.code) {
-                    case SuscriberError.USER_NOT_FOUND:
-                        return reply.status(404).send({ success: false, message: error.code });
-                    default:
-                        return reply.status(409).send({
-                            success: false,
-                            message: error.message,
-                            redirectTo: '/suscriber/updateprofile'
-                        });
-                }
-            }
-            
-            request.log.error(error);
-            return reply.status(500).send({
+            const err = ErrorWrapper.analyse(error);
+            console.log(err.message);
+            return reply.status(err.code).send({
                 success: false,
-                message: 'Internal server error'
-            });            
+                message: err.message,
+            });
         }
     }
 
@@ -167,22 +165,11 @@ export class SuscriberController {
             });
 
         } catch (error) {
-            if (error instanceof SuscriberException) {
-                switch (error.code) {
-                    case SuscriberError.USER_NOT_FOUND:
-                        return reply.status(404).send({ success: false, message: error.code });
-                    default:
-                        return reply.status(400).send({
-                            success: false,
-                            message: error.message || 'Unknow error',
-                            redirectTo: '/suscriber/profile'
-                        });
-                }
-            }
-            request.log.error(error);
-            return reply.status(500).send({
+            const err = ErrorWrapper.analyse(error);
+            console.log(err.message);
+            return reply.status(err.code).send({
                 success: false,
-                message: 'Internal server error'
+                message: err.message,
             });
         }
     }
@@ -201,20 +188,11 @@ export class SuscriberController {
             return reply.status(204).send();
 
         } catch (error) {
-            if (error instanceof SuscriberException) {
-                if (error.code === SuscriberError.USER_NOT_FOUND)
-                    return reply.status(404).send({ success: false, message: error.code });
-                else
-                    return reply.status(400).send({
-                        success: false,
-                        message: error.message || 'Unknow error',
-                    });
-            }
-
-            request.log.error(error);
-            return reply.status(500).send({
+            const err = ErrorWrapper.analyse(error);
+            console.log(err.message);
+            return reply.status(err.code).send({
                 success: false,
-                message: 'Internal server error'
+                message: err.message,
             });
         }
     }
@@ -223,7 +201,6 @@ export class SuscriberController {
     // DELETE /suscriber/deleteaccount
     async deleteAccount(request: FastifyRequest, reply: FastifyReply) {
         try {
-            // the accessToken and tokenKey are already validated in the middleware
             const id = (request as any).user.userId;
             
             // delete user or throw exception USER NOT FOUND
@@ -235,15 +212,11 @@ export class SuscriberController {
             return reply.status(204).send();
 
         } catch (error) {
-            if (error instanceof SuscriberException) {
-                if (error.code === SuscriberError.USER_NOT_FOUND)
-                    return reply.status(404).send({ success: false, message: error.code });
-            }
-
-            request.log.error(error);
-            return reply.status(500).send({
+            const err = ErrorWrapper.analyse(error);
+            console.log(err.message);
+            return reply.status(err.code).send({
                 success: false,
-                message: 'Internal server error'
+                message: err.message,
             });
         }
     }

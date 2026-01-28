@@ -1,6 +1,5 @@
 import zod from "zod";
 import { zodKeysUpdate, zodProfile, zodTournamentCreationSettings, zodTournamentDescription, zodTournamentId} from "./ZodMessageType";
-import { CommonSchema } from "./common.schema";
 import { resultOf } from "./ZodHelper";
 
 export const clientMessages = ["join-matchmaking",
@@ -32,7 +31,7 @@ export const zodClientMessageData  = {
 	"watch-profile" : [zod.array(zod.number())] ,
 	"unwatch-profile" : [zod.array(zod.number())] ,
     "authenticate" : [zod.object({ token: zod.string() })] ,
-    "set-alias" : [CommonSchema.username]
+    "set-alias" : [zod.string()]
 } satisfies {
   readonly [key : string]: readonly [zod.ZodTypeAny, ...zod.ZodTypeAny[]];
 }

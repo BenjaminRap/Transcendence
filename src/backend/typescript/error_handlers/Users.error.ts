@@ -8,6 +8,6 @@ export enum UsersError
 export class UsersException extends Error {
     constructor(public code: UsersError, message?: string) {
         super(message ?? code);
-        this.name = 'SuscriberException';
+        this.name = 'UsersException';
     }
 }
