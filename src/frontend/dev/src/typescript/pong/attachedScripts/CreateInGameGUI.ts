@@ -80,6 +80,8 @@ export class CreateInGameGUI extends CustomScriptComponent {
 
 	protected	start()
 	{
+		if (this._sceneData.serverProxy.getTournamentData() !== null)
+			this.switchToGUI(this._endGUI);
 		this._inputManager.getEscapeInput().addKeyObserver((event : "keyDown" | "keyUp") => {
 			if (event == "keyDown" && !this._gameManager.hasEnded())
 				this.togglePause();
