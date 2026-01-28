@@ -361,11 +361,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 
 	public getDescriptionIfAvailable(socket : DefaultSocket) : TournamentDescription | null
 	{
-		if (!this._settings.isPublic)
-			return null;
-		const	canJoinTournament = this.canJoinTournament(socket);
-
-		if (!canJoinTournament)
+		if (!this._settings.isPublic || !this.canJoinTournament(socket).success)
 			return null;
 		return this.getDescription();
 	}
