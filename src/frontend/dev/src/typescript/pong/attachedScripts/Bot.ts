@@ -48,7 +48,7 @@ export class Bot extends CustomScriptComponent {
 	protected	awake()
 	{
 		this._shotFactory = new ShotFactory(this._top, this._bottom, this._goalLeft, this._paddleRight, this._ball);
-		this._timerManager.setInterval(this.refreshGameView.bind(this), this._difficultySettings.refreshIntervalMs);
+		this._timerManager.setInterval(this.refreshGameView.bind(this), 1000);
 	}
 
 	protected	start()
@@ -65,7 +65,12 @@ export class Bot extends CustomScriptComponent {
 
 	private	refreshGameView()
 	{
-		this._targetHeight = this.getTargetHeight();
+		const	delay = RandomRange(0, this._difficultySettings.refreshIntervalMaxAdditionMs);
+		const	targetHeight = this.getTargetHeight();
+
+		this._timerManager.setTimeout(() => {
+			this._targetHeight = targetHeight;
+		}, delay);
 	}
 
 	private	getTargetDirection() : number

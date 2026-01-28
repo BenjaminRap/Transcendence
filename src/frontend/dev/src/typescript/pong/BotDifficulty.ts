@@ -2,19 +2,19 @@ import { Paddle } from "@shared/attachedScripts/Paddle";
 
 export const botDifficulty  = {
 	"easy": {
-		refreshIntervalMs: 1300,
+		refreshIntervalMaxAdditionMs: 600,
 		maxReboundCalculationRecursion: 1,
 		shootAtOppositeProbability: 0,
 		rangeForRandom: Paddle.range * 0.25
 	},
 	"normal": {
-		refreshIntervalMs: 1200,
+		refreshIntervalMaxAdditionMs: 300,
 		maxReboundCalculationRecursion: 2,
 		shootAtOppositeProbability: 0.2,
 		rangeForRandom: Paddle.range * 0.5
 	},
 	"hard": {
-		refreshIntervalMs: 1000,
+		refreshIntervalMaxAdditionMs: 100,
 		maxReboundCalculationRecursion: 4,
 		shootAtOppositeProbability: 0.5,
 		rangeForRandom: Paddle.range
