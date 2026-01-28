@@ -252,15 +252,17 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 				guestName: guestName
 			});
 		}
-		if (!(this._state === "creation" && isCreator))
-			socket.data.leaveTournament();
-		if (this._state === "waiting-ready")
+		else if (this._state === "waiting-ready")
 		{
 			if (socket.data.ready)
 				this._socketReadyCount--;
 			else
 				this.startMatchesIfReady();
 		}
+		else if (this._state === "started")
+			this.onNewMatches();
+		if (!(this._state === "creation" && isCreator))
+			socket.data.leaveTournament();
 	}
 
 	protected override onParticipantLose(loser : DefaultSocket, isQualifications : boolean, roundMatchCount : number)
@@ -299,12 +301,14 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		this._currentMatches.forEach(match => {
 			const	left = match.left;
 			const	right = match.right;
+			const	isLeftValid = !!left && left.profile.connected;
+			const	isRightValid = !!right && right.profile.connected;
 
 			if (match.winner !== undefined)
 				return ;
-			if (!left || !right)
+			if (!isLeftValid || !isRightValid)
 			{
-				const	endData = getEndDataOnInvalidMatch(!!left, !!right);
+				const	endData = getEndDataOnInvalidMatch(isLeftValid, isRightValid);
 
 				match.setWinner(endData);
 				this.onMatchEnd(match);
