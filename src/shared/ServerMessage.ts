@@ -1,5 +1,5 @@
 import zod from "zod";
-import { zodGameInfos, zodGameInit, zodGameStartInfos, zodGameStats, zodSanitizedUser, zodTournamentEvent } from "./ZodMessageType";
+import { zodForceDisconnectReason, zodGameInfos, zodGameInit, zodGameStartInfos, zodGameStats, zodSanitizedUser, zodTournamentEvent } from "./ZodMessageType";
 
 export const serverMessages = ["game-infos",
 							"joined-game",
@@ -10,7 +10,8 @@ export const serverMessages = ["game-infos",
                             "game-stats-update",
                             "account-deleted",
 							"friend-status-update",
-							"init"] as const;
+							"init",
+							"force-disconnect"] as const;
 
 export const zodServerMessageData = {
 	"game-infos" : [zodGameInfos],
@@ -21,7 +22,8 @@ export const zodServerMessageData = {
     "game-stats-update" : [zod.object({ stats: zodGameStats })],
 	"friend-status-update" : [zod.object({ fromUserId: zod.number(), status: zod.literal('PENDING', 'ACCEPTED')})],
 	"ready" : [zodGameStartInfos],
-	"init" : [zod.string()]
+	"init" : [zod.string()],
+	"force-disconnect" : [zodForceDisconnectReason]
 } satisfies {
   readonly [key : string]: readonly [zod.ZodTypeAny, ...zod.ZodTypeAny[]];
 }

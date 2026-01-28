@@ -175,3 +175,6 @@ export const zodGameStartInfos = zod.object({
 	ballStartDirection: zodVector3
 });
 export type GameStartInfos = zod.infer<typeof zodGameStartInfos>;
+
+export const zodForceDisconnectReason = zod.literal(["client error", "server error", "server closed"]);
+export type ForceDisconnectReason = zod.infer<typeof zodForceDisconnectReason>;

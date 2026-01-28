@@ -228,7 +228,7 @@ export class SocketEventController {
 		});
 	}
 
-	private static middleware(event : Event, next: (err?: Error) => void)
+	private static middleware(socket : DefaultSocket, event : Event, next: (err?: Error) => void)
 	{
 		const	[eventName, ...args] = event;
 
@@ -238,7 +238,13 @@ export class SocketEventController {
 			const	parsed = parseClientMessageParameters(eventName, args);
 
 			if (!parsed.success)
+			{
+				socket.emit("force-disconnect", "client error");
+				socket.disconnect();
+				console.log(`Socket sent the wrong data type on event : ${eventName}`)
 				next(new Error(parsed.error.message));
+				return ;
+			}
 		}
 		next();
 	}
@@ -247,7 +253,7 @@ export class SocketEventController {
 	private async handleConnection(socket: DefaultSocket)
 	{
         try {
-			socket.use(SocketEventController.middleware)
+			socket.use(SocketEventController.middleware.bind(null, socket))
             this.sockets.add(socket);
     
             socket.data = new SocketData(socket);
