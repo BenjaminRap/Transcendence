@@ -22,6 +22,7 @@ import type { GameInfos, GameInit, Profile, TournamentEvent } from "@shared/ZodM
 
 import { PongUtils } from '../terminal'
 import { LoadingGUI } from "./gui/LoadingGUI";
+import type { BotDifficulty } from "./BotDiificulties";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
@@ -143,8 +144,9 @@ export class PongGame extends HTMLElement {
 		await this.changeScene("Menu.gltf", "Menu");
 	}
 
-	public async startBotGame(sceneName : FrontendGameSceneName)
+	public async startBotGame(sceneName : FrontendGameSceneName, difficulty : keyof BotDifficulty)
 	{
+		console.log("Difficulty");
 		const	sceneData = await this.changeScene(sceneName, "Bot");
 
 		this.setInputs(sceneData, 0);
