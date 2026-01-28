@@ -9,7 +9,7 @@ import type { TimerManager } from "@shared/attachedScripts/TimerManager";
 import { GameManager } from "@shared/attachedScripts/GameManager";
 
 export class VisualTimer extends CustomScriptComponent {
-	private static readonly _timerDurationS = 30;
+	private static readonly _timerDurationS = 60;
 
 	@Imported("Text") private _text! : Text;
 	@Imported("TimerManager") private _timerManager! : TimerManager;

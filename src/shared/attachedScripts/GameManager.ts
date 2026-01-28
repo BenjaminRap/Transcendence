@@ -22,7 +22,7 @@ export type EndData = {
 }
 
 export class GameManager extends CustomScriptComponent {
-	public static readonly timeLimitS = 30;
+	public static readonly timeLimitS = 600;
 
 	private static readonly _pointsToWin = 10;
 
