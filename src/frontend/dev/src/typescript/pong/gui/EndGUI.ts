@@ -24,7 +24,7 @@ export class	EndGUI extends HTMLElement implements IGUI<EndGUIInputs>
 		this.innerHTML = `
 			<div class="pauseGUIMainDiv flex flex-col size-full  h-4/6 w-1/3 -translate-y-1/2 top-1/2 absolute">
 				<p class="pauseGUIWinText font-bold leading-normal text-[7cqw] text-white text-center"></p>
-				<div class="absolute bottom-0">
+				<div class="absolute bottom-0 w-full">
 					${this.getTypeSpecificHTML()}
 					${this.getButtonHTML("Go To Menu", "pauseGUIGoToMenu")}
 				</div>
