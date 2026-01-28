@@ -1,9 +1,10 @@
 import { HavokPlugin, type int } from "@babylonjs/core";
 import { PongGame } from "./PongGame";
-import { type FrontendGameType, type FrontendSceneName, SceneData } from "@shared/SceneData";
+import { type FrontendGameSceneName, type FrontendMenuSceneName, SceneData } from "@shared/SceneData";
 import { ServerProxy } from "./ServerProxy";
 import { FrontendEventsManager } from "./FrontendEventsManager";
 import type { LocalTournament } from "./LocalTournament";
+import type { BotDifficulty } from "./BotDiificulties";
 
 export interface	ClientInput
 {
@@ -12,17 +13,38 @@ export interface	ClientInput
 	downKey : string;
 }
 
+export type FrontendSceneProperties = {
+	gameType: "Local",
+	tournament? : LocalTournament
+	sceneName : FrontendGameSceneName
+} | {
+	gameType: "Bot"
+	difficulty: keyof BotDifficulty
+	sceneName : FrontendGameSceneName
+} | {
+	gameType: "Menu"
+	sceneName : FrontendMenuSceneName
+} | {
+	gameType: "Multiplayer"
+	sceneName : FrontendGameSceneName
+};
+
 export class FrontendSceneData extends SceneData
 {
+	public readonly tournament? : LocalTournament;
+	public readonly difficulty?: keyof BotDifficulty;
+
 	constructor(
-		sceneName : FrontendSceneName,
 		havokPlugin : HavokPlugin,
+		properties : FrontendSceneProperties,
 		public readonly pongHTMLElement : PongGame,
-		public readonly gameType : FrontendGameType,
 		public readonly serverProxy : ServerProxy,
-		public readonly tournament? : LocalTournament
 	) {
-		super(sceneName, havokPlugin, gameType, new FrontendEventsManager());
+		super(properties.sceneName, havokPlugin, properties.gameType, new FrontendEventsManager());
+		if (properties.gameType === "Local")
+			this.tournament = properties.tournament;
+		else if (properties.gameType === "Bot")
+			this.difficulty = properties.difficulty;
 	}
 
 	public get events()
