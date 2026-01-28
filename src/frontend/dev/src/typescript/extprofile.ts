@@ -265,11 +265,11 @@ async function fetchProfileData(user: string) : Promise <string>
 
 
 export namespace ExtProfileBuilder {
-	export async function buildExtProfile(user: string) {
+	export async function buildExtProfile(user: string): Promise <string> {
 		const result = await fetchProfileData(user);
 		if (result !== "OK") {
-			console.error("Error fetching profile data:", result);
-			return;
+			console.log("Error fetching profile data:", result);
+			return result;
 		}
 		const profileElement = document.createElement('div');
 		profileElement.id = "profile";
@@ -318,7 +318,7 @@ export namespace ExtProfileBuilder {
 			socketUtils.socket.on("match-update", (data: MatchSummary) => {
 				console.log("Extended View", ExtendedView.isExtendedViewIsActive, ExtendedView.type, ExtendedView.profileId);
 				if (data.opponent != null && parseInt(data.opponent.id) === profile.id)
-					return ;
+					return "Erreur, actualiser la page et reessayer.";
 				if (ExtendedView.isExtendedViewIsActive && ExtendedView.type === 'match')
 				{
 					console.log("Adding match to extended view:", data);
@@ -340,6 +340,7 @@ export namespace ExtProfileBuilder {
 			socketUtils.socket.emit("watch-profile", watchMatchIds);
 			console.log("Watching match IDs:", watchMatchIds);
 		}
+		return 'Profil ouvert. Tapez "kill profile" pour le fermer.';
 	}
 	export function removeExtProfile() {
 		const profileElement = document.getElementById('profile');

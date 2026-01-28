@@ -789,11 +789,39 @@ function DeleteAccount() {
 	Modal.makeModal("Are you sure you want to delete your account? Type 'DELETE' to confirm.", 'text', 'DELETE', (text: string) => {
 		Modal.closeModal();
 		if (text === "DELETE") {
-			console.log("Account deleted");
+			requestDeleteAccount();
 		}
 		else
 			console.log("Account deletion cancelled");
 	});
+}
+
+
+// DELETE /suscriber/deleteaccount
+async function requestDeleteAccount(): Promise<boolean>
+{
+	const token = TerminalUtils.getCookie('accessToken') || '';
+	try {
+		const response = await fetch('/api/suscriber/delete/account', {
+			method: 'DELETE',
+			headers: {
+				'Authorization': 'Bearer ' + token
+			}
+		});
+		const data = await response;
+		console.log("Account deletion response:", data);
+		if (response.status === 204) {
+			WriteOnTerminal.printErrorOnTerminal("Compte supprimé avec succès.");
+			RequestBackendModule.logout([], "");
+			return true;
+		}
+		else
+			WriteOnTerminal.printErrorOnTerminal("Erreur lors de la suppression du compte.");
+		return false;
+	} catch (error) {
+		console.error("Error:", error);
+		return false;
+	}
 }
 
 export namespace FriendRequestController {

@@ -4,6 +4,7 @@ import { TerminalFileSystem, TerminalUserManagement } from "../terminal";
 import { socketUtils } from '../terminal'
 import type { Result } from "@shared/utils";
 import { ProfileBuilder } from "../profile";
+import { ExtProfileBuilder } from "../extprofile";
 
 
 export namespace RequestBackendModule {
@@ -28,7 +29,7 @@ export namespace RequestBackendModule {
 				document.cookie = `accessToken=${data.tokens.accessToken}; path=/;`;
 				document.cookie = `refreshToken=${data.tokens.refreshToken}; path=/;`;
 				await loadUser();
-				return 'Le compte a été créé avec succès.';
+				return 'Le compte a été créé avec succès. Vous êtes maintenant connecté. Tapez **help** pour de nouvelles instructions.';
 			} else {
 				let message = data.message || "Unknown error";
 				return 'Échec de l\'inscription : ' + message;
@@ -199,7 +200,11 @@ export namespace RequestBackendModule {
 		TerminalUserManagement.isLoggedIn = false;
 		TerminalUserManagement.username = 'usah';
 		TerminalUtils.updatePromptText( TerminalUserManagement.username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ " );
-		ProfileBuilder.removeProfile();
+
+		if (ExtProfileBuilder.isActive)
+			ExtProfileBuilder.removeExtProfile();
+		else if (ProfileBuilder.isActive)
+			ProfileBuilder.removeProfile();
 		return 'Déconnexion réussie.';
 	}
 }

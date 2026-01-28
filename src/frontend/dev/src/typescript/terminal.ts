@@ -227,8 +227,7 @@ async function profileCommand(args: string[], description: string): Promise<stri
 		result = await ProfileBuilder.buildProfile('');
 	else
 	{
-		await ExtProfileBuilder.buildExtProfile(args[1]);
-		result = 'Profil ouvert. Tapez "kill profile" pour le fermer.';
+		result = await ExtProfileBuilder.buildExtProfile(args[1]);
 	}
 	return result;
 }
@@ -486,6 +485,8 @@ async function getListOfElementTabCompletion(command: string, cursorPosition: nu
 				if (!clearedPath.startsWith('/'))
 					clearedPath = '/' + clearedPath;
 				result = lsCommand(['ls', clearedPath], '').split('\n> ').filter(item => item !== '');
+				if (result[0].startsWith('ls : impossible'))
+					return [];
 				if (filePart !== '')
 					result = getStartWithList(filePart, result);
 			}
