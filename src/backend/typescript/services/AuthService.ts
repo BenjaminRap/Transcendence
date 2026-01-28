@@ -103,6 +103,10 @@ export class AuthService {
         let user = await this.findByEmailOrUsername(userData.email, userData.login);
 		let msg = '';
         if (!user) {
+            if (CommonSchema.username.safeParse(userData.login).success === false) {
+                throw new AuthException(AuthError.INVALID_CREDENTIALS, 'Your 42 login is not a valid username for our platform (contain invalid characters)');
+            }
+
             const randomPassword = Math.random().toString(36).slice(-8);
             const hashedPassword = await this.passwordHasher.hash(randomPassword);
 
@@ -115,6 +119,12 @@ export class AuthService {
                 },
             });
 			msg = 'New user created and logged in with 42';
+        }
+        else {
+            if (user.email !== userData.email) {
+                console.error(`Username collision for ${userData.login}. DB email: ${user.email}, 42 email: ${userData.email}`);
+                throw new AuthException(AuthError.USERNAME_TAKEN, 'Username already taken by another user');
+            }
         }
 		if (msg === '') {
 			msg = 'User logged in with 42';

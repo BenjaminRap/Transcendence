@@ -52,8 +52,9 @@ export class ErrorWrapper {
                 const suscriberError = error as SuscriberException;
                 if (suscriberError.code === SuscriberError.USER_NOT_FOUND)
                     return { code: 404, message: suscriberError?.message || suscriberError.code };
-                else if (suscriberError.code === SuscriberError.INVALID_CREDENTIALS)
+                else if (suscriberError.code === SuscriberError.INVALID_CREDENTIALS) {
                     return { code: 401, message: suscriberError?.message || suscriberError.code };
+                }
                 else if (suscriberError.code === SuscriberError.USRNAME_ALREADY_USED)
                     return { code: 409, message: suscriberError?.message || suscriberError.code };
                 else
