@@ -18,8 +18,8 @@ import { PongError } from "@shared/pongError/PongError";
 export class Paddle extends CustomScriptComponent {
 	public static _range : number = 7.56;
 	public static _hitAcceleration : number = 1.05;
-	public static _ballXSpeedRange = new Range(8, 12);
-	public static _ballmaxSpeed = 16;
+	public static _ballXSpeedRange = new Range(8, 15);
+	public static _ballmaxSpeed = 17;
 	public static _speed : number = 9;
 
 	public static _maxAngle : number = Math.PI / 3;
