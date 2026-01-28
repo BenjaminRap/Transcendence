@@ -43,6 +43,8 @@ export class	ServerProxy
 			}
 			else if (this._state === "tournament-player" && tournamentEvent.type === "tournament-start")
 				this._state = "in-tournament";
+			if (tournamentEvent.type === "joined-game")
+				this._playerIndex = tournamentEvent.gameInit.playerIndex;
 		});
 		this.getObservable("joined-game").add(([gameInit]) => {
 			this._playerIndex = gameInit.playerIndex;
