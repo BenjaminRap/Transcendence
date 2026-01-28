@@ -32,7 +32,7 @@ export type TournamentType<T extends FrontendGameType> =
 
 export class PongGame extends HTMLElement {
 	private _canvas! : HTMLCanvasElement;
-	private _engine! : Engine;
+	private _engine? : Engine;
 	private _scene : Scene | undefined;
 	private _settings : Settings;
 	private _errorGUI : ErrorGUI;
@@ -71,6 +71,7 @@ export class PongGame extends HTMLElement {
 			this._engine.runRenderLoop(this.renderScene.bind(this));
 		} catch (error) {
 			console.error(`Could not initialize the scene : ${error}`)
+			this.quit();
 		}
     }
 
@@ -80,7 +81,7 @@ export class PongGame extends HTMLElement {
 			if (this._scene)
 				this._scene.render();
 		} catch (error) {
-			console.error(`Could not render the scene : ${error}`)
+			this.onError(error);
 		}
 	}
 
@@ -245,7 +246,7 @@ export class PongGame extends HTMLElement {
 		tournament? : TournamentType<T>) : Promise<Scene>
 	{
 		this._loadingGUI.displayLoadingUI();
-		const	scene = new Scene(this._engine);
+		const	scene = new Scene(this._engine!);
 
 		if (!scene.metadata)
 			scene.metadata = {};
@@ -296,7 +297,7 @@ export class PongGame extends HTMLElement {
 		if (globalThis.HKP)
 			delete globalThis.HKP;
 		this.disposeScene();
-		this._engine.dispose();
+		this._engine?.dispose();
 	}
 
 	public setButtonEnable(enabled : boolean)

@@ -232,12 +232,6 @@ export class CreateMenuGUI extends CustomScriptComponent {
 	{
 		const	sceneName = this._scenes[sceneIndex].getSceneFileName();
 
-		if (sceneName !== "Basic.gltf" && sceneName !== "Magic.gltf" && sceneName !== "Terminal.gltf")
-		{
-			console.error(`Wrong scene file name : ${sceneName}`);
-			return ;
-		}
-
 		const	enemyType = enemyTypes[enemyTypeIndex];
 
 		if (enemyType === "Bot")
