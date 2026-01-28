@@ -35,7 +35,7 @@ export class VisualTimer extends CustomScriptComponent {
 				this._timeLimitTimeout = this._timerManager.setTimeout(() => {
 					this.showTimer();
 					this._timeLimitTimeout = null;
-				}, VisualTimer._timerDurationS * 1000);
+				}, (GameManager.timeLimitS - VisualTimer._timerDurationS) * 1000);
 			}
 		});
 		sceneData.events.getObservable("end").add(() => {
