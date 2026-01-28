@@ -23,9 +23,11 @@ export class	EndGUI extends HTMLElement implements IGUI<EndGUIInputs>
 		this.classList.add("absolute", "inset-0", "size-full", "cursor-default", "select-none", "pointer-events-none", "backdrop-blur-sm");
 		this.innerHTML = `
 			<div class="pauseGUIMainDiv flex flex-col size-full  h-4/6 w-1/3 -translate-y-1/2 top-1/2 absolute">
-				<p class="pauseGUIWinText font-bold leading-normal text-[7cqw] text-white text-center">WIN</p>
-				${this.getTypeSpecificHTML()}
-				${this.getButtonHTML("Go To Menu", "pauseGUIGoToMenu")}
+				<p class="pauseGUIWinText font-bold leading-normal text-[7cqw] text-white text-center"></p>
+				<div class="absolute bottom-0">
+					${this.getTypeSpecificHTML()}
+					${this.getButtonHTML("Go To Menu", "pauseGUIGoToMenu")}
+				</div>
 			</div>
 		`;
 		this._inputs = {
@@ -35,6 +37,7 @@ export class	EndGUI extends HTMLElement implements IGUI<EndGUIInputs>
 		}
 		this._mainDiv = this.querySelector<HTMLDivElement>("div.pauseGUIMainDiv")!;
 		this._winText = this.querySelector<HTMLParagraphElement>("p.pauseGUIWinText")!;
+		this.setWinTextSide("middle");
 	}
 
 	public setWinner(winner : "left" | "right" | "draw", endCause : EndCause, playerIndex? : number)
@@ -86,7 +89,7 @@ export class	EndGUI extends HTMLElement implements IGUI<EndGUIInputs>
 
 	private	getButtonHTML(text : string, className : string)
 	{
-		return `<button class="${className} text-[3cqw] w-full mt-[10%] grow menu-button">${text}</button>`;
+		return `<button class="${className} text-[3cqw] w-full mt-[10%] grow menu-button max-h-[12%]">${text}</button>`;
 	}
 
 	public getInputs() : EndGUIInputs
