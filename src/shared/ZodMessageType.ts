@@ -188,8 +188,8 @@ export const zodOpponentSummary = zod.object({
 export type OpponentSummary = zod.infer<typeof zodOpponentSummary>;
 
 export const zodMatchResult = zod.object({
-	winnerId: zod.number().nullable(),
-	loserId: zod.number().nullable(),
+	winnerId: zod.number().nullable().optional(),
+	loserId: zod.number().nullable().optional(),
 	createdAt: zod.any(),
 	matchId: zod.number(),
 	scoreWinner: zod.number(),
