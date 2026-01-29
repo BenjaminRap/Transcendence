@@ -6,7 +6,7 @@ import { CancellablePromise } from "./CancellablePromise";
 import type { AllServerMessage, ServerMessage, ServerMessageData, ServerReservedMessage, ServerToClientEvents } from "@shared/ServerMessageHelpers";
 import type { ClientMessage, ClientMessageAcknowledgement, ClientMessageData, ClientToServerEvents } from "@shared/ClientMessageHelpers";
 
-type DefaultSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
+export type DefaultSocket = Socket<ServerToClientEvents, ClientToServerEvents>;
 
 type ResultType<T extends ClientMessage>
 	= ClientMessageAcknowledgement<T> extends (result: Result<infer R>) => void 

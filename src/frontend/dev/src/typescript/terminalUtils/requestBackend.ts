@@ -194,7 +194,7 @@ export namespace RequestBackendModule {
 			return 'You are not logged in.';
 		if (args.length > 1)
 			return description;
-		socketUtils.socket?.emit('logout', {});
+		socketUtils.socket?.emit('logout');
 		document.cookie = 'accessToken=; path=/;';
 		document.cookie = 'refreshToken=; path=/;';
 		TerminalUserManagement.isLoggedIn = false;

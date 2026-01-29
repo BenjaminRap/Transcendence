@@ -25,7 +25,7 @@ export class	MatchMaker
 		if (currentState!== "unactive")
 			return error("The user is already in a game, tournament or matchmaking");
 		console.log("user added to matchmaking !");
-		socket.once("leave-matchmaking", () => { this.removeUserFromMatchMaking(socket) });
+		SocketEventController.once(socket, "leave-matchmaking", () => { this.removeUserFromMatchMaking(socket) });
 		this._waitingSockets.push(socket);
 		socket.data.setInWaitingQueue();
 		this.createParty();

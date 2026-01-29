@@ -1,5 +1,4 @@
-import type { GameStats } from "@shared/ZodMessageType.js";
-import type { MatchSummary } from "./match.types.js";
+import type { GameStats, MatchSummary } from "@shared/ZodMessageType.js";
 
 export interface UpdateData
 {

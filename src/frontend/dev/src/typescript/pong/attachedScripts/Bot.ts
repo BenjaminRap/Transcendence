@@ -14,12 +14,10 @@ import { Ball } from "@shared/attachedScripts/Ball";
 import { ShotFactory } from "../ShotFactory";
 import type { Shot } from "../Shot";
 import { getRandomWeightedIndex } from "../utilities";
+import { botDifficulty, type BotDifficulty } from "../BotDifficulty";
 
 export class Bot extends CustomScriptComponent {
 	private static readonly _paddleMinimumMovement = 0.3;
-	private static readonly _refreshIntervalMs = 1000;
-	private static readonly _maxReboundCalculationRecursion = 4;
-	private static readonly _shootAtOppositeProbability = 0.5;
 
 	@Imported("InputManager") private	_inputManager! : InputManager;
 	@Imported("TimerManager") private _timerManager! : TimerManager;
@@ -35,6 +33,7 @@ export class Bot extends CustomScriptComponent {
 	private _shotFactory! : ShotFactory;
 	private _targetHeight : number = 0;
 	private _sceneData : FrontendSceneData;
+	private _difficultySettings : BotDifficulty[keyof BotDifficulty];
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "Bot") {
         super(transform, scene, properties, alias);
@@ -43,12 +42,13 @@ export class Bot extends CustomScriptComponent {
 
 		if (this._sceneData.gameType !== "Bot")
 			SceneManager.DestroyScriptComponent(this);
+		this._difficultySettings = botDifficulty[this._sceneData.difficulty ?? "normal"];
     }
 
 	protected	awake()
 	{
 		this._shotFactory = new ShotFactory(this._top, this._bottom, this._goalLeft, this._paddleRight, this._ball);
-		this._timerManager.setInterval(this.refreshGameView.bind(this), Bot._refreshIntervalMs);
+		this._timerManager.setInterval(this.refreshGameView.bind(this), 1000);
 	}
 
 	protected	start()
@@ -65,7 +65,15 @@ export class Bot extends CustomScriptComponent {
 
 	private	refreshGameView()
 	{
-		this._targetHeight = this.getTargetHeight();
+		const	delay = RandomRange(0, this._difficultySettings.refreshIntervalMaxAdditionMs);
+		const	targetHeight = this.getTargetHeight();
+		const	randomError = RandomRange(-this._difficultySettings.rangeForRandom / 2, this._difficultySettings.rangeForRandom / 2);
+		const	randomizedTargetHeight = targetHeight + randomError;
+
+		this._targetHeight = randomizedTargetHeight;
+		this._timerManager.setTimeout(() => {
+			this._targetHeight = targetHeight;
+		}, delay);
 	}
 
 	private	getTargetDirection() : number
@@ -81,7 +89,7 @@ export class Bot extends CustomScriptComponent {
 	{
 		const	startPosition = this._ball.transform.absolutePosition;
 		const	direction = this._ball.getLinearVelocity();
-		const	paddleMiddle = this.getTargetHeightRecursive(startPosition, direction, Bot._maxReboundCalculationRecursion)
+		const	paddleMiddle = this.getTargetHeightRecursive(startPosition, direction, this._difficultySettings.maxReboundCalculationRecursion)
 		const	displacement = (paddleMiddle === null) ?
 			this.getHeightDisplacementForDefense() :
 			this.getHeightDisplacementForAttack(paddleMiddle)
@@ -110,11 +118,11 @@ export class Bot extends CustomScriptComponent {
 
 	private	getHeightTargetAttack() : number
 	{
-		if (Math.random() > Bot._shootAtOppositeProbability)
-			return RandomRange(-Paddle._range / 2, Paddle._range / 2);
+		if (Math.random() > this._difficultySettings.shootAtOppositeProbability)
+			return RandomRange(-Paddle.range / 2, Paddle.range / 2);
 		if (this._paddleLeft.transform.absolutePosition.y > 0)
-			return -Paddle._range / 2 + 0.1;
-		return Paddle._range / 2 + 0.1;
+			return -Paddle.range / 2 + 0.1;
+		return Paddle.range / 2 + 0.1;
 	}
 
 	private	getTargetHeightRecursive(startPosition: Vector3, direction : Vector3, maxRecursion : int) : number | null

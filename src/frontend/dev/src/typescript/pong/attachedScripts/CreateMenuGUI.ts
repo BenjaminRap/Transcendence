@@ -25,9 +25,10 @@ import { OnlineTournamentStartGUI } from "../gui/OnlineTournamentStartGUI";
 import { PongError } from "@shared/pongError/PongError";
 import type { FrontendGameSceneName } from "@shared/SceneData";
 import type { TournamentEvent } from "@shared/ZodMessageType";
+import { BotDifficultyChoiceGUI } from "../gui/BotDifficultyChoiceGUI";
+import type { BotDifficulty } from "../BotDifficulty";
 
 const enemyTypes = ["Local", "Multiplayer", "Bot"] as const;
-type EnemyType = typeof enemyTypes[number];
 
 export class CreateMenuGUI extends CustomScriptComponent {
 	@Imported(TransformNode) private _scenesParent! : TransformNode;
@@ -40,6 +41,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 	private _menuGUI! : MenuGUI;
 	private _inMatchmakingGUI! : InMatchmakingGUI;
 	private _titleGUI! : TitleGUI;
+	private _botDifficultyChoiceGUI! : BotDifficultyChoiceGUI;
 	private _localGameTypeChoiceGUI! : GameTypeChoiceGUI;
 	private _localTournamentCreationGUI!: LocalTournamentCreationGUI;
 	private _onlineGameTypeChoiceGUI! : GameTypeChoiceGUI;
@@ -82,8 +84,14 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		this._inMatchmakingGUI = initMenu(new InMatchmakingGUI(), {
 			cancelButton: () => this.cancelMatchmaking()
 		}, this._menuParent);
+		this._botDifficultyChoiceGUI = initMenu(new BotDifficultyChoiceGUI(), {
+			easy: () => this.startBotGame(this._currentSceneFileName,"easy"),
+			normal: () => this.startBotGame(this._currentSceneFileName, "normal"),
+			hard: () => this.startBotGame(this._currentSceneFileName, "hard"),
+			cancel: () => this.switchMenu(this._menuGUI)
+		}, this._menuParent);
 		this._localGameTypeChoiceGUI = initMenu(new GameTypeChoiceGUI(), {
-			twoVersusTwo: () => this.startGame(this._currentSceneFileName, "Local", undefined),
+			oneVersusOne: () => this.startLocalGame(this._currentSceneFileName),
 			tournament: () => {
 				this._localTournamentCreationGUI.reset();
 				this.switchMenu(this._localTournamentCreationGUI)
@@ -91,7 +99,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			cancel: () => this.switchMenu(this._menuGUI)
 		}, this._menuParent);
 		this._onlineGameTypeChoiceGUI = initMenu(new GameTypeChoiceGUI(), {
-			twoVersusTwo: () => this.startGame(this._currentSceneFileName, "Multiplayer", undefined),
+			oneVersusOne: () => this.startOnlineGame(this._currentSceneFileName),
 			tournament: () => this.switchMenu(this._onlineTournamentChoiceGUI),
 			cancel: () => this.switchMenu(this._menuGUI)
 		}, this._menuParent)
@@ -228,14 +236,12 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		return true;
 	}
 
-	private onPlay(sceneIndex : number, enemyTypeIndex : number)
+	private onPlay(_sceneIndex : number, enemyTypeIndex : number)
 	{
-		const	sceneName = this._scenes[sceneIndex].getSceneFileName();
-
 		const	enemyType = enemyTypes[enemyTypeIndex];
 
 		if (enemyType === "Bot")
-			this.startGame(sceneName, enemyType, undefined);
+			this.switchMenu(this._botDifficultyChoiceGUI);
 		else if (enemyType === "Local")
 			this.switchMenu(this._localGameTypeChoiceGUI);
 		else if (enemyType === "Multiplayer")
@@ -249,24 +255,34 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			return ;
 		const	tournament = new LocalTournament(profiles);
 
-		this.startGame(this._currentSceneFileName, "Local", tournament);
+		this.startLocalGame(this._currentSceneFileName, tournament);
 	}
 
-	private	async startGame<T extends EnemyType>(
-		sceneName : FrontendGameSceneName,
-		enemyType : T,
-		tournament : T extends "Local" ? LocalTournament | undefined : undefined)
+	private	async startOnlineGame(sceneName : FrontendGameSceneName)
 	{
 		try {
-			if (enemyType === "Local")
-				await this._sceneData.pongHTMLElement.startLocalGame(sceneName, tournament);
-			else if (enemyType === "Multiplayer")
-			{
-				this.switchMenu(this._inMatchmakingGUI);
-				await this._sceneData.pongHTMLElement.searchOnlineGame(sceneName);
-			}
-			else if (enemyType === "Bot")
-				await this._sceneData.pongHTMLElement.startBotGame(sceneName);
+			this.switchMenu(this._inMatchmakingGUI);
+			await this._sceneData.pongHTMLElement.searchOnlineGame(sceneName);
+		} catch (error) {
+			this._sceneData.pongHTMLElement.onError(error);
+			this.switchMenu(this._menuGUI);
+		}
+	}
+
+	private	async startLocalGame(sceneName : FrontendGameSceneName, tournament? : LocalTournament)
+	{
+		try {
+			await this._sceneData.pongHTMLElement.startLocalGame(sceneName, tournament);
+		} catch (error) {
+			this._sceneData.pongHTMLElement.onError(error);
+			this.switchMenu(this._menuGUI);
+		}
+	}
+
+	private	async startBotGame(sceneName : FrontendGameSceneName, difficulty : keyof BotDifficulty)
+	{
+		try {
+			await this._sceneData.pongHTMLElement.startBotGame(sceneName, difficulty);
 		} catch (error) {
 			this._sceneData.pongHTMLElement.onError(error);
 			this.switchMenu(this._menuGUI);
@@ -303,10 +319,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			this._sceneData.pongHTMLElement.setButtonEnable(false);
 			await this._sceneData.serverProxy.startTournament();
 			this._sceneData.pongHTMLElement.setButtonEnable(true);
-			const	tournamentData = this._sceneData.serverProxy.getTournamentData();
-
-			if (!tournamentData)
-				this.switchMenu(this._onlineTournamentChoiceGUI);
+			this.switchMenu(this._onlineTournamentChoiceGUI);
 		} catch (error) {
 			this._sceneData.pongHTMLElement.setButtonEnable(true);
 			this._sceneData.pongHTMLElement.onError(error);
@@ -388,10 +401,6 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 	private	onTournamentEvent(tournamentEvent : TournamentEvent)
 	{
-		const	tournamentData = this._sceneData.serverProxy.getTournamentData();
-
-		if (!tournamentData)
-			return ;
 		const	message =
 			tournamentEvent.type === "kicked" ? "You have been kicked from the tournament" :
 			tournamentEvent.type === "banned" ? "You have been banned from the tournament" :
@@ -404,6 +413,10 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		}
 		else if (tournamentEvent.type === "add-participant")
 		{
+			const	tournamentData = this._sceneData.serverProxy.getTournamentData();
+
+			if (!tournamentData)
+				return ;
 			const	areYouCreator = tournamentData.isCreator;
 			const	canKickOrBan = areYouCreator && !tournamentEvent.isCreator;
 			const	isNameInput = this._sceneData.serverProxy.getGuestName() === tournamentEvent.profile.guestName;

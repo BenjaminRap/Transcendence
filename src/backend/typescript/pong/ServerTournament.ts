@@ -88,6 +88,8 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		if (this._players.size < 2)
 			return error("Not enough players !");
 		this.removeCreatorEvents();
+		if (!this._players.has(this._creator.data.getGuestName()))
+			this._creator.data.leaveTournament();
 		this._state = "waiting-ready";
 		console.log(`${this._settings.name} tournament started !`);
 		this._io.to(this._tournamentId).emit("tournament-event", {type:"tournament-start"});
@@ -97,7 +99,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		this._players.forEach(socket => {
 			socket.removeAllListeners("set-alias");
 			socket.data.ready = false;
-			socket.once("ready", () => {
+			SocketEventController.once(socket, "ready", () => {
 				socket.data.ready = true;
 				this._socketReadyCount++;
 				this.startMatchesIfReady();
@@ -185,7 +187,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 			return error("The tournament has already started !");
 		if (this._players.size === this._settings.maxPlayerCount)
 			return error("The tournament is already full !");
-		if (!socket.data.isConnected() && !this._settings.acceptGuests)
+		if (socket.data.getUserId() === undefined && !this._settings.acceptGuests)
 			return error("The tournament doesn't accept guests, you must log to your account !");
 		const	userId = socket.data.getUserId();
 
@@ -211,8 +213,8 @@ export class	ServerTournament extends Tournament<DefaultSocket>
         });
 		socket.join(this._tournamentId);
 		socket.data.joinTournament(this);
-		socket.once("leave-tournament", () => this.removePlayerFromTournament(socket));
-		socket.on("set-alias", (alias, ack) => this.changeAlias(socket, alias, ack));
+		SocketEventController.once(socket, "leave-tournament", () => this.removePlayerFromTournament(socket));
+		SocketEventController.on(socket, "set-alias", (alias, ack) => this.changeAlias(socket, alias, ack));
 		return success(undefined);
 	}
 
@@ -301,9 +303,10 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		this._currentMatches.forEach(match => {
 			const	left = match.left;
 			const	right = match.right;
-			const	isLeftValid = !!left && left.profile.connected;
-			const	isRightValid = !!right && right.profile.connected;
+			const	isLeftValid = !!left && this._players.has(left.profile.data.getGuestName());
+			const	isRightValid = !!right && this._players.has(right.profile.data.getGuestName());
 
+			console.log(isLeftValid, isRightValid, match.winner !== undefined);
 			if (match.winner !== undefined)
 				return ;
 			if (!isLeftValid || !isRightValid)

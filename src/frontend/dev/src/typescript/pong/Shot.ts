@@ -13,7 +13,7 @@ export class	Shot
 	constructor(direction : Vector3, paddleRight : Vector3)
 	{
 		const	angle = Vector3.GetAngleBetweenVectors(paddleRight, direction, Vector3.Forward());
-		const	clampedAngle = Clamp(angle, -Paddle._maxAngle, Paddle._maxAngle);
+		const	clampedAngle = Clamp(angle, -Paddle.maxAngle, Paddle.maxAngle);
 
 		this.angle = clampedAngle;
 

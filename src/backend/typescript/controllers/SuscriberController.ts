@@ -204,7 +204,8 @@ export class SuscriberController {
             // delete user or throw exception USER NOT FOUND
             await this.suscriberService.deleteAccount(Number(id));
 
-            SocketEventController.notifyProfileChange(Number(id), 'account-deleted', undefined);
+            // envoyer un event a la room 'user-{id}' pour que tous les processus front se deconnectent
+            SocketEventController.notifyProfileChange(Number(id), 'account-deleted');
 
             return reply.status(204).send();
 

@@ -13,6 +13,7 @@ import { TerminalUtils } from './terminalUtils/terminalUtils';
 import FileSystem from './filesystem.json';
 import { HELP_MESSAGE_NOT_LOG, HELP_MESSAGE, HELP_SECONDARY,  CommandHelpMessage } from './terminalUtils/helpText/help';
 import { io, Socket } from "socket.io-client";
+import type { DefaultSocket } from './pong/FrontendSocketHandler';
 
 
 export namespace TerminalElements {
@@ -72,7 +73,7 @@ export namespace PongUtils {
 }
 
 export namespace socketUtils {
-	export let socket: Socket | null = null;
+	export let socket: DefaultSocket | null = null;
 	export let userId: number | null = null;
 
 }

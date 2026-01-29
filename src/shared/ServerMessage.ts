@@ -1,5 +1,5 @@
 import zod from "zod";
-import { zodForceDisconnectReason, zodGameInfos, zodGameInit, zodGameStartInfos, zodGameStats, zodSanitizedUser, zodTournamentEvent } from "./ZodMessageType";
+import { zodForceDisconnectReason, zodFriendStatusUpdate, zodGameInfos, zodGameInit, zodGameStartInfos, zodGameStats, zodMatchSummary, zodSanitizedUser, zodTournamentEvent, zodUserStatusChange } from "./ZodMessageType";
 
 export const serverMessages = ["game-infos",
 							"joined-game",
@@ -11,19 +11,23 @@ export const serverMessages = ["game-infos",
                             "account-deleted",
 							"friend-status-update",
 							"init",
-							"force-disconnect"] as const;
+							"force-disconnect",
+							"match-update",
+							"stat-update"] as const;
 
 export const zodServerMessageData = {
 	"game-infos" : [zodGameInfos],
 	"joined-game" : [zodGameInit],
 	"tournament-event" : [zodTournamentEvent],
-    "user-status-change" : [zod.object({ userId: zod.number(), status: zod.literal(['online', 'offline']) })],
+    "user-status-change" : [zodUserStatusChange],
     "profile-update" : [zod.object({ user: zodSanitizedUser })],
     "game-stats-update" : [zod.object({ stats: zodGameStats })],
-	"friend-status-update" : [zod.object({ fromUserId: zod.number(), status: zod.literal('PENDING', 'ACCEPTED')})],
+	"friend-status-update" : [zodFriendStatusUpdate],
 	"ready" : [zodGameStartInfos],
 	"init" : [zod.string()],
-	"force-disconnect" : [zodForceDisconnectReason]
+	"force-disconnect" : [zodForceDisconnectReason],
+	"match-update": [zodMatchSummary],
+	"stat-update": [zodGameStats]
 } satisfies {
   readonly [key : string]: readonly [zod.ZodTypeAny, ...zod.ZodTypeAny[]];
 }

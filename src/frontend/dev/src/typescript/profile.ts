@@ -5,18 +5,8 @@ import { ExtendedView } from './extendedView'
 import { TerminalUtils } from './terminalUtils/terminalUtils';
 import { RequestBackendModule } from './terminalUtils/requestBackend';
 import { PongUtils, TerminalFileSystem, TerminalUserManagement, socketUtils } from './terminal'
-import { io } from "socket.io-client";
 import { WriteOnTerminal } from './terminalUtils/writeOnTerminal';
-import { is } from 'zod/v4/locales';
-
-
-export interface GameStats
-{
-	wins:        number,
-	losses:        number,
-	total:         number,
-	winRate:    number,
-}
+import type { FriendStatusUpdate, GameStats, MatchSummary, UserStatusChange } from '@shared/ZodMessageType';
 
 export interface Friend
 {
@@ -28,7 +18,10 @@ export interface Friend
 	requesterId:    number,
 }
 
-
+export function numberOrNan(value : any)
+{
+	return parseInt(value);
+}
 
 interface ExtendedFriend
 {
@@ -43,25 +36,6 @@ interface ExtendedFriend
 	}
 }
 
-interface Match {
-	id: number;
-	createdAt: Date;
-	winnerId: number | null;
-	loserId: number | null;
-	scoreWinner: number;
-	scoreLoser: number;
-	duration: number;
-	tournamentId: number | null;
-}
-
-
-export interface MatchSummary
-{
-		isWinner: boolean,
-		opponent: { id: string, username: string, avatar: string,} | null,
-		match: Match | null,
-}
-
 export interface SuscriberProfile
 {
 	id:         number,
@@ -71,8 +45,6 @@ export interface SuscriberProfile
 	lastMatchs: MatchSummary[],
 	friends:    Friend[],
 }
-
-
 
 let profile: SuscriberProfile;
 
@@ -208,12 +180,12 @@ function updateMatchDiv(flagAdd: boolean)
 		socketUtils.socket?.emit("unwatch-profile", [watchMatchIds[3]] );
 		watchMatchIds.pop();
 
-		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
+		watchMatchIds.unshift(numberOrNan(profile.lastMatchs[0].opponent!.id));
 		socketUtils.socket?.emit("watch-profile", [watchMatchIds[0]] );
 	} 
 	else if (flagAdd)
 	{
-		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
+		watchMatchIds.unshift(numberOrNan(profile.lastMatchs[0].opponent!.id));
 		socketUtils.socket?.emit("watch-profile", [watchMatchIds[0]] );
 	}
 	console.log("Updated watching match IDs:", watchMatchIds);
@@ -500,7 +472,7 @@ export namespace ProfileBuilder {
 				{
 					for (let i = 0; i < profile.lastMatchs.length; i++)
 					{
-						if (profile.lastMatchs[i].opponent && parseInt(profile.lastMatchs[i].opponent!.id) === parseInt(data.user.id))
+						if (profile.lastMatchs[i].opponent && numberOrNan(profile.lastMatchs[i].opponent!.id) === parseInt(data.user.id))
 						{
 							profile.lastMatchs[i].opponent!.username = data.user.username;
 							profile.lastMatchs[i].opponent!.avatar = data.user.avatar;
@@ -529,11 +501,11 @@ export namespace ProfileBuilder {
 					}
 				}
 			});
-			socketUtils.socket.on("user-status-change", (data: { userId: string; status: string }) => {
-				ProfileUpdater.updateFriendList(parseInt(data.userId), data.status);
+			socketUtils.socket.on("user-status-change", (data: UserStatusChange) => {
+				ProfileUpdater.updateFriendList(data.userId, data.status);
 				if (ExtendedView.isExtendedViewIsActive && ExtendedView.type === 'friend')
 				{
-					ExtendedView.updateFriendStatus(parseInt(data.userId), data.status);
+					ExtendedView.updateFriendStatus(data.userId, data.status);
 				}
 			});
 
@@ -551,11 +523,7 @@ export namespace ProfileBuilder {
 				ProfileUpdater.updateProfileCard(profile);
 			});
 
-			socketUtils.socket.on("friend-status-update", (data: {
-				requester?: {id: number, username: string, avatar: string, isOnline: boolean, requesterId: number}, 
-				friendProfile?: {id: number, username: string, avatar: string, isOnline: boolean, requesterId: number}, 
-				status: string
-			}) => {
+			socketUtils.socket.on("friend-status-update", (data: FriendStatusUpdate) => {
 				console.log("Friend status updated DATA:", data);
 				
 				// Récupère les données utilisateur, qu'elles soient dans 'requester' ou 'friendProfile'
@@ -621,7 +589,7 @@ function getWathIdMatch(): number[]
 	for (let i = 0; i < 4; i++)
 	{
 		if (profile.lastMatchs[i] && profile.lastMatchs[i].opponent)
-			ids.push(parseInt(profile.lastMatchs[i].opponent!.id));
+			ids.push(numberOrNan(profile.lastMatchs[i].opponent!.id));
 	}
 	return ids;
 }

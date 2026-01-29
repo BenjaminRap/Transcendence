@@ -1,7 +1,7 @@
 import type { IGUI } from "./IGUI";
 
 export type GameTypeChoiceGUIInputs = {
-	twoVersusTwo : HTMLButtonElement,
+	oneVersusOne : HTMLButtonElement,
 	tournament : HTMLButtonElement,
 	cancel : HTMLButtonElement
 }
@@ -22,7 +22,7 @@ export class	GameTypeChoiceGUI extends HTMLElement implements IGUI<GameTypeChoic
 			</div>
 		`;
 		this._inputs = {
-			twoVersusTwo: this.querySelector("button.GameTypeChoiceGUITwoVersusTwo")!,
+			oneVersusOne: this.querySelector("button.GameTypeChoiceGUITwoVersusTwo")!,
 			tournament: this.querySelector("button.GameTypeChoiceGUITournament")!,
 			cancel: this.querySelector("button.GameTypeChoiceGUICancel")!
 		}

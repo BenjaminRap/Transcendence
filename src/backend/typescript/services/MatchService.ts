@@ -1,7 +1,7 @@
 import { Prisma, type Match, type PrismaClient } from '@prisma/client';
 import { FriendService } from './FriendService.js';
-import type { GameStats } from '@shared/ZodMessageType.js';
-import type { MatchData, MatchSummary, OpponentSummary } from '../types/match.types.js';
+import type { GameStats, MatchSummary, OpponentSummary } from '@shared/ZodMessageType.js';
+import type { MatchData } from '../types/match.types.js';
 
 export type MatchWithRelations = Prisma.MatchGetPayload<{
     include: {

@@ -1,48 +1,14 @@
-import type { boolean } from "zod";
 import { ExtendedView } from "./extendedView";
 import { socketUtils } from './terminal'
 import { TerminalUtils } from "./terminalUtils/terminalUtils";
 import { RequestBackendModule } from "./terminalUtils/requestBackend";
 import { WriteOnTerminal } from "./terminalUtils/writeOnTerminal";
-import { fa } from "zod/v4/locales";
-
-
-
+import type { GameStats, MatchSummary } from "@shared/ZodMessageType";
+import { numberOrNan } from "./profile";
 
 export { };
 
-
-
-interface Match {
-	id: number;
-	createdAt: Date;
-	winnerId: number | null;
-	winnerLevel: string | null;
-	loserId: number | null;
-	loserLevel: string | null;
-	scoreWinner: number;
-	scoreLoser: number;
-	duration: number;
-	tournamentId: number | null;
-}
-
-export interface GameStats
-{
-	wins:        number,
-	losses:        number,
-	total:         number,
-	winRate:    number,
-}
-
 let watchMatchIds: number[];
-
-
-export interface MatchSummary
-{
-	isWinner: boolean,
-	opponent: { id: string, username: string, avatar: string,} | null,
-	match: Match | null,
-}
 
 export interface ExtProfile
 {
@@ -102,12 +68,12 @@ function updateMatchDiv(flagAdd: boolean)
 		socketUtils.socket?.emit("unwatch-profile", [watchMatchIds[3]] );
 		watchMatchIds.pop();
 
-		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
+		watchMatchIds.unshift(numberOrNan(profile.lastMatchs[0].opponent!.id));
 		socketUtils.socket?.emit("watch-profile", [watchMatchIds[0]] );
 	} 
 	else if (flagAdd)
 	{
-		watchMatchIds.unshift(parseInt(profile.lastMatchs[0].opponent!.id));
+		watchMatchIds.unshift(numberOrNan(profile.lastMatchs[0].opponent!.id));
 		socketUtils.socket?.emit("watch-profile", [watchMatchIds[0]] );
 	}
 	console.log("Updated watching match IDs:", watchMatchIds);
@@ -286,7 +252,7 @@ export namespace ExtProfileBuilder {
 
 		if (socketUtils && socketUtils.socket)
 		{
-			socketUtils.socket.emit("watch-profile", profile.id);
+			socketUtils.socket.emit("watch-profile", [profile.id]);
 
 			socketUtils.socket.on("profile-update", (data : {user: { id: string; username: string; avatar: string }}) => {
 				console.log("Profile updated:", data.user.id, ' : ', data.user.username, ' : ', data.user.avatar);
@@ -300,7 +266,7 @@ export namespace ExtProfileBuilder {
 				{
 					for (let i = 0; i < profile.lastMatchs.length; i++)
 					{
-						if (profile.lastMatchs[i].opponent && parseInt(profile.lastMatchs[i].opponent!.id) === parseInt(data.user.id))
+						if (profile.lastMatchs[i].opponent && numberOrNan(profile.lastMatchs[i].opponent!.id) === parseInt(data.user.id))
 						{
 							profile.lastMatchs[i].opponent!.username = data.user.username;
 							profile.lastMatchs[i].opponent!.avatar = data.user.avatar;
@@ -317,7 +283,7 @@ export namespace ExtProfileBuilder {
 
 			socketUtils.socket.on("match-update", (data: MatchSummary) => {
 				console.log("Extended View", ExtendedView.isExtendedViewIsActive, ExtendedView.type, ExtendedView.profileId);
-				if (data.opponent != null && parseInt(data.opponent.id) === profile.id)
+				if (data.opponent != null && numberOrNan(data.opponent.id) === profile.id)
 					return "Erreur, actualiser la page et reessayer.";
 				if (ExtendedView.isExtendedViewIsActive && ExtendedView.type === 'match')
 				{
@@ -351,7 +317,7 @@ export namespace ExtProfileBuilder {
 			watchMatchIds = [];
 			if (socketUtils && socketUtils.socket)
 			{
-				socketUtils.socket.emit("unwatch-profile", profile.id);
+				socketUtils.socket.emit("unwatch-profile", [profile.id]);
 				socketUtils.socket.emit("unwatch-profile", watchMatchIds);
 			}
 		}
@@ -369,7 +335,7 @@ function getWathIdMatch(): number[]
 	for (let i = 0; i < 4; i++)
 	{
 		if (profile.lastMatchs[i] && profile.lastMatchs[i].opponent)
-			ids.push(parseInt(profile.lastMatchs[i].opponent!.id));
+			ids.push(numberOrNan(profile.lastMatchs[i].opponent!.id));
 	}
 	return ids;
 }

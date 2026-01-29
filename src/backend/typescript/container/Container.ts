@@ -136,7 +136,7 @@ export class Container {
 
 		this.registerService('TournamentController', () => new TournamentController(
 			this.getService('TournamentService'),
-            this.getService('UsersService')
+            this.getService('MatchController')
 		));
 
         // Middleware

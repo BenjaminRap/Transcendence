@@ -1,10 +1,8 @@
 import { WriteOnTerminal } from "./terminalUtils/writeOnTerminal";
 import { PongUtils } from './terminal'
 import { TerminalUtils } from "./terminalUtils/terminalUtils";
-import { FriendRequestController } from "./profile";
-import { RequestBackendModule } from "./terminalUtils/requestBackend";
-
-
+import { FriendRequestController, numberOrNan } from "./profile";
+import type { MatchSummary } from "@shared/ZodMessageType";
 
 
 interface Friend
@@ -18,25 +16,6 @@ interface Friend
 		isOnline: boolean,
 		requesterId: number,
 	}
-}
-
-
-interface Match {
-	id: number;
-	createdAt: Date;
-	winnerId: number | null;
-	loserId: number | null;
-	scoreWinner: number;
-	scoreLoser: number;
-	duration: number;
-	tournamentId: number | null;
-}
-
-interface MatchSummary
-{
-	isWinner: boolean,
-	opponent: { id: string, username: string, avatar: string,} | null,
-	match: Match | null,
 }
 
 let searchBar: HTMLInputElement;
@@ -430,7 +409,7 @@ export namespace ExtendedView {
 			const m = matches[i];
 			if (!m || m.opponent == null)
 				continue;
-			if (parseInt(m.opponent.id) === id) {
+			if (numberOrNan(m.opponent.id) === id) {
 				m.opponent.username = username;
 				m.opponent.avatar = avatar;
 			}
