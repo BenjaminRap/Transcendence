@@ -233,7 +233,7 @@ export class SocketEventController {
 		else
 		{
 			socket.emit("force-disconnect", "client error");
-			socket.disconnect();
+			socket.disconnect(true);
 			console.log(`Client ${socket.data.getProfile().shownName} sent wrong data in event : ${event}`);
 		}
 	}
