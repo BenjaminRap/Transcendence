@@ -124,6 +124,6 @@ export abstract class	Tournament<T>
 	protected abstract	onQualificationsEnd(qualified : T[]) : void;
 	protected abstract	onTournamentEnd(winner? : T) : void;
 	protected abstract	onTournamentShow() : void;
-	protected abstract onNewMatches() : void;
+	protected abstract	onNewMatches() : void;
 	protected abstract	setRoundWinners(round : number, matches : Match<T>[]) : void;
 }
