@@ -231,7 +231,7 @@ async function fetchProfileData(user: string) : Promise <string>
 
 
 export namespace ExtProfileBuilder {
-	export async function buildExtProfile(user: string): Promise <string> {
+	export async function buildExtProfile(user: string, push: boolean): Promise <string> {
 		const result = await fetchProfileData(user);
 		if (result !== "OK") {
 			console.log("Error fetching profile data:", result);
@@ -247,7 +247,9 @@ export namespace ExtProfileBuilder {
 		createMatchHistory(profileElement);
 		
 		document.body.appendChild(profileElement);
-		history.pushState({}, '', `/profile/${user}`);
+		if (push) {
+			history.pushState(null, '', `/profile/${user}`);
+		}
 		isActive = true;
 
 		if (socketUtils && socketUtils.socket)
@@ -259,7 +261,7 @@ export namespace ExtProfileBuilder {
 				if (parseInt(data.user.id) === profile.id) {
 					profile.username = data.user.username;
 					profile.avatar = data.user.avatar;
-					history.replaceState({}, '', `/profile/${profile.username}`);
+					history.replaceState(null, '', `/profile/${profile.username}`);
 					updateProfileCard(profile);
 				}
 				else
@@ -308,12 +310,14 @@ export namespace ExtProfileBuilder {
 		}
 		return 'Profil ouvert. Tapez "kill profile" pour le fermer.';
 	}
-	export function removeExtProfile() {
+	export function removeExtProfile(push: boolean) {
 		const profileElement = document.getElementById('profile');
 		if (profileElement) {
 			document.body.removeChild(profileElement);
 			isActive = false;
-			history.pushState({}, '', `/`);
+			if (push) {
+				history.pushState(null, '', `/`);
+			}
 			watchMatchIds = [];
 			if (socketUtils && socketUtils.socket)
 			{
@@ -323,6 +327,10 @@ export namespace ExtProfileBuilder {
 		}
 	}
 	export let isActive = false;
+	
+	export function getName(): string {
+		return profile.username;
+	}
 }
 
 
