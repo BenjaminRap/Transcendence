@@ -222,13 +222,14 @@ async function profileCommand(args: string[], description: string): Promise<stri
 		return description;
 	}
 	if (ProfileBuilder.isActive || ExtProfileBuilder.isActive)
-		return 'Le profil est déjà ouvert. Tapez "kill profile" pour le fermer.';
+		return 'Profile est déjà ouvert. Tapez "kill profile" pour le fermer.';
 	if (args.length === 1)
 		result = await ProfileBuilder.buildProfile('');
 	else
 	{
 		result = await ExtProfileBuilder.buildExtProfile(args[1]);
 	}
+    console.log("Profile command result:", result);
 	return result;
 }
 
@@ -428,7 +429,6 @@ function clearTabCompletion() {
 function resize() {
 	if (!TerminalElements.currentInput)
 		return;
-	TerminalElements.currentInput.style.height = 'auto';
 	TerminalElements.currentInput.style.height = TerminalElements.currentInput.scrollHeight + 'px';
 }
 

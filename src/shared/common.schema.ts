@@ -6,6 +6,7 @@ export const CommonSchema = {
     password: z.string()
             .trim()
             .min(8, 'Password must contain at least 8 characters')
+            .max(64, 'Password can\'t exceed 64 characters')
             .regex(/(?=.*[a-z])/, 'Password must contain at least one lowercase')
             .regex(/(?=.*[A-Z])/, 'Password must contain at least one capital letter')
             .regex(/(?=.*\d)/, 'Password must contain at least one number')
@@ -22,7 +23,7 @@ export const CommonSchema = {
             .trim()
             .min(3, 'Username should have 3 characters minimum')
             .max(20, 'Username can\'t exceed 20 characters')
-            .regex(/^[a-zA-Z0-9]+$/, 'Username can only contain letters and numbers')
+            .regex(/^[a-zA-Z0-9]+(?:[-_][a-zA-Z0-9]+)*$/, 'Username can only contain letters, numbers, and `-` or `_`')
             .refine((val) => !['@', 'guest'].some(prefix => val.startsWith(prefix)), {
                 message: 'This username is not allowed, don\'t use reserved prefixes (A_ , G_)',
             }),

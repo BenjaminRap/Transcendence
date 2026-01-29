@@ -275,8 +275,7 @@ export class SocketEventController {
         let userId: number;
 
         try {
-            const tokenManager: TokenManager = Container.getInstance().getService('TokenManager');
-            const decoded = await tokenManager.verify(token, false);
+            const decoded = await this.tokenManager.verify(token, false);
             userId = Number(decoded.userId);
 
             const user = await this.friendService.getById(userId);
@@ -329,8 +328,6 @@ export class SocketEventController {
 	}
 
 	// ----------------------------------------------------------------------------- //
-    // demander la liste des ids des users en ligne
-    // renvoyer les ids des users connectes qui correspondent a des ids de la liste demandee
 	private handleGetStatus(callback: (onlineUsers: number[]) => void)
 	{
 		callback(Array.from(SocketEventController.connectedUsers.keys()));

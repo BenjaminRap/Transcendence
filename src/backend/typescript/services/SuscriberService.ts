@@ -82,6 +82,12 @@ export class SuscriberService {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
         }
 
+        if (user.password === '') {
+            throw new SuscriberException(SuscriberError.INVALID_CREDENTIALS,
+                'Dear 42 student, you cannot change your password. You can get back to playing pong. Enjoy! 🎮🏓'
+            );
+        }
+
         if (!await this.passwordHasher.verify(currentPassword, user.password)) {
             throw new SuscriberException(SuscriberError.INVALID_CREDENTIALS, SuscriberError.INVALID_CREDENTIALS);
         }

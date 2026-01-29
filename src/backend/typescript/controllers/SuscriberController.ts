@@ -76,10 +76,11 @@ export class SuscriberController {
                     redirectTo: '/suscriber/update/password'
                 });
             }
+
             
             const userId = (request as any).user.userId;
             const { newPassword, currentPassword } = validation.data;
-
+            
             // check if user exists, if password is different then hash and update or throw exception
             await this.suscriberService.updatePassword(userId, currentPassword, newPassword);
 
