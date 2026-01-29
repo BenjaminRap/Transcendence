@@ -9,8 +9,7 @@ import type { Friend } from "../types/suscriber.types.js";
 import type { MatchService } from "./MatchService.js";
 import type { FriendService } from "./FriendService.js";
 import type { ListFormat } from "../types/friend.types.js";
-import type { MatchSummary } from "../types/match.types.js";
-import type { GameStats, SanitizedUser } from "@shared/ZodMessageType.js";
+import type { GameStats, MatchSummary, SanitizedUser } from "@shared/ZodMessageType.js";
 
 export class SuscriberService {
     constructor(

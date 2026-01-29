@@ -178,3 +178,53 @@ export type GameStartInfos = zod.infer<typeof zodGameStartInfos>;
 
 export const zodForceDisconnectReason = zod.literal(["client error", "server error", "server closed"]);
 export type ForceDisconnectReason = zod.infer<typeof zodForceDisconnectReason>;
+
+export const zodOpponentSummary = zod.object({
+	id: zod.number().optional(),
+	username: CommonSchema.username,
+	avatar: CommonSchema.avatar,
+	isFriend: zod.boolean
+});
+export type OpponentSummary = zod.infer<typeof zodOpponentSummary>;
+
+export const zodMatchResult = zod.object({
+	winnerId: zod.number().nullable(),
+	loserId: zod.number().nullable(),
+	createdAt: zod.any(),
+	matchId: zod.number(),
+	scoreWinner: zod.number(),
+	scoreLoser: zod.number(),
+	duration: zod.number(),
+	winnerName: zod.string(),
+	loserName: zod.string()
+});
+export type MatchResult = zod.infer<typeof zodMatchResult>;
+
+export const zodMatchSummary = zod.object({
+	opponent: zodOpponentSummary,
+	match: zodMatchResult,
+	isWinner: zod.boolean()
+});
+export type MatchSummary = zod.infer<typeof zodMatchSummary>;
+
+export const zodFriendProfile = zod.object({
+	id: zod.number(),
+	username: CommonSchema.username,
+	avatar: CommonSchema.avatar,
+	isOnline: zod.boolean(),
+	requesterId: zod.number()
+});
+export type FriendProfile = zod.infer<typeof zodFriendProfile>;
+
+export const zodFriendStatusUpdate = zod.object({
+	requester: zodFriendProfile.optional(),
+	friendProfile: zodFriendProfile.optional(),
+	status: zod.literal(["PENDING", "ACCEPTED"])
+});
+export type FriendStatusUpdate = zod.infer<typeof zodFriendStatusUpdate>;
+
+export const zodUserStatusChange = zod.object({
+	userId: zod.number(),
+	status: zod.literal(["online", "offline"])
+});
+export type UserStatusChange = zod.infer<typeof zodUserStatusChange>;

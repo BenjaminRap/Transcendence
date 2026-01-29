@@ -1,48 +1,13 @@
-import type { boolean } from "zod";
 import { ExtendedView } from "./extendedView";
 import { socketUtils } from './terminal'
 import { TerminalUtils } from "./terminalUtils/terminalUtils";
 import { RequestBackendModule } from "./terminalUtils/requestBackend";
 import { WriteOnTerminal } from "./terminalUtils/writeOnTerminal";
-import { fa } from "zod/v4/locales";
-
-
-
+import type { GameStats, MatchSummary } from "@shared/ZodMessageType";
 
 export { };
 
-
-
-interface Match {
-	id: number;
-	createdAt: Date;
-	winnerId: number | null;
-	winnerLevel: string | null;
-	loserId: number | null;
-	loserLevel: string | null;
-	scoreWinner: number;
-	scoreLoser: number;
-	duration: number;
-	tournamentId: number | null;
-}
-
-export interface GameStats
-{
-	wins:        number,
-	losses:        number,
-	total:         number,
-	winRate:    number,
-}
-
 let watchMatchIds: number[];
-
-
-export interface MatchSummary
-{
-	isWinner: boolean,
-	opponent: { id: string, username: string, avatar: string,} | null,
-	match: Match | null,
-}
 
 export interface ExtProfile
 {

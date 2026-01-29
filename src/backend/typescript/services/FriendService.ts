@@ -2,7 +2,7 @@ import { PrismaClient, type Friendship } from "@prisma/client"
 import { FriendException, FriendError } from "../error_handlers/Friend.error.js";
 import type { ListFormat } from '../types/friend.types.js';
 import { SocketEventController } from "../controllers/SocketEventController.js";
-import type { FriendProfile } from "../types/friend.types.js";
+import type { FriendProfile } from "@shared/ZodMessageType.js";
 
 export class FriendService {
     constructor(

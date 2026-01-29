@@ -6,11 +6,10 @@ import { TokenManager } from "../utils/TokenManager.js";
 import type { FriendService } from "../services/FriendService.js";
 import type { ServerType } from "../index.js";
 import { getPublicTournamentsDescriptions, TournamentMaker } from "../pong/TournamentMaker.js";
-import { type Profile, type TournamentCreationSettings, type TournamentDescription, type TournamentId } from "@shared/ZodMessageType.js";
+import { type FriendProfile, type Profile, type TournamentCreationSettings, type TournamentDescription, type TournamentId } from "@shared/ZodMessageType.js";
 import { error, success, type Result } from "@shared/utils.js";
-import type { FriendProfile } from "../types/friend.types.js";
-import { areParametersValid, type ClientMessage, type ClientMessageAcknowledgement, type ClientMessageParameters, type ClientToServerEvents } from "@shared/ClientMessageHelpers.js";
-import type { ServerToClientEvents } from "@shared/ServerMessageHelpers.js";
+import { areParametersValid, type ClientMessage, type ClientToServerEvents } from "@shared/ClientMessageHelpers.js";
+import type { ServerMessage, ServerToClientEvents } from "@shared/ServerMessageHelpers.js";
 
 export type DefaultSocket = Socket<ClientToServerEvents, ServerToClientEvents, DefaultEventsMap, SocketData>;
 
@@ -47,7 +46,7 @@ export class SocketEventController {
 
     // send message to a specific user
     // ----------------------------------------------------------------------------- //
-	static sendToUser(userId: number, event: string, data: any): void
+	static sendToUser<T extends ServerMessage>(userId: number, event: T, ...data: Parameters<ServerToClientEvents[T]>): void
 	{
         if (!userId) {
             // console.log(`Cannot send event "${event}" to invalid user ID: ${userId}`);
@@ -56,7 +55,7 @@ export class SocketEventController {
 
         try {
             if (SocketEventController.socketInstance) {
-                SocketEventController.socketInstance.io.to('user-' + Number(userId)).emit(event as any, data);
+                SocketEventController.socketInstance.io.to('user-' + Number(userId)).emit(event, ...data);
             }
         } catch (error) {
             console.warn(`\nFailed to emit event "${event}" to user ${userId} :`, error);
@@ -65,14 +64,14 @@ export class SocketEventController {
 
     // send message to all users watching a specific profile
     // ----------------------------------------------------------------------------- //
-    static sendToProfileWatchers(userId: number, event: string, data: any): void
+    static sendToProfileWatchers<T extends ServerMessage>(userId: number, event: T, ...data: Parameters<ServerToClientEvents[T]>): void
     {
         if (!userId) return;
 
         try {
             if (SocketEventController.socketInstance) {
                 // console.log(`Emitting event "${event}" to watchers of profile ${userId} with data: `, data);
-                SocketEventController.socketInstance.io.to('watching-' + Number(userId)).emit(event as any, data);
+                SocketEventController.socketInstance.io.to('watching-' + Number(userId)).emit(event, ...data);
             }
         } catch (error) {
             console.warn(`\nFailed to emit event "${event}" to watchers of profile ${userId} :`, error);
@@ -81,7 +80,7 @@ export class SocketEventController {
 
     // send message to all friends of a specific user
     // ----------------------------------------------------------------------------- //
-    static async sendToFriends(userId: number, event: string, data: any): Promise<void>
+    static async sendToFriends<T extends ServerMessage>(userId: number, event: T, ...data: Parameters<ServerToClientEvents[T]>): Promise<void>
     {
         if (!userId) {
             return;
@@ -94,7 +93,7 @@ export class SocketEventController {
                     .then((friendsIds: number[]) => {
                         friendsIds.forEach((friendId) => {
                             // console.log(`Emitting event "${event}" to friend ${friendId}`); 
-                            SocketEventController.sendToUser(friendId, event, data);
+                            SocketEventController.sendToUser(friendId, event, ...data);
                         });
                     }).catch((error) => {
                         console.warn(`Error retrieving friends of user ${userId} :`, error);
@@ -107,12 +106,12 @@ export class SocketEventController {
 
     // notify profile change to user, friends and watchers
     // ----------------------------------------------------------------------------- //
-    static notifyProfileChange(id: number | null, event: string, data: any): void
+    static notifyProfileChange<T extends "profile-update" | "account-deleted">(id: number | null, event: T, ...data: Parameters<ServerToClientEvents[T]>): void
     {
         if (!id || id < 0) return;
-        SocketEventController.sendToUser(id, event, data);
-        SocketEventController.sendToFriends(id, event, data);
-        SocketEventController.sendToProfileWatchers(id, event, data);
+        SocketEventController.sendToUser(id, event, ...data);
+        SocketEventController.sendToFriends(id, event, ...data);
+        SocketEventController.sendToProfileWatchers(id, event, ...data);
     }
 
     // check if a user is online

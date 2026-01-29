@@ -208,7 +208,7 @@ export class SuscriberController {
             await this.suscriberService.deleteAccount(Number(id));
 
             // envoyer un event a la room 'user-{id}' pour que tous les processus front se deconnectent
-            SocketEventController.notifyProfileChange(Number(id), 'account-deleted', undefined);
+            SocketEventController.notifyProfileChange(Number(id), 'account-deleted');
 
             return reply.status(204).send();
 

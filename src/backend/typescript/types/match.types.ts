@@ -13,32 +13,7 @@ export interface MatchData
     duration:	    number,
 }
 
-export interface OpponentSummary
-{
-    id: number | undefined,
-    username: string,   // guestname si id null sinon username courant
-    avatar: string,     // default si id null
-    isFriend: boolean,  // false si id null
-}
-
 export interface PlayerInfo {
     id:         number | undefined,
     guestName:  string, // username si id defini sinon guestname
-}
-
-export interface MatchResult
-{
-    createdAt: any;
-    matchId: number,
-    scoreWinner: number,
-    scoreLoser: number,
-    duration: number,
-    winnerName: string,
-    loserName: string,
-}
-
-export interface MatchSummary
-{
-    opponent:       OpponentSummary,
-    match:    MatchResult,
 }

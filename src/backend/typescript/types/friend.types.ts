@@ -1,11 +1,4 @@
-export interface FriendProfile
-{
-    id:             number,
-    username:       string,
-    avatar:         string,
-    isOnline:       boolean,
-    requesterId:    number,
-}
+import type { FriendProfile } from "@shared/ZodMessageType";
 
 export interface ListFormat
 {

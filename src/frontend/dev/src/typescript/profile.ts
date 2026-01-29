@@ -5,9 +5,8 @@ import { ExtendedView } from './extendedView'
 import { TerminalUtils } from './terminalUtils/terminalUtils';
 import { RequestBackendModule } from './terminalUtils/requestBackend';
 import { PongUtils, TerminalFileSystem, TerminalUserManagement, socketUtils } from './terminal'
-import { io } from "socket.io-client";
 import { WriteOnTerminal } from './terminalUtils/writeOnTerminal';
-import { is } from 'zod/v4/locales';
+import type { FriendStatusUpdate, MatchSummary, UserStatusChange } from '@shared/ZodMessageType';
 
 
 export interface GameStats
@@ -43,25 +42,6 @@ interface ExtendedFriend
 	}
 }
 
-interface Match {
-	id: number;
-	createdAt: Date;
-	winnerId: number | null;
-	loserId: number | null;
-	scoreWinner: number;
-	scoreLoser: number;
-	duration: number;
-	tournamentId: number | null;
-}
-
-
-export interface MatchSummary
-{
-		isWinner: boolean,
-		opponent: { id: string, username: string, avatar: string,} | null,
-		match: Match | null,
-}
-
 export interface SuscriberProfile
 {
 	id:         number,
@@ -71,8 +51,6 @@ export interface SuscriberProfile
 	lastMatchs: MatchSummary[],
 	friends:    Friend[],
 }
-
-
 
 let profile: SuscriberProfile;
 
@@ -529,11 +507,11 @@ export namespace ProfileBuilder {
 					}
 				}
 			});
-			socketUtils.socket.on("user-status-change", (data: { userId: string; status: string }) => {
-				ProfileUpdater.updateFriendList(parseInt(data.userId), data.status);
+			socketUtils.socket.on("user-status-change", (data: UserStatusChange) => {
+				ProfileUpdater.updateFriendList(data.userId, data.status);
 				if (ExtendedView.isExtendedViewIsActive && ExtendedView.type === 'friend')
 				{
-					ExtendedView.updateFriendStatus(parseInt(data.userId), data.status);
+					ExtendedView.updateFriendStatus(data.userId, data.status);
 				}
 			});
 
@@ -551,11 +529,7 @@ export namespace ProfileBuilder {
 				ProfileUpdater.updateProfileCard(profile);
 			});
 
-			socketUtils.socket.on("friend-status-update", (data: {
-				requester?: {id: number, username: string, avatar: string, isOnline: boolean, requesterId: number}, 
-				friendProfile?: {id: number, username: string, avatar: string, isOnline: boolean, requesterId: number}, 
-				status: string
-			}) => {
+			socketUtils.socket.on("friend-status-update", (data: FriendStatusUpdate) => {
 				console.log("Friend status updated DATA:", data);
 				
 				// Récupère les données utilisateur, qu'elles soient dans 'requester' ou 'friendProfile'
