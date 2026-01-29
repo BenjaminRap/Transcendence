@@ -16,14 +16,14 @@ export interface MatchData
 export interface OpponentSummary
 {
     id: number | undefined,
-    username: string,   // guestname si id null sinon username courant
-    avatar: string,     // default si id null
-    isFriend: boolean,  // false si id null
+    username: string,
+    avatar: string,
+    isFriend: boolean,
 }
 
 export interface PlayerInfo {
     id:         number | undefined,
-    guestName:  string, // username si id defini sinon guestname
+    guestName:  string,
 }
 
 export interface MatchResult

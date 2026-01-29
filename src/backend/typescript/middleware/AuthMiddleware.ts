@@ -1,6 +1,5 @@
 import type { FastifyRequest, FastifyReply } from 'fastify';
 import { TokenManager } from '../utils/TokenManager.js';
-import type { DeleteAccount } from '../types/suscriber.types.js';
 
 export class AuthMiddleware {
     constructor(private tokenManager: TokenManager) {}
@@ -49,29 +48,6 @@ export class AuthMiddleware {
             return reply.status(401).send({
                 success: false,
                 message: 'Invalid or expired token',
-            });
-        }
-    };
-
-    // --------------------------------------------------------------------------------- //
-    keyAuthenticate = async (request: FastifyRequest<{ Body: DeleteAccount }>, reply: FastifyReply) => {
-        try {
-            const token = request.body?.tokenKey;
-            const decoded = await this.tokenManager.verify(token, false);
-
-            if (decoded.userId !== (request as any).user.userId) {
-                return reply.status(403).send({
-                    success: false,
-                    message: 'tokenKey user mismatch',
-                });
-            }
-
-            // Bind user with the request
-            (request as any).verifiedUser = decoded;
-        } catch (error) {
-            return reply.status(403).send({
-                success: false,
-                message: 'Invalid or expired tokenKey',
             });
         }
     };

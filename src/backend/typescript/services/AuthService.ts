@@ -120,7 +120,7 @@ export class AuthService {
         else {
             if (user.email !== userData.email) {
                 console.error(`Username collision for ${userData.login}. DB email: ${user.email}, 42 email: ${userData.email}`);
-                throw new AuthException(AuthError.USERNAME_TAKEN, 'Username already taken by another user');
+                throw new AuthException(AuthError.USERNAME_TAKEN, 'This username is already taken by another user');
             }
         }
 		if (msg === '') {

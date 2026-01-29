@@ -44,10 +44,12 @@ export class UsersService {
             throw new UsersException(UsersError.USER_NOT_FOUND, 'No suscriber found');
         }
 
+        const takeLimit = 10;
+
         const users = await this.prisma.user.findMany({
             where: { username: { contains: username } },
             select: { id: true, avatar: true, username: true },
-            take: 10
+            take: takeLimit
         });
 
         if (!users || users.length === 0)

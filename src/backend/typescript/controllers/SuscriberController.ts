@@ -22,8 +22,6 @@ export class SuscriberController {
             // returns user or throw exception USER NOT FOUND
             const user =  await this.suscriberService.getProfile(Number(id));
 
-            // console.log('SuscriberController - getProfile - user - friendList: ', user.friends);
-
             return reply.status(200).send({
                 success: true,
                 message: 'Profile successfully retrieved',
@@ -76,7 +74,6 @@ export class SuscriberController {
                     redirectTo: '/suscriber/update/password'
                 });
             }
-
             
             const userId = (request as any).user.userId;
             const { newPassword, currentPassword } = validation.data;
@@ -207,7 +204,6 @@ export class SuscriberController {
             // delete user or throw exception USER NOT FOUND
             await this.suscriberService.deleteAccount(Number(id));
 
-            // envoyer un event a la room 'user-{id}' pour que tous les processus front se deconnectent
             SocketEventController.notifyProfileChange(Number(id), 'account-deleted', undefined);
 
             return reply.status(204).send();

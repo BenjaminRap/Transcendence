@@ -23,7 +23,7 @@ export function friendRoute(
         preHandler: middleware.authenticate
     }, controller.getFriendList.bind(controller));
 
-    fastify.get('/search/pendinglist', {
-        preHandler: middleware.authenticate
-    }, controller.getPendingList.bind(controller));
+    // fastify.get('/search/pendinglist', {
+    //     preHandler: middleware.authenticate
+    // }, controller.getPendingList.bind(controller));
 }
