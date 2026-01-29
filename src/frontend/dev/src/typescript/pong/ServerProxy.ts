@@ -59,8 +59,8 @@ export class	ServerProxy
 		const	joinGameCancellable = this._frontendSocketHandler.waitForEvent("joined-game");
 
 		joinMatchmakingCancellable.promise
-			.catch(() => {
-				joinGameCancellable.cancel();
+			.catch((error) => {
+				joinGameCancellable.cancel(error);
 			});
 		joinGameCancellable.promise
 			.then(() => {

@@ -26,9 +26,9 @@ export class	CancellablePromise<T>
 			});
 	}
 
-	public cancel()
+	public cancel(error? : any)
 	{
 		this._cancel?.();
-		this._reject?.(new PongError("canceled", "ignore"));
+		this._reject?.(error ?? new PongError("canceled", "ignore"));
 	}
 }
