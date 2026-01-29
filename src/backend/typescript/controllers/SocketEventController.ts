@@ -184,7 +184,7 @@ export class SocketEventController {
 		this.io.on('connection', (socket : DefaultSocket) => {
 			this.handleConnection(socket);
 
-            SocketEventController.once(socket, "authenticate", (data: { token: string }, ack: (result: Result<null>) => void) => {
+            SocketEventController.on(socket, "authenticate", (data: { token: string }, ack: (result: Result<null>) => void) => {
                 this.handleAuthenticate(socket, data.token, ack);
             });
 
