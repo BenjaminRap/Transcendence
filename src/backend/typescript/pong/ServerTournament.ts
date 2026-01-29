@@ -165,7 +165,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		console.log(`${this._settings.name} tournamend end`);
 		if (this._state === "creation")
 		{
-			this._io.to(this._tournamentId).emit("tournament-event", { type: "tournament-canceled" })
+			this._io.to(this._tournamentId).except(this._creator.id).emit("tournament-event", { type: "tournament-canceled" })
 			this._creator.data.leaveTournament();
 			this.removeCreatorEvents();
 		}
