@@ -180,7 +180,6 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		{
 			this.switchToGUI(this._inMatchmakingGUI);
 			this._sceneData.pongHTMLElement.searchOnlineGame().then(() => {
-				this.hideCurrentGUI();
 			}).catch(() => {
 				this.switchToGUI(this._endGUI);
 			});
@@ -194,6 +193,7 @@ export class CreateInGameGUI extends CustomScriptComponent {
 
 	private	switchToGUI(newGUI : HTMLElement)
 	{
+		console.log("switch to : " + newGUI.nodeName);
 		this.hideCurrentGUI();
 		this._currentGUI = newGUI;
 		newGUI.classList.remove("hidden");
