@@ -123,38 +123,38 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 			return ;
 		this.clearDelay();
 		if (this._players.size === 0)
+		{
 			this.dispose();
-		else if (this._players.size === 1)
+			return ;
+		}
+		const result = await this._tournamentController.createTournament({
+			title: this._settings.name,
+			creatorId: this._creator.data.getUserId(),
+			creatorGuestName: this._creator.data.getGuestName(),
+			participants: [...this._players.values()].map(socket => {
+				return {
+					userId: socket.data.getUserId(),
+					guestName: socket.data.getGuestName(),
+					alias: socket.data.getProfile().shownName
+				}
+			})
+		});
+		if (!result.success)
+		{
+			this.dispose();
+			return ;
+		}
+		this._databaseId = result.value;
+		if (this._players.size === 1)
 		{
 			const	winner = this._players.values().next().value;
 
 			this.onTournamentEnd(winner);
-		}
-		else
-		{
-			const result = await this._tournamentController.createTournament({
-				title: this._settings.name,
-				creatorId: this._creator.data.getUserId(),
-				creatorGuestName: this._creator.data.getGuestName(),
-				participants: [...this._players.values()].map(socket => {
-					return {
-						userId: socket.data.getUserId(),
-						guestName: socket.data.getGuestName(),
-						alias: socket.data.getProfile().shownName
-					}
-				})
-			});
-			if (!result.success)
-			{
-				this.dispose();
-				return ;
-			}
-			this._databaseId = result.value;
-			this.setParticipants([...this._players.values()]);
-			this.createMatches();
-			this._state = "started";
 			return ;
 		}
+		this.setParticipants([...this._players.values()]);
+		this.createMatches();
+		this._state = "started";
 	}
 
 	public dispose()
@@ -164,7 +164,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		super.dispose();
 		console.log(`${this._settings.name} tournamend end`);
 		if (this._state === "creation")
-		{
+			{
 			this._io.to(this._tournamentId).except(this._creator.id).emit("tournament-event", { type: "tournament-canceled" })
 			this._creator.data.leaveTournament();
 			this.removeCreatorEvents();
