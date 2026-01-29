@@ -42,6 +42,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 		this._creator.on("ban-participant", (name : string) => this.banParticipant(name));
 		this._creator.on("kick-participant", (name : string) => this.kickParticipant(name));
 		this._creator.data.joinTournament(this);
+		console.log(`${this._settings.name} tournament created !`);
 	}
 
 	private	banParticipant(name : string)
