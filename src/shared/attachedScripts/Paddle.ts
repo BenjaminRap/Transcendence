@@ -177,6 +177,12 @@ export class Paddle extends CustomScriptComponent {
 		this.transform.position.copyFrom(this._initialPosition);
 		this._physicsBody.setLinearVelocity(Vector3.ZeroReadOnly);
 	}
+
+	public onGoal()
+	{
+		if (Math.abs(this.transform.absolutePosition.y) > Paddle.range / 4)
+			this.transform.position.copyFrom(this._initialPosition);
+	}
 }
 
 SceneManager.RegisterClass("Paddle", Paddle);

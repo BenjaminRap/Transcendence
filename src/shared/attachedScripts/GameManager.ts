@@ -10,6 +10,7 @@ import { Imported } from "@shared/ImportedDecorator";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { toXYZ } from "@shared/utils";
 import type { TimerManager } from "./TimerManager";
+import type { Paddle } from "./Paddle";
 
 export type EndCause = "scoreReached" | "forfeit" | "timeLimitReached";
 
@@ -28,6 +29,8 @@ export class GameManager extends CustomScriptComponent {
 
 	@Imported(TransformNode) private	_goalLeft! : TransformNode;
 	@Imported(TransformNode) private	_goalRight! : TransformNode;
+	@Imported("Paddle") private	_paddleLeft! : Paddle;
+	@Imported("Paddle") private	_paddleRight! : Paddle;
 	@Imported("Ball") private	_ball! : Ball;
 	@Imported("TimerManager") private _timerManager! : TimerManager;
 
@@ -93,6 +96,8 @@ export class GameManager extends CustomScriptComponent {
 			if (this._scoreLeft === GameManager._pointsToWin)
 				this.endMatch("left", "scoreReached");
 		}
+		this._paddleLeft.onGoal();
+		this._paddleRight.onGoal();
 		if (!this._ended)
 			this._ball.launch();
 		else
