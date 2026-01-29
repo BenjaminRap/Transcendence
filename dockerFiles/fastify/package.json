@@ -29,7 +29,8 @@
 		"file-type": "~21.1.0",
 		"jsonwebtoken": "~9.0.2",
 		"sharp": "~0.34.5",
-		"uuid": "~13.0.0"
+		"uuid": "~13.0.0",
+        "email-addresses": "~5.0.0"
 	},
 	"scripts": {
 		"start-dev": "nodemon --import=extensionless/register dev/backend/typescript/index.js",
