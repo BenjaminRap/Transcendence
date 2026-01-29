@@ -153,11 +153,12 @@ export class PongGame extends HTMLElement {
 			sceneData.events.getObservable("game-start").notifyObservers();
 	}
 
-	public async searchOnlineGame(sceneName : FrontendGameSceneName) : Promise<void>
+	public async searchOnlineGame(sceneName? : FrontendGameSceneName) : Promise<void>
 	{
 		const	[gameInit] = await this._serverProxy.joinGame();
 
-		await this.changeScene({sceneName, gameType: "Multiplayer"});
+		if (sceneName)
+			await this.changeScene({sceneName, gameType: "Multiplayer"});
 		this.startOnlineGame(gameInit);
 	}
 
