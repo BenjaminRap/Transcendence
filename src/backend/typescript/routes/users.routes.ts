@@ -7,9 +7,9 @@ export function usersRoutes(
     controller: UsersController,
     middleware: AuthMiddleware
 ) {
-    fastify.get<{ Params: {id: string} }>('/search/id/:id', {
-        preHandler: middleware.authenticate,
-    }, controller.getById.bind(controller));
+    // fastify.get<{ Params: {id: string} }>('/search/id/:id', {
+    //     preHandler: middleware.authenticate,
+    // }, controller.getById.bind(controller));
 
     fastify.get<{ Params: {username: string} }>('/search/username/:username', {
         preHandler: middleware.authenticate,

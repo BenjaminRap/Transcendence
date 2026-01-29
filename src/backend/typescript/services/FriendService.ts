@@ -33,8 +33,6 @@ export class FriendService {
         user.isOnline = SocketEventController.isUserOnline(userId);
         user.requesterId = userId;
 
-        // console.log("Friend request created:", user);
-        
         return user;
     }
 
@@ -53,8 +51,6 @@ export class FriendService {
             throw new FriendException(FriendError.NO_LINK, FriendError.NO_LINK);
         if (friendship.status === 'ACCEPTED')
             throw new FriendException(FriendError.ACCEPTED, FriendError.ACCEPTED);
-
-        // console.log("Friendship to accept:", friendship);
 
         // if the requester try to accept the friend request
         if (friendship.receiverId !== userId)
@@ -131,7 +127,6 @@ export class FriendService {
         });
 
         if (friendList.length === 0) {
-            // console.log('SuscriberService - getProfile - friendList is empty');
             return [];
         }
 
@@ -194,7 +189,6 @@ export class FriendService {
 
     // ----------------------------------------------------------------------------- //
     async areFriends(friendId: number, userId: number): Promise<boolean> {
-        // console.log("Checking friendship between", userId, "and", friendId);
         if ( await this.checkId(friendId) == false || await this.checkId(userId) == false )
             throw new FriendException(FriendError.USR_NOT_FOUND, FriendError.USR_NOT_FOUND);
 
@@ -244,7 +238,6 @@ export class FriendService {
     private async formatList(list: any[], userId: number): Promise<ListFormat[]> {
         return await Promise.all(
             list.map(async (friendship) => {
-                // console.log("Formatting friendship:", friendship);
                 const friend = friendship.requesterId === userId
                     ? friendship.receiver
                     : friendship.requester;

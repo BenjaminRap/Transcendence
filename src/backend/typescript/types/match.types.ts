@@ -15,5 +15,5 @@ export interface MatchData
 
 export interface PlayerInfo {
     id:         number | undefined,
-    guestName:  string, // username si id defini sinon guestname
+    guestName:  string,
 }

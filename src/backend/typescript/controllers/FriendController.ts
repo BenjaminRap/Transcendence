@@ -18,7 +18,6 @@ export class FriendController {
             if (!friendId.success) {
                 throw new FriendException(FriendError.INVALID_ID, 'Invalid Id format');
             }
-            // console.log('Creating friend request to id:', friendId.data);
             // check users existance; their connection; create the friend request and returns the current user profile
             const userId = (request as any).user.userId;
             const userProfile = await this.friendService.createFriendRequest(Number(friendId.data), Number(userId));
@@ -56,7 +55,6 @@ export class FriendController {
 
             // check users existance; their connection; update the friendship status
             const userProfile = await this.friendService.acceptFriendRequest(Number(friendId.data), Number(userId));
-            // console.log('friendProfile: ', userProfile);
 
 			// notify friendship acceptation
 			SocketEventController.sendToUser(Number(friendId.data), 'friend-status-update', {

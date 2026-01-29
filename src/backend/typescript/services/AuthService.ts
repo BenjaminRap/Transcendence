@@ -6,6 +6,7 @@ import { AuthException, AuthError } from '../error_handlers/Auth.error.js';
 import { type RegisterData, sanitizeUser } from '../types/auth.types.js';
 import type { SanitizedUser } from '@shared/ZodMessageType.js';
 import { CommonSchema } from '@shared/common.schema.js';
+import emailAddresses from 'email-addresses';
 
 export class AuthService {
     constructor(
@@ -16,11 +17,18 @@ export class AuthService {
 
     // --------------------------------------------------------------------------------- //
     async register(data: RegisterData): Promise<{ user: SanitizedUser; tokens: TokenPair }> {
+        // check if mail is valid per RFC with email-addresses
+        const parsed = emailAddresses.parseOneAddress(data.email);
+        if (!parsed || !('address' in parsed)) {
+            throw new AuthException(AuthError.INVALID_CREDENTIALS, 'Invalid email format');
+        }
+        const normalizedEmail = parsed.address.toLowerCase();
+
         // check if the user already exist
-        const existing = await this.findByEmailOrUsername(data.email, data.username);
+        const existing = await this.findByEmailOrUsername(normalizedEmail, data.username);
 
         if (existing) {
-            if (existing.email === data.email)
+            if (existing.email === normalizedEmail)
                 throw new AuthException(AuthError.EMAIL_TAKEN, AuthError.EMAIL_TAKEN);
             else 
                 throw new AuthException(AuthError.USERNAME_TAKEN, AuthError.USERNAME_TAKEN);
@@ -32,7 +40,7 @@ export class AuthService {
         const user = await this.prisma.user.create({
             data: {
                 username: data.username,
-                email: data.email,
+                email: normalizedEmail,
                 password: hashedPassword,
                 avatar: process.env.DEFAULT_AVATAR_URL || "api/static/public/avatarDefault.webp",
             },
@@ -49,7 +57,10 @@ export class AuthService {
     // --------------------------------------------------------------------------------- //
     async login(identifier: string, password: string): Promise<{ user: SanitizedUser; tokens: TokenPair }> {
         // Find the user
-        const user = await this.findByEmailOrUsername(identifier, identifier);
+        const parsed = emailAddresses.parseOneAddress(identifier);
+        const normalizedIdentifier = (parsed && 'address' in parsed) ? parsed.address.toLowerCase() : identifier;
+
+        const user = await this.findByEmailOrUsername(normalizedIdentifier, identifier);
         if (!user) {
             throw new AuthException(AuthError.INVALID_CREDENTIALS, 'Invalid email or username');
         }
@@ -61,7 +72,7 @@ export class AuthService {
         }
 
         // generate JWT tokens for the session
-        const tokens = await this.tokenManager.generatePair(String(user.id), user.email);
+        const tokens = await this.tokenManager.generatePair(String(user.id), user.email); // utiliser mail norm
 
         return {
             user: sanitizeUser(user),
@@ -100,7 +111,15 @@ export class AuthService {
 
         const userData = await userResponse.json() as any;
 
-        let user = await this.findByEmailOrUsername(userData.email, userData.login);
+        // normaliser le mail avec email-adresses
+        const parsed = emailAddresses.parseOneAddress(userData.email);
+        if (!parsed || !('address' in parsed)) {
+             throw new AuthException(AuthError.INVALID_CREDENTIALS, 'Invalid 42 email');
+        }
+        const normalizedEmail = parsed.address.toLowerCase();
+
+        // check if the user already exists
+        let user = await this.findByEmailOrUsername(normalizedEmail, userData.login);
 		let msg = '';
         if (!user) {
             if (CommonSchema.username.safeParse(userData.login).success === false) {
@@ -110,7 +129,7 @@ export class AuthService {
             user = await this.prisma.user.create({
                 data: {
                     username: userData.login,
-                    email: userData.email,
+                    email: normalizedEmail, // enregistrer le mail normalise
                     password: '',
                     avatar: userData.image?.link || "api/static/public/avatarDefault.webp",
                 },
@@ -118,9 +137,9 @@ export class AuthService {
 			msg = 'New user created and logged in with 42';
         }
         else {
-            if (user.email !== userData.email) {
-                console.error(`Username collision for ${userData.login}. DB email: ${user.email}, 42 email: ${userData.email}`);
-                throw new AuthException(AuthError.USERNAME_TAKEN, 'Username already taken by another user');
+            if (user.email !== normalizedEmail) {
+                console.error(`Username collision for ${userData.login}. DB email: ${user.email}, 42 email: ${normalizedEmail}`);
+                throw new AuthException(AuthError.USERNAME_TAKEN, 'This username is already taken by another user');
             }
         }
 		if (msg === '') {
