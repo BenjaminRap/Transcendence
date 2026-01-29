@@ -317,7 +317,7 @@ export class PongGame extends HTMLElement {
 	public quit()
 	{
 		this.dispose();
-		PongUtils.removePongDiv();
+		PongUtils.removePongDiv(true);
 	}
 }
 

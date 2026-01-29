@@ -61,12 +61,18 @@ export namespace PongUtils {
 	export let isPongLaunched = false;
 	export let pongGameInstance: HTMLDivElement | null = null;
 
-	export function removePongDiv() {
+	export function removePongDiv(flag: boolean) {
 		const pongContainer = document.getElementById('pong-game-container');
 		if (pongContainer) {
 			pongContainer.remove();
 			isPongLaunched = false;
 			pongGameInstance = null;
+		}
+		if (flag) {
+			if (ProfileBuilder.isActive)
+				history.pushState(null, '', '/profile');
+			else if (ExtProfileBuilder.isActive)
+				history.pushState(null, '', `/profile/${ExtProfileBuilder.getName()}`);
 		}
 	}
 }
@@ -124,7 +130,7 @@ export namespace TerminalCommand {
 		new Command('42' , CommandHelpMessage.HELP_42, OauthCommand),
 		new Command('pong', CommandHelpMessage.HELP_PONG, pongCommand),
 		new Command('rm', 'Remove files or directories', rmCommand),
-        new Command('sudo', 'Execute a command with superuser privileges', sudoCommand)
+		new Command('sudo', 'Execute a command with superuser privileges', sudoCommand)
 	];
 	export let commandHistory: string[] = [];
 	export let indexCommandHistory = -2;
@@ -158,6 +164,7 @@ function pongCommand(args: string[], description: string): string {
 `);
 	PongUtils.isPongLaunched = true;
 	PongUtils.pongGameInstance = document.getElementById('pong-game') as HTMLDivElement;
+	window.history.pushState(null, '', '/pong');
 	return 'Pong lancé !';
 }
 
@@ -224,12 +231,12 @@ async function profileCommand(args: string[], description: string): Promise<stri
 	if (ProfileBuilder.isActive || ExtProfileBuilder.isActive)
 		return 'Profile est déjà ouvert. Tapez "kill profile" pour le fermer.';
 	if (args.length === 1)
-		result = await ProfileBuilder.buildProfile('');
+		result = await ProfileBuilder.buildProfile('', true);
 	else
 	{
-		result = await ExtProfileBuilder.buildExtProfile(args[1]);
+		result = await ExtProfileBuilder.buildExtProfile(args[1], true);
 	}
-    console.log("Profile command result:", result);
+	console.log("Profile command result:", result);
 	return result;
 }
 
@@ -237,11 +244,11 @@ function killCommand(args: string[], description: string): string {
 	if (args.length !== 2)
 		return description;
 	if (args[1] === 'profile' && ProfileBuilder.isActive) {
-		ProfileBuilder.removeProfile();
+		ProfileBuilder.removeProfile(true);
 		return 'kill profile';
 	}
 	if (args[1] === 'profile' && ExtProfileBuilder.isActive) {
-		ExtProfileBuilder.removeExtProfile();
+		ExtProfileBuilder.removeExtProfile(true);
 		return 'kill profile';
 	}
 	if (args[1].toLowerCase() === 'me') {
@@ -799,7 +806,7 @@ function setEventListeners() {
 		}
 		if (TerminalElements.currentInput) {
 			TerminalElements.currentInput.addEventListener('keydown', (event: KeyboardEvent) => {
-				if (event.key === 'F11' || (event.ctrlKey && event.key.toLowerCase() === 'r')) {
+				if (event.key === 'F11' || (event.ctrlKey && event.key.toLowerCase() === 'r') || (event.ctrlKey && event.key === 'F5')) {
 					return;
 				}
 				event.preventDefault();

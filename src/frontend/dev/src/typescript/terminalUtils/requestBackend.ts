@@ -202,9 +202,9 @@ export namespace RequestBackendModule {
 		TerminalUtils.updatePromptText( TerminalUserManagement.username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ " );
 
 		if (ExtProfileBuilder.isActive)
-			ExtProfileBuilder.removeExtProfile();
+			ExtProfileBuilder.removeExtProfile(true);
 		else if (ProfileBuilder.isActive)
-			ProfileBuilder.removeProfile();
+			ProfileBuilder.removeProfile(true);
 		return 'Déconnexion réussie.';
 	}
 }
