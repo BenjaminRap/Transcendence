@@ -306,7 +306,6 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 			const	isLeftValid = !!left && this._players.has(left.profile.data.getGuestName());
 			const	isRightValid = !!right && this._players.has(right.profile.data.getGuestName());
 
-			console.log(isLeftValid, isRightValid, match.winner !== undefined);
 			if (match.winner !== undefined)
 				return ;
 			if (!isLeftValid || !isRightValid)
