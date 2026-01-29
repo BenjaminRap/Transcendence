@@ -67,9 +67,8 @@ export class	ServerProxy
 				this._state = "in-game";
 			})
 			.catch(() => {
-				this._state = "connected";
+				this.setStateIfConnected("connected");
 			});
-
 
 		this.replaceCurrentPromise(joinGameCancellable);
 		return joinGameCancellable.promise;
@@ -175,7 +174,7 @@ export class	ServerProxy
 				this._state = "tournament-creator";
 			})
 			.catch(() => {
-				this._state = "connected";
+				this.setStateIfConnected("connected");
 			});
 		this.replaceCurrentPromise(cancellable);
 
@@ -197,7 +196,7 @@ export class	ServerProxy
 				this._state = "tournament-player";
 			})
 			.catch(() => {
-				this._state = "connected";
+				this.setStateIfConnected("connected");
 			})
 		this.replaceCurrentPromise(cancellable);
 		return cancellable.promise;
@@ -215,7 +214,7 @@ export class	ServerProxy
 				this._state = "tournament-creator-player";
 			})
 			.catch(() => {
-				this._state = "tournament-creator";
+				this.setStateIfConnected("tournament-creator");
 			});
 		this.replaceCurrentPromise(cancellable);
 		return cancellable.promise;
@@ -250,7 +249,7 @@ export class	ServerProxy
 					this._state = "in-tournament";
 			})
 			.catch(() => {
-				this._state = previousState;
+				this.setStateIfConnected(previousState);
 			});
 		return cancellable.promise;
 	}
@@ -263,7 +262,7 @@ export class	ServerProxy
 		cancellable.promise
 			.catch(() => {})
 			.finally(() => {
-				this._state = "connected";
+				this.setStateIfConnected("connected");
 			});
 		this.replaceCurrentPromise(cancellable);
 
@@ -290,7 +289,7 @@ export class	ServerProxy
 		cancellable.promise
 			.catch(() => {})
 			.finally(() => {
-				this._state = previousState;
+				this.setStateIfConnected(previousState);
 			});
 		this.replaceCurrentPromise(cancellable);
 
@@ -311,6 +310,13 @@ export class	ServerProxy
 	{
 		if (!allowedStates.includes(this._state))
 			throw new PongError(`A FrontendSocketHandler method called with an invalid state, current state : ${this._state}, allowed : ${allowedStates}`, "show");
+	}
+
+	public setStateIfConnected(state : SocketState)
+	{
+		if (this._state === "not-connected")
+			return ;
+		this._state = state;
 	}
 
 	private	replaceCurrentPromise(newPromise : CancellablePromise<any> | null) : void
