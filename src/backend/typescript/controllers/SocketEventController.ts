@@ -347,6 +347,8 @@ export class SocketEventController {
             const ids = Array.isArray(profileId) ? profileId : [profileId];
             // console.log("Adding to watch profiles:", ids);
             for (const id of ids) {
+                if (isNaN(id) || id <= 0)
+                    continue;
                 socket.join('watching-' + Number(id));
             }            
         } catch (error) {
@@ -361,6 +363,8 @@ export class SocketEventController {
             const ids = Array.isArray(profileId) ? profileId : [profileId];
             // console.log("Removing from watch profiles:", ids);
             for (const id of ids) {
+                if (isNaN(id) || id <= 0)
+                    continue;
                 socket.leave('watching-' + Number(id));
             }            
         } catch (error) {
