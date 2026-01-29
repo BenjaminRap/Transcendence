@@ -11,7 +11,7 @@ services:
       "dev"
     ]
     env_file:
-      - ./.env.fastify_example
+      - ./fastify/.env.fastify_example
   nginx:
     build: ./nginx/
     ports:
@@ -61,6 +61,10 @@ volumes:
       o: bind
   databases:
     driver: local
+    driver_opts:
+      type: none
+      device: ./fastify/databases/
+      o: bind
 
 secrets:
   ssl_crt:

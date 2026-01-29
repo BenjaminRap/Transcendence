@@ -22,13 +22,17 @@ certificates:
 	  -subj "/C=FR/ST=Auvergne-Rhône-Alpes/L=Brignais/O=42/CN=brappo"
 
 cp-scenes:
-	mkdir	-p ./dockerFiles/fastify/app_src/dev
 	cp		-r ./src/backend/dev/scenes ./dockerFiles/fastify/app_src/dev/.
 
-create-upload-folders:
-	mkdir -p ./dockerFiles/fastify/app_src/uploads/avatars
+gen-prisma-client:
+	npx prisma generate --schema=./dockerFiles/fastify/prisma/schema.prisma
 
-build: cp-scenes create-upload-folders compile
+create-folders:
+	mkdir	-p	./dockerFiles/fastify/app_src/dev \
+				./dockerFiles/fastify/app_src/uploads/avatars \
+				./dockerFiles/fastify/databases/
+
+build: create-folders cp-scenes gen-prisma-client compile
 
 ifeq ($(PROFILE), prod)
 	npx vite build
@@ -59,7 +63,6 @@ endif
 
 install:
 	npm install
-	npx prisma generate --schema=./dockerFiles/fastify/prisma/schema.prisma
 
 copy-tsconfig:
 	cp ./src/frontend/tsconfig.json ./dockerFiles/vite/

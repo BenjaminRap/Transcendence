@@ -12,3 +12,4 @@ dockerFiles/vite/tsconfig.json
 src/backend/test/.test_tokens
 /dockerFiles/fastify/app_src/dev/
 /dockerFiles/.env.fastify_example
+/dockerFiles/fastify/databases/

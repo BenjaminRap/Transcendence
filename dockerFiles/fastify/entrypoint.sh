@@ -1,7 +1,6 @@
 #!/bin/sh
 set -e
 
-echo "Updating Prisma Client..."
 npx prisma generate
 
 if [ "${PROFILE:-prod}" = "dev" ]; then
@@ -13,7 +12,7 @@ if [ "${PROFILE:-prod}" = "dev" ]; then
   exec npm run start-dev
 else
   echo "Applying migrations (prod)..."
-  npx prisma db push --accept-data-loss
+  npx prisma migrate deploy
 
   echo "Starting in PROD mode..."
   exec npm run start-prod
