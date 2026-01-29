@@ -9,13 +9,14 @@ import type { EndData } from "@shared/attachedScripts/GameManager";
 import { SocketEventController, type DefaultSocket } from "../controllers/SocketEventController";
 import { getEndDataOnInvalidMatch } from "@shared/utils";
 import type { ServerMessage, ServerToClientEvents } from "@shared/ServerMessageHelpers";
+import { UniqueDelayOwner } from "@shared/UniqueDelayOwner";
 
 export type SocketMessage = {
 	socketIndex : int,
 	data : KeysUpdate
 }
 
-export class	Room
+export class	Room extends UniqueDelayOwner
 {
 	private static readonly _showParticipantsTimeoutMs = 2000;
 	private static readonly _readyTimeout = 60000;
@@ -27,7 +28,6 @@ export class	Room
 	private _observers : Map<string, Observable<SocketMessage>>;
 	private _socketsReadyCount : int = 0;
 	private _sceneData : ServerSceneData | undefined;
-	private _timeout : NodeJS.Timeout | null = null;
 	
 	constructor(
 		private readonly _io : ServerType,
@@ -35,6 +35,7 @@ export class	Room
 		firstSocket : DefaultSocket,
 		secondSocket : DefaultSocket
 	) {
+		super();
 		this._observers = new Map<string, Observable<SocketMessage>>();
 		this._roomId = crypto.randomUUID();
 		this._sockets.push(firstSocket, secondSocket);
@@ -74,8 +75,7 @@ export class	Room
 	{
 		if (this._disposed)
 			return ;
-		if (this._timeout)
-			clearTimeout(this._timeout);
+		this.clearDelay();
 		console.log("disposing room !");
 		this._io.to(this._roomId).emit("game-infos", { type:"room-closed" });
 		this._disposed = true;
@@ -130,11 +130,7 @@ export class	Room
 
 	private	async startGame()
 	{
-		if (this._timeout)
-		{
-			clearTimeout(this._timeout);
-			this._timeout = null;
-		}
+		this.clearDelay();
 		const	gameStartInfos = await this._sceneData!.readyPromise.promise as GameStartInfos;
 
 		this.delay(() => {
@@ -221,15 +217,5 @@ export class	Room
 			});
 		});
 		return observable;
-	}
-
-	private async delay(callback: () => void, durationMs : number)
-	{
-		if (this._timeout)
-			clearTimeout(this._timeout);
-		this._timeout = setTimeout(() => {
-			callback();
-			this._timeout = null;
-		}, durationMs);
 	}
 }

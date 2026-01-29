@@ -1,8 +1,9 @@
 import { TournamentHelper, type ProfileWithScore } from "@shared/TournamentHelper";
 import type { Match } from "@shared/Match";
 import { isPowerOfTwo } from "@shared/utils";
+import { UniqueDelayOwner } from "./UniqueDelayOwner";
 
-export abstract class	Tournament<T>
+export abstract class	Tournament<T> extends UniqueDelayOwner
 {
 	protected static readonly _showOpponentsDurationMs = 2000;
 	private static readonly _showTournamentDurationMs = 5000;
@@ -10,7 +11,6 @@ export abstract class	Tournament<T>
 	private _round :  "qualifications" | number = "qualifications";
 	private _tournamentMatches : Match<T>[][] = [];
 	private _qualified : ProfileWithScore<T>[] = [];
-	private _timeout : ReturnType<typeof setTimeout> | null = null;
 	private _expectedQualifiedCount : number = 0;
 	private _participants : ProfileWithScore<T>[] = [];
 	private _matchesFinished : number = 0;
@@ -66,23 +66,6 @@ export abstract class	Tournament<T>
 		this._currentMatches = matches;
 		this._matchesFinished = 0;
 		this.onNewMatches();
-	}
-
-	protected async delay(callback: () => void, durationMs : number)
-	{
-		this.clearDelay();
-		this._timeout = setTimeout(() => {
-			callback();
-			this._timeout = null;
-		}, durationMs);
-	}
-
-	protected	clearDelay()
-	{
-		if (!this._timeout)
-			return ;
-		clearTimeout(this._timeout);
-		this._timeout = null;
 	}
 
 	protected	setParticipants(participants : T[])
