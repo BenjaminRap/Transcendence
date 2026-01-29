@@ -163,9 +163,14 @@ export class SocketEventController {
 
 		if (!userId)
 			return data.getState();
+		return SocketEventController.getConnectedUserState(userId);
+	}
+
+	static getConnectedUserState(userId : number)
+	{
 		const	user = SocketEventController.connectedUsers.get(userId);
 		if (!user)
-			return data.getState();
+			return "unactive";
 		for (const socketData of user)
 		{
 			const	state = socketData.getState();
