@@ -319,10 +319,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			this._sceneData.pongHTMLElement.setButtonEnable(false);
 			await this._sceneData.serverProxy.startTournament();
 			this._sceneData.pongHTMLElement.setButtonEnable(true);
-			const	tournamentData = this._sceneData.serverProxy.getTournamentData();
-
-			if (!tournamentData)
-				this.switchMenu(this._onlineTournamentChoiceGUI);
+			this.switchMenu(this._onlineTournamentChoiceGUI);
 		} catch (error) {
 			this._sceneData.pongHTMLElement.setButtonEnable(true);
 			this._sceneData.pongHTMLElement.onError(error);
@@ -404,10 +401,6 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 	private	onTournamentEvent(tournamentEvent : TournamentEvent)
 	{
-		const	tournamentData = this._sceneData.serverProxy.getTournamentData();
-
-		if (!tournamentData)
-			return ;
 		const	message =
 			tournamentEvent.type === "kicked" ? "You have been kicked from the tournament" :
 			tournamentEvent.type === "banned" ? "You have been banned from the tournament" :
@@ -420,6 +413,10 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		}
 		else if (tournamentEvent.type === "add-participant")
 		{
+			const	tournamentData = this._sceneData.serverProxy.getTournamentData();
+
+			if (!tournamentData)
+				return ;
 			const	areYouCreator = tournamentData.isCreator;
 			const	canKickOrBan = areYouCreator && !tournamentEvent.isCreator;
 			const	isNameInput = this._sceneData.serverProxy.getGuestName() === tournamentEvent.profile.guestName;
