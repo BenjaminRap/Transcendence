@@ -1,6 +1,6 @@
 import "reflect-metadata"
 import { FrontendSocketHandler } from "./pong/FrontendSocketHandler"
-import { Terminal, TerminalFileSystem, socketUtils } from './terminal'
+import { PongUtils, Terminal, TerminalElements, TerminalFileSystem, socketUtils } from './terminal'
 import { ProfileBuilder } from './profile'
 import { WriteOnTerminal } from './terminalUtils/writeOnTerminal'
 import { TerminalUtils } from './terminalUtils/terminalUtils'
@@ -12,7 +12,7 @@ export const	frontendSocketHandler = await FrontendSocketHandler.createFrontendS
 
 socketUtils.socket = frontendSocketHandler.socket;
 const url = new URL( window.location.href);
-const path = url.pathname;
+let path = url.pathname;
 
 let message = '';
 
@@ -27,7 +27,21 @@ function getUrlVar(varName: string) : string | null {
 function Error404() {
 	WriteOnTerminal.displayOnTerminal(`cat error404.html`, true);
 	WriteOnTerminal.printErrorOnTerminal(errors404[Math.floor(Math.random() * errors404.length)]);
-	history.pushState({}, '', `/`);
+	history.pushState(null, '', `/`);
+}
+
+
+function buildPong()
+{
+	if (TerminalElements.terminal) {
+		TerminalElements.terminal.insertAdjacentHTML('beforeend', `
+			<div id="pong-game-container" class="fixed top-[50%] left-[50%] border border-green-500 bg-black flex flex-col -translate-x-[50%] -translate-y-[50%] gap-4 " style="width: 80vw">
+				<pong-game id="pong-game" class="size-full"></pong-game>
+			</div>
+		`);
+		PongUtils.isPongLaunched = true;
+		PongUtils.pongGameInstance = document.getElementById('pong-game') as HTMLDivElement;
+	}
 }
 
 async function auth42Callback() {
@@ -56,11 +70,13 @@ async function auth42Callback() {
 		} catch (error) {
 			console.error("Error:", error);
 		}
-		history.pushState({}, '', `/`);
+		console.log("42 des ses mort");
+		history.pushState(null, '', `/`);
 	}
 	else if (getUrlVar('error')) {
 		message = "Authentication failed. Please try again.";
-		history.pushState({}, '', `/`);
+		console.log("42 des ses mort if");
+		history.pushState(null, '', `/`);
 	}
 }
 
@@ -69,43 +85,67 @@ await auth42Callback();
 await Terminal.buildTerminal();
 
 
-if (path === '/')
-{
-	if (!TerminalUserManagement.isLoggedIn)
-	{
-		if (message) {
-			WriteOnTerminal.printWithAnimation(message, 5);
-		} else {
-			await WriteOnTerminal.printWithAnimation("Welcome to Transencdence !", 5);
-			await WriteOnTerminal.printWithAnimation(HELP_MESSAGE_NOT_LOG, 1);
+async function pathSelector() {
+	const currentPath = window.location.pathname;
 
+	if (currentPath === '/') {
+		if (!TerminalUserManagement.isLoggedIn) {
+			if (typeof message !== 'undefined' && message) {
+				WriteOnTerminal.printWithAnimation(message, 5);
+			} else {
+				await WriteOnTerminal.printWithAnimation("Welcome to Transcendence !", 5);
+				await WriteOnTerminal.printWithAnimation(HELP_MESSAGE_NOT_LOG, 1);
+			}
+		} else {
+			await WriteOnTerminal.printWithAnimation(`Welcome back ${TerminalUserManagement.username} ! Type 'help' for instructions.`, 5);
+		}
+		
+		if (ProfileBuilder.isActive) {
+			ProfileBuilder.removeProfile(false);
+		}
+
+		if (PongUtils.isPongLaunched) {
+			PongUtils.removePongDiv(false);
+		}
+	} 
+	else if (currentPath.startsWith('/profile/')) {
+		if (PongUtils.isPongLaunched) {
+			PongUtils.removePongDiv(false);
+		}
+		const user = currentPath.split('/profile/')[1];
+				if ((user.match(/\//g) || []).length >= 1) {
+			Error404();
+		} else {
+			let result: string;
+			if (user === TerminalUserManagement.username || user === '') {
+				if (ProfileBuilder.isActive) {
+					return ;
+				}
+				result = await ProfileBuilder.buildProfile('', false);
+			} else {
+				result = await ExtProfileBuilder.buildExtProfile(user, false);
+			}
+
+			if (!result.startsWith('Profil ouvert. Tapez "kill profile" pour le fermer.')) {
+				WriteOnTerminal.printErrorOnTerminal(result);
+				window.history.pushState(null, '', '/'); 
+				console.log("Salam from index");
+				await pathSelector();
+			}
 		}
 	}
-	else
-	{
-		await WriteOnTerminal.printWithAnimation(`Welcome back ${TerminalUserManagement.username} ! Type 'help' for instructions.`, 5);
-	}
-	if (ProfileBuilder.isActive)
-		ProfileBuilder.removeProfile();
-}
-else if (path.startsWith('/profile/')) {
-	const user = path.split('/profile/')[1];
-	if ((user.match(/\//g) || []).length >= 1) {
+	else if (currentPath.startsWith('/pong')) {
+		if (!PongUtils.isPongLaunched) {
+			buildPong();
+		}
+	} else {
 		Error404();
 	}
-	else
-	{
-		let result: string;
-		if (user === TerminalUserManagement.username || user === '')
-			result = await ProfileBuilder.buildProfile('');
-		else
-			result = await ExtProfileBuilder.buildExtProfile(user);
-		if (!result.startsWith('Profil ouvert. Tapez "kill profile" pour le fermer.'))
-		{
-			WriteOnTerminal.printErrorOnTerminal(result);
-			history.pushState({}, '', `/`);
-		}
-	}
 }
-else
-	Error404();
+
+await pathSelector();
+
+window.addEventListener('popstate', async (event: PopStateEvent) => {
+	console.log(`Navigation détectée vers : ${window.location.pathname}`);
+	await pathSelector();
+});

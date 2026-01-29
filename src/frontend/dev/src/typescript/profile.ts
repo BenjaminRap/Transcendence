@@ -439,7 +439,7 @@ async function fetchProfileData(user: string): Promise<string> {
 }
 
 export namespace ProfileBuilder {
-	export async function buildProfile(user: string): Promise<string> {
+	export async function buildProfile(user: string, push: boolean): Promise<string> {
 		const result = await fetchProfileData(user);
 		if (!result || result !== "OK")
 			return result;
@@ -454,7 +454,9 @@ export namespace ProfileBuilder {
 		createFriendDiv(profileElement);
 
 		document.body.appendChild(profileElement);
-		history.pushState({}, '', `/profile/${user}`);
+		if (push) {
+			history.pushState(null, '', `/profile/${user}`);
+		}
 		isActive = true;
 		if (socketUtils && socketUtils.socket)
 		{
@@ -465,7 +467,7 @@ export namespace ProfileBuilder {
 				if (parseInt(data.user.id) === profile.id) {
 					profile.username = data.user.username;
 					profile.avatar = data.user.avatar;
-					history.replaceState({}, '', `/profile/${profile.username}`);
+					history.replaceState(null, '', `/profile/${profile.username}`);
 					ProfileUpdater.updateProfileCard(profile);
 				}
 				else
@@ -558,14 +560,17 @@ export namespace ProfileBuilder {
 		}
 		return 'Profil ouvert. Tapez "kill profile" pour le fermer.';
 	}
-	export function removeProfile() {
+	export function removeProfile(pushHistory: boolean) {
 		const profileElement = document.getElementById('profile');
 		if (profileElement) {
 			document.body.removeChild(profileElement);
 			isActive = false;
 			if (socketUtils && socketUtils.socket)
 				socketUtils.socket.off("profile-update");
-			history.pushState({}, '', `/`);
+			if (pushHistory)
+			{
+				history.pushState(null, '', `/`);
+			}
 		}
 		if (socketUtils && socketUtils.socket)
 		{
