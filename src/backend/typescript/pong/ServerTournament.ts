@@ -187,7 +187,7 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 			return error("The tournament has already started !");
 		if (this._players.size === this._settings.maxPlayerCount)
 			return error("The tournament is already full !");
-		if (!socket.data.isConnected() && !this._settings.acceptGuests)
+		if (socket.data.getUserId() === undefined && !this._settings.acceptGuests)
 			return error("The tournament doesn't accept guests, you must log to your account !");
 		const	userId = socket.data.getUserId();
 

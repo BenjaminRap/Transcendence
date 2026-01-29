@@ -25,7 +25,6 @@ export class	SocketData
 	private _room : Room | null = null;
 	private _tournament : ServerTournament | null = null;
 	private _onlineProfile : OnlineProfile | null = null;
-	private _connected : boolean = false;
 	private _guestName : string = getGuestName(); 
 	private _alias : string | null = null;
 
@@ -33,10 +32,6 @@ export class	SocketData
 
 	public getState() {
 		return this._state;
-	}
-
-	public isConnected() {
-		return this._connected;
 	}
 
 	constructor(private readonly _socket : DefaultSocket)
