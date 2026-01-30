@@ -89,6 +89,13 @@ async function pathSelector() {
 	const currentPath = window.location.pathname;
 
 	if (currentPath === '/') {
+		if (ProfileBuilder.isActive) {
+			ProfileBuilder.removeProfile(false);
+		}
+
+		if (PongUtils.isPongLaunched) {
+			PongUtils.removePongDiv(false);
+		}
 		if (!TerminalUserManagement.isLoggedIn) {
 			if (typeof message !== 'undefined' && message) {
 				WriteOnTerminal.printWithAnimation(message, 5);
@@ -100,13 +107,7 @@ async function pathSelector() {
 			await WriteOnTerminal.printWithAnimation(`Welcome back ${TerminalUserManagement.username} ! Type 'help' for instructions.`, 5);
 		}
 		
-		if (ProfileBuilder.isActive) {
-			ProfileBuilder.removeProfile(false);
-		}
 
-		if (PongUtils.isPongLaunched) {
-			PongUtils.removePongDiv(false);
-		}
 	} 
 	else if (currentPath.startsWith('/profile/')) {
 		if (PongUtils.isPongLaunched) {
