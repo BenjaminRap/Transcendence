@@ -55,7 +55,6 @@ async function auth42Callback() {
 				},
 			});
 			const data = await response.json();
-			console.log("Data:", data);
 			if (data.success) {
 				document.cookie = `accessToken=${data.tokens.accessToken}; path=/;`;
 				document.cookie = `refreshToken=${data.tokens.refreshToken}; path=/;`;
@@ -63,19 +62,13 @@ async function auth42Callback() {
 				TerminalUtils.updatePromptText( TerminalUserManagement.username + "@terminal:" + TerminalFileSystem.currentDirectory +"$ " );
 				TerminalUserManagement.isLoggedIn = true;
 			}
-			else
-			{
-
-			}
 		} catch (error) {
-			console.error("Error:", error);
+			WriteOnTerminal.printErrorOnTerminal("Error with authentication:");
 		}
-		console.log("42 des ses mort");
 		history.pushState(null, '', `/`);
 	}
 	else if (getUrlVar('error')) {
 		message = "Authentication failed. Please try again.";
-		console.log("42 des ses mort if");
 		history.pushState(null, '', `/`);
 	}
 }
@@ -89,6 +82,13 @@ async function pathSelector() {
 	const currentPath = window.location.pathname;
 
 	if (currentPath === '/') {
+		if (ProfileBuilder.isActive) {
+			ProfileBuilder.removeProfile(false);
+		}
+
+		if (PongUtils.isPongLaunched) {
+			PongUtils.removePongDiv(false);
+		}
 		if (!TerminalUserManagement.isLoggedIn) {
 			if (typeof message !== 'undefined' && message) {
 				WriteOnTerminal.printWithAnimation(message, 5);
@@ -100,13 +100,7 @@ async function pathSelector() {
 			await WriteOnTerminal.printWithAnimation(`Welcome back ${TerminalUserManagement.username} ! Type 'help' for instructions.`, 5);
 		}
 		
-		if (ProfileBuilder.isActive) {
-			ProfileBuilder.removeProfile(false);
-		}
 
-		if (PongUtils.isPongLaunched) {
-			PongUtils.removePongDiv(false);
-		}
 	} 
 	else if (currentPath.startsWith('/profile/')) {
 		if (PongUtils.isPongLaunched) {
@@ -129,7 +123,6 @@ async function pathSelector() {
 			if (!result.startsWith('Profil ouvert. Tapez "kill profile" pour le fermer.')) {
 				WriteOnTerminal.printErrorOnTerminal(result);
 				window.history.pushState(null, '', '/'); 
-				console.log("Salam from index");
 				await pathSelector();
 			}
 		}
@@ -146,6 +139,5 @@ async function pathSelector() {
 await pathSelector();
 
 window.addEventListener('popstate', async (event: PopStateEvent) => {
-	console.log(`Navigation détectée vers : ${window.location.pathname}`);
 	await pathSelector();
 });

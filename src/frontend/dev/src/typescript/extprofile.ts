@@ -76,7 +76,6 @@ function updateMatchDiv(flagAdd: boolean)
 		watchMatchIds.unshift(numberOrNan(profile.lastMatchs[0].opponent!.id));
 		socketUtils.socket?.emit("watch-profile", [watchMatchIds[0]] );
 	}
-	console.log("Updated watching match IDs:", watchMatchIds);
 	const oldMatchListElement = document.getElementById('match-list');
 	if (oldMatchListElement && oldMatchListElement.parentElement) {
 		oldMatchListElement.parentElement.replaceChild(newMatchListElement, oldMatchListElement);
@@ -202,7 +201,6 @@ async function fetchProfileData(user: string) : Promise <string>
 		});
 		const data = await response.json();
 		if (data.success) {
-			console.log('data :', data);
 			let user : ExtProfile = {
 				id:         data.user[0].id,
 				avatar:     data.user[0].avatar,
@@ -221,10 +219,8 @@ async function fetchProfileData(user: string) : Promise <string>
 			}
 			return "OK";
 		}
-		console.error("Error fetching profile data:", data.message);
 		return data.message || 'Erreur lors de la récupération des données du profil.';
 	} catch (error) {
-		console.error("Error:", error);
 		return 'Erreur lors de la récupération des données du profil.';
 	}
 }
@@ -234,7 +230,6 @@ export namespace ExtProfileBuilder {
 	export async function buildExtProfile(user: string, push: boolean): Promise <string> {
 		const result = await fetchProfileData(user);
 		if (result !== "OK") {
-			console.log("Error fetching profile data:", result);
 			return result;
 		}
 		const profileElement = document.createElement('div');
@@ -257,7 +252,6 @@ export namespace ExtProfileBuilder {
 			socketUtils.socket.emit("watch-profile", [profile.id]);
 
 			socketUtils.socket.on("profile-update", (data : {user: { id: string; username: string; avatar: string }}) => {
-				console.log("Profile updated:", data.user.id, ' : ', data.user.username, ' : ', data.user.avatar);
 				if (parseInt(data.user.id) === profile.id) {
 					profile.username = data.user.username;
 					profile.avatar = data.user.avatar;
@@ -284,14 +278,10 @@ export namespace ExtProfileBuilder {
 			});
 
 			socketUtils.socket.on("match-update", (data: MatchSummary) => {
-				console.log("Extended View", ExtendedView.isExtendedViewIsActive, ExtendedView.type, ExtendedView.profileId);
 				if (data.opponent != null && numberOrNan(data.opponent.id) === profile.id)
 					return "Erreur, actualiser la page et reessayer.";
 				if (ExtendedView.isExtendedViewIsActive && ExtendedView.type === 'match')
-				{
-					console.log("Adding match to extended view:", data);
 					ExtendedView.addMatch(data);
-				}
 				profile.lastMatchs.unshift(data);
 				if (profile.lastMatchs.length > 4)
 					profile.lastMatchs.pop();
@@ -299,14 +289,12 @@ export namespace ExtProfileBuilder {
 			});
 
 			socketUtils.socket.on("stat-update", (data: GameStats) => {
-				console.log("Stat updated:", data);
 				profile.gameStats = data;
 				updateProfileCard(profile);
 			});
 			
 			watchMatchIds = getWathIdMatch();
 			socketUtils.socket.emit("watch-profile", watchMatchIds);
-			console.log("Watching match IDs:", watchMatchIds);
 		}
 		return 'Profil ouvert. Tapez "kill profile" pour le fermer.';
 	}
@@ -365,7 +353,6 @@ async function sendFriendRequest(id: number)
 		});
 		const data = await response.json();
 		if (data.success) {
-			console.log('data :', data);
 			WriteOnTerminal.printErrorOnTerminal(`Demande d'ami envoyée à ${profile.username}`);
 			return "OK";
 		}
@@ -381,10 +368,8 @@ async function sendFriendRequest(id: number)
 			WriteOnTerminal.printErrorOnTerminal('Votre demande d\'ami est en attente.');
 			return "OK";
 		}
-		console.error("Error fetching profile data:", data.message);
 		WriteOnTerminal.printErrorOnTerminal('Erreur lors de la récupération des données du profil.');
 	} catch (error) {
-		console.error("Error:", error);
 		WriteOnTerminal.printErrorOnTerminal('Erreur lors de la récupération des données du profil.');
 	}
 }
@@ -404,7 +389,6 @@ async function removeFriend(id: number)
 		});
 		const data = await response.json();
 		if (data.success) {
-			console.log('data :', data);
 			WriteOnTerminal.printErrorOnTerminal(`${profile.username} a été retiré de vos amis.`);
 			return "OK";
 		}
@@ -415,10 +399,8 @@ async function removeFriend(id: number)
 			}
 			return "OK";
 		}
-		console.error("Error fetching profile data:", data.message);
 		WriteOnTerminal.printErrorOnTerminal('Erreur lors de la récupération des données du profil.');
 	} catch (error) {
-		console.error("Error:", error);
 		WriteOnTerminal.printErrorOnTerminal('Erreur lors de la récupération des données du profil.');
 	}
 }
