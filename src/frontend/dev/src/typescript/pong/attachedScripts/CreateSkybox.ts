@@ -18,9 +18,7 @@ export class CreateSkybox extends CustomScriptComponent {
 
 	protected	awake()
 	{
-		const	texture = new CubeTexture(this._skyboxPath, this.scene, undefined, undefined, undefined, undefined, (message, exception) => {
-			console.log(`${message} : ${exception}`)
-		});
+		const	texture = new CubeTexture(this._skyboxPath, this.scene);
 
 		const skyboxMaterial = new StandardMaterial("skyBox", this.scene);
 		skyboxMaterial.backFaceCulling = false;

@@ -71,10 +71,10 @@ export class ClientSync extends CustomScriptComponent {
 				this.updateKey(gameInfos.keysUpdate.down, opponentInputs.down);
 				break ;
 			case "itemsUpdate":
-				const ping = this._sceneData.serverProxy.getPing();
-
-				console.log("actual : " + Vector3.Distance(toVec3(gameInfos.itemsUpdate.ball.pos), this._ball.transform.position));
-				console.log("optimized : " + Vector3.Distance(this.getNewPosition(this._ball.transform.position, this._ball.transform.getPhysicsBody()!.getLinearVelocity(), ping / 2000), this._ball.transform.position));
+				// const ping = this._sceneData.serverProxy.getPing();
+				//
+				// console.log("actual : " + Vector3.Distance(toVec3(gameInfos.itemsUpdate.ball.pos), this._ball.transform.position));
+				// console.log("optimized : " + Vector3.Distance(this.getNewPosition(this._ball.transform.position, this._ball.transform.getPhysicsBody()!.getLinearVelocity(), ping / 2000), this._ball.transform.position));
 				this._ball.transform.position.copyFrom(toVec3(gameInfos.itemsUpdate.ball.pos));
 				this._ball.transform.getPhysicsBody()!.setLinearVelocity(toVec3(gameInfos.itemsUpdate.ball.linearVelocity));
 				this._paddleLeft.transform.position.copyFrom(toVec3(gameInfos.itemsUpdate.paddleLeftPos));
