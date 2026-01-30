@@ -254,13 +254,13 @@ export class PongGame extends HTMLElement {
 		SceneManager.OnSceneReadyObservable.add(() => {
 			SceneManager.OnSceneReadyObservable.clear();
 			scene.clearColor = new Color4(0, 0, 0, 1);
-			this._assetsManager = null;
 			cam.dispose(); // removing the unecessary camera
 			scene.activeCameras = scene.cameras;
 			globalThis.HKP = undefined;
 			this._loadingGUI.hideLoadingUI();
 		});
 		await this._assetsManager.loadAsync();
+		this._assetsManager = null;
 
 		return scene;
 	}
@@ -269,6 +269,7 @@ export class PongGame extends HTMLElement {
 	{
 		SceneManager.OnSceneReadyObservable.clear();
 		this._assetsManager?.reset();
+		this._assetsManager = null;
 		if (this._scene === undefined)
 			return ;
 		const	sceneData = getFrontendSceneData(this._scene);
