@@ -478,7 +478,7 @@ export namespace ProfileBuilder {
 							profile.lastMatchs[i].opponent!.username = user.username;
 							profile.lastMatchs[i].opponent!.avatar = user.avatar;
 							updateMatchDiv(false);
-							break ;
+							continue ;
 						}
 					}
 					for (let i = 0; i < profile.friends.length; i++)
@@ -489,7 +489,7 @@ export namespace ProfileBuilder {
 							profile.friends[i].avatar = user.avatar;
 							sortFriendList();
 							updateFriendDiv();
-							break ;
+							continue ;
 						}
 					}
 					if (ExtendedView.isExtendedViewIsActive && ExtendedView.type === 'friend')

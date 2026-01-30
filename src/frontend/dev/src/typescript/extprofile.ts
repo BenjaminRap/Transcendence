@@ -267,7 +267,7 @@ export namespace ExtProfileBuilder {
 							profile.lastMatchs[i].opponent!.username = user.username;
 							profile.lastMatchs[i].opponent!.avatar = user.avatar;
 							updateMatchDiv(false);
-							break ;
+							continue ;
 						}
 					}
 					if (ExtendedView.isExtendedViewIsActive && ExtendedView.type === 'match')
