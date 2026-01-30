@@ -131,7 +131,7 @@ export class AuthService {
                     username: userData.login,
                     email: normalizedEmail, // enregistrer le mail normalise
                     password: '',
-                    avatar: userData.image?.link || "api/static/public/avatarDefault.webp",
+                    avatar: userData.image?.link || process.env.DEFAULT_AVATAR_URL || "api/static/public/avatarDefault.webp",
                 },
             });
 			msg = 'New user created and logged in with 42';
