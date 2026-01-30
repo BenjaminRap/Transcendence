@@ -20,7 +20,8 @@ export const clientMessages = ["join-matchmaking",
 							"watch-profile",
 							"unwatch-profile",
                             "authenticate",
-							"set-alias"] as const;
+							"set-alias",
+							"ping"] as const;
 
 export const zodClientMessageData  = {
 	"input-infos" : [zodKeysUpdate],
@@ -40,10 +41,11 @@ export const zodClientMessageAcknowledgementParameters = {
 	"start-tournament": [resultOf(zod.null())],
 	"join-tournament" : [resultOf(zod.array(zodProfile))],
 	"get-tournaments" : [resultOf(zod.array(zodTournamentDescription))],
-	"get-online-users" : [(zod.array(zod.number()))],
+	"get-online-users" : [zod.array(zod.number())],
     "authenticate" : [resultOf(zod.null())],
     "set-alias" : [resultOf(zod.null())],
-    "join-matchmaking" : [resultOf(zod.null())]
+    "join-matchmaking" : [resultOf(zod.null())],
+	"ping": [zod.number()]
 } satisfies {
   readonly [key : string]: readonly [zod.ZodTypeAny, ...zod.ZodTypeAny[]];
 }

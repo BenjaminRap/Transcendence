@@ -57,6 +57,7 @@ export class ServerSync extends CustomScriptComponent {
     private sendInfos(): void {
 		const	message : GameInfos = {
 			type : "itemsUpdate",
+			date: Date.now(),
 			itemsUpdate: {
 				paddleRightPos: toXYZ(this._paddleRight.transform.position),
 				paddleLeftPos: toXYZ(this._paddleLeft.transform.position),

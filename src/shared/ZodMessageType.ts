@@ -41,6 +41,7 @@ export const zodGameInfos = zod.discriminatedUnion("type", [
 	}),
 	zod.object({
 		type: zod.literal("itemsUpdate"),
+		date: zod.number(),
 		itemsUpdate: zodItemsUpdate,
 	}),
 	zod.object({

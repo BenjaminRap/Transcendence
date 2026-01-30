@@ -15,10 +15,14 @@ import type { Platform } from "@shared/attachedScripts/Platform";
 import { PongError } from "@shared/pongError/PongError";
 import type { GameInfos } from "@shared/ZodMessageType";
 import { toVec3 } from "@shared/utils";
+import type { TimerManager } from "@shared/attachedScripts/TimerManager";
 
 export class ClientSync extends CustomScriptComponent {
+	private static readonly _updateClockOffsetDelay = 10000;
+
 	@Imported("InputManager") private	_inputManager! : InputManager;
 	@Imported("GameManager") private	_gameManager! : GameManager;
+	@Imported("TimerManager") private	_timerManager! : TimerManager;
 	@Imported("Ball") private _ball! : Ball;
 	@Imported("Paddle") private _paddleRight! : Paddle;
 	@Imported("Paddle") private _paddleLeft! : Paddle;
@@ -39,7 +43,17 @@ export class ClientSync extends CustomScriptComponent {
 			return ;
 
 		this.listenToGameInfos();
+		this._sceneData.serverProxy.updateClockOffset();
+		this._timerManager.setTimer(() => {
+			this._sceneData.serverProxy.warmUpClockOffset();
+		}, 100, 10);
+		this._timerManager.setTimeout(() => {
+			this._timerManager.setInterval(() => {
+				this._sceneData.serverProxy.updateClockOffset();
+			}, ClientSync._updateClockOffsetDelay);
+		}, 1000);
 	}
+
 	
 	private	listenToGameInfos()
 	{
@@ -62,8 +76,22 @@ export class ClientSync extends CustomScriptComponent {
 				this.updateKey(gameInfos.keysUpdate.down, opponentInputs.down);
 				break ;
 			case "itemsUpdate":
-				this._ball.transform.position.copyFrom(toVec3(gameInfos.itemsUpdate.ball.pos));
-				this._ball.transform.getPhysicsBody()!.setLinearVelocity(toVec3(gameInfos.itemsUpdate.ball.linearVelocity));
+				const	clockOffset = this._sceneData.serverProxy.getClockOffset();
+
+				if (clockOffset)
+				{
+					const delta = performance.now() + clockOffset - gameInfos.date;
+
+					console.log("offset : " + clockOffset + "now : " + (delta - clockOffset - gameInfos.date) + "server : " + gameInfos.date);
+					// console.log(delta);
+					this._ball.transform.position.copyFrom(toVec3(gameInfos.itemsUpdate.ball.pos));
+					this._ball.transform.getPhysicsBody()!.setLinearVelocity(toVec3(gameInfos.itemsUpdate.ball.linearVelocity));
+				}
+				else
+				{
+					this._ball.transform.position.copyFrom(toVec3(gameInfos.itemsUpdate.ball.pos));
+					this._ball.transform.getPhysicsBody()!.setLinearVelocity(toVec3(gameInfos.itemsUpdate.ball.linearVelocity));
+				}
 				this._paddleLeft.transform.position.copyFrom(toVec3(gameInfos.itemsUpdate.paddleLeftPos));
 				this._paddleRight.transform.position.copyFrom(toVec3(gameInfos.itemsUpdate.paddleRightPos));
 				break ;
@@ -85,8 +113,10 @@ export class ClientSync extends CustomScriptComponent {
 			inputKey.setKeyUp();
 	}
 
-	private	getNewPosition(startPosition: Vector3, velocity : Vector3, remainingTimeSeconds : number) : Vector3
+	private	getNewPosition(startPosition: Vector3, velocity : Vector3, remainingTimeSeconds : number, maxRecursion = 2) : Vector3
 	{
+		if (maxRecursion <= 0)
+			return startPosition;
 		const	castVector = velocity.scale(remainingTimeSeconds);
 		const	endPosition = startPosition.add(castVector);
 		const	hitWorldResult = this._ball.shapeCast(startPosition, endPosition);

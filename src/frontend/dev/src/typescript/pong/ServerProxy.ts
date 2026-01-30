@@ -306,6 +306,21 @@ export class	ServerProxy
 		return this._frontendSocketHandler.guestName;
 	}
 
+	public updateClockOffset()
+	{
+		this._frontendSocketHandler.updateClockOffset();
+	}
+
+	public warmUpClockOffset()
+	{
+		this._frontendSocketHandler.warmUpClockOffset();
+	}
+
+	public getClockOffset()
+	{
+		return this._frontendSocketHandler.getClockOffset();
+	}
+
 	private verifyState(...allowedStates : SocketState[]) : void
 	{
 		if (!allowedStates.includes(this._state))
