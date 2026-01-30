@@ -37,21 +37,29 @@ export class ClientSync extends CustomScriptComponent {
 		this._sceneData = getFrontendSceneData(this.scene);
     }
 
-	protected	start()
+	protected	awake()
 	{
 		if (this._sceneData.gameType !== "Multiplayer")
 			return ;
 
-		this.listenToGameInfos();
 		this._sceneData.serverProxy.updatePing();
 		this._timerManager.setInterval(() => {
 			this._sceneData.serverProxy.updatePing();
 		}, ClientSync._updatePing);
 	}
 
+	protected	start()
+	{
+		if (this._sceneData.gameType !== "Multiplayer")
+			return ;
+
+		this.listenToGameInfos();
+	}
+
 	
 	private	listenToGameInfos()
 	{
+		console.log("added");
 		this._sceneData.events.getObservable("game-infos").add((gameInfos : GameInfos) => {
 			const	opponentInputs = this._inputManager.getPlayerInput(this._sceneData.serverProxy.getOpponentIndex());
 
@@ -62,6 +70,7 @@ export class ClientSync extends CustomScriptComponent {
 				this.updateKey({event: "keyUp"}, opponentInputs.up);
 				break ;
 			case "forfeit":
+				console.log("forfeit");
 				const	winningSide = (this._sceneData.serverProxy.getPlayerIndex() === 0) ? "left" : "right";
 
 				this._sceneData.events.getObservable("forfeit").notifyObservers(winningSide);
