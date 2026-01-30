@@ -25,7 +25,10 @@ export class	ServerProxy
 		this._state = "connected";
 		this.getObservable("game-infos").add(([gameInfos]) => {
 			if (gameInfos.type === "room-closed" && this._state === "in-game")
+			{
 				this._state = "connected";
+				this.replaceCurrentPromise(null);
+			}
 		});
 		this.getObservable("disconnect").add(() => {
 			this._state = "not-connected";
@@ -38,6 +41,7 @@ export class	ServerProxy
 			if ((removeFromTournament && this._state === "tournament-player")
 				|| (tournamentEnd && this._state === "in-tournament"))
 			{
+				this.replaceCurrentPromise(null);
 				this._state = "connected";
 				this._tournamentData = null;
 			}
@@ -88,7 +92,7 @@ export class	ServerProxy
 		else if (this._state === "tournament-creator" || this._state === "tournament-creator-player")
 			this._frontendSocketHandler.sendEventWithNoResponse("cancel-tournament");
 		this.replaceCurrentPromise(null);
-		this._state = "connected";
+		this.setStateIfConnected("connected");
 	}
 
 	public onGameReady() : Promise<[GameStartInfos]>

@@ -315,7 +315,7 @@ export class PongGame extends HTMLElement {
 		requestAnimationFrame(() => {
 			try {
 				this._engine?.stopRenderLoop();
-				window.addEventListener("popstate", this.onPopState);
+				window.removeEventListener("popstate", this.onPopState);
 				this._serverProxy.leave();
 				this._serverProxy.dispose();
 				if (globalThis.HKP)
@@ -350,7 +350,11 @@ export class PongGame extends HTMLElement {
 	}
 
 	private onPopState = () => {
+		if (this.isInScene("Menu.gltf"))
+			return ;
+
 		this.goToMenuScene();
+		this._serverProxy.leave();
 	}
 }
 
