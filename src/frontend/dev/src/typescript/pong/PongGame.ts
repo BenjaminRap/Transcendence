@@ -61,6 +61,7 @@ export class PongGame extends HTMLElement {
 		this._serverProxy.getObservable("tournament-event").add(([tournamentEvent]) => this.onTournamentMessage(tournamentEvent));
 		this._serverProxy.getObservable("game-infos").add(([gameEvent]) => this.onGameMessage(gameEvent));
 		this.loadGame();
+		window.addEventListener("popstate", this.onPopState);
 	}
 
 	private async loadGame() : Promise<void> {
@@ -107,6 +108,8 @@ export class PongGame extends HTMLElement {
 
 	private async changeScene(properties : FrontendSceneProperties) : Promise<FrontendSceneData>
 	{
+		if (this.isInScene("Menu.gltf"))
+			history.pushState(null, "", "/pong/game/");
 		this.disposeScene();
 		this._scene = await this.getNewScene(properties);
 
@@ -130,6 +133,7 @@ export class PongGame extends HTMLElement {
 	{
 		if (this.isInScene("Menu.gltf"))
 			return ;
+		history.pushState(null, "", "/pong");
 		this._serverProxy.leave();
 		await this.changeScene({sceneName: "Menu.gltf", gameType: "Menu"});
 	}
@@ -281,6 +285,7 @@ export class PongGame extends HTMLElement {
 
 	public dispose()
 	{
+		window.addEventListener("popstate", this.onPopState);
 		this._serverProxy.leave();
 		this._serverProxy.dispose();
 		if (globalThis.HKP)
@@ -309,6 +314,10 @@ export class PongGame extends HTMLElement {
 	{
 		this.dispose();
 		PongUtils.removePongDiv(true);
+	}
+
+	private onPopState = () => {
+		this.goToMenuScene();
 	}
 }
 

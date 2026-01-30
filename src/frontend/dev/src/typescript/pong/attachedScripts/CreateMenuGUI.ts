@@ -489,7 +489,10 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		const	gui = this._statesGUI.get(guiName);
 
 		if (!gui)
+		{
+			history.replaceState(null, "", "/pong");
 			return ;
+		}
 		if (this._currentMenu === this._inMatchmakingGUI)
 		{
 			this._sceneData.serverProxy.leave();
