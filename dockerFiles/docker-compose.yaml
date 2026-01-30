@@ -11,7 +11,7 @@ services:
       "dev"
     ]
     env_file:
-      - ./fastify/.env.fastify_example
+      - ./fastify/app_src/.env
   nginx:
     build: ./nginx/
     ports:
@@ -43,28 +43,12 @@ services:
 volumes:
   frontend:
     driver: local
-    driver_opts:
-      type: none
-      device: ../src/frontend/dev/
-      o: bind
   backend:
     driver: local
-    driver_opts:
-      type: none
-      device: ./fastify/app_src/dev/
-      o: bind
   shared:
     driver: local
-    driver_opts:
-      type: none
-      device: ../src/shared/
-      o: bind
   databases:
     driver: local
-    driver_opts:
-      type: none
-      device: ./fastify/databases/
-      o: bind
 
 secrets:
   ssl_crt:

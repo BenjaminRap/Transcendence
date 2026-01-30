@@ -24,6 +24,9 @@ certificates:
 cp-scenes:
 	cp		-r ./src/backend/dev/scenes ./dockerFiles/fastify/app_src/dev/.
 
+cp-env:
+	cp		~/.env.fastify	./dockerFiles/fastify/app_src/.env
+
 gen-prisma-client:
 	npx prisma generate --schema=./dockerFiles/fastify/prisma/schema.prisma
 
@@ -32,7 +35,7 @@ create-folders:
 				./dockerFiles/fastify/app_src/uploads/avatars \
 				./dockerFiles/fastify/databases/
 
-build: create-folders cp-scenes gen-prisma-client compile
+build: create-folders cp-scenes cp-env gen-prisma-client compile
 
 ifeq ($(PROFILE), prod)
 	npx vite build
@@ -72,16 +75,18 @@ all: copy-tsconfig install certificates build up
 $(NAME): all
 
 stop:
-	$(DOCKER_EXEC) stop
+	$(DOCKER_EXEC) down
 
 clean: stop
 	-rm -rf ./dockerFiles/nginx/website/
-	-rm -rf ./src/backend/javascript/*
+	-rm -rf ./dockerFiles/fastify/app_src/dev/backend
+	-rm -rf ./dockerFiles/fastify/app_src/dev/shared
 
-fclean: clean
-	-docker rmi -f $(docker images -qa) 2>/dev/null
-	-docker volume rm $(docker volume ls -q) 2>/dev/null
-	-docker network rm $(docker network ls -q) 2>/dev/null
+fclean:
+	$(DOCKER_EXEC) down -v
+	-docker rmi $(docker image ls -aq)
+	-docker network rm $(docker network ls -q)
+	-docker volume rm $(docker volume ls -q)
 	-docker system prune -af
 	-rm -rf ./node_modules/
 	-rm ./package-lock.json

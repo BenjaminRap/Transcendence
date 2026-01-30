@@ -109,6 +109,14 @@ export class SuscriberController {
                 });
             }
 
+            if (SocketEventController.getConnectedUserState(Number(id)) !== 'unactive') {
+                return reply.status(400).send({
+                    success: false,
+                    message: 'You cannot change your username while being active',
+                    redirectTo: '/suscriber/profile'
+                });
+            }
+
             // check data, user existence, username availability then update and returns user or throw exception
             const user = await this.suscriberService.updateUsername(id, validation.data.username);
 
@@ -144,6 +152,14 @@ export class SuscriberController {
             }
 
             const id = (request as any).user.userId;
+            if (SocketEventController.getConnectedUserState(Number(id)) !== 'unactive') {
+                return reply.status(400).send({
+                    success: false,
+                    message: 'You cannot update your avatar while being active',
+                    redirectTo: '/suscriber/update/profile'
+                });
+            }
+
             const updatedUser = await this.suscriberService.updateAvatar(data.buffer, Number(id));
             if (!updatedUser) {
                 return reply.status(400).send({
@@ -178,6 +194,12 @@ export class SuscriberController {
         try {
             const id = (request as any).user.userId;
 
+            if (SocketEventController.getConnectedUserState(Number(id)) !== 'unactive') {
+                return reply.status(400).send({
+                    success: false,
+                    message: 'You cannot delete your avatar while being active',
+                });
+            }
             // delete avatar or throw exception USER NOT FOUND
             const user = await this.suscriberService.deleteAvatar(Number(id));
 
@@ -200,7 +222,13 @@ export class SuscriberController {
     async deleteAccount(request: FastifyRequest, reply: FastifyReply) {
         try {
             const id = (request as any).user.userId;
-            
+
+            if (SocketEventController.getConnectedUserState(Number(id)) !== 'unactive') {
+                return reply.status(400).send({
+                    success: false,
+                    message: 'You cannot delete your account while being active',
+                });
+            }
             // delete user or throw exception USER NOT FOUND
             await this.suscriberService.deleteAccount(Number(id));
 
