@@ -21,7 +21,7 @@ export class SuscriberService {
     ) {}
     private api_url = process.env.API_URL || 'https://localhost:8080/api';
     private default_avatar_filename = 'avatarDefault.webp';
-    private default_avatar_url = 'api/static/public/' + this.default_avatar_filename;
+    private default_avatar_url = '/api/static/public/' + this.default_avatar_filename;
 
     // ----------------------------------------------------------------------------- //
     async getProfile(id: number): Promise<SuscriberProfile> {
@@ -141,7 +141,7 @@ export class SuscriberService {
             throw new SuscriberException(SuscriberError.UPLOAD_ERROR, SuscriberError.UPLOAD_ERROR);
         
         const oldAvatarUrl = user.avatar;
-        const newAvatarUrl = `api/static/avatars/${path.basename(avatarFileName)}`;
+        const newAvatarUrl = `/api/static/avatars/${path.basename(avatarFileName)}`;
 
         // this try catch is used to rollback avatar upload if DB update fails
         try {
