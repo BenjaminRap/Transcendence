@@ -53,6 +53,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 	private _currentSceneFileName! : FrontendGameSceneName;
 	private _menuParent! : HTMLDivElement;
 	private _currentMenu : HTMLElement | null = null;
+	private _statesGUI! : Map<string, HTMLElement>; 
 
     constructor(transform: TransformNode, scene: Scene, properties: any = {}, alias: string = "CreateMenuGUI") {
         super(transform, scene, properties, alias);
@@ -73,11 +74,13 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 		applyTheme(this._sceneData.pongHTMLElement, theme)
 		this.createMenus();
+		this.createStatesGuiMap();
 		this._sceneData.events.getObservable("tournament-event").add(tournamentEvent => this.onTournamentEvent(tournamentEvent));
 	}
 
 	private	createMenus()
 	{
+		window.addEventListener("popstate", this.onPopState);
 		this.createMenuGUI();
 
 		this._titleGUI = initMenu(new TitleGUI(), undefined, this._menuParent);
@@ -153,6 +156,20 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		this._onlineTournamentStartGUI.onSetAlias().add(value => {
 			this.setAlias(value.guestName, value.newAlias);
 		});
+	}
+
+	private	createStatesGuiMap()
+	{
+		this._statesGUI = new Map<string, HTMLElement>([
+			["", this._menuGUI],
+			["botDifficultyChoice", this._botDifficultyChoiceGUI],
+			["localGameTypeChoice", this._localGameTypeChoiceGUI],
+			["localTournamentCreation", this._localTournamentCreationGUI],
+			["onlineGameTypeChoice", this._onlineGameTypeChoiceGUI],
+			["onlineTournamentChoice", this._onlineTournamentChoiceGUI],
+			["onlineTournamentJoinPrivate", this._onlineTournamentJoinPrivateGUI],
+			["onlineTournamentJoinPublic", this._onlineTournamentJoinPublicGUI],
+		]);
 	}
 
 	protected	ready()
@@ -433,6 +450,9 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 	private	switchMenu(newGUI : HTMLElement)
 	{
+		const	entry = this._statesGUI.entries().find(([_name, gui]) => gui === newGUI);
+		if (entry !== undefined)
+			history.pushState({menu : entry[0]}, "", `/pong/${entry[0]}`);
 		this._currentMenu?.classList.add("hidden");
 		newGUI.classList.remove("hidden")
 		this._currentMenu = newGUI;
@@ -440,7 +460,22 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 	protected destroy()
 	{
+		window.removeEventListener("popstate", this.onPopState);
 		this._menuParent.remove();
+	}
+
+	private onPopState = () => {
+		if (!location.pathname.startsWith("/pong/"))
+			return ;
+		const	guiName = location.pathname.slice(6);
+		console.log(guiName);
+		const	gui = this._statesGUI.get(guiName);
+
+		if (!gui)
+			return ;
+		this._currentMenu?.classList.add("hidden");
+		gui.classList.remove("hidden")
+		this._currentMenu = gui;
 	}
 }
 
