@@ -279,7 +279,7 @@ export namespace ExtProfileBuilder {
 
 			socketUtils.socket.on("match-update", (data: MatchSummary) => {
 				if (data.opponent != null && numberOrNan(data.opponent.id) === profile.id)
-					return "Erreur, actualiser la page et reessayer.";
+					return ;
 				if (ExtendedView.isExtendedViewIsActive && ExtendedView.type === 'match')
 					ExtendedView.addMatch(data);
 				profile.lastMatchs.unshift(data);
