@@ -312,19 +312,21 @@ export class PongGame extends HTMLElement {
 
 	public dispose()
 	{
-		try {
-			this._engine?.stopRenderLoop();
-			window.addEventListener("popstate", this.onPopState);
-			this._serverProxy.leave();
-			this._serverProxy.dispose();
-			if (globalThis.HKP)
-				delete globalThis.HKP;
-			if (globalThis.HKP)
-				delete globalThis.HKP;
-			this.disposeScene();
-			this._engine?.dispose();
-		} catch (error) {
-		}
+		requestAnimationFrame(() => {
+			try {
+				this._engine?.stopRenderLoop();
+				window.addEventListener("popstate", this.onPopState);
+				this._serverProxy.leave();
+				this._serverProxy.dispose();
+				if (globalThis.HKP)
+					delete globalThis.HKP;
+				if (globalThis.HKP)
+					delete globalThis.HKP;
+				this.disposeScene();
+				this._engine?.dispose();
+			} catch (error) {
+			}
+		})
 	}
 
 	public setButtonEnable(enabled : boolean)

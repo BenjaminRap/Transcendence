@@ -100,7 +100,7 @@ export class ServerPongGame {
 	}
 
 	public dispose() : void {
-		queueMicrotask(() => {
+		setImmediate(() => {
 			try {
 				if (globalThis.HKP)
 					delete globalThis.HKP;
