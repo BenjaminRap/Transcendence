@@ -85,13 +85,13 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 		this._titleGUI = initMenu(new TitleGUI(), undefined, this._menuParent);
 		this._inMatchmakingGUI = initMenu(new InMatchmakingGUI(), {
-			cancelButton: () => this.cancelMatchmaking()
+			cancelButton: () => history.back()
 		}, this._menuParent);
 		this._botDifficultyChoiceGUI = initMenu(new BotDifficultyChoiceGUI(), {
 			easy: () => this.startBotGame(this._currentSceneFileName,"easy"),
 			normal: () => this.startBotGame(this._currentSceneFileName, "normal"),
 			hard: () => this.startBotGame(this._currentSceneFileName, "hard"),
-			cancel: () => this.switchMenu(this._menuGUI)
+			cancel: () => history.back()
 		}, this._menuParent);
 		this._localGameTypeChoiceGUI = initMenu(new GameTypeChoiceGUI(), {
 			oneVersusOne: () => this.startLocalGame(this._currentSceneFileName),
@@ -99,16 +99,16 @@ export class CreateMenuGUI extends CustomScriptComponent {
 				this._localTournamentCreationGUI.reset();
 				this.switchMenu(this._localTournamentCreationGUI)
 			},
-			cancel: () => this.switchMenu(this._menuGUI)
+			cancel: () => history.back()
 		}, this._menuParent);
 		this._onlineGameTypeChoiceGUI = initMenu(new GameTypeChoiceGUI(), {
 			oneVersusOne: () => this.startOnlineGame(this._currentSceneFileName),
 			tournament: () => this.switchMenu(this._onlineTournamentChoiceGUI),
-			cancel: () => this.switchMenu(this._menuGUI)
+			cancel: () => history.back()
 		}, this._menuParent)
 		this._localTournamentCreationGUI = initMenu(new LocalTournamentCreationGUI(), {
 			start: () => this.startLocalTournamentGame(),
-			cancel: () => this.switchMenu(this._localGameTypeChoiceGUI)
+			cancel: () => history.back()
 		}, this._menuParent);
 		this._onlineTournamentChoiceGUI = initMenu(new OnlineTournamentChoiceGUI(), {
 			create: () => {
@@ -124,25 +124,25 @@ export class CreateMenuGUI extends CustomScriptComponent {
 				this._onlineTournamentJoinPrivateGUI.reset();
 				this.switchMenu(this._onlineTournamentJoinPrivateGUI)
 			},
-			cancel: () => this.switchMenu(this._onlineGameTypeChoiceGUI),
+			cancel: () => history.back()
 		}, this._menuParent);
 		this._onlineTournamentCreationGUI = initMenu(new OnlineTournamentCreationGUI(), {
 			create: () => this.createTournament(),
-			cancel: () => this.switchMenu(this._onlineTournamentChoiceGUI)
+			cancel: () => history.back()
 		}, this._menuParent);
 		this._onlineTournamentStartGUI = initMenu(new OnlineTournamentStartGUI(), {
 			start: () => this.startTournament(),
 			join: () => this.joinTournamentAsCreator(),
 			leave: () => this.leaveTournament(),
-			cancel: () => this.cancelTournament()
+			cancel: () => history.back()
 		}, this._menuParent);
 		this._onlineTournamentJoinPrivateGUI = initMenu(new OnlineTournamentJoinPrivateGUI(), {
 			join: () => this.joinTournament(this._onlineTournamentJoinPrivateGUI.getTournamentId()),
-			cancel: () => this.switchMenu(this._onlineTournamentChoiceGUI)
+			cancel: () => history.back()
 		}, this._menuParent);
 		this._onlineTournamentJoinPublicGUI = initMenu(new OnlineTournamentJoinPublicGUI(), {
 			refresh: () => this.refreshTournaments(),
-			cancel: () => this.switchMenu(this._onlineTournamentChoiceGUI)
+			cancel: () => history.back()
 		}, this._menuParent);
 		this._onlineTournamentJoinPublicGUI.onTournamentJoin().add((id : string) => {
 			this.joinTournament(id);
@@ -165,10 +165,13 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			["botDifficultyChoice", this._botDifficultyChoiceGUI],
 			["localGameTypeChoice", this._localGameTypeChoiceGUI],
 			["localTournamentCreation", this._localTournamentCreationGUI],
+			["onlineTournamentCreation", this._onlineTournamentCreationGUI],
 			["onlineGameTypeChoice", this._onlineGameTypeChoiceGUI],
 			["onlineTournamentChoice", this._onlineTournamentChoiceGUI],
+			["onlineTournamentStart", this._onlineTournamentStartGUI],
 			["onlineTournamentJoinPrivate", this._onlineTournamentJoinPrivateGUI],
 			["onlineTournamentJoinPublic", this._onlineTournamentJoinPublicGUI],
+			["inMatchmaking", this._inMatchmakingGUI],
 		]);
 	}
 
@@ -238,12 +241,6 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		return true;
 	}
 
-	private	cancelMatchmaking()
-	{
-		this.switchMenu(this._menuGUI);
-		this._sceneData.serverProxy.leaveMatchmaking();
-	}
-
 	private	onEnemyTypeChange(_currentIndex : number, _newIndex : number) : boolean
 	{
 		const	currentType = enemyTypes[_currentIndex];
@@ -275,14 +272,14 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		this.startLocalGame(this._currentSceneFileName, tournament);
 	}
 
-	private	async startOnlineGame(sceneName : FrontendGameSceneName)
+	private	async startOnlineGame(sceneName : FrontendGameSceneName, pushState = true)
 	{
 		try {
-			this.switchMenu(this._inMatchmakingGUI);
+			this.switchMenu(this._inMatchmakingGUI, pushState);
 			await this._sceneData.pongHTMLElement.searchOnlineGame(sceneName);
 		} catch (error) {
 			this._sceneData.pongHTMLElement.onError(error);
-			this.switchMenu(this._menuGUI);
+			this.switchMenu(this._onlineGameTypeChoiceGUI, false);
 		}
 	}
 
@@ -292,7 +289,6 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			await this._sceneData.pongHTMLElement.startLocalGame(sceneName, tournament);
 		} catch (error) {
 			this._sceneData.pongHTMLElement.onError(error);
-			this.switchMenu(this._menuGUI);
 		}
 	}
 
@@ -302,7 +298,6 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			await this._sceneData.pongHTMLElement.startBotGame(sceneName, difficulty);
 		} catch (error) {
 			this._sceneData.pongHTMLElement.onError(error);
-			this.switchMenu(this._menuGUI);
 		}
 	}
 
@@ -322,12 +317,6 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			this._sceneData.pongHTMLElement.setButtonEnable(true);
 			this._sceneData.pongHTMLElement.onError(error);
 		}
-	}
-
-	private	async cancelTournament()
-	{
-		this._sceneData.serverProxy.cancelTournament();
-		this.switchMenu(this._onlineTournamentCreationGUI);
 	}
 
 	private	async startTournament()
@@ -392,13 +381,16 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 	private	async leaveTournament()
 	{
-		this._sceneData.serverProxy.leaveTournament();
 		const	tournamentData = this._sceneData.serverProxy.getTournamentData();
 
 		if (tournamentData?.isCreator)
+		{
+			this._sceneData.serverProxy.leaveTournament();
+
 			this._onlineTournamentStartGUI.setType("creator");
+		}
 		else
-			this.switchMenu(this._onlineTournamentChoiceGUI);
+			history.back();
 	}
 
 	private	async refreshTournaments()
@@ -448,11 +440,14 @@ export class CreateMenuGUI extends CustomScriptComponent {
 			this._sceneData.pongHTMLElement.startOnlineTournament(this._currentSceneFileName);
 	}
 
-	private	switchMenu(newGUI : HTMLElement)
+	private	switchMenu(newGUI : HTMLElement, pushState = true)
 	{
-		const	entry = this._statesGUI.entries().find(([_name, gui]) => gui === newGUI);
-		if (entry !== undefined)
-			history.pushState({menu : entry[0]}, "", `/pong/${entry[0]}`);
+		if (pushState)
+		{
+			const	entry = this._statesGUI.entries().find(([_name, gui]) => gui === newGUI);
+			if (entry !== undefined)
+				history.pushState({}, "", `/pong/${entry[0]}`);
+		}
 		this._currentMenu?.classList.add("hidden");
 		newGUI.classList.remove("hidden")
 		this._currentMenu = newGUI;
@@ -468,14 +463,25 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		if (!location.pathname.startsWith("/pong/"))
 			return ;
 		const	guiName = location.pathname.slice(6);
-		console.log(guiName);
 		const	gui = this._statesGUI.get(guiName);
 
 		if (!gui)
 			return ;
-		this._currentMenu?.classList.add("hidden");
-		gui.classList.remove("hidden")
-		this._currentMenu = gui;
+		if (this._currentMenu === this._inMatchmakingGUI)
+		{
+			this._sceneData.serverProxy.leave();
+			return ;
+		}
+		else if (this._currentMenu === this._onlineTournamentStartGUI)
+		{
+			history.replaceState({}, "", null);
+			this._sceneData.serverProxy.leave();
+		}
+		if (gui === this._inMatchmakingGUI)
+			this.startOnlineGame(this._currentSceneFileName, false);
+		else if (gui === this._onlineTournamentStartGUI)
+			return ;
+		this.switchMenu(gui, false);
 	}
 }
 
