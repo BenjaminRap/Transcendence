@@ -159,7 +159,7 @@ export class PongGame extends HTMLElement {
 
 		if (sceneName)
 			await this.changeScene({sceneName, gameType: "Multiplayer"});
-		this.startOnlineGame(gameInit);
+		await this.startOnlineGame(gameInit);
 	}
 
 	public async startOnlineTournament(sceneName : FrontendGameSceneName)
