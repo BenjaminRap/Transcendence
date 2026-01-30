@@ -49,7 +49,6 @@ export class SocketEventController {
 	static sendToUser<T extends ServerMessage>(userId: number, event: T, ...data: Parameters<ServerToClientEvents[T]>): void
 	{
         if (!userId) {
-            // console.log(`Cannot send event "${event}" to invalid user ID: ${userId}`);
             return;
         }
 
@@ -108,7 +107,18 @@ export class SocketEventController {
     // ----------------------------------------------------------------------------- //
     static notifyProfileChange<T extends "profile-update" | "account-deleted">(id: number | null, event: T, ...data: Parameters<ServerToClientEvents[T]>): void
     {
-        if (!id || id < 0) return;
+        if (!id || id < 0)
+            return;
+
+        // c'est ici qu'on parcours les socketdata
+        try {
+            if (event === "profile-update") {
+                // update all SocketData instances for this user
+            }            
+        } catch (error) {
+            console.log(`Error updating sockets for user ${id} on event "${event}":`, error);
+        }
+
         SocketEventController.sendToUser(id, event, ...data);
         SocketEventController.sendToFriends(id, event, ...data);
         SocketEventController.sendToProfileWatchers(id, event, ...data);
