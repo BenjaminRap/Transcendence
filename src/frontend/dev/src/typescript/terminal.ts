@@ -74,6 +74,9 @@ export namespace PongUtils {
 				history.pushState(null, '', '/profile');
 			else if (ExtProfileBuilder.isActive)
 				history.pushState(null, '', `/profile/${ExtProfileBuilder.getName()}`);
+			else
+				history.pushState(null, "", "/");
+
 		}
 	}
 }
