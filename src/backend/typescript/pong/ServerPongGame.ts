@@ -17,6 +17,7 @@ importGlob("dev/shared/attachedScripts/*.js");
 export class ServerPongGame {
 	private _engine! : Engine;
 	private _scene? : Scene;
+	private _assetsManager : AssetsManager | null = null;
 
     constructor(sceneData : ServerSceneData) {
 		this.init(sceneData);
@@ -70,22 +71,25 @@ export class ServerPongGame {
 
 	private async loadAssets(scene : Scene) : Promise<void>
 	{
-		const	assetsManager = new AssetsManager(scene);
 		const	sceneName = "Server.gltf";
 
-		assetsManager.addMeshTask("scene", null, "http://localhost:8181/scenes/", sceneName);
+		this._assetsManager = new AssetsManager(scene);
+		this._assetsManager.addMeshTask("scene", null, "http://localhost:8181/scenes/", sceneName);
 
 		(globalThis as any).window = { setTimeout: setTimeout, removeEventListener: () => {} };
 		(globalThis as any).XMLHttpRequest = XMLHttpRequest;
 		SceneManager.ForceHideLoadingScreen = () => {};
 		InputController.ConfigureUserInput = () => {};
-		await assetsManager.loadAsync();
+		await this._assetsManager.loadAsync();
+		this._assetsManager = null;
 		globalThis.HKP = undefined;
 	}
 
 
 	private disposeScene()
 	{
+		this._assetsManager?.reset();
+		this._assetsManager = null;
 		if (this._scene === undefined)
 			return ;
 		const	sceneData = getServerSceneData(this._scene);
@@ -95,12 +99,17 @@ export class ServerPongGame {
 	}
 
 	public dispose() : void {
-		if (globalThis.HKP)
-			delete globalThis.HKP;
-		if (globalThis.HKP)
-			delete globalThis.HKP;
-		this.disposeScene();
-		this._engine.dispose();
+		queueMicrotask(() => {
+			try {
+				if (globalThis.HKP)
+					delete globalThis.HKP;
+				if (globalThis.HKP)
+					delete globalThis.HKP;
+				this.disposeScene();
+				this._engine.dispose();
+			} catch (error) {
+			}
+		})
 	}
 }
 

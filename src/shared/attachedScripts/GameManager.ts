@@ -106,8 +106,8 @@ export class GameManager extends CustomScriptComponent {
 
 	private	endMatch(winner : "left" | "right" | "highestScore", endCause : EndCause)
 	{
-		if (this._ended)
-			return ;
+		const	duration = this._ended ? 0 : Math.round((Date.now() - this._startDate) / 1000);
+
 		this._ended = true;
 		if (this._timeLimitTimeout !== null)
 		{
@@ -119,7 +119,7 @@ export class GameManager extends CustomScriptComponent {
 			endCause: endCause,
 			scoreLeft: this._scoreLeft,
 			scoreRight: this._scoreRight,
-			duration: Math.round((Date.now() - this._startDate) / 1000)
+			duration: duration
 		}
 		this._sceneData.events.getObservable("end").notifyObservers(endData);
 	}

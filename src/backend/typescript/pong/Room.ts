@@ -21,13 +21,13 @@ export class	Room extends UniqueDelayOwner
 	private static readonly _showParticipantsTimeoutMs = 2000;
 	private static readonly _readyTimeout = 60000;
 
+	private _state : "waiting" | "playing" | "disposed" = "waiting";
 	private _sockets : DefaultSocket[] = [];
-	private _serverPongGame : ServerPongGame | undefined;
-	private _disposed : boolean = false;
+	private _serverPongGame : ServerPongGame;
 	private _roomId : string;
 	private _observers : Map<string, Observable<SocketMessage>>;
 	private _socketsReadyCount : int = 0;
-	private _sceneData : ServerSceneData | undefined;
+	private _sceneData : ServerSceneData;
 	
 	constructor(
 		private readonly _io : ServerType,
@@ -40,11 +40,10 @@ export class	Room extends UniqueDelayOwner
 		this._roomId = crypto.randomUUID();
 		this._sockets.push(firstSocket, secondSocket);
 
-		this.init();
-	}
+		const	clientProxy = new ClientProxy(this);
 
-	private	async init()
-	{
+		this._sceneData = new ServerSceneData(new HavokPlugin(false), clientProxy);
+		this._serverPongGame = new ServerPongGame(this._sceneData);
 		const	participants = this._sockets.map((socket) => socket.data.getProfile());
 
 		this.delay(() => {
@@ -56,10 +55,6 @@ export class	Room extends UniqueDelayOwner
 
 			this.addSocketToRoom(socket, index, participants);
 		}
-
-		const	clientProxy = new ClientProxy(this);
-		this._sceneData = new ServerSceneData(new HavokPlugin(false), clientProxy);
-		this._serverPongGame = new ServerPongGame(this._sceneData);
 	}
 
 	private	onReadyTimeout()
@@ -73,26 +68,35 @@ export class	Room extends UniqueDelayOwner
 
 	private dispose(endData : EndData)
 	{
-		if (this._disposed)
+		if (this._state === "disposed")
 			return ;
 		this.clearDelay();
 		console.log("disposing room !");
 		this._io.to(this._roomId).emit("game-infos", { type:"room-closed" });
-		this._disposed = true;
+		this._state = "disposed";
 		this._sockets.forEach((socket : DefaultSocket) => { this.removeSocketFromRoom(socket) });
-		this._serverPongGame?.dispose();
-		this._serverPongGame = undefined;
+		this._serverPongGame.dispose();
 		this._onDispose(endData);
 	}
 
 	public onSocketQuit(socket : DefaultSocket)
 	{
-		if (this._disposed)
+		if (this._state === "disposed")
 			return ;
-		socket.broadcast.to(this._roomId).emit("game-infos", { type: "forfeit" });
-		const	winningSide = (socket === this._sockets[0]) ? "right" : "left";
+		const	isQuitterLeft = socket === this._sockets[0];
+		const	otherSocket = isQuitterLeft ? this._sockets[1] : this._sockets[0];
+		const	endMatch = () => {
+			otherSocket.emit("game-infos", {type: "forfeit"});
+			const	endData = getEndDataOnInvalidMatch(!isQuitterLeft, isQuitterLeft);
 
-		this._sceneData!.events.getObservable("forfeit").notifyObservers(winningSide);
+			this.dispose(endData);
+		}
+
+		if (otherSocket.data.ready)
+			endMatch();
+		else
+			SocketEventController.once(otherSocket, "ready", endMatch);
+
 	}
 
 	private removeSocketFromRoom(socket : DefaultSocket)
@@ -118,6 +122,17 @@ export class	Room extends UniqueDelayOwner
 		else
 			socket.emit("joined-game", gameInit);
 		SocketEventController.once(socket, "ready", () => { this.setSocketReady(socket) } );
+		SocketEventController.once(socket, "forfeit", () => {
+			if (this._state === "waiting")
+				this.onSocketQuit(socket);
+			else if (this._state === "playing")
+			{
+				socket.broadcast.to(this._roomId).emit("game-infos", { type: "forfeit" });
+				const	winningSide = (playerIndex === 0) ? "right" : "left";
+
+				this._sceneData.events.getObservable("forfeit").notifyObservers(winningSide);
+			}
+		});
 	}
 
 	private	setSocketReady(socket : DefaultSocket)
@@ -130,29 +145,18 @@ export class	Room extends UniqueDelayOwner
 
 	private	async startGame()
 	{
-		this.clearDelay();
-		const	gameStartInfos = await this._sceneData!.readyPromise.promise as GameStartInfos;
+		try {
+			this.clearDelay();
+			const	gameStartInfos = await this._sceneData.readyPromise.promise as GameStartInfos;
+			this._state = "playing";
+			this._sceneData.events.getObservable("end").add(endData => { this.dispose(endData) });
 
-		this.delay(() => {
-			this._sceneData!.events.getObservable("game-start").notifyObservers();
-			this._sceneData!.events.getObservable("end").add(endData => { this.gameEnd(endData) });
-			this.sendMessageToRoom("ready", gameStartInfos);
-			this._sockets.forEach((socket : DefaultSocket, index : int) => {
-				SocketEventController.once(socket, "forfeit", () => {
-					socket.broadcast.to(this._roomId).emit("game-infos", { type: "forfeit" });
-					const	winningSide = (index === 0) ? "right" : "left";
-
-					this._sceneData!.events.getObservable("forfeit").notifyObservers(winningSide);
-				});
-			});
-		}, Room._showParticipantsTimeoutMs);
-	}
-
-	private gameEnd(endData : EndData)
-	{
-		setTimeout(() => {
-			this.dispose(endData);
-		}, 0);
+			this.delay(() => {
+				this._sceneData.events.getObservable("game-start").notifyObservers();
+				this.sendMessageToRoom("ready", gameStartInfos);
+			}, Room._showParticipantsTimeoutMs);
+		} catch (error) {
+		}
 	}
 
 	public sendMessageToRoom<T extends keyof ServerToClientEvents>
