@@ -49,6 +49,9 @@ export class PongGame extends HTMLElement {
 		this._settings = new Settings();
 		this._canvas = document.createElement("canvas");
 		this._canvas.classList.add("size-full");
+		this._canvas.addEventListener("webglcontextlost", () => {
+			this.onError(new PongError("We lost the webgl context !", "quitPong"));
+		});
 		this._errorGUI = initMenu(new ErrorGUI(), {
 			close: () => this._errorGUI.classList.add("hidden")
 		}, this);
