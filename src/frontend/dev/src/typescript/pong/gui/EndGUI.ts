@@ -89,7 +89,7 @@ export class	EndGUI extends HTMLElement implements IGUI<EndGUIInputs>
 
 	private	getButtonHTML(text : string, className : string)
 	{
-		return `<button class="${className} text-[3cqw] w-full mt-[10%] grow menu-button max-h-[12%]">${text}</button>`;
+		return `<button class="${className} text-[3cqw] w-full mt-[10%] grow menu-button max-h-[20%]">${text}</button>`;
 	}
 
 	public getInputs() : EndGUIInputs

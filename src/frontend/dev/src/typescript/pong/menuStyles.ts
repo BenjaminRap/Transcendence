@@ -41,6 +41,7 @@ type Theme = {
 	"--profile-border-width": string,
 	"--file-text-color": string,
 	"--profile-text-color": string
+	"--container-color": string
 }
 
 type Themes = {
@@ -75,7 +76,8 @@ const	themes : Themes = {
 		"--file-color": "var(--color-blue-700)",
 		"--profile-border-width": "0.2cqw",
 		"--file-text-color": "var(--color-cyan-500)",
-		"--profile-text-color": "var(--file-color)"
+		"--profile-text-color": "var(--file-color)",
+		"--container-color": "transparent"
 	},
 	"basic": {
 		"--font": "pixel",
@@ -102,7 +104,8 @@ const	themes : Themes = {
 		"--file-color": "var(--color-white)",
 		"--profile-border-width": "0.1cqw",
 		"--file-text-color": "var(--color-black)",
-		"--profile-text-color": "var(--color-white)"
+		"--profile-text-color": "var(--color-white)",
+		"--container-color": "transparent"
 	},
 	"terminal": {
 		"--font": "VT323",
@@ -129,7 +132,8 @@ const	themes : Themes = {
 		"--file-color": "var(--color-green-700)",
 		"--profile-border-width": "0.1cqw",
 		"--file-text-color": "var(--color-black)",
-		"--profile-text-color": "var(--file-color)"
+		"--profile-text-color": "var(--file-color)",
+		"--container-color": "black"
 	}
 };
 
