@@ -35,7 +35,6 @@ export namespace RequestBackendModule {
 				return 'Échec de l\'inscription : ' + message;
 			}
 		} catch (error) {
-			console.error("Error:", error);
 			return 'Échec de l\'inscription en raison d\'une erreur.';
 		}
 	}
@@ -63,7 +62,6 @@ export namespace RequestBackendModule {
 				return 'Échec de la connexion : ' + message;
 			}
 		} catch (error) {
-			console.error("Error:", error);
 			return 'Échec de la connexion en raison d\'une erreur.';
 		}
 	}
@@ -72,18 +70,8 @@ export namespace RequestBackendModule {
 	{
 		if (socketUtils.socket === null)
 			return ;
-		// socketUtils.socket.emit('authenticate', { token: token });
 
-		socketUtils.socket.emit("authenticate", { token: token }, (result: Result<null>) => {
-			if (result.success) {
-				console.log("Connecté en tant qu'utilisateur !");
-			} else {
-				console.error("Échec auth:", result.error);
-			}
-		});
-		socketUtils.socket.onAny((event, ...args) => {
-			console.log(`Reçu l'événement Socket.IO : ${event}`, args);
-		});
+		socketUtils.socket.emit("authenticate", { token: token }, (result: Result<null>) => {})
 	}
 
 	export async function loadUser(): Promise<void> {
@@ -117,7 +105,7 @@ export namespace RequestBackendModule {
 			}
 			return ;
 		} catch (error) {
-			console.error("Error:", error);
+			WriteOnTerminal.printErrorOnTerminal("Error loading user data.");
 			return ;
 		}
 	}
@@ -154,14 +142,12 @@ export namespace RequestBackendModule {
 			}
 			return [];
 		} catch (error) {
-			console.error("Error:", error);
 			return [];
 		}
 	}
 
 	export async function tryRefreshToken() : Promise<boolean>
 	{
-		console.log("Trying to refresh token...");
 		const token =  TerminalUtils.getCookie('refreshToken') || '';
 		if (token === '') {
 			return false;
@@ -183,7 +169,6 @@ export namespace RequestBackendModule {
 			else
 				return false;
 		} catch (error) {
-			console.error("Error:", error);
 			return false;
 		}
 	}

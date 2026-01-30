@@ -14,9 +14,8 @@ RUN ["chmod", "-R", "755", "/app/uploads"]
 # install dependencies including prisma
 RUN [ "npm", "install" ]
 
-# generate prisma before cleaning cache
 COPY ./prisma ./prisma
-RUN ["npx", "prisma", "generate"]
+COPY .env* .env
 
 # clean cache
 RUN [ "npm", "cache", "clean", "--force" ]

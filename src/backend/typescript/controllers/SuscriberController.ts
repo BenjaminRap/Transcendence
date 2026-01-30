@@ -109,10 +109,18 @@ export class SuscriberController {
                 });
             }
 
+            if (SocketEventController.getConnectedUserState(Number(id)) !== 'unactive') {
+                return reply.status(400).send({
+                    success: false,
+                    message: 'You cannot change your username while being active',
+                    redirectTo: '/suscriber/profile'
+                });
+            }
+
             // check data, user existence, username availability then update and returns user or throw exception
             const user = await this.suscriberService.updateUsername(id, validation.data.username);
 
-            SocketEventController.notifyProfileChange(Number(id), 'profile-update', { user: sanitizeUser(user) });
+            SocketEventController.notifyProfileChange(sanitizeUser(user));
             
             return reply.status(200).send({
                 success: true,
@@ -134,6 +142,15 @@ export class SuscriberController {
     // PUT /suscriber/update/avatar
     async updateAvatar(request: FastifyRequest, reply: FastifyReply) {
         try {
+            const id = (request as any).user.userId;
+            if (SocketEventController.getConnectedUserState(Number(id)) !== 'unactive') {
+                return reply.status(400).send({
+                    success: false,
+                    message: 'You cannot update your avatar while being active',
+                    redirectTo: '/suscriber/update/profile'
+                });
+            }
+
             const data = await this.fileService.normalizeAvatar(request);
             if (!data.success || !data.buffer) {
                 return reply.status(400).send({
@@ -143,7 +160,6 @@ export class SuscriberController {
                 });
             }
 
-            const id = (request as any).user.userId;
             const updatedUser = await this.suscriberService.updateAvatar(data.buffer, Number(id));
             if (!updatedUser) {
                 return reply.status(400).send({
@@ -153,7 +169,7 @@ export class SuscriberController {
                 });
             }
 
-            SocketEventController.notifyProfileChange(Number(id), 'profile-update', { user: updatedUser });
+            SocketEventController.notifyProfileChange(updatedUser);
 
             return reply.status(200).send({
                 success: true,
@@ -178,10 +194,16 @@ export class SuscriberController {
         try {
             const id = (request as any).user.userId;
 
+            if (SocketEventController.getConnectedUserState(Number(id)) !== 'unactive') {
+                return reply.status(400).send({
+                    success: false,
+                    message: 'You cannot delete your avatar while being active',
+                });
+            }
             // delete avatar or throw exception USER NOT FOUND
             const user = await this.suscriberService.deleteAvatar(Number(id));
 
-            SocketEventController.notifyProfileChange(Number(id), 'profile-update', { user });
+            SocketEventController.notifyProfileChange(user);
 
             return reply.status(204).send();
 
@@ -200,12 +222,18 @@ export class SuscriberController {
     async deleteAccount(request: FastifyRequest, reply: FastifyReply) {
         try {
             const id = (request as any).user.userId;
-            
+
+            if (SocketEventController.getConnectedUserState(Number(id)) !== 'unactive') {
+                return reply.status(400).send({
+                    success: false,
+                    message: 'You cannot delete your account while being active',
+                });
+            }
             // delete user or throw exception USER NOT FOUND
-            await this.suscriberService.deleteAccount(Number(id));
+            const user = await this.suscriberService.deleteAccount(Number(id));
 
             // envoyer un event a la room 'user-{id}' pour que tous les processus front se deconnectent
-            SocketEventController.notifyProfileChange(Number(id), 'account-deleted');
+            SocketEventController.notifyProfileChange(sanitizeUser(user));
 
             return reply.status(204).send();
 

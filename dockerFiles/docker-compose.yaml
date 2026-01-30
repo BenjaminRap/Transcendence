@@ -1,17 +1,27 @@
 services:
-  fastify:
+  fastify-prod:
     build: ./fastify/
     volumes:
-      - backend:/app/dev/
       - databases:/app/databases/
     environment:
       - PROFILE=${PROFILE:-prod} 
     profiles: [
       "prod",
+    ]
+    env_file:
+      - ./fastify/app_src/.env
+  fastify-dev:
+    build: ./fastify/
+    volumes:
+      - backend:/app/dev/
+      - databases:/app/databases/
+    environment:
+      - PROFILE=${PROFILE:-dev} 
+    profiles: [
       "dev"
     ]
     env_file:
-      - ./.env.fastify_example
+      - ./fastify/app_src/.env
   nginx:
     build: ./nginx/
     ports:
@@ -23,7 +33,7 @@ services:
       - ssl_key
       - ssl_crt
     depends_on:
-      - fastify
+      - fastify-prod
   vite:
     build: ./vite/
     ports:
@@ -38,7 +48,7 @@ services:
       - ssl_key
       - ssl_crt
     depends_on:
-      - fastify
+      - fastify-dev
 
 volumes:
   frontend:

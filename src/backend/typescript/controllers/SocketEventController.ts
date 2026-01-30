@@ -6,7 +6,7 @@ import { TokenManager } from "../utils/TokenManager.js";
 import type { FriendService } from "../services/FriendService.js";
 import type { ServerType } from "../index.js";
 import { getPublicTournamentsDescriptions, TournamentMaker } from "../pong/TournamentMaker.js";
-import { type FriendProfile, type Profile, type TournamentCreationSettings, type TournamentDescription, type TournamentId } from "@shared/ZodMessageType.js";
+import { type FriendProfile, type Profile, type SanitizedUser, type TournamentCreationSettings, type TournamentDescription, type TournamentId } from "@shared/ZodMessageType.js";
 import { error, success, type Result } from "@shared/utils.js";
 import { areParametersValid, type ClientMessage, type ClientToServerEvents } from "@shared/ClientMessageHelpers.js";
 import type { ServerMessage, ServerToClientEvents } from "@shared/ServerMessageHelpers.js";
@@ -49,7 +49,6 @@ export class SocketEventController {
 	static sendToUser<T extends ServerMessage>(userId: number, event: T, ...data: Parameters<ServerToClientEvents[T]>): void
 	{
         if (!userId) {
-            // console.log(`Cannot send event "${event}" to invalid user ID: ${userId}`);
             return;
         }
 
@@ -106,12 +105,24 @@ export class SocketEventController {
 
     // notify profile change to user, friends and watchers
     // ----------------------------------------------------------------------------- //
-    static notifyProfileChange<T extends "profile-update" | "account-deleted">(id: number | null, event: T, ...data: Parameters<ServerToClientEvents[T]>): void
+    static notifyProfileChange(user : SanitizedUser): void
     {
-        if (!id || id < 0) return;
-        SocketEventController.sendToUser(id, event, ...data);
-        SocketEventController.sendToFriends(id, event, ...data);
-        SocketEventController.sendToProfileWatchers(id, event, ...data);
+		const	id = Number(user.id);
+
+        if (!id || id < 0)
+            return;
+		const	users = SocketEventController.connectedUsers.get(id);
+
+		if (!users)
+			return ;
+		users.forEach(socketData => {
+			socketData.setUsername(user.username);
+			socketData.setAvatar(user.avatar);
+		})
+
+        SocketEventController.sendToUser(id, "profile-update", user);
+        SocketEventController.sendToFriends(id, "profile-update", user);
+        SocketEventController.sendToProfileWatchers(id, "profile-update", user);
     }
 
     // check if a user is online

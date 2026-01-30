@@ -15,12 +15,12 @@ export default defineConfig({
 		},
 		proxy: {
 			'/api': {
-				target: 'http://fastify:8181',
+				target: 'http://fastify-dev:8181',
 				changeOrigin: true,
 				rewrite: (path) => path.replace(/^\/api/, ''),
 			},
 			'/api/socket.io': {
-				target: 'http://fastify:8181',
+				target: 'http://fastify-dev:8181',
 				changeOrigin: true,
 				ws: true,
 				rewrite: (path) => path.replace(/^\/api/, ''),

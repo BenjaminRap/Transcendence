@@ -240,7 +240,6 @@ async function profileCommand(args: string[], description: string): Promise<stri
 	{
 		result = await ExtProfileBuilder.buildExtProfile(args[1], true);
 	}
-	console.log("Profile command result:", result);
 	return result;
 }
 
