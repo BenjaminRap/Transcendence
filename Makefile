@@ -25,7 +25,7 @@ cp-scenes:
 	cp		-r ./src/backend/dev/scenes ./dockerFiles/fastify/app_src/dev/.
 
 cp-env:
-	cp		~/.env.fastify	./dockerFiles/fastify/app_src/.env
+	cp		.env.fastify	./dockerFiles/fastify/app_src/.env
 
 gen-prisma-client:
 	npx prisma generate --schema=./dockerFiles/fastify/prisma/schema.prisma
@@ -74,8 +74,11 @@ all: copy-tsconfig install certificates build up
 
 $(NAME): all
 
-stop:
+down:
 	$(DOCKER_EXEC) down
+
+stop:
+	$(DOCKER_EXEC) stop
 
 clean: stop
 	-rm -rf ./dockerFiles/nginx/website/

@@ -133,4 +133,18 @@ export class	SocketData
 	{
 		return this._alias;
 	}
+
+	public setUsername(username : string)
+	{
+		if (!this._onlineProfile)
+			return ;
+		this._onlineProfile.username = username;
+	}
+
+	public setAvatar(avatar : string)
+	{
+		if (!this._onlineProfile)
+			return ;
+		this._onlineProfile.image = avatar;
+	}
 }

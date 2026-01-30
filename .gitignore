@@ -7,6 +7,7 @@ secrets/
 *.key
 *.crt
 .env
+.env.fastify
 dockerFiles/nginx/website/
 dockerFiles/vite/tsconfig.json
 src/backend/test/.test_tokens

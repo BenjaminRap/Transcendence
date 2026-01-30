@@ -185,13 +185,14 @@ export class SuscriberService {
     }
 
     // ----------------------------------------------------------------------------- //
-    async deleteAccount(id: number): Promise<void> {
+    async deleteAccount(id: number): Promise<User> {
         const user = await this.getById(Number(id));
         if (!user) {
             throw new SuscriberException(SuscriberError.USER_NOT_FOUND, SuscriberError.USER_NOT_FOUND);
         }
 
         await this.prisma.user.delete({ where: { id: Number(id) } });
+		return user;
     }
 
     // ================================== PRIVATE ================================== //
