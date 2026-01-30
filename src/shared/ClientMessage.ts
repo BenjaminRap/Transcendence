@@ -45,7 +45,7 @@ export const zodClientMessageAcknowledgementParameters = {
     "authenticate" : [resultOf(zod.null())],
     "set-alias" : [resultOf(zod.null())],
     "join-matchmaking" : [resultOf(zod.null())],
-	"ping": [zod.number()]
+	"ping": [resultOf(zod.null())]
 } satisfies {
   readonly [key : string]: readonly [zod.ZodTypeAny, ...zod.ZodTypeAny[]];
 }

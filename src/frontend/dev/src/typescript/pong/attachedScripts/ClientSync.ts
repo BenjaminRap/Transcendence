@@ -18,7 +18,7 @@ import { toVec3 } from "@shared/utils";
 import type { TimerManager } from "@shared/attachedScripts/TimerManager";
 
 export class ClientSync extends CustomScriptComponent {
-	private static readonly _updateClockOffsetDelay = 10000;
+	private static readonly _updatePing = 1000;
 
 	@Imported("InputManager") private	_inputManager! : InputManager;
 	@Imported("GameManager") private	_gameManager! : GameManager;
@@ -43,15 +43,10 @@ export class ClientSync extends CustomScriptComponent {
 			return ;
 
 		this.listenToGameInfos();
-		this._sceneData.serverProxy.updateClockOffset();
-		this._timerManager.setTimer(() => {
-			this._sceneData.serverProxy.warmUpClockOffset();
-		}, 100, 10);
-		this._timerManager.setTimeout(() => {
-			this._timerManager.setInterval(() => {
-				this._sceneData.serverProxy.updateClockOffset();
-			}, ClientSync._updateClockOffsetDelay);
-		}, 1000);
+		this._sceneData.serverProxy.updatePing();
+		this._timerManager.setInterval(() => {
+			this._sceneData.serverProxy.updatePing();
+		}, ClientSync._updatePing);
 	}
 
 	
@@ -76,22 +71,12 @@ export class ClientSync extends CustomScriptComponent {
 				this.updateKey(gameInfos.keysUpdate.down, opponentInputs.down);
 				break ;
 			case "itemsUpdate":
-				const	clockOffset = this._sceneData.serverProxy.getClockOffset();
+				const ping = this._sceneData.serverProxy.getPing();
 
-				if (clockOffset)
-				{
-					const delta = performance.now() + clockOffset - gameInfos.date;
-
-					console.log("offset : " + clockOffset + "now : " + (delta - clockOffset - gameInfos.date) + "server : " + gameInfos.date);
-					// console.log(delta);
-					this._ball.transform.position.copyFrom(toVec3(gameInfos.itemsUpdate.ball.pos));
-					this._ball.transform.getPhysicsBody()!.setLinearVelocity(toVec3(gameInfos.itemsUpdate.ball.linearVelocity));
-				}
-				else
-				{
-					this._ball.transform.position.copyFrom(toVec3(gameInfos.itemsUpdate.ball.pos));
-					this._ball.transform.getPhysicsBody()!.setLinearVelocity(toVec3(gameInfos.itemsUpdate.ball.linearVelocity));
-				}
+				console.log("actual : " + Vector3.Distance(toVec3(gameInfos.itemsUpdate.ball.pos), this._ball.transform.position));
+				console.log("optimized : " + Vector3.Distance(this.getNewPosition(this._ball.transform.position, this._ball.transform.getPhysicsBody()!.getLinearVelocity(), ping / 2000), this._ball.transform.position));
+				this._ball.transform.position.copyFrom(toVec3(gameInfos.itemsUpdate.ball.pos));
+				this._ball.transform.getPhysicsBody()!.setLinearVelocity(toVec3(gameInfos.itemsUpdate.ball.linearVelocity));
 				this._paddleLeft.transform.position.copyFrom(toVec3(gameInfos.itemsUpdate.paddleLeftPos));
 				this._paddleRight.transform.position.copyFrom(toVec3(gameInfos.itemsUpdate.paddleRightPos));
 				break ;
@@ -129,11 +114,13 @@ export class ClientSync extends CustomScriptComponent {
 
 		const	colliderScript = this.getPlatformScript(transform) ?? this.getPaddleScript(transform);;
 
-		if (!colliderScript)
-			throw new PongError("The getNewPosition raycast hit an unexpected collider !", "quitScene");
-		const	newVelocity = colliderScript.getNewVelocity(velocity);
+		if (colliderScript)
+		{
+			const	newVelocity = colliderScript.getNewVelocity(velocity);
 
-		return this.getNewPosition(hitPoint, newVelocity, newRemainingTime);
+			return this.getNewPosition(hitPoint, newVelocity, newRemainingTime);
+		}
+		return endPosition;
 	}
 
 	private	getPlatformScript(transform : TransformNode)

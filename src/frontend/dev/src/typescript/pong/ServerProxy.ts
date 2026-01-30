@@ -306,19 +306,14 @@ export class	ServerProxy
 		return this._frontendSocketHandler.guestName;
 	}
 
-	public updateClockOffset()
+	public updatePing()
 	{
-		this._frontendSocketHandler.updateClockOffset();
+		this._frontendSocketHandler.updatePing();
 	}
 
-	public warmUpClockOffset()
+	public getPing()
 	{
-		this._frontendSocketHandler.warmUpClockOffset();
-	}
-
-	public getClockOffset()
-	{
-		return this._frontendSocketHandler.getClockOffset();
+		return this._frontendSocketHandler.getPing();
 	}
 
 	private verifyState(...allowedStates : SocketState[]) : void

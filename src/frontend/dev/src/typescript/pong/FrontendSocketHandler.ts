@@ -23,8 +23,7 @@ export class	FrontendSocketHandler
 	private static readonly _apiUrl = "/api/socket.io/";
 
 	private _observables = new Map<string, Map<AllServerMessage, EventHandler>>
-	private _clockOffset? : number;
-	private _bestRtt = Infinity;
+	private _ping : number = 0;
 
 	public getObservable<T extends AllServerMessage>(groupName : string, event : T) : Observable<T extends ServerMessage ? ServerMessageData<T> : void>
 	{
@@ -161,42 +160,19 @@ export class	FrontendSocketHandler
 	  return promise;
 	}
 
-	public warmUpClockOffset()
+	public updatePing()
 	{
 		const	clientSent = performance.now();
 
-		this._socket.emit("ping", (serverReceived : number) => {
+		this._socket.emit("ping", () => {
 			const	clientReceived = performance.now();
-			const	rtt = clientReceived - clientSent;
-			const	clockOffset = serverReceived - (clientSent + rtt / 2);
 
-			if (clockOffset < this._bestRtt)
-			{
-				this._bestRtt = rtt;
-				this._clockOffset = clockOffset;
-			}
+			this._ping = 0.8 * this._ping + 0.2 * (clientReceived - clientSent);
 		});
 	}
 
-	public updateClockOffset()
+	public getPing()
 	{
-		const	clientSent = performance.now();
-
-		this._socket.emit("ping", (serverReceived : number) => {
-			const	clientReceived = performance.now();
-			const	rtt = clientReceived - clientSent;
-			const	clockOffset = serverReceived - (clientSent + rtt / 2);
-			console.log("clientReceived : " + clientReceived + ", serverReceived : " + serverReceived + ", rtt : " + rtt);
-
-			if (this._clockOffset === undefined)
-				this._clockOffset = clockOffset;
-			else
-				this._clockOffset = 0.8 * this._clockOffset + 0.2 * clockOffset;
-		});
-	}
-
-	public getClockOffset()
-	{
-		return this._clockOffset;
+		return this._ping;
 	}
 }

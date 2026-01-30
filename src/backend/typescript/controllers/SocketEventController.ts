@@ -193,8 +193,8 @@ export class SocketEventController {
                 this.handleAuthenticate(socket, data.token, ack);
             });
 
-            SocketEventController.on(socket, "ping", (ack: (date: number) => void) => {
-                ack(performance.now());
+            SocketEventController.on(socket, "ping", (ack: (result: Result<null>) => void) => {
+                ack(success(null));
             });
 
 			SocketEventController.on(socket, "get-tournaments", (ack : (descriptions : Result<TournamentDescription[]>) => void) => {
