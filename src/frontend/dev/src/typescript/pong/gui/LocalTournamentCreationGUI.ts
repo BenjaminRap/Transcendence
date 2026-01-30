@@ -59,7 +59,7 @@ export class	LocalTournamentCreationGUI extends HTMLElement implements IGUI<Tour
 		if (this._profiles.length >= TournamentHelper.maxTournamentParticipants)
 			return ;
 		const	newProfile = new ProfileCreationGUI();
-		newProfile.classList.add("mb-[0.5cqw]", "w-1/4", "ml-[3%]", "mr-[3%]", "mt-[0.5cqw]");
+		newProfile.classList.add("mb-[0.5cqw]", "w-2/5", "ml-[3%]", "mr-[3%]", "mt-[0.5cqw]");
 	
 		this._profiles.push(newProfile);
 		this._profileContainer.appendChild(newProfile);
