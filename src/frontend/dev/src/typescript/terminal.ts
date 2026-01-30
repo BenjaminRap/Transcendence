@@ -175,7 +175,7 @@ function pongCommand(args: string[], description: string): string {
 
 function OauthCommand(args: string[], description: string): string {
 	const redirectUri = encodeURIComponent('https://localhost:8080/');
-	const uri = `https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-c059880dbba480439dcbeb47c67c3cfb6744af5eb566b4887f9b3b9b3a3a924b&redirect_uri=${redirectUri}&response_type=code`;
+	const uri = `https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-21b6c1e35a6d669a6614d9f118f8c0b9dacd09ab2e5795c441d336621f68d315&redirect_uri=${redirectUri}&response_type=code`;
 
 	if (TerminalUserManagement.isLoggedIn)
 		return 'Vous êtes déjà connecté.';
