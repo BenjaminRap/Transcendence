@@ -251,10 +251,10 @@ export namespace ExtProfileBuilder {
 		{
 			socketUtils.socket.emit("watch-profile", [profile.id]);
 
-			socketUtils.socket.on("profile-update", (data : {user: { id: string; username: string; avatar: string }}) => {
-				if (parseInt(data.user.id) === profile.id) {
-					profile.username = data.user.username;
-					profile.avatar = data.user.avatar;
+			socketUtils.socket.on("profile-update", (user: { id: string, username: string; avatar: string }) => {
+				if (parseInt(user.id) === profile.id) {
+					profile.username = user.username;
+					profile.avatar = user.avatar;
 					history.replaceState(null, '', `/profile/${profile.username}`);
 					updateProfileCard(profile);
 				}
@@ -262,17 +262,17 @@ export namespace ExtProfileBuilder {
 				{
 					for (let i = 0; i < profile.lastMatchs.length; i++)
 					{
-						if (profile.lastMatchs[i].opponent && numberOrNan(profile.lastMatchs[i].opponent!.id) === parseInt(data.user.id))
+						if (profile.lastMatchs[i].opponent && numberOrNan(profile.lastMatchs[i].opponent!.id) === parseInt(user.id))
 						{
-							profile.lastMatchs[i].opponent!.username = data.user.username;
-							profile.lastMatchs[i].opponent!.avatar = data.user.avatar;
+							profile.lastMatchs[i].opponent!.username = user.username;
+							profile.lastMatchs[i].opponent!.avatar = user.avatar;
 							updateMatchDiv(false);
 							break ;
 						}
 					}
 					if (ExtendedView.isExtendedViewIsActive && ExtendedView.type === 'match')
 					{
-						ExtendedView.updateMatchOpponent(parseInt(data.user.id), data.user.username, data.user.avatar);
+						ExtendedView.updateMatchOpponent(parseInt(user.id), user.username, user.avatar);
 					}
 				}
 			});

@@ -53,10 +53,11 @@ up:
 	$(DOCKER_EXEC) up -d
 ifeq ($(PROFILE), prod)
 	$(DOCKER_EXEC) logs -f nginx &
+	$(DOCKER_EXEC) logs -f fastify-prod &
 else
 	$(DOCKER_EXEC) logs -f vite &
+	$(DOCKER_EXEC) logs -f fastify-dev &
 endif
-	$(DOCKER_EXEC) logs -f fastify &
 # ifeq ($(PROFILE), prod)
 # 	$(DOCKER_EXEC) logs -f nginx > ./dockerFiles/nginx/nginx.logs &
 # else
