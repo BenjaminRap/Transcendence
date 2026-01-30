@@ -165,7 +165,7 @@ function pongCommand(args: string[], description: string): string {
 `);
 	PongUtils.isPongLaunched = true;
 	PongUtils.pongGameInstance = document.getElementById('pong-game') as HTMLDivElement;
-	window.history.pushState(null, '', '/pong');
+	window.history.pushState(null, '', location.pathname);
 	return 'Pong lancé !';
 }
 
