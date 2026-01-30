@@ -421,8 +421,7 @@ async function fetchProfileData(user: string): Promise<string> {
 		});
 		data = await response.json();
 		if (data.success) {
-			console.log("Data fetched successfully:", user);
-			profile = data;
+			profile = data.user;
 			return "OK";
 		}
 		if (data.message === 'Invalid or expired token') {
