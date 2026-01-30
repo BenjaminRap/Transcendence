@@ -23,6 +23,7 @@ import type { GameInfos, GameInit, Profile, TournamentEvent } from "@shared/ZodM
 import { PongUtils } from '../terminal'
 import { LoadingGUI } from "./gui/LoadingGUI";
 import type { BotDifficulty } from "./BotDifficulty";
+import { WriteOnTerminal } from "../terminalUtils/writeOnTerminal";
 
 import.meta.glob("./attachedScripts/*.ts", { eager: true});
 import.meta.glob("@shared/attachedScripts/*", { eager: true});
@@ -72,7 +73,7 @@ export class PongGame extends HTMLElement {
 			this._scene = await this.getNewScene({sceneName: "Menu.gltf", gameType: "Menu"});
 			this._engine.runRenderLoop(this.renderScene.bind(this));
 		} catch (error) {
-			console.error(`Could not initialize the scene : ${error}`)
+			WriteOnTerminal.displayOnTerminal(`Could not initialize the scene : ${error}`, false)
 			this.quit();
 		}
     }
@@ -231,7 +232,7 @@ export class PongGame extends HTMLElement {
 				this.goToMenuScene();
 				break;
 			case "quitPong":
-				console.error(message);
+				WriteOnTerminal.displayOnTerminal(message, false)
 				this.quit();
 				break;
 		}
