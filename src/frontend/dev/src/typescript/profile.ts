@@ -511,6 +511,8 @@ export namespace ProfileBuilder {
 			});
 
 			socketUtils.socket.on("match-update", (data: MatchSummary) => {
+				if (data.opponent != null && numberOrNan(data.opponent.id) === profile.id)
+					return ;
 				console.log("Match updated:", data);
 				profile.lastMatchs.unshift(data);
 				if (profile.lastMatchs.length > 4)
