@@ -1,6 +1,6 @@
 import { TournamentHelper, type ProfileWithScore } from "@shared/TournamentHelper";
 import type { Match } from "@shared/Match";
-import { isPowerOfTwo } from "@shared/utils";
+import { isPowerOfTwo, shuffle } from "@shared/utils";
 import { UniqueDelayOwner } from "./UniqueDelayOwner";
 
 export abstract class	Tournament<T> extends UniqueDelayOwner
@@ -35,12 +35,13 @@ export abstract class	Tournament<T> extends UniqueDelayOwner
 			disqualified.forEach(participant => this.onParticipantLose(participant.profile, true, rank));
 			if (this._qualified.length === this._expectedQualifiedCount)
 			{
+				shuffle(this._qualified);
 				this.onQualificationsEnd(this._qualified.map(value => value.profile));
+				this._round = 0;
+				this._tournamentMatches = TournamentHelper.createTournamentMatches(this._qualified);
 				this.onTournamentShow();
 				this.delay(() => {
-					this._round = 0;
-					this._tournamentMatches = TournamentHelper.createTournamentMatches(this._qualified);
-					this.setCurrentMatches(this._tournamentMatches[this._round]);
+					this.setCurrentMatches(this._tournamentMatches[0]);
 				}, Tournament._showTournamentDurationMs);
 			}
 			else

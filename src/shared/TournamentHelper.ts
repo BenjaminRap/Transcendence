@@ -17,7 +17,7 @@ export abstract class	TournamentHelper
 		if (participants.length < 2)
 			throw new PongError(`The profiles should be greater than 1, got ${participants.length}`, "quitPong");
 		shuffle(participants);
-		const	matches = [];
+		const	matches : Match<T>[] = [];
 
 		for (let index = 0; index < participants.length; index++) {
 			const	opponentLeftIndex = index;
@@ -33,7 +33,7 @@ export abstract class	TournamentHelper
 	{
 		if (profiles.length < 2 || !isPowerOfTwo(profiles.length))
 			throw new PongError(`The profiles should be a power of two, greater than 1, got ${profiles.length}`, "quitPong");
-		shuffle(profiles);
+
 		return this.createMatchesByRoundRecursive(profiles);
 	}
 
