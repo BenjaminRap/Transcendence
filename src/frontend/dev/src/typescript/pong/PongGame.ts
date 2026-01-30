@@ -287,6 +287,7 @@ export class PongGame extends HTMLElement {
 
 	public dispose()
 	{
+		this._engine?.stopRenderLoop();
 		window.addEventListener("popstate", this.onPopState);
 		this._serverProxy.leave();
 		this._serverProxy.dispose();

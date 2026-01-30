@@ -105,6 +105,7 @@ export class ServerPongGame {
 					delete globalThis.HKP;
 				if (globalThis.HKP)
 					delete globalThis.HKP;
+				this._engine.stopRenderLoop();
 				this.disposeScene();
 				this._engine.dispose();
 			} catch (error) {
