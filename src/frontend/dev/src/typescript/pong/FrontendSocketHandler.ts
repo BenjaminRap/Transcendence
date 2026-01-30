@@ -75,6 +75,7 @@ export class	FrontendSocketHandler
         const socket : DefaultSocket = io("/", {
             path: FrontendSocketHandler._apiUrl,
             autoConnect: false,
+			reconnection: false
         });
 
 		const	connectionPromise = new Promise<string>((resolve, reject) => {
