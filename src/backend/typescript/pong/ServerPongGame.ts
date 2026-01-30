@@ -88,14 +88,15 @@ export class ServerPongGame {
 
 	private disposeScene()
 	{
+		if (this._scene !== undefined)
+		{
+			const	sceneData = getServerSceneData(this._scene);
+
+			sceneData.dispose();
+			this._scene.dispose();
+		}
 		this._assetsManager?.reset();
 		this._assetsManager = null;
-		if (this._scene === undefined)
-			return ;
-		const	sceneData = getServerSceneData(this._scene);
-
-		sceneData.dispose();
-		this._scene.dispose();
 	}
 
 	public dispose() : void {
