@@ -657,7 +657,7 @@ async function requetChangeName(newName: string): Promise<boolean> {
 		}
 		return false;
 	} catch (error) {
-		console.error("Error:", error);
+		WriteOnTerminal.printErrorOnTerminal("Error changing name.");
 		return false;
 	}
 
@@ -711,7 +711,7 @@ async function requestChangePassword(currentPassword: string, newPassword: strin
 		WriteOnTerminal.printErrorOnTerminal(data.message || "Error changing password.");
 		return false;
 	} catch (error) {
-		console.error("Error:", error);
+		WriteOnTerminal.printErrorOnTerminal("Error changing password.");
 		return false;
 	}
 }
@@ -759,7 +759,7 @@ async function requestChangeAvatar(formData: FormData): Promise<boolean> {
 		WriteOnTerminal.printErrorOnTerminal(data.message || "Error changing avatar.");
 		return false;
 	} catch (error) {
-		console.error("Error:", error);
+		WriteOnTerminal.printErrorOnTerminal("Error changing avatar.");
 		return false;
 	}
 }
@@ -800,7 +800,7 @@ async function requestDeleteAccount(): Promise<boolean>
 			WriteOnTerminal.printErrorOnTerminal("Erreur lors de la suppression du compte.");
 		return false;
 	} catch (error) {
-		console.error("Error:", error);
+		WriteOnTerminal.printErrorOnTerminal("Error deleting account.");
 		return false;
 	}
 }
@@ -836,7 +836,7 @@ export namespace FriendRequestController {
 			}
 			return false;
 		} catch (error) {
-			console.error("Error:", error);
+			WriteOnTerminal.printErrorOnTerminal("Error accepting friend request.");
 			return false;
 		}
 	}
@@ -876,7 +876,7 @@ export namespace FriendRequestController {
 			}
 			return false;
 		} catch (error) {
-			console.error("Error:", error);
+			WriteOnTerminal.printErrorOnTerminal("Error removing friend.");
 			return false;
 		}
 	}
