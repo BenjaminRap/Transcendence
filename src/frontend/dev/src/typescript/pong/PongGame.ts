@@ -64,6 +64,7 @@ export class PongGame extends HTMLElement {
 		this.append(this._canvas);
 		this._serverProxy.getObservable("tournament-event").add(([tournamentEvent]) => this.onTournamentMessage(tournamentEvent));
 		this._serverProxy.getObservable("game-infos").add(([gameEvent]) => this.onGameMessage(gameEvent));
+		this._serverProxy.getObservable("disconnect").add(() => this.onDisconnect());
 		this.loadGame();
 		window.addEventListener("popstate", this.onPopState);
 	}
@@ -202,6 +203,19 @@ export class PongGame extends HTMLElement {
 		if (!this._scene)
 			return ;
 		getFrontendSceneData(this._scene).events.getObservable("game-infos").notifyObservers(gameInfos);
+	}
+
+	private	onDisconnect()
+	{
+		if (!this._scene)
+			return ;
+		const	sceneData = getFrontendSceneData(this._scene);
+
+		if (sceneData.gameType === "Multiplayer")
+		{
+			this.changeScene({gameType: "Menu", sceneName: "Menu.gltf"}).catch(() => {});
+			this.onError(new PongError("The server disconnected !", "show"));
+		}
 	}
 
 	private setInputs(sceneData : FrontendSceneData, ...inputIndexes : int[])
