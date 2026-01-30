@@ -71,6 +71,7 @@ export class PongGame extends HTMLElement {
 			globalThis.HK = await HavokPhysics();
 			await SceneManager.InitializeRuntime(this._engine, { showDefaultLoadingScreen: false });
 			this._scene = await this.getNewScene({sceneName: "Menu.gltf", gameType: "Menu"});
+			this.addEventListener("resize", () => this._engine?.resize)
 			this._engine.runRenderLoop(this.renderScene.bind(this));
 		} catch (error) {
 			WriteOnTerminal.displayOnTerminal(`Could not initialize the scene : ${error}`, false)
