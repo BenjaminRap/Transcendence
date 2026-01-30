@@ -83,7 +83,7 @@ export class	OnlineTournamentStartGUI extends HTMLElement implements IGUI<Online
 			return ;
 		const	gui = new OnlineTournamentProfileGUI(addKickAndBanButtons, profile.shownName, isNameInput);
 
-		gui.classList.add("w-1/4", "text-[1.5cqw]", "ml-[3%]", "mr-[3%]")
+		gui.classList.add("w-1/4", "text-[1.5cqw]", "ml-[3%]", "mr-[3%]", "mt-[2%]")
 		initMenu(gui, {
 			setAlias: () => this._onSetAliasObservable.notifyObservers({guestName: profile.guestName, newAlias: gui.getAlias()}),
 			ban: () => this._onBanParticipantObservable.notifyObservers(profile.guestName),
