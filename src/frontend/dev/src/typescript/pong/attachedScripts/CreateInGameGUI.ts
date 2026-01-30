@@ -16,7 +16,6 @@ import { MatchOpponentsGUI } from "../gui/MatchOpponentsGUI";
 import { initMenu } from "../gui/IGUI";
 import { TournamentGUI } from "../gui/TournamentGUI";
 import { TournamentEndGUI } from "../gui/TournamentEndGUI";
-import type { FrontendGameSceneName } from "@shared/SceneData";
 import type { TournamentEvent } from "@shared/ZodMessageType";
 
 export class CreateInGameGUI extends CustomScriptComponent {
@@ -193,7 +192,6 @@ export class CreateInGameGUI extends CustomScriptComponent {
 
 	private	switchToGUI(newGUI : HTMLElement)
 	{
-		console.log("switch to : " + newGUI.nodeName);
 		this.hideCurrentGUI();
 		this._currentGUI = newGUI;
 		newGUI.classList.remove("hidden");
