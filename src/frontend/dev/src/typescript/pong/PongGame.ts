@@ -137,11 +137,15 @@ export class PongGame extends HTMLElement {
 
 	public async goToMenuScene()
 	{
-		if (this.isInScene("Menu.gltf"))
-			return ;
-		history.pushState(null, "", "/pong");
-		this._serverProxy.leave();
-		await this.changeScene({sceneName: "Menu.gltf", gameType: "Menu"});
+		try {
+			if (this.isInScene("Menu.gltf"))
+				return ;
+			history.pushState(null, "", "/pong");
+			this._serverProxy.leave();
+			await this.changeScene({sceneName: "Menu.gltf", gameType: "Menu"});
+		} catch (error) {
+			this.onError(error);
+		}
 	}
 
 	public async startBotGame(sceneName : FrontendGameSceneName, difficulty : keyof BotDifficulty)
@@ -290,30 +294,37 @@ export class PongGame extends HTMLElement {
 
 	private disposeScene()
 	{
-		SceneManager.OnSceneReadyObservable.clear();
-		this._assetsManager?.reset();
-		this._assetsManager = null;
-		if (this._scene === undefined)
-			return ;
-		const	sceneData = getFrontendSceneData(this._scene);
+		try {
+			if (this._scene !== undefined)
+			{
+				const	sceneData = getFrontendSceneData(this._scene);
 
-		sceneData.dispose();
-		this._scene.dispose();
-		this._scene = undefined;
+				sceneData.dispose();
+				this._scene.dispose();
+				this._scene = undefined;
+			}
+			SceneManager.OnSceneReadyObservable.clear();
+			this._assetsManager?.reset();
+			this._assetsManager = null;
+		} catch (error) {
+		}
 	}
 
 	public dispose()
 	{
-		this._engine?.stopRenderLoop();
-		window.addEventListener("popstate", this.onPopState);
-		this._serverProxy.leave();
-		this._serverProxy.dispose();
-		if (globalThis.HKP)
-			delete globalThis.HKP;
-		if (globalThis.HKP)
-			delete globalThis.HKP;
-		this.disposeScene();
-		this._engine?.dispose();
+		try {
+			this._engine?.stopRenderLoop();
+			window.addEventListener("popstate", this.onPopState);
+			this._serverProxy.leave();
+			this._serverProxy.dispose();
+			if (globalThis.HKP)
+				delete globalThis.HKP;
+			if (globalThis.HKP)
+				delete globalThis.HKP;
+			this.disposeScene();
+			this._engine?.dispose();
+		} catch (error) {
+		}
 	}
 
 	public setButtonEnable(enabled : boolean)
