@@ -71,12 +71,15 @@ export class ClientSync extends CustomScriptComponent {
 				this.updateKey(gameInfos.keysUpdate.down, opponentInputs.down);
 				break ;
 			case "itemsUpdate":
-				// const ping = this._sceneData.serverProxy.getPing();
-				//
-				// console.log("actual : " + Vector3.Distance(toVec3(gameInfos.itemsUpdate.ball.pos), this._ball.transform.position));
-				// console.log("optimized : " + Vector3.Distance(this.getNewPosition(this._ball.transform.position, this._ball.transform.getPhysicsBody()!.getLinearVelocity(), ping / 2000), this._ball.transform.position));
-				this._ball.transform.position.copyFrom(toVec3(gameInfos.itemsUpdate.ball.pos));
-				this._ball.transform.getPhysicsBody()!.setLinearVelocity(toVec3(gameInfos.itemsUpdate.ball.linearVelocity));
+				const	ping = this._sceneData.serverProxy.getPing();
+				const	currentPos  = this._ball.transform.position;
+				const	serverPos = toVec3(gameInfos.itemsUpdate.ball.pos);
+				const	serverVelocity = toVec3(gameInfos.itemsUpdate.ball.linearVelocity);
+				const	calculated = this.caculateNewPosAndVelocity(serverPos, serverVelocity, ping / 2000);
+				const	final = this.chooseBestValue(currentPos, calculated, [serverPos, serverVelocity]);
+
+				this._ball.transform.position.copyFrom(final[0]);
+				this._ball.setLinearVelocity(final[1]);
 				this._paddleLeft.transform.position.copyFrom(toVec3(gameInfos.itemsUpdate.paddleLeftPos));
 				this._paddleRight.transform.position.copyFrom(toVec3(gameInfos.itemsUpdate.paddleRightPos));
 				break ;
@@ -86,6 +89,13 @@ export class ClientSync extends CustomScriptComponent {
 				break ;
 			}
 		});
+	}
+
+	private	chooseBestValue(currentPos : Vector3, calculated : [Vector3, Vector3], server : [Vector3, Vector3]) : [Vector3, Vector3]
+	{
+		if (Vector3.Distance(currentPos, calculated[0]) < Vector3.Distance(currentPos, server[0]))
+			return calculated;
+		return server;
 	}
 
 	private	updateKey(keyUpdate : { event: "keyDown" | "keyUp" } | undefined, inputKey : InputKey)
@@ -98,16 +108,16 @@ export class ClientSync extends CustomScriptComponent {
 			inputKey.setKeyUp();
 	}
 
-	private	getNewPosition(startPosition: Vector3, velocity : Vector3, remainingTimeSeconds : number, maxRecursion = 2) : Vector3
+	private	caculateNewPosAndVelocity(startPosition: Vector3, velocity : Vector3, remainingTimeSeconds : number, maxRecursion = 2) : [Vector3, Vector3]
 	{
 		if (maxRecursion <= 0)
-			return startPosition;
+			return [startPosition, velocity];
 		const	castVector = velocity.scale(remainingTimeSeconds);
 		const	endPosition = startPosition.add(castVector);
 		const	hitWorldResult = this._ball.shapeCast(startPosition, endPosition);
 
 		if (!hitWorldResult.hasHit || !hitWorldResult.body)
-			return endPosition;
+			return [endPosition, velocity];
 		const	newRemainingTime = (1 - hitWorldResult.hitFraction) * remainingTimeSeconds;
 		const	transform = hitWorldResult.body.transformNode;
 		const	hitPoint = startPosition.add(castVector.scale(hitWorldResult.hitFraction));
@@ -118,9 +128,9 @@ export class ClientSync extends CustomScriptComponent {
 		{
 			const	newVelocity = colliderScript.getNewVelocity(velocity);
 
-			return this.getNewPosition(hitPoint, newVelocity, newRemainingTime);
+			return this.caculateNewPosAndVelocity(hitPoint, newVelocity, newRemainingTime);
 		}
-		return endPosition;
+		return [endPosition, velocity];
 	}
 
 	private	getPlatformScript(transform : TransformNode)
