@@ -37,7 +37,7 @@ export class ClientSync extends CustomScriptComponent {
 		this._sceneData = getFrontendSceneData(this.scene);
     }
 
-	protected	awake()
+	protected	start()
 	{
 		if (this._sceneData.gameType !== "Multiplayer")
 			return ;
