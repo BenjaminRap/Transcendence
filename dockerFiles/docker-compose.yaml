@@ -75,3 +75,5 @@ volumes:
 secrets:
   ssl_crt:
     file: ./secrets/ssl/selfsigned.crt
+  ssl_key:
+    file: ./secrets/ssl/selfsigned.key
