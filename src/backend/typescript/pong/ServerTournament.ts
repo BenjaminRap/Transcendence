@@ -33,14 +33,14 @@ export class	ServerTournament extends Tournament<DefaultSocket>
 	{
 		super();
 		this._tournamentId = crypto.randomUUID();
-		this._creator.once("start-tournament", (ack : (success : Result<null>) => void) => {
+		SocketEventController.on(this._creator, "start-tournament", (ack : (success : Result<null>) => void) => {
 			const	result = this.start();
 
 			ack(result);
 		});
-		this._creator.once("cancel-tournament", () => this.dispose());
-		this._creator.on("ban-participant", (name : string) => this.banParticipant(name));
-		this._creator.on("kick-participant", (name : string) => this.kickParticipant(name));
+		SocketEventController.once(this._creator, "cancel-tournament", () => this.dispose());
+		SocketEventController.on(this._creator, "ban-participant", (name : string) => this.banParticipant(name));
+		SocketEventController.on(this._creator, "kick-participant", (name : string) => this.kickParticipant(name));
 		this._creator.data.joinTournament(this);
 		console.log(`${this._settings.name} tournament created !`);
 	}
