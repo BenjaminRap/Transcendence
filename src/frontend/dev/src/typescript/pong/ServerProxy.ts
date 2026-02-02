@@ -18,11 +18,20 @@ export class	ServerProxy
 	private _playerIndex : int = 0;
 	private _currentPromise : CancellablePromise<any> | null = null;
 	private _tournamentData : tournamentData | null = null;
+	private _guestName = "guest";
 
 	constructor(
 		private _frontendSocketHandler : FrontendSocketHandler,
 	) {
 		this._state = "connected";
+		window.addEventListener("offline", this.onDisconnect);
+		this.getObservable("connect").add(() => {
+			if (this._state === "not-connected")
+				this._state = "connected";
+		});
+		this.getObservable("init").add(([guestName]) => {
+			this._guestName = guestName;
+		});
 		this.getObservable("game-infos").add(([gameInfos]) => {
 			if (gameInfos.type === "room-closed" && this._state === "in-game")
 			{
@@ -30,10 +39,7 @@ export class	ServerProxy
 				this.replaceCurrentPromise(null);
 			}
 		});
-		this.getObservable("disconnect").add(() => {
-			this._state = "not-connected";
-			this.replaceCurrentPromise(null);
-		});
+		this.getObservable("disconnect").add(this.onDisconnect);
 		this.getObservable("tournament-event").add(([tournamentEvent]) => {
 			const	removeFromTournament = ["banned", "kicked", "tournament-canceled"].includes(tournamentEvent.type);
 			const	tournamentEnd = ["win", "lose"].includes(tournamentEvent.type);
@@ -307,7 +313,7 @@ export class	ServerProxy
 
 	public getGuestName()
 	{
-		return this._frontendSocketHandler.guestName;
+		return this._guestName;
 	}
 
 	public updatePing()
@@ -343,5 +349,11 @@ export class	ServerProxy
 	{
 		this._frontendSocketHandler.clearObservable("ServerProxy");
 		this.leave();
+		window.removeEventListener("offline", this.onDisconnect);
+	}
+
+	private onDisconnect = () => {
+			this._state = "not-connected";
+			this.replaceCurrentPromise(null);
 	}
 }

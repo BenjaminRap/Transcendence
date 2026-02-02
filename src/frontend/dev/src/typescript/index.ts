@@ -8,7 +8,7 @@ import { TerminalUserManagement } from './terminal'
 import { HELP_MESSAGE_NOT_LOG } from './terminalUtils/helpText/help'
 import { ExtProfileBuilder } from "./extprofile"
 
-export const	frontendSocketHandler = await FrontendSocketHandler.createFrontendSocketHandler();
+export const	frontendSocketHandler = new FrontendSocketHandler();
 
 socketUtils.socket = frontendSocketHandler.socket;
 const url = new URL( window.location.href);

@@ -64,7 +64,8 @@ export class PongGame extends HTMLElement {
 		this.append(this._canvas);
 		this._serverProxy.getObservable("tournament-event").add(([tournamentEvent]) => this.onTournamentMessage(tournamentEvent));
 		this._serverProxy.getObservable("game-infos").add(([gameEvent]) => this.onGameMessage(gameEvent));
-		this._serverProxy.getObservable("disconnect").add(() => this.onDisconnect());
+		this._serverProxy.getObservable("disconnect").add(this.onDisconnect);
+		window.addEventListener("offline", this.onDisconnect);
 		this.loadGame();
 		window.addEventListener("popstate", this.onPopState);
 	}
@@ -209,7 +210,7 @@ export class PongGame extends HTMLElement {
 		getFrontendSceneData(this._scene).events.getObservable("game-infos").notifyObservers(gameInfos);
 	}
 
-	private	onDisconnect()
+	private	onDisconnect = () =>
 	{
 		if (!this._scene)
 			return ;
@@ -314,6 +315,7 @@ export class PongGame extends HTMLElement {
 	{
 		requestAnimationFrame(() => {
 			try {
+				window.removeEventListener("offline", this.onDisconnect);
 				this._engine?.stopRenderLoop();
 				window.removeEventListener("popstate", this.onPopState);
 				this._serverProxy.leave();

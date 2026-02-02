@@ -22,6 +22,7 @@ export class	FrontendSocketHandler
 {
 	private static readonly _apiUrl = "/api/socket.io/";
 
+	private _socket : DefaultSocket;
 	private _observables = new Map<string, Map<AllServerMessage, EventHandler>>
 	private _ping : number = 0;
 
@@ -61,42 +62,14 @@ export class	FrontendSocketHandler
 		this._observables.keys().forEach(key => this.clearObservable(key));
 	}
 
-	private constructor(
-		private _socket : DefaultSocket,
-		public readonly guestName: string)
+	public constructor()
 	{
-		this.getObservable("FrontendSocketHandler", "disconnect").add(() => {
-			this.onDisconnectEvent();
-		});
-	}
-
-	public static async createFrontendSocketHandler()
-	{
-        const socket : DefaultSocket = io("/", {
+        this._socket = io("/", {
             path: FrontendSocketHandler._apiUrl,
-            autoConnect: false,
-			reconnection: false
+			reconnection: true
         });
-
-		const	connectionPromise = new Promise<string>((resolve, reject) => {
-			socket.once("connect", () => {
-				socket.off("connect_error");
-			});
-			socket.once("connect_error", (error : Error) => {
-				socket.off("connect");
-				reject(error);
-			});
-			socket.once("init", guestName => {
-				resolve(guestName);
-			});
-		});
-		socket.connect();
-
-		const	guestName = await connectionPromise;
-		const	frontendSocketHandler = new FrontendSocketHandler(socket, guestName);
-
-		return frontendSocketHandler;
 	}
+
 	public get socket() : DefaultSocket
 	{
 		return this._socket;
@@ -105,12 +78,6 @@ export class	FrontendSocketHandler
 	public disconnect()
 	{
 		this._socket.disconnect();
-		this.clearObservables();
-	}
-
-	private	onDisconnectEvent()
-	{
-		this._socket.off();
 		this.clearObservables();
 	}
 
