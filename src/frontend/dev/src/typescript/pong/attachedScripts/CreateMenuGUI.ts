@@ -185,7 +185,7 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 		if (gui)
 		{
-			this.pushPreviousStates(guiName);
+			// this.pushPreviousStates(guiName);
 			history.pushState(null, "", `/pong/${guiName}`)
 			this.onPopState();
 		}
@@ -480,11 +480,10 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		const	guiName = location.pathname.slice(6);
 		const	gui = this._statesGUI.get(guiName);
 
+		console.log("before");
 		if (!gui)
-		{
-			history.replaceState(null, "", "/pong");
 			return ;
-		}
+		console.log("after");
 		if (this._currentMenu === this._inMatchmakingGUI)
 		{
 			this._sceneData.serverProxy.leave();
