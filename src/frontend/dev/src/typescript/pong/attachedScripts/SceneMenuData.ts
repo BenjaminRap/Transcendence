@@ -10,7 +10,7 @@ import { ImportedComponentOptional, zodBoolean, zodString } from "@shared/Import
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import { PongError } from "@shared/pongError/PongError";
 import type { FrontendGameSceneName } from "@shared/SceneData";
-import * as zod from "zod";
+import zod from "zod";
 
 export const zodSceneFileName = zod.literal(["Magic.gltf", "Basic.gltf", "Terminal.gltf"]);
 
