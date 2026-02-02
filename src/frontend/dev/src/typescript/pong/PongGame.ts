@@ -53,7 +53,7 @@ export class PongGame extends HTMLElement {
 			this.onError(new PongError("We lost the webgl context !", "quitPong"));
 		});
 		this._errorGUI = initMenu(new ErrorGUI(), {
-			close: () => this._errorGUI.classList.add("hidden")
+			close: () => history.back()
 		}, this);
 		this._loadingGUI = new LoadingGUI();
 		this.appendChild(this._loadingGUI);
@@ -250,8 +250,10 @@ export class PongGame extends HTMLElement {
 		sceneData.events.getObservable("input-change").notifyObservers(inputs);
 	}
 
-	private	showError(errorText : string)
+	private	showError(errorText : string, pushState = true)
 	{
+		if (pushState)
+			history.pushState({error: errorText}, "", "/pong/error");
 		this._errorGUI.setErrorText(errorText);
 		this._errorGUI.classList.remove("hidden");
 	}
@@ -371,7 +373,11 @@ export class PongGame extends HTMLElement {
 		PongUtils.removePongDiv(true);
 	}
 
-	private onPopState = () => {
+	private onPopState = (popEvent : PopStateEvent) => {
+		if (location.pathname === "/pong/error")
+			this.showError(String(popEvent.state.errorText), false);
+		else
+			this._errorGUI.classList.remove("hidden");
 		if (this.isInScene("Menu.gltf"))
 			return ;
 
