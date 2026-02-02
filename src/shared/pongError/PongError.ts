@@ -1,4 +1,5 @@
-export type PongErrorSeverity = "ignore" | "show" | "quitScene" | "quitPong";
+const	severities = [ "ignore", "show", "quitScene", "quitPong" ] as const;
+export type PongErrorSeverity = (typeof severities)[number];
 
 export class	PongError extends Error
 {
@@ -14,4 +15,20 @@ export class	PongError extends Error
 	{
 		return this._severity;
 	}
+
+	public setMinimalSeverity(minimalSeverity : PongErrorSeverity)
+	{
+		const	currentSeverityIndex = severities.findIndex((value) => value === this._severity);
+		const	minimalSeverityIndex = severities.findIndex((value) => value === minimalSeverity);
+
+		if (currentSeverityIndex < minimalSeverityIndex)
+			this._severity = severities[minimalSeverityIndex];
+	}
+}
+
+export function	setMinimalSeverity(error : any, minimalSeverity : PongErrorSeverity)
+{
+	if (error instanceof PongError)
+		error.setMinimalSeverity(minimalSeverity);
+	return error
 }
