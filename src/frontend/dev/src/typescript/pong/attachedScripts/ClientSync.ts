@@ -59,7 +59,6 @@ export class ClientSync extends CustomScriptComponent {
 	
 	private	listenToGameInfos()
 	{
-		console.log("added");
 		this._sceneData.events.getObservable("game-infos").add((gameInfos : GameInfos) => {
 			const	opponentInputs = this._inputManager.getPlayerInput(this._sceneData.serverProxy.getOpponentIndex());
 
@@ -70,7 +69,6 @@ export class ClientSync extends CustomScriptComponent {
 				this.updateKey({event: "keyUp"}, opponentInputs.up);
 				break ;
 			case "forfeit":
-				console.log("forfeit");
 				const	winningSide = (this._sceneData.serverProxy.getPlayerIndex() === 0) ? "left" : "right";
 
 				this._sceneData.events.getObservable("forfeit").notifyObservers(winningSide);

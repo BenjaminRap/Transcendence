@@ -105,7 +105,6 @@ export namespace Modal {
 			terminal.appendChild(modal);
 		}
 		else {
-			console.error("Terminal not found");
 			return;
 		}
 		

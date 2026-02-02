@@ -73,7 +73,6 @@ function sortFriendList()
 
 export namespace ProfileUpdater {
 	export function updateProfile(username: string, linkofavatar: string) {
-		console.log("Updating profile:", username, linkofavatar);
 		profile.username = username;
 		profile.avatar = linkofavatar;
 		ProfileUpdater.updateProfileCard(profile);
@@ -115,7 +114,6 @@ export namespace ProfileUpdater {
 			ProfileUpdater.updateProfile(username, avatar);
 		else
 		{
-			console.log("Salut " + userID)
 			const index = profile.friends.findIndex(friend => friend.id === userID);
 			if (index !== -1) {
 				profile.friends[index].username = username;
@@ -188,7 +186,6 @@ function updateMatchDiv(flagAdd: boolean)
 		watchMatchIds.unshift(numberOrNan(profile.lastMatchs[0].opponent!.id));
 		socketUtils.socket?.emit("watch-profile", [watchMatchIds[0]] );
 	}
-	console.log("Updated watching match IDs:", watchMatchIds);
 	const oldMatchListElement = document.getElementById('match-list');
 	if (oldMatchListElement && oldMatchListElement.parentElement) {
 		oldMatchListElement.parentElement.replaceChild(newMatchListElement, oldMatchListElement);
@@ -313,7 +310,6 @@ function createMatchHistory(profileElement: HTMLElement | null): HTMLElement | v
 	});
 	profileElement.appendChild(matchHistory);
 	const matchElement = createMatchElement();
-	console.log("Created match element:", matchElement);
 	matchHistory.appendChild(matchElement);
 	profileElement.appendChild(matchHistory);
 	return matchHistory;
@@ -460,9 +456,7 @@ export namespace ProfileBuilder {
 		if (socketUtils && socketUtils.socket)
 		{
 			socketUtils.socket.on("profile-update", (user: { id: string, username: string, avatar: string }) => {
-				// console.log("Profile updated:", user.id);
 				// ProfileUpdater.updateFriendProfile(parseInt(user.id), user.username, user.avatar);
-				console.log("Profile updated:", user.id, ' : ', user.username, ' : ', user.avatar);
 				if (parseInt(user.id) === profile.id) {
 					profile.username = user.username;
 					profile.avatar = user.avatar;
@@ -513,7 +507,6 @@ export namespace ProfileBuilder {
 			socketUtils.socket.on("match-update", (data: MatchSummary) => {
 				if (data.opponent != null && numberOrNan(data.opponent.id) === profile.id)
 					return ;
-				console.log("Match updated:", data);
 				profile.lastMatchs.unshift(data);
 				if (profile.lastMatchs.length > 4)
 					profile.lastMatchs.pop();
@@ -521,13 +514,11 @@ export namespace ProfileBuilder {
 			});
 
 			socketUtils.socket.on("stat-update", (data: GameStats) => {
-				console.log("Stat updated:", data);
 				profile.gameStats = data;
 				ProfileUpdater.updateProfileCard(profile);
 			});
 
 			socketUtils.socket.on("friend-status-update", (data: FriendStatusUpdate) => {
-				console.log("Friend status updated DATA:", data);
 				
 				// Récupère les données utilisateur, qu'elles soient dans 'requester' ou 'friendProfile'
 				const userData = data.requester || data.friendProfile;
@@ -557,7 +548,6 @@ export namespace ProfileBuilder {
 			});
 			watchMatchIds = getWathIdMatch();
 			socketUtils.socket.emit("watch-profile", watchMatchIds);
-			console.log("Watching match IDs:", watchMatchIds);
 		}
 		return 'Profil ouvert. Tapez "kill profile" pour le fermer.';
 	}
@@ -619,7 +609,6 @@ async function ChangeName() {
 		return;
 	Modal.makeModal("Change Name", 'text', 'Shadow 0-1', async (text: string) => {
 		Modal.closeModal();
-		console.log("New name:", text);
 		await requetChangeName(text);
 	});
 }
@@ -773,8 +762,6 @@ function DeleteAccount() {
 		if (text === "DELETE") {
 			requestDeleteAccount();
 		}
-		else
-			console.log("Account deletion cancelled");
 	});
 }
 
@@ -791,7 +778,6 @@ async function requestDeleteAccount(): Promise<boolean>
 			}
 		});
 		const data = await response;
-		console.log("Account deletion response:", data);
 		if (response.status === 204) {
 			WriteOnTerminal.printErrorOnTerminal("Compte supprimé avec succès.");
 			RequestBackendModule.logout([], "");

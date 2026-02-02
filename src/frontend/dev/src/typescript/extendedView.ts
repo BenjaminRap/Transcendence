@@ -186,7 +186,6 @@ async function fetchFriendData() : Promise<void>
 	try {
 		const token = TerminalUtils.getCookie('accessToken') || '';
 		if (token === '') {
-			console.error("No access token found.");
 			return;
 		}
 		const response = await fetch('/api/friend/search/myfriends', {
@@ -201,13 +200,9 @@ async function fetchFriendData() : Promise<void>
 		{
 			friends = data.friendList as Friend[];
 			FriendDisplay = [...friends];
-			console.log("Friend data fetched successfully:", FriendDisplay);
 		}
-		else
-			console.error("Failed to fetch friend data:", data.message);
 	}
 	catch (error) {
-		console.error("Error fetching friend data:", error);
 	}
 }
 
@@ -217,7 +212,6 @@ async function fetchMatchData(id: number) : Promise<void>
 	try {
 		const token = TerminalUtils.getCookie('accessToken') || '';
 		if (token === '') {
-			console.error("No access token found.");
 			return;
 		}
 		const response = await fetch(`/api/users/id/${id}/allmatches`, {
@@ -232,13 +226,9 @@ async function fetchMatchData(id: number) : Promise<void>
 		{
 			matches = data.matches as MatchSummary[];
 			MatchDisplay = [...matches];
-			console.log("Match data fetched successfully:", MatchDisplay);
 		}
-		else
-			console.error("Failed to fetch match data:", data.message);
 	}
 	catch (error) {
-		console.error("Error fetching match data:", error);
 	}
 }
 
@@ -283,7 +273,6 @@ export namespace ExtendedView {
 
 		view.addEventListener('keydown', (event: KeyboardEvent) => {
 			if (event.key === 'Escape' || (event.key === 'c' && event.ctrlKey)) {
-				console.log("Kill signal recu par :", event.key);
 				event.preventDefault();
 				closeExtendedView();
 				WriteOnTerminal.displayOnTerminal("^C", true);
@@ -327,7 +316,6 @@ export namespace ExtendedView {
 			terminal.appendChild(view);
 		}
 		else {
-			console.error("Terminal not found");
 			return;
 		}
 
@@ -366,7 +354,6 @@ export namespace ExtendedView {
 
 	export function addMatch(match: MatchSummary) {
 		matches.unshift(match);
-		console.log("Matches after adding new match:", matches);
 		refreshMatchList();
 	}
 
@@ -378,7 +365,6 @@ export namespace ExtendedView {
 
 
 	export function updateFriendStatus(id:number, status: string) {
-		console.log("Updating friend status for ID:", id, "to status:", status);
 		for (let i = 0; i < friends.length; i++) {
 			const f = friends[i];
 			if (f.user.id === id) {
@@ -419,11 +405,9 @@ export namespace ExtendedView {
 }
 
 // function acceptFriendRequest(username: string) {
-// 	console.log(`Accepted friend request from: ${username}`);
 // }
 
 // function removeFriend(username: string) {
-// 	console.log(`Removing friend: ${username}`);
 // }
 
 
