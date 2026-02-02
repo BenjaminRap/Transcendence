@@ -240,10 +240,7 @@ export class PongGame extends HTMLElement {
 		const	sceneData = getFrontendSceneData(this._scene);
 
 		if (sceneData.gameType === "Multiplayer")
-		{
-			this.changeScene({gameType: "Menu", sceneName: "Menu.gltf"}).catch(() => {});
-			this.onError(new PongError("The server disconnected !", "show"));
-		}
+			this.goToMenuScene(new PongError("Lost connection to the server !", "show"));
 	}
 
 	private setInputs(sceneData : FrontendSceneData, ...inputIndexes : int[])
