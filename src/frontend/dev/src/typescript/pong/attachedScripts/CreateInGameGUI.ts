@@ -178,10 +178,10 @@ export class CreateInGameGUI extends CustomScriptComponent {
 		if (this._sceneData.gameType === "Multiplayer")
 		{
 			this.switchToGUI(this._inMatchmakingGUI);
-			this._sceneData.pongHTMLElement.searchOnlineGame().then(() => {
-			}).catch(() => {
-				this.switchToGUI(this._endGUI);
-			});
+			this._sceneData.pongHTMLElement.searchOnlineGame()
+				.catch(() => {
+					this.switchToGUI(this._endGUI);
+				});
 		}
 		else
 		{

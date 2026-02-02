@@ -17,7 +17,7 @@ import { frontendSocketHandler } from "../index";
 import { ErrorGUI } from "./gui/ErrorGUI";
 import { initMenu } from "./gui/IGUI";
 import { CloseGUI } from "./gui/CloseGUI";
-import { PongError } from "@shared/pongError/PongError";
+import { PongError, setMinimalSeverity } from "@shared/pongError/PongError";
 import type { GameInfos, GameInit, Profile, TournamentEvent } from "@shared/ZodMessageType";
 
 import { PongUtils } from '../terminal'
@@ -79,8 +79,7 @@ export class PongGame extends HTMLElement {
 			this.addEventListener("resize", () => this._engine?.resize)
 			this._engine.runRenderLoop(this.renderScene.bind(this));
 		} catch (error) {
-			WriteOnTerminal.displayOnTerminal(`Could not initialize the scene : ${error}`, false)
-			this.quit();
+			this.onError(setMinimalSeverity(error, "quitPong"));
 		}
     }
 
@@ -136,52 +135,75 @@ export class PongGame extends HTMLElement {
 		return sceneData.sceneName === sceneName;
 	}
 
-	public async goToMenuScene()
+	public goToMenuScene()
 	{
-		try {
-			if (this.isInScene("Menu.gltf"))
-				return ;
-			history.pushState(null, "", "/pong");
-			this._serverProxy.leave();
-			await this.changeScene({sceneName: "Menu.gltf", gameType: "Menu"});
-		} catch (error) {
-			this.onError(error);
+		if (this.isInScene("Menu.gltf"))
+		{
+			this.onError(new PongError("Trying to go in the menu while already being in the menu", "quitPong"));
+			return ;
 		}
+		history.pushState(null, "", "/pong");
+		this._serverProxy.leave();
+		this.changeScene({sceneName: "Menu.gltf", gameType: "Menu"})
+			.catch((error : any) => {
+				this.onError(setMinimalSeverity(error, "quitPong"));
+			});
 	}
 
-	public async startBotGame(sceneName : FrontendGameSceneName, difficulty : keyof BotDifficulty)
+	public startBotGame(sceneName : FrontendGameSceneName, difficulty : keyof BotDifficulty)
 	{
-		const	sceneData = await this.changeScene({sceneName, gameType: "Bot", difficulty});
-
-		this.setInputs(sceneData, 0);
-		sceneData.events.getObservable("game-start").notifyObservers();
+		this.changeScene({sceneName, gameType: "Bot", difficulty})
+			.then(sceneData => {
+				this.setInputs(sceneData, 0);
+				sceneData.events.getObservable("game-start").notifyObservers();
+			})
+			.catch(error => {
+				this.onError(setMinimalSeverity(error, "quitScene"));
+			});
 	}
 
-	public async startLocalGame(sceneName : FrontendGameSceneName, tournament? : LocalTournament)
+	public startLocalGame(sceneName : FrontendGameSceneName, tournament? : LocalTournament)
 	{
-		const	sceneData = await this.changeScene({sceneName, gameType: "Local", tournament});
-
-		this.setInputs(sceneData, 0, 1);
-		if (tournament)
-			tournament.setEventsAndStart(sceneData.events);
-		else
-			sceneData.events.getObservable("game-start").notifyObservers();
+		this.changeScene({sceneName, gameType: "Local", tournament})
+			.then(sceneData => {
+				this.setInputs(sceneData, 0, 1);
+				if (tournament)
+					tournament.setEventsAndStart(sceneData.events);
+				else
+					sceneData.events.getObservable("game-start").notifyObservers();
+			})
+			.catch(error => {
+				this.onError(setMinimalSeverity(error, "quitScene"));
+			});
 	}
 
 	public async searchOnlineGame(sceneName? : FrontendGameSceneName) : Promise<void>
 	{
 		const	[gameInit] = await this._serverProxy.joinGame();
 
-		if (sceneName)
-			await this.changeScene({sceneName, gameType: "Multiplayer"});
-		await this.startOnlineGame(gameInit);
+		if (!sceneName)
+			await this.startOnlineGame(gameInit);
+		else
+		{
+			this.changeScene({sceneName, gameType: "Multiplayer"})
+				.then(() => {
+					return this.startOnlineGame(gameInit);
+				})
+				.catch(error => {
+					this.onError(setMinimalSeverity(error, "quitScene"));
+				})
+		}
 	}
 
-	public async startOnlineTournament(sceneName : FrontendGameSceneName)
+	public startOnlineTournament(sceneName : FrontendGameSceneName)
 	{
-		await this.changeScene({sceneName, gameType: "Multiplayer"});
-
-		this._serverProxy.setReady();
+		this.changeScene({sceneName, gameType: "Multiplayer"})
+			.then(() => {
+				this._serverProxy.setReady();
+			})
+			.catch(error => {
+				this.onError(setMinimalSeverity(error, "quitScene"));
+			})
 	}
 
 	public async startOnlineGame(gameInit : GameInit) : Promise<void>
@@ -239,7 +261,7 @@ export class PongGame extends HTMLElement {
 	public onError(error : any)
 	{
 		let		severity = (error instanceof PongError) ? error.getSeverity() : "quitPong";
-		const	message = (error instanceof Error) ? error.message : error;
+		const	message = (error instanceof Error) ? error.message : "An error occured";
 
 		if (severity === "quitScene" && this.isInScene("Menu.gltf"))
 			severity = "quitPong";
@@ -255,7 +277,7 @@ export class PongGame extends HTMLElement {
 				this.goToMenuScene();
 				break;
 			case "quitPong":
-				WriteOnTerminal.displayOnTerminal(message, false)
+				WriteOnTerminal.displayOnTerminal(error, false)
 				this.quit();
 				break;
 		}

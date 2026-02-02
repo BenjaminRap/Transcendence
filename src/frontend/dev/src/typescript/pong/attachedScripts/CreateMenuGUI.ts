@@ -308,20 +308,12 @@ export class CreateMenuGUI extends CustomScriptComponent {
 
 	private	async startLocalGame(sceneName : FrontendGameSceneName, tournament? : LocalTournament)
 	{
-		try {
-			await this._sceneData.pongHTMLElement.startLocalGame(sceneName, tournament);
-		} catch (error) {
-			this._sceneData.pongHTMLElement.onError(error);
-		}
+		this._sceneData.pongHTMLElement.startLocalGame(sceneName, tournament);
 	}
 
-	private	async startBotGame(sceneName : FrontendGameSceneName, difficulty : keyof BotDifficulty)
+	private	startBotGame(sceneName : FrontendGameSceneName, difficulty : keyof BotDifficulty)
 	{
-		try {
-			await this._sceneData.pongHTMLElement.startBotGame(sceneName, difficulty);
-		} catch (error) {
-			this._sceneData.pongHTMLElement.onError(error);
-		}
+		this._sceneData.pongHTMLElement.startBotGame(sceneName, difficulty);
 	}
 
 	private	async createTournament()
