@@ -331,7 +331,7 @@ export class	ServerProxy
 		if (!allowedStates.includes(this._state))
 		{
 			if (this._state === "not-connected")
-				throw new PongError("Could not connect to the server, the client is not connected", "quitPong");
+				throw new PongError("Could not connect to the server, the client is not connected", "show");
 			throw new PongError(`A FrontendSocketHandler method called with an invalid state, current state : ${this._state}, allowed : ${allowedStates}`, "show");
 		}
 	}
