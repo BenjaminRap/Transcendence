@@ -135,11 +135,12 @@ export class PongGame extends HTMLElement {
 		return sceneData.sceneName === sceneName;
 	}
 
-	public goToMenuScene()
+	public goToMenuScene(error? : any)
 	{
 		if (this.isInScene("Menu.gltf"))
 		{
-			this.onError(new PongError("Trying to go in the menu while already being in the menu", "quitPong"));
+			if (error)
+				this.onError(setMinimalSeverity(error, "quitPong"));
 			return ;
 		}
 		history.pushState(null, "", "/pong");
@@ -274,7 +275,7 @@ export class PongGame extends HTMLElement {
 				break;
 			case "quitScene":
 				this.showError(message);
-				this.goToMenuScene();
+				this.goToMenuScene(error);
 				break;
 			case "quitPong":
 				WriteOnTerminal.displayOnTerminal(error, false)
