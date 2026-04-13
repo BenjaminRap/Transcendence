@@ -25,7 +25,7 @@ cp-scenes:
 	cp		-r ./src/backend/dev/scenes ./dockerFiles/fastify/app_src/dev/.
 
 cp-env:
-	cp		.env.fastify	./dockerFiles/fastify/app_src/.env
+	cp		.env.example	./dockerFiles/fastify/app_src/.env
 
 gen-prisma-client:
 	npx prisma generate --schema=./dockerFiles/fastify/prisma/schema.prisma
