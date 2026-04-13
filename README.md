@@ -1,117 +1,213 @@
-# Transcendence
-42 project ft_transcendence
+# 🕹️ Transcendence
 
-# 🗂️ Structure et Hiérarchie du Projet
-
-Ce projet est organisé en **plusieurs conteneurs Docker** pour séparer le développement frontend, le backend, et le déploiement en production.
+Projet web complet combinant **jeu**, **backend temps réel** et **interface terminal stylisée**.
 
 ---
 
-## ⚙️ Conteneurs Docker
+## 🚀 Présentation
 
-Le projet utilise **3 conteneurs** principaux :
+**Transcendence** est une application web basée sur une architecture **frontend / backend séparée**, avec :
 
-| Conteneur | Rôle | Mode | Adresse |
-|-----------|------|------|---------|
-| `fastify` | Serveur **backend** | Dev + Prod | `https://localhost:8080/api/` |
-| `vite`    | Serveur **frontend** + reverse proxy | Dev uniquement | `https://localhost:8080/` |
-| `nginx`   | Serveur **frontend** + reverse proxy | Prod uniquement | `https://localhost:8080/` |
+* 🔐 gestion HTTPS côté frontend (certificat auto-signé)
+* 🔁 frontend servant de **reverse proxy**
+* ⚡ backend gérant :
 
-> 🔁 Nginx/Vite redirige les requêtes `/api/` vers Fastify (reverse proxy).  
-> 🛡️ Cela centralise la gestion du HTTPS et évite les erreurs CORS.
+  * les **WebSockets**
+  * la **base de données**
+  * la logique applicative
 
----
-
-## 🔐 HTTPS & Certificats
-
-- Le projet utilise un **certificat auto-signé** généré via :  
-  ```bash
-  make certificates
-  ```
-- Appelé automatiquement dans `make all`
-- Les fichiers `.crt` et `.key` sont fournis aux conteneurs `vite` et `nginx` via des **Docker secrets**
+L’interface adopte un **style terminal interactif**, où toutes les actions passent par des commandes.
 
 ---
 
-## 🛠️ Makefile – Commandes Clés
+## 🏗️ Architecture
 
-| Commande | Description |
-|----------|-------------|
-| `make all` | Compile + build en **production** |
-| `make all PROFILE=dev` | Compile + build en **développement** |
-| `make clean` | Supprime conteneurs, images, volumes Docker... |
-| `make fclean` | `clean` + suppression des fichiers temporaires (.crt, .key, .js…) |
-| `make compile` | Compile TypeScript et TailwindCSS |
-| `make compile-watch` | Idem mais avec watch automatique |
-| `make install` | Installe les dépendances du projet |
+### Frontend
 
----
+* Sert de **reverse proxy**
+* Gère le **HTTPS (certificat auto-signé)**
+* Interface utilisateur (terminal + UI)
 
-## 🧪 Compilation TypeScript
+### Backend
 
-Configuration **modulaire** :
-
-- `tsconfig.json` à la racine = configuration de base
-- `tsconfig.frontend.json` et `tsconfig.backend.json` = spécifiques
-
-| Zone | Utilisation de `tsc` | Rôle |
-|------|----------------------|------|
-| Backend (`/src/backend`) | ✅ Génère les fichiers `.js` |
-| Frontend (`/src/frontend/dev/`) | ✅ Vérifie les types, mais ne compile pas (`vite` s’en occupe) |
-
-> ⚠️ Vite **ne vérifie pas les types** → `tsc` est nécessaire pour les erreurs de compilation.
+* Gestion des utilisateurs
+* Authentification via **JWT**
+* Communication temps réel via **WebSockets**
+* Gestion des parties et du jeu en ligne
+* Base de données
 
 ---
 
-## 🎨 TailwindCSS
+## 🧑‍💻 Commandes principales
 
-- **Compilé manuellement** via CLI (`tailwindcss`), pas via Vite
-- Sortie : `/src/frontend/dev/public/css/`
-- Sources analysées : `.ts`, `.html` du backend + frontend
-- Classes dynamiques : déclarées dans `safelist` du `tailwind.config.js`
+### 🔓 Sans connexion
 
-> Cela permet d’utiliser Tailwind **dans le backend** aussi, en respectant certaines conditions.
+* `register` → créer un compte
+* `login` → se connecter
+* `pong` → lancer le jeu
 
 ---
 
-## 🏗️ Structure des Dossiers
+### 🔐 Après connexion
+
+* `logout` → se déconnecter
+* `profile` → voir son profil
+* `profile <username>` → voir le profil d’un autre utilisateur
+* `kill profile` → fermer la vue profil
+
+---
+
+## 👤 Gestion des utilisateurs
+
+### Création de compte
+
+Le mot de passe doit contenir :
+
+* au moins **8 caractères**
+* une **majuscule**
+* une **minuscule**
+* un **caractère spécial**
+
+**Exemple :**
 
 ```
-/
-├── Makefile
-├── tailwind.config.js
-├── tsconfig.json
-├── dockerFiles/
-│   └── nginx/
-│       └── website/         # Fichiers build pour Nginx
-├── src/
-│   ├── backend/             # Code backend (Fastify)
-│   └── frontend/
-│       └── dev/
-│           ├── public/      # HTML, CSS, assets statiques
-│           └── src/         # TypeScript du frontend
+azER123!
 ```
 
 ---
 
-## 🔁 Différences Dev / Prod
+### Profil utilisateur
 
-| Mode | Serveur | Détail |
-|------|---------|--------|
-| Développement | `vite` | Serveur local avec hot reload |
-| Production | `nginx` | Sert les fichiers buildés, fait office de proxy pour `/api/` |
+Le profil permet de :
 
-- En dev, `vite` a un **volume monté** (bind mount)
-- En prod, `vite build` → les fichiers sont **copiés** dans `nginx/website`
+* ✏️ changer son nom
+* 🔒 modifier son mot de passe
+* 🖼️ changer son avatar
+* ❌ supprimer son compte
+* 📊 consulter ses dernières parties
+* 👥 voir sa liste d’amis
 
 ---
 
-## ✅ Résumé
+### Fonctionnalités sociales
 
-- 🧠 Architecture claire : 3 conteneurs pour 3 rôles
-- 🔒 HTTPS géré uniquement par Nginx/Vite (via certificat auto-signé)
-- 📦 Fastify exposé  par nginx/Vite en reverse proxy via la route `/api/`
-- 🎨 Tailwind compilé manuellement pour inclure toutes les classes (même backend)
-- 🧪 TypeScript géré différemment en dev/prod
-- 🧰 Un Makefile centralise toutes les opérations
-- 🔁 Vite en mode dev, Nginx en prod
+* ➕ ajouter un utilisateur en ami
+* 👀 voir l’activité des amis **en temps réel**
+* 🔄 synchronisation via WebSockets
+
+---
+
+## 🎮 Jeu : Pong
+
+Accessible via la commande :
+
+```
+pong
+```
+
+---
+
+### Modes de jeu
+
+* 🧍 1v1 local
+* 🤖 contre un bot (3 niveaux de difficulté)
+* 🌐 multijoueur en ligne
+* 🏆 tournois (local ou en ligne)
+
+---
+
+### Tournois
+
+* Phase de **pool** pour atteindre une puissance de 2
+* Puis **arbre éliminatoire**
+
+---
+
+### Multijoueur en ligne
+
+* Les parties sont **hostées côté serveur**
+* Synchronisation via WebSockets
+
+---
+
+## 🌍 Environnements / Thèmes
+
+Le projet propose plusieurs styles visuels :
+
+---
+
+### 🖥️ Terminal
+
+* Interface principale
+* Effets visuels :
+
+  * particules de texte qui tombent
+  * événements dynamiques (buts, début de partie…)
+
+---
+
+### 🎾 Pong Classic
+
+* Interface simple et lisible
+* Style minimaliste
+
+---
+
+### 🌿 Nature (procédural)
+
+* Terrain généré procéduralement
+* Shaders :
+
+  * herbe
+  * feuilles d’arbres
+* 🌱 **Instancing GPU massif** pour l’herbe
+
+---
+
+## ⚙️ Technologies utilisées
+
+* Frontend : interface terminal + UI web
+* Backend :
+
+  * WebSockets
+  * JWT
+  * Base de données
+* Graphismes :
+
+  * **BabylonJS** (3D)
+  * shaders custom
+  * génération procédurale
+
+---
+
+## 💡 Points techniques intéressants
+
+* Reverse proxy custom côté frontend
+* Authentification sécurisée via JWT
+* Temps réel avec WebSockets
+* Interface terminal entièrement interactive
+* Rendu 3D temps réel dans un projet web
+* Génération procédurale (terrain, végétation)
+* Optimisation GPU (instancing)
+
+---
+
+## ⚠️ Remarques
+
+* HTTPS fonctionne via **certificat auto-signé**
+* Certaines fonctionnalités externes (authentification 42) ne sont plus disponibles
+
+---
+
+## 📌 Conclusion
+
+**Transcendence** est un projet complet combinant :
+
+* développement web
+* temps réel
+* rendu 3D
+* gameplay
+
+avec une forte identité visuelle et technique autour du **terminal interactif**.
+
+---
