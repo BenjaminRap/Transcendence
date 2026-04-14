@@ -4,6 +4,61 @@ Projet web complet combinant **jeu**, **backend temps réel** et **interface ter
 
 ---
 
+## ⚙️ Installation
+
+<details>
+<summary>Linux only</summary>
+
+### 📋 1. Dépendances
+
+Docker, Docker Compose, Node.js (npm), GNU Make
+
+* Docker & Docker Compose : [https://docs.docker.com/engine/install/](https://docs.docker.com/engine/install/)
+* Node.js (npm) : [https://nodejs.org/en/download/package-manager/](https://nodejs.org/en/download/package-manager/)
+
+```bash id="mk7v2a"
+sudo apt-get update
+sudo apt-get install -y make
+```
+
+---
+
+### 🚀 2. Cloner le projet
+
+```bash id="z4x1pc"
+git clone git@github.com:BenjaminRap/Transcendence.git transcendence
+```
+
+---
+
+### 📁 3. Accéder au dossier
+
+```bash id="u8n3df"
+cd transcendence
+```
+
+---
+
+### ▶️ 4. Lancer l’installation
+
+```bash id="y2k9ls"
+make all
+```
+
+---
+
+### 🌐 5. Accéder à l’application
+
+Ouvrez votre navigateur et allez sur :
+[https://localhost:8080](https://localhost:8080)
+
+⚠️ Un avertissement de sécurité apparaîtra (certificat auto-signé).
+Il suffit de cliquer sur **“Avancé”** puis **“Continuer vers localhost”** (ou équivalent selon le navigateur).
+
+</details>
+
+---
+
 ## 🚀 Présentation
 
 **Transcendence** est une application web basée sur une architecture **frontend / backend séparée**, avec :
