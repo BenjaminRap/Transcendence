@@ -1,6 +1,9 @@
 services:
   fastify-prod:
-    build: ./fastify/
+    build:
+      context: ./fastify/
+      additional_contexts:
+        babylonjs-toolkit: ../mackeyk24
     volumes:
       - databases:/app/databases/
     environment:
@@ -11,7 +14,10 @@ services:
     env_file:
       - ./fastify/app_src/.env
   fastify-dev:
-    build: ./fastify/
+    build:
+      context: ./fastify/
+      additional_contexts:
+        babylonjs-toolkit: ../mackeyk24
     volumes:
       - backend:/app/dev/
       - databases:/app/databases/
@@ -23,7 +29,10 @@ services:
     env_file:
       - ./fastify/app_src/.env
   nginx:
-    build: ./nginx/
+    build:
+      context: ./nginx/
+      additional_contexts:
+        babylonjs-toolkit: ../mackeyk24
     ports:
       - "8080:443"
     profiles: [
@@ -35,7 +44,10 @@ services:
     depends_on:
       - fastify-prod
   vite:
-    build: ./vite/
+    build:
+      context: ./vite/
+      additional_contexts:
+        babylonjs-toolkit: ../mackeyk24
     ports:
       - "8080:443"
     volumes:

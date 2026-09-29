@@ -1,0 +1,212 @@
+{
+    "name": "@babylonjs-toolkit/next",
+    "version": "8.15.10",
+    "description": "Babylon Toolkit Runtime Library (ES6)",
+    "main": "lib/index.js",
+    "module": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "type": "module",
+    "sideEffects": false,
+    "publishConfig": {
+        "access": "public"
+    },
+    "exports": {
+        ".": {
+            "import": "./lib/index.js",
+            "types": "./lib/index.d.ts"
+        },
+        "./scenemanager": {
+            "import": "./lib/scenemanager.js",
+            "types": "./lib/scenemanager.d.ts"
+        },
+        "./shurikenparticles": {
+            "import": "./lib/shurikenparticles.js",
+            "types": "./lib/shurikenparticles.d.ts"
+        },
+        "./terraingenerator": {
+            "import": "./lib/terraingenerator.js",
+            "types": "./lib/terraingenerator.d.ts"
+        },
+        "./charactercontroller": {
+            "import": "./lib/charactercontroller.js",
+            "types": "./lib/charactercontroller.d.ts"
+        },
+        "./webvideoplayer": {
+            "import": "./lib/webvideoplayer.js",
+            "types": "./lib/webvideoplayer.d.ts"
+        },
+        "./handedness": {
+            "import": "./lib/handedness.js",
+            "types": "./lib/handedness.d.ts"
+        },
+        "./movementtype": {
+            "import": "./lib/movementtype.js",
+            "types": "./lib/movementtype.d.ts"
+        },
+        "./customloadingscreen": {
+            "import": "./lib/customloadingscreen.js",
+            "types": "./lib/customloadingscreen.d.ts"
+        },
+        "./blendtreeposition": {
+            "import": "./lib/blendtreeposition.js",
+            "types": "./lib/blendtreeposition.d.ts"
+        },
+        "./collisioncontact": {
+            "import": "./lib/collisioncontact.js",
+            "types": "./lib/collisioncontact.d.ts"
+        },
+        "./collisionfilters": {
+            "import": "./lib/collisionfilters.js",
+            "types": "./lib/collisionfilters.d.ts"
+        },
+        "./collisionflags": {
+            "import": "./lib/collisionflags.js",
+            "types": "./lib/collisionflags.d.ts"
+        },
+        "./collisionstate": {
+            "import": "./lib/collisionstate.js",
+            "types": "./lib/collisionstate.d.ts"
+        },
+        "./customshadermaterial": {
+            "import": "./lib/customshadermaterial.js",
+            "types": "./lib/customshadermaterial.d.ts"
+        },
+        "./customshadermaterialplugin": {
+            "import": "./lib/customshadermaterialplugin.js",
+            "types": "./lib/customshadermaterialplugin.d.ts"
+        },
+        "./entitycontroller": {
+            "import": "./lib/entitycontroller.js",
+            "types": "./lib/entitycontroller.d.ts"
+        },
+        "./ianimationcurve": {
+            "import": "./lib/ianimationcurve.js",
+            "types": "./lib/ianimationcurve.d.ts"
+        },
+        "./intersectionprecision": {
+            "import": "./lib/intersectionprecision.js",
+            "types": "./lib/intersectionprecision.d.ts"
+        },
+        "./linesmeshrenderer": {
+            "import": "./lib/linesmeshrenderer.js",
+            "types": "./lib/linesmeshrenderer.d.ts"
+        },
+        "./localmessagebus": {
+            "import": "./lib/localmessagebus.js",
+            "types": "./lib/localmessagebus.d.ts"
+        },
+        "./mousebuttonmode": {
+            "import": "./lib/mousebuttonmode.js",
+            "types": "./lib/mousebuttonmode.d.ts"
+        },
+        "./playercontrol": {
+            "import": "./lib/playercontrol.js",
+            "types": "./lib/playercontrol.d.ts"
+        },
+        "./prefabobjectpool": {
+            "import": "./lib/prefabobjectpool.js",
+            "types": "./lib/prefabobjectpool.d.ts"
+        },
+        "./raycasthitresult": {
+            "import": "./lib/raycasthitresult.js",
+            "types": "./lib/raycasthitresult.d.ts"
+        },
+        "./recastcharactercontroller": {
+            "import": "./lib/recastcharactercontroller.js",
+            "types": "./lib/recastcharactercontroller.d.ts"
+        },
+        "./roomerrormessage": {
+            "import": "./lib/roomerrormessage.js",
+            "types": "./lib/roomerrormessage.d.ts"
+        },
+        "./simplecharactercontroller": {
+            "import": "./lib/simplecharactercontroller.js",
+            "types": "./lib/simplecharactercontroller.d.ts"
+        },
+        "./touchjoystickhandler": {
+            "import": "./lib/touchjoystickhandler.js",
+            "types": "./lib/touchjoystickhandler.d.ts"
+        },
+        "./touchmousebutton": {
+            "import": "./lib/touchmousebutton.js",
+            "types": "./lib/touchmousebutton.d.ts"
+        },
+        "./triggervolume": {
+            "import": "./lib/triggervolume.js",
+            "types": "./lib/triggervolume.d.ts"
+        },
+        "./universalcharactercontroller": {
+            "import": "./lib/universalcharactercontroller.js",
+            "types": "./lib/universalcharactercontroller.d.ts"
+        },
+        "./universalterrainmaterial": {
+            "import": "./lib/universalterrainmaterial.js",
+            "types": "./lib/universalterrainmaterial.d.ts"
+        },
+        "./userinputpointer": {
+            "import": "./lib/userinputpointer.js",
+            "types": "./lib/userinputpointer.d.ts"
+        },
+        "./xbox360trigger": {
+            "import": "./lib/xbox360trigger.js",
+            "types": "./lib/xbox360trigger.d.ts"
+        },
+        "./noisefunction2d": {
+            "import": "./lib/noisefunction2d.js",
+            "types": "./lib/noisefunction2d.d.ts"
+        },
+        "./noisefunction3d": {
+            "import": "./lib/noisefunction3d.js",
+            "types": "./lib/noisefunction3d.d.ts"
+        },
+        "./noisefunction4d": {
+            "import": "./lib/noisefunction4d.js",
+            "types": "./lib/noisefunction4d.d.ts"
+        },
+        "./simplexnoise": {
+            "import": "./lib/simplexnoise.js",
+            "types": "./lib/simplexnoise.d.ts"
+        },
+        "./randomfn": {
+            "import": "./lib/randomfn.js",
+            "types": "./lib/randomfn.d.ts"
+        },
+        "./package.json": "./package.json"
+    },
+    "scripts": {
+        "clean": "rimraf lib",
+        "build": "npm run build-all",
+        "build-ts": "tsc",
+        "build-all": "npm run clean && npm run build-ts"
+    },
+    "keywords": [
+        "babylonjs",
+        "babylontoolkit",
+        "development",
+        "games",
+        "unity",
+        "webgl",
+        "gltf"
+    ],
+    "files": [
+        "README.md",
+        "package.json",
+        "lib/**/*"
+    ],
+    "devDependencies": {
+        "rimraf": "^6.0.1",
+        "typescript": "^5.5.4",
+        "@babylonjs/gui": "^8.15.1",
+        "@babylonjs/core": "^8.15.1",
+        "@babylonjs/havok": "^1.3.10",
+        "@babylonjs/loaders": "^8.15.1",
+        "@babylonjs/materials": "^8.15.1"
+    },
+    "peerDependencies": {
+        "@babylonjs/gui": "^8.15.1",
+        "@babylonjs/core": "^8.15.1",
+        "@babylonjs/havok": "^1.3.10",
+        "@babylonjs/loaders": "^8.15.1",
+        "@babylonjs/materials": "^8.15.1"
+    }
+}

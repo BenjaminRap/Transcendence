@@ -5,6 +5,9 @@ RUN [ "apt-get", "update", "-y" ]
 RUN [ "apt-get", "clean" ]
 RUN [ "rm", "-rf", "/var/lib/apt/lists*" ]
 
+# copy babylonjs toolkit
+COPY --from=babylonjs-toolkit . ./mackeyk24
+
 COPY ./package.json ./package.json
 RUN [ "npm", "install" ]
 RUN [ "npm", "cache", "clean", "--force" ]
