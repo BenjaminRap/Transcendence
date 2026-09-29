@@ -6,7 +6,6 @@ import multipartPlugin from './plugins/multipart.js';
 import staticPlugin from './plugins/static.js';
 import { registerRoutes } from './plugins/registerRoutes.js';
 import "reflect-metadata";
-import { fpSqlitePlugin } from 'fastify-sqlite-typed';
 import { Server, type DefaultEventsMap } from 'socket.io';
 import fs from 'fs';
 import path from 'path';
@@ -50,10 +49,6 @@ dotenv.config();
 await fastify.register(cors, {
     origin: true,
     credentials: true,
-});
-
-await fastify.register(fpSqlitePlugin, {
-    dbFilename: "./databases/main.db",
 });
 
 await fastify.register(prismaPlugin);

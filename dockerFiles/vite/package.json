@@ -3,17 +3,17 @@
 	"version": "1.0.0",
 	"type": "module",
 	"dependencies": {
-		"vite": "~7.0.6",
+		"@babylonjs-toolkit/next": "file:mackeyk24/@babylonjs-toolkit/next",
 		"@babylonjs/core": "~8.33.4",
-		"@babylonjs/loaders": "~8.33.4",
-        "@babylonjs/materials": "~8.33.4",
 		"@babylonjs/gui": "~8.33.4",
 		"@babylonjs/havok": "~1.3.10",
-		"@babylonjs-toolkit/next": "file:mackeyk24/@babylonjs-toolkit/next",
-		"socket.io-client": "~4.8.1",
-		"zod": "~4.1.12",
+		"@babylonjs/loaders": "~8.33.4",
+		"@babylonjs/materials": "~8.33.4",
 		"@z-code/vite-plugin-swc": "~0.5.2",
-		"reflect-metadata": "~0.2.2"
+		"reflect-metadata": "~0.2.2",
+		"socket.io-client": "~4.8.1",
+		"vite": "^7.3.6",
+		"zod": "~4.1.12"
 	},
 	"scripts": {
 		"start": "npx vite dev"
