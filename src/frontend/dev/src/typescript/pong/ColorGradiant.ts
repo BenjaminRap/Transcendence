@@ -7,6 +7,7 @@ export const	zodColor = zod.object({
 	b : zodNumber,
 	a : zodNumber
 });
+export type Color = zod.infer<typeof zodColor>;
 
 export const	zodColorGradiant = zod.array(zod.object({
 	step : zod.number().min(0).max(1),

@@ -7,6 +7,7 @@ import { zodInt, zodString } from "@shared/ImportedHelpers";
 import { CustomScriptComponent } from "@shared/CustomScriptComponent";
 import zod from "zod";
 import { getFrontendSceneData } from "../PongGame";
+import { zodColor, type Color } from "../ColorGradiant";
 
 const	zodVerticalAlignment = zod.literal(["top", "center", "bottom"]);
 type	VerticalAlignment = zod.infer<typeof zodVerticalAlignment>;
@@ -15,6 +16,8 @@ const	zodHorizontalAlignment = zod.literal(["left", "center", "right"]);
 type	HorizontalAlignment = zod.infer<typeof zodHorizontalAlignment>;
 
 export class Text extends CustomScriptComponent {
+	@Imported(zodColor) private _color! : Color;
+	@Imported(zodString) private _fontFamily! : string;
 	@Imported(zodString) private _text! : string;
 	@Imported(zodInt) private _fontSizeInPixels! : number;
 	@Imported(zodInt) private _maxCharacterInRow! : number;
@@ -36,6 +39,8 @@ export class Text extends CustomScriptComponent {
 
 		this._texture = AdvancedDynamicTexture.CreateForMesh(this.getAbstractMesh(), width, height, false, false, false);
 		this._textBlock = new TextBlock(undefined, this._text);
+		this._textBlock.fontFamily = this._fontFamily;
+		this._textBlock.color = `rgba(${this._color.r}${this._color.g}${this._color.b}${this._color.a})`
 		this._textBlock.fontSizeInPixels = this._fontSizeInPixels;
 		this._textBlock.resizeToFit = true;
 		this._textBlock.textHorizontalAlignment = this.getHorizontalAlignment();
