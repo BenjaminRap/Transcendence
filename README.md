@@ -4,6 +4,10 @@ Projet web complet combinant **jeu**, **backend temps réel** et **interface ter
 
 ---
 
+⚠️ Maintenance en cours
+
+Je travaille actuellement à corriger des vulnérabilités introduites par certaines dépendances depuis la fin du projet. En conséquence, certaines fonctionnalités peuvent être temporairement indisponibles ou ne plus fonctionner correctement.
+
 ## ⚙️ Installation
 
 <details>
