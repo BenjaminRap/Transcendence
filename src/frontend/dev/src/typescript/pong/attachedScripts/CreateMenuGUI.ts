@@ -480,10 +480,8 @@ export class CreateMenuGUI extends CustomScriptComponent {
 		const	guiName = location.pathname.slice(6);
 		const	gui = this._statesGUI.get(guiName);
 
-		console.log("before");
 		if (!gui)
 			return ;
-		console.log("after");
 		if (this._currentMenu === this._inMatchmakingGUI)
 		{
 			this._sceneData.serverProxy.leave();
