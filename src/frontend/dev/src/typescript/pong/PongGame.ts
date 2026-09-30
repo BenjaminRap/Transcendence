@@ -277,6 +277,7 @@ export class PongGame extends HTMLElement {
 				this.goToMenuScene(error);
 				break;
 			case "quitPong":
+				console.log(error);
 				WriteOnTerminal.displayOnTerminal(message, false)
 				this.quit();
 				break;
