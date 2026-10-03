@@ -29,7 +29,6 @@ export class ShadowsManager extends CustomScriptComponent {
 
 	protected	start()
 	{
-
 		this._shadowReceivers.forEach((mesh : AbstractMesh) => {
 			this._shadowGenerator.addShadowCaster(mesh);
 		})

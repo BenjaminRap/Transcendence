@@ -82,7 +82,7 @@ export class CreateParticlesTerminal extends CustomScriptComponent {
 		terminalParticles.spriteCellWidth = this._spriteCellDimensions.y;
 		terminalParticles.minLifeTime = this._particleRange.y / this._speed;
 		terminalParticles.maxLifeTime = terminalParticles.maxLifeTime;
-		terminalParticles.direction1 = Vector3.DownReadOnly.scale(this._speed);
+		terminalParticles.direction1 = this.transform.up.scale(-this._speed);
 		terminalParticles.direction2 = terminalParticles.direction1.clone();
 		terminalParticles.startPositionFunction = (_worldMatrix, positionToUpdate, particle, _isLocal) => {
 			const	x = (particle.id % columnCount) * columnSize - this._particleRange.x / 2;
