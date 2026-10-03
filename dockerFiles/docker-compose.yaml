@@ -1,4 +1,22 @@
 services:
+  certificates:
+    image: alpine/openssl
+    volumes:
+      - ./secrets/ssl:/ssl
+    command:
+      - req
+      - -x509
+      - -nodes
+      - -days
+      - "365"
+      - -newkey
+      - rsa:2048
+      - -keyout
+      - /ssl/selfsigned.key
+      - -out
+      - /ssl/selfsigned.crt
+      - -subj
+      - /C=FR/ST=Auvergne-Rhône-Alpes/L=Brignais/O=42/CN=brappo
   fastify-prod:
     build:
       context: ./fastify/

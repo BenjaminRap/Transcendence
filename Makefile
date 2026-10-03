@@ -7,6 +7,8 @@ DOCKER_DIR	=	./dockerFiles/
 DOCKER_FILE	=	docker-compose.yaml
 DOCKER_EXEC	=	docker compose -f $(DOCKER_DIR)$(DOCKER_FILE) --profile $(PROFILE)
 
+all: install copy-tsconfig certificates build up
+
 compile:
 	npx tsc -p ./src/backend/tsconfig.json
 	npx tsc-alias -p ./src/backend/tsconfig.json --resolve-full-paths --resolve-full-extension .js
@@ -15,23 +17,20 @@ compile:
 
 
 certificates:
-	mkdir -p ./dockerFiles/secrets/ssl/
-	openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-	  -keyout ./dockerFiles/secrets/ssl/selfsigned.key \
-	  -out ./dockerFiles/secrets/ssl/selfsigned.crt \
-	  -subj "/C=FR/ST=Auvergne-Rhône-Alpes/L=Brignais/O=42/CN=brappo"
+	npx shx mkdir -p ./dockerFiles/secrets/ssl/
+	$(DOCKER_EXEC) run --rm certificates
 
 cp-scenes:
-	cp		-r ./src/backend/dev/scenes ./dockerFiles/fastify/app_src/dev/.
+	npx shx cp -r ./src/backend/dev/scenes ./dockerFiles/fastify/app_src/dev/.
 
 cp-env:
-	cp		.env.example	./dockerFiles/fastify/app_src/.env
+	npx shx cp .env.example	./dockerFiles/fastify/app_src/.env
 
 gen-prisma-client:
 	npx prisma generate --schema=./dockerFiles/fastify/prisma/schema.prisma
 
 create-folders:
-	mkdir	-p	./dockerFiles/fastify/app_src/dev \
+	npx shx mkdir -p	./dockerFiles/fastify/app_src/dev \
 				./dockerFiles/fastify/app_src/uploads/avatars \
 				./dockerFiles/fastify/databases/
 
@@ -52,26 +51,16 @@ compile-watch:
 up:
 	$(DOCKER_EXEC) up -d
 ifeq ($(PROFILE), prod)
-	$(DOCKER_EXEC) logs -f nginx &
-	$(DOCKER_EXEC) logs -f fastify-prod &
+	npx concurrently "$(DOCKER_EXEC) logs -f nginx" "$(DOCKER_EXEC) logs -f fastify-prod"
 else
-	$(DOCKER_EXEC) logs -f vite &
-	$(DOCKER_EXEC) logs -f fastify-dev &
+	npx concurrently "$(DOCKER_EXEC) logs -f vite" "$(DOCKER_EXEC) logs -f fastify-dev"
 endif
-# ifeq ($(PROFILE), prod)
-# 	$(DOCKER_EXEC) logs -f nginx > ./dockerFiles/nginx/nginx.logs &
-# else
-# 	$(DOCKER_EXEC) logs -f vite > ./dockerFiles/vite/vite.logs &
-# endif
-# 	$(DOCKER_EXEC) logs -f fastify > ./dockerFiles/fastify/fastify.logs &
 
 install:
 	npm install
 
 copy-tsconfig:
-	cp ./src/frontend/tsconfig.json ./dockerFiles/vite/
-
-all: copy-tsconfig install certificates build up
+	npx shx cp ./src/frontend/tsconfig.json ./dockerFiles/vite/
 
 $(NAME): all
 
@@ -82,9 +71,9 @@ stop:
 	$(DOCKER_EXEC) stop
 
 clean: stop
-	-rm -rf ./dockerFiles/nginx/website/
-	-rm -rf ./dockerFiles/fastify/app_src/dev/backend
-	-rm -rf ./dockerFiles/fastify/app_src/dev/shared
+	-npx shx rm -rf ./dockerFiles/nginx/website/
+	-npx shx rm -rf ./dockerFiles/fastify/app_src/dev/backend
+	-npx shx rm -rf ./dockerFiles/fastify/app_src/dev/shared
 
 fclean:
 	$(DOCKER_EXEC) down -v
@@ -92,10 +81,10 @@ fclean:
 	-docker network rm $(docker network ls -q)
 	-docker volume rm $(docker volume ls -q)
 	-docker system prune -af
-	-rm -rf ./node_modules/
-	-rm ./package-lock.json
-	-rm -r ./dockerFiles/secrets/ssl/*
-	-rm -rf ./dockerFiles/fastify/app_src/dev/*
+	-npx shx rm ./package-lock.json
+	-npx shx rm -rf ./dockerFiles/secrets/ssl/
+	-npx shx rm -rf ./dockerFiles/fastify/app_src/dev/
+	-npx shx rm -rf ./node_modules/
 
 re: clean all
 fre: fclean all
