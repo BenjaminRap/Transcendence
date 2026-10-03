@@ -8,7 +8,7 @@ import { HavokPlugin } from "@babylonjs/core/Physics";
 
 import HavokPhysics from "@babylonjs/havok";
 import { type ClientInput, FrontendSceneData, type FrontendSceneProperties } from "./FrontendSceneData";
-import { Color4, type int } from "@babylonjs/core";
+import { Color3, Color4, type int } from "@babylonjs/core";
 import { type FrontendGameType, type SceneName, type FrontendGameSceneName } from "@shared/SceneData";
 import { Settings } from "./Settings";
 import { ServerProxy } from "./ServerProxy";
@@ -299,6 +299,7 @@ export class PongGame extends HTMLElement {
 		SceneManager.OnSceneReadyObservable.add(() => {
 			SceneManager.OnSceneReadyObservable.clear();
 			scene.clearColor = new Color4(0, 0, 0, 1);
+			scene.ambientColor = new Color3(0.2, 0.2, 0.2);
 			cam.dispose(); // removing the unecessary camera
 			scene.activeCameras = scene.cameras;
 			globalThis.HKP = undefined;
