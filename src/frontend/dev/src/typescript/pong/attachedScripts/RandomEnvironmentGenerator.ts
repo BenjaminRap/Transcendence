@@ -66,7 +66,7 @@ export class RandomEnvironmentGenerator extends CustomScriptComponent {
 			const	worldPosition = this.transform.position.add(position);
 			worldPosition.y += 100;
 
-			const	squaredDistance = Vector3.DistanceSquared(this.transform.position, worldPosition);
+			const	squaredDistance = Math.pow(worldPosition.x, 2) + Math.pow(worldPosition.z, 2);
 			const	lodLevel = lod.getLodLevel(squaredDistance);
 			if (!lodLevel)
 				continue ;
