@@ -53,7 +53,7 @@ export class PongGame extends HTMLElement {
 			this.onError(new PongError("We lost the webgl context !", "quitPong"));
 		});
 		this._errorGUI = initMenu(new ErrorGUI(), {
-			close: () => history.back()
+			close: () => this._errorGUI.classList.add("hidden")
 		}, this);
 		this._loadingGUI = new LoadingGUI();
 		this.appendChild(this._loadingGUI);
@@ -67,7 +67,6 @@ export class PongGame extends HTMLElement {
 		this._serverProxy.getObservable("disconnect").add(this.onDisconnect);
 		window.addEventListener("offline", this.onDisconnect);
 		this.loadGame();
-		window.addEventListener("popstate", this.onPopState);
 	}
 
 	private async loadGame() : Promise<void> {
@@ -114,8 +113,6 @@ export class PongGame extends HTMLElement {
 
 	private async changeScene(properties : FrontendSceneProperties) : Promise<FrontendSceneData>
 	{
-		if (this.isInScene("Menu.gltf"))
-			history.pushState(null, "", "/pong/game/");
 		this.disposeScene();
 		this._scene = await this.getNewScene(properties);
 
@@ -143,7 +140,6 @@ export class PongGame extends HTMLElement {
 				this.onError(setMinimalSeverity(error, "quitPong"));
 			return ;
 		}
-		history.pushState(null, "", "/pong");
 		this._serverProxy.leave();
 		this.changeScene({sceneName: "Menu.gltf", gameType: "Menu"})
 			.catch((error : any) => {
@@ -250,10 +246,8 @@ export class PongGame extends HTMLElement {
 		sceneData.events.getObservable("input-change").notifyObservers(inputs);
 	}
 
-	private	showError(errorText : string, pushState = true)
+	private	showError(errorText : string)
 	{
-		if (pushState)
-			history.pushState({error: errorText}, "", "/pong/error");
 		this._errorGUI.setErrorText(errorText);
 		this._errorGUI.classList.remove("hidden");
 	}
@@ -340,7 +334,6 @@ export class PongGame extends HTMLElement {
 			try {
 				window.removeEventListener("offline", this.onDisconnect);
 				this._engine?.stopRenderLoop();
-				window.removeEventListener("popstate", this.onPopState);
 				this._serverProxy.leave();
 				this._serverProxy.dispose();
 				if (globalThis.HKP)
@@ -372,18 +365,6 @@ export class PongGame extends HTMLElement {
 	{
 		this.dispose();
 		PongUtils.removePongDiv(true);
-	}
-
-	private onPopState = (popEvent : PopStateEvent) => {
-		if (location.pathname === "/pong/error")
-			this.showError(String(popEvent.state.errorText), false);
-		else
-			this._errorGUI.classList.remove("hidden");
-		if (this.isInScene("Menu.gltf"))
-			return ;
-
-		this.goToMenuScene();
-		this._serverProxy.leave();
 	}
 }
 

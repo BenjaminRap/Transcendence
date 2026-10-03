@@ -206,7 +206,6 @@ export class CreateInGameGUI extends CustomScriptComponent {
 
 	private	onGoToMenu() : void
 	{
-		history.back();
 		this._sceneData.pongHTMLElement.goToMenuScene();
 	}
 
