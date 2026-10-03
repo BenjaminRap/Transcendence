@@ -73,6 +73,7 @@ export class ParticleText extends CustomScriptComponent {
 	{
 		const	textParticles = new ParticleSystem("textParticle", 1000000, this.scene);
 
+		textParticles.layerMask = 1;
 		textParticles.minLifeTime = Infinity;
 		textParticles.maxLifeTime = Infinity;
 		textParticles.minSize = this._scale.x / texture.getSize().width * 1 / this._precision;
