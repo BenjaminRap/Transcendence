@@ -1,5 +1,5 @@
 import { Color3, Scene, Vector2, Vector3 } from "@babylonjs/core";
-import { AddBlock, AnimatedInputBlockTypes, ClampBlock, DiscardBlock, DistanceBlock, FragmentOutputBlock, ImageSourceBlock, InputBlock, InstancesBlock, LerpBlock, LightBlock, MultiplyBlock, NegateBlock, NodeMaterial, NodeMaterialModes, NodeMaterialSystemValues, NodeMaterialTeleportInBlock, NodeMaterialTeleportOutBlock, RemapBlock, SimplexPerlin3DBlock, SmoothStepBlock, SubtractBlock, TextureBlock, TransformBlock, VectorMergerBlock, VectorSplitterBlock, VertexOutputBlock } from "@babylonjs/core/Materials/Node";
+import { AddBlock, AnimatedInputBlockTypes, ClampBlock, DiscardBlock, DistanceBlock, FragmentOutputBlock, ImageSourceBlock, InputBlock, InstancesBlock, LerpBlock, LightBlock, MultiplyBlock, NodeMaterial, NodeMaterialModes, NodeMaterialSystemValues, NodeMaterialTeleportInBlock, NodeMaterialTeleportOutBlock, RemapBlock, SimplexPerlin3DBlock, SmoothStepBlock, SubtractBlock, TextureBlock, TransformBlock, VectorMergerBlock, VectorSplitterBlock, VertexOutputBlock } from "@babylonjs/core/Materials/Node";
 
 export type	StylizedGrassMaterialAndInputs = [ NodeMaterial, StylizedGrassMaterialInputsBlocks ];
 
@@ -323,13 +323,6 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	viewVector.visibleOnFrame = false;
 	viewVector.target = 4;
 
-	// NodeMaterialTeleportOutBlock
-	var worldPos5 = new NodeMaterialTeleportOutBlock("> worldPos3");
-	worldPos5.visibleInInspector = false;
-	worldPos5.visibleOnFrame = false;
-	worldPos5.target = 1;
-	worldPos.attachToEndpoint(worldPos5);
-
 	// InputBlock
 	var cameraPosition1 = new InputBlock("cameraPosition");
 	cameraPosition1.visibleInInspector = false;
@@ -442,11 +435,11 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	displacedWorldPos.target = 4;
 
 	// NodeMaterialTeleportOutBlock
-	var worldPos6 = new NodeMaterialTeleportOutBlock("> worldPos3");
-	worldPos6.visibleInInspector = false;
-	worldPos6.visibleOnFrame = false;
-	worldPos6.target = 1;
-	worldPos.attachToEndpoint(worldPos6);
+	var worldPos5 = new NodeMaterialTeleportOutBlock("> worldPos3");
+	worldPos5.visibleInInspector = false;
+	worldPos5.visibleOnFrame = false;
+	worldPos5.target = 1;
+	worldPos.attachToEndpoint(worldPos5);
 
 	// VectorMergerBlock
 	var VectorMerger1 = new VectorMergerBlock("VectorMerger");
@@ -577,6 +570,13 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	instanceWorld3.visibleOnFrame = false;
 	instanceWorld3.target = 1;
 	instanceWorld.attachToEndpoint(instanceWorld3);
+
+	// NodeMaterialTeleportOutBlock
+	var worldPos6 = new NodeMaterialTeleportOutBlock("> worldPos3");
+	worldPos6.visibleInInspector = false;
+	worldPos6.visibleOnFrame = false;
+	worldPos6.target = 1;
+	worldPos.attachToEndpoint(worldPos6);
 
 	// NodeMaterialTeleportOutBlock
 	var worldPos7 = new NodeMaterialTeleportOutBlock("> worldPos3");
@@ -747,7 +747,7 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	Clamp.output.connectTo(normalizedHeight.input);
 	normalizedHeight1.output.connectTo(Multiply3.right);
 	Multiply3.output.connectTo(displacedWorldPos.left);
-	worldPos6.output.connectTo(displacedWorldPos.right);
+	worldPos5.output.connectTo(displacedWorldPos.right);
 	displacedWorldPos.output.connectTo(VectorMerger1.xyzIn);
 	one.output.connectTo(VectorMerger1.w);
 	VectorMerger1.xyzw.connectTo(vertexScreenPos.vector);
@@ -756,7 +756,7 @@ export function	buildStylizedGrassMaterial(name : string, scene : Scene) : Styli
 	bottomColor.output.connectTo(unlitColor.left);
 	nearColor.output.connectTo(distanceBlendedColor.left);
 	farColor.output.connectTo(distanceBlendedColor.right);
-	worldPos5.output.connectTo(viewVector.left);
+	worldPos1.xyz.connectTo(viewVector.left);
 	cameraPosition1.output.connectTo(viewVector.right);
 	viewVector.output.connectTo(distanceBlending.value);
 	near.output.connectTo(distanceBlending.edge0);
