@@ -59,6 +59,21 @@ make fclean
 
 ---
 
+## 📸 Images
+
+<details>
+ <summary>Image 1</summary>
+ <img width="1867" height="920" alt="terminal" src="https://github.com/user-attachments/assets/7ccab838-51d5-4535-8d8f-4a69de74195f" />
+</details>
+<details>
+ <summary>Image 2</summary>
+ <img width="1503" height="844" alt="pongTerminal" src="https://github.com/user-attachments/assets/e8858291-46be-40ff-a2d8-edbfd7666663" />
+</details>
+<details>
+ <summary>Image 3</summary>
+ <img width="1500" height="841" alt="pongNature" src="https://github.com/user-attachments/assets/4db6e7f0-d2a4-444d-a208-1a62d13c312a" />
+</details>
+
 ## 🚀 Présentation
 
 **Transcendence** est une application web basée sur une architecture **frontend / backend séparée**, avec :
