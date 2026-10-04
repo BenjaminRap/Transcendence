@@ -4,32 +4,20 @@ Projet web complet combinant **jeu**, **backend temps réel** et **interface ter
 
 ---
 
-⚠️ Maintenance en cours
-
-Je travaille actuellement à corriger des vulnérabilités introduites par certaines dépendances depuis la fin du projet. En conséquence, certaines fonctionnalités peuvent être temporairement indisponibles ou ne plus fonctionner correctement.
-
 ## ⚙️ Installation
 
 <details>
-<summary>Linux only</summary>
+<summary>Docker (toutes plateformes)</summary>
 
-### 📋 1. Dépendances
+### 📋 1. Installer les Dépendances
 
-Docker, Docker Compose, Node.js (npm), GNU Make
-
-* Docker & Docker Compose : [https://docs.docker.com/engine/install/](https://docs.docker.com/engine/install/)
-* Node.js (npm) : [https://nodejs.org/en/download/package-manager/](https://nodejs.org/en/download/package-manager/)
-
-```bash id="mk7v2a"
-sudo apt-get update
-sudo apt-get install -y make
-```
+docker, docker compose, npm 24, make, git
 
 ---
 
 ### 🚀 2. Cloner le projet
 
-```bash id="z4x1pc"
+```bash
 git clone git@github.com:BenjaminRap/Transcendence.git transcendence
 ```
 
@@ -37,7 +25,7 @@ git clone git@github.com:BenjaminRap/Transcendence.git transcendence
 
 ### 📁 3. Accéder au dossier
 
-```bash id="u8n3df"
+```bash
 cd transcendence
 ```
 
@@ -45,7 +33,7 @@ cd transcendence
 
 ### ▶️ 4. Lancer l’installation
 
-```bash id="y2k9ls"
+```bash
 make all
 ```
 
@@ -58,6 +46,14 @@ Ouvrez votre navigateur et allez sur :
 
 ⚠️ Un avertissement de sécurité apparaîtra (certificat auto-signé).
 Il suffit de cliquer sur **“Avancé”** puis **“Continuer vers localhost”** (ou équivalent selon le navigateur).
+
+---
+
+### 🧽 6. Nettoyer
+
+```bash
+make fclean
+```
 
 </details>
 
