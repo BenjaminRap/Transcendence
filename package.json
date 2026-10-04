@@ -30,7 +30,6 @@
 		"fastify-type-provider-zod": "~5.1.0",
 		"file-type": "^21.3.4",
 		"jsonwebtoken": "~9.0.2",
-		"node": "~25.2.0",
 		"prisma": "^6.12.0",
 		"reflect-metadata": "~0.2.2",
 		"sharp": "^0.35.5",

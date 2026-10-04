@@ -30,7 +30,7 @@ gen-prisma-client:
 	npx prisma generate --schema=./dockerFiles/fastify/prisma/schema.prisma
 
 create-folders:
-	npx shx mkdir -p	./dockerFiles/fastify/app_src/dev \
+	npx shx mkdir -p ./dockerFiles/fastify/app_src/dev \
 				./dockerFiles/fastify/app_src/uploads/avatars \
 				./dockerFiles/fastify/databases/
 
@@ -70,20 +70,14 @@ down:
 stop:
 	$(DOCKER_EXEC) stop
 
-clean: stop
+clean:
 	-npx shx rm -rf ./dockerFiles/nginx/website/
-	-npx shx rm -rf ./dockerFiles/fastify/app_src/dev/backend
-	-npx shx rm -rf ./dockerFiles/fastify/app_src/dev/shared
+	-npx shx rm -rf ./dockerFiles/fastify/app_src/dev
 
 fclean:
-	$(DOCKER_EXEC) down -v
-	-docker rmi $(docker image ls -aq)
-	-docker network rm $(docker network ls -q)
-	-docker volume rm $(docker volume ls -q)
-	-docker system prune -af
+	$(DOCKER_EXEC) down -v --remove-orphans --rmi local
 	-npx shx rm ./package-lock.json
 	-npx shx rm -rf ./dockerFiles/secrets/ssl/
-	-npx shx rm -rf ./dockerFiles/fastify/app_src/dev/
 	-npx shx rm -rf ./node_modules/
 
 re: clean all
